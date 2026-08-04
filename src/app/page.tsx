@@ -1,67 +1,162 @@
 import Link from "next/link";
+import type { Route } from "next";
 import {
   ArrowRight,
   ChevronRight,
   CircleUserRound,
   Heart,
   MessageCircle,
-  Send,
   Sparkles,
+  Target,
   UsersRound,
 } from "lucide-react";
 
-import { CATEGORIES } from "@/lib/constants";
+import { EmptyState } from "@/components/empty-state";
 import { SiteHeader } from "@/components/site-header";
+import { CATEGORIES } from "@/lib/constants";
+import { formatRubles } from "@/lib/money";
+import { hasSupabaseEnvironment } from "@/lib/supabase/env";
+import { createClient } from "@/lib/supabase/server";
 
-const feedItems = [
+export const dynamic = "force-dynamic";
+
+type FeedItem = {
+  id: string;
+  slug: string;
+  title: string;
+  categorySlug: string | null;
+  targetAmountMinor: number;
+  currentAmountMinor: number;
+  participantsCount: number;
+  authorName: string;
+  authorUsername: string;
+  city: string | null;
+};
+
+type PersonItem = {
+  id: string;
+  username: string;
+  displayName: string;
+  city: string | null;
+};
+
+const demoFundraisers: FeedItem[] = [
   {
-    emoji: "📷",
+    id: "demo-1",
+    slug: "demo-1",
     title: "Камера для первых съёмок",
-    name: "Настя Орлова",
+    categorySlug: "hobbies",
+    targetAmountMinor: 15000000,
+    currentAmountMinor: 8750000,
+    participantsCount: 43,
+    authorName: "Настя Орлова",
+    authorUsername: "nastya",
     city: "Казань",
-    raised: "87 500 ₽",
-    target: "150 000 ₽",
-    percent: 58,
-    people: 43,
-    palette: "from-[#fde3bc] to-[#f6b9aa]",
   },
   {
-    emoji: "🎸",
+    id: "demo-2",
+    slug: "demo-2",
     title: "Моя первая электрогитара",
-    name: "Максим Белов",
+    categorySlug: "music",
+    targetAmountMinor: 6500000,
+    currentAmountMinor: 2840000,
+    participantsCount: 19,
+    authorName: "Максим Белов",
+    authorUsername: "max",
     city: "Москва",
-    raised: "28 400 ₽",
-    target: "65 000 ₽",
-    percent: 44,
-    people: 19,
-    palette: "from-[#d5e9db] to-[#a8cbbd]",
   },
   {
-    emoji: "✈️",
+    id: "demo-3",
+    slug: "demo-3",
     title: "Увидеть цветение сакуры",
-    name: "Лиза Соколова",
+    categorySlug: "travel",
+    targetAmountMinor: 18000000,
+    currentAmountMinor: 6320000,
+    participantsCount: 31,
+    authorName: "Лиза Соколова",
+    authorUsername: "liza",
     city: "Санкт-Петербург",
-    raised: "63 200 ₽",
-    target: "180 000 ₽",
-    percent: 35,
-    people: 31,
-    palette: "from-[#f5d9e8] to-[#d4b4d2]",
   },
 ];
 
+const demoPeople: PersonItem[] = [
+  { id: "person-1", username: "nastya", displayName: "Настя Орлова", city: "Казань" },
+  { id: "person-2", username: "max", displayName: "Максим Белов", city: "Москва" },
+  {
+    id: "person-3",
+    username: "liza",
+    displayName: "Лиза Соколова",
+    city: "Санкт-Петербург",
+  },
+];
+
+async function getHomeData() {
+  if (!hasSupabaseEnvironment()) {
+    return { fundraisers: demoFundraisers, people: demoPeople, isDemo: true };
+  }
+
+  try {
+    const supabase = await createClient();
+    const [{ data: rawFundraisers }, { data: rawPeople }] = await Promise.all([
+      supabase
+        .from("public_fundraiser_feed")
+        .select(
+          "id, slug, title, category_slug, target_amount_minor, current_amount_minor, participant_count, author_display_name, author_username, author_city",
+        )
+        .order("published_at", { ascending: false })
+        .limit(6),
+      supabase
+        .from("profiles")
+        .select("id, username, display_name, city, show_city")
+        .eq("profile_visibility", "public")
+        .eq("is_suspended", false)
+        .order("created_at", { ascending: false })
+        .limit(4),
+    ]);
+
+    const fundraisers: FeedItem[] = (
+      (rawFundraisers ?? []) as Array<Record<string, unknown>>
+    ).map((item) => ({
+      id: String(item.id),
+      slug: String(item.slug),
+      title: String(item.title),
+      categorySlug: item.category_slug ? String(item.category_slug) : null,
+      targetAmountMinor: Number(item.target_amount_minor),
+      currentAmountMinor: Number(item.current_amount_minor),
+      participantsCount: Number(item.participant_count),
+      authorName: String(item.author_display_name),
+      authorUsername: String(item.author_username),
+      city: item.author_city ? String(item.author_city) : null,
+    }));
+    const people: PersonItem[] = (
+      (rawPeople ?? []) as Array<Record<string, unknown>>
+    ).map((item) => ({
+      id: String(item.id),
+      username: String(item.username),
+      displayName: String(item.display_name),
+      city: item.show_city && item.city ? String(item.city) : null,
+    }));
+
+    return { fundraisers, people, isDemo: false };
+  } catch {
+    return { fundraisers: [], people: [], isDemo: false };
+  }
+}
+
 function Avatar({ name, index = 0 }: { name: string; index?: number }) {
   const colors = ["bg-[#f0b5a7]", "bg-[#b9d6ca]", "bg-[#c7b3db]", "bg-[#f0cb81]"];
-
   return (
     <span
-      className={`grid size-9 place-items-center rounded-full border-2 border-white text-xs font-bold text-[#563941] ${colors[index % colors.length]}`}
+      className={`grid size-10 place-items-center rounded-full border-2 border-white text-sm font-bold text-[#563941] ${colors[index % colors.length]}`}
     >
-      {name.slice(0, 1)}
+      {name.slice(0, 1).toUpperCase()}
     </span>
   );
 }
 
-export default function HomePage() {
+export default async function HomePage() {
+  const { fundraisers, people, isDemo } = await getHomeData();
+
   return (
     <>
       <SiteHeader />
@@ -71,8 +166,8 @@ export default function HomePage() {
           <div className="absolute bottom-0 left-[42%] size-36 rounded-full bg-[#ffc86b]/30 blur-3xl" />
           <div className="relative max-w-2xl">
             <p className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-sm font-medium text-rose-100">
-              <Sparkles className="size-4 text-[#ffd179]" />
-              Желания становятся ближе вместе
+              <Sparkles className="size-4 text-[#ffd179]" /> Желания становятся ближе
+              вместе
             </p>
             <h1 className="text-balance text-3xl font-bold leading-tight tracking-tight sm:text-4xl lg:text-5xl">
               Не просто собирайте. Делитесь мечтой.
@@ -84,16 +179,16 @@ export default function HomePage() {
             <div className="mt-7 flex flex-wrap gap-3">
               <Link
                 className="inline-flex h-11 items-center gap-2 rounded-xl bg-white px-5 text-sm font-bold text-[#9e3457] transition hover:bg-rose-50"
-                href="/auth/sign-in"
+                href="/wishes/new"
               >
                 Создать желание <ArrowRight className="size-4" />
               </Link>
-              <a
+              <Link
                 className="inline-flex h-11 items-center gap-2 rounded-xl border border-white/25 px-5 text-sm font-semibold text-white transition hover:bg-white/10"
-                href="#feed"
+                href="/fundraisers/new"
               >
-                Смотреть сборы <ChevronRight className="size-4" />
-              </a>
+                Создать сбор <Target className="size-4" />
+              </Link>
             </div>
           </div>
           <div className="relative mt-10 flex flex-wrap gap-x-9 gap-y-4 border-t border-white/15 pt-6 sm:mt-12">
@@ -114,7 +209,7 @@ export default function HomePage() {
           <div className="mb-5 flex items-end justify-between gap-4">
             <div>
               <p className="text-sm font-semibold text-[#bd3e66]">Сейчас происходит</p>
-              <h2 className="mt-1 text-2xl font-bold tracking-tight">Живые сборы</h2>
+              <h2 className="mt-1 text-2xl font-bold tracking-tight">Новые сборы</h2>
             </div>
             <Link
               className="group hidden items-center gap-1 text-sm font-semibold text-[#a13d5e] sm:inline-flex"
@@ -124,59 +219,92 @@ export default function HomePage() {
               <ChevronRight className="size-4 transition group-hover:translate-x-0.5" />
             </Link>
           </div>
-
-          <div className="grid gap-4 md:grid-cols-3">
-            {feedItems.map((item, index) => (
-              <article
-                className="surface group overflow-hidden rounded-2xl"
-                key={item.title}
-              >
-                <div
-                  className={`relative grid h-36 place-items-center bg-gradient-to-br ${item.palette}`}
-                >
-                  <span
-                    className="drop-shadow-sm transition duration-300 group-hover:scale-110"
-                    style={{ fontSize: "4.25rem" }}
+          {isDemo && (
+            <p className="mb-4 rounded-xl bg-amber-50 px-3.5 py-2.5 text-xs leading-5 text-amber-800">
+              Это демонстрационные карточки. Подключите Supabase — здесь автоматически
+              появятся реальные публичные сборы.
+            </p>
+          )}
+          {fundraisers.length > 0 ? (
+            <div className="grid gap-4 md:grid-cols-3">
+              {fundraisers.map((item, index) => {
+                const category =
+                  CATEGORIES.find((category) => category.slug === item.categorySlug) ??
+                  CATEGORIES.at(-1)!;
+                const progress = Math.min(
+                  100,
+                  Math.round((item.currentAmountMinor / item.targetAmountMinor) * 100),
+                );
+                const href = isDemo
+                  ? "/auth/sign-in"
+                  : (`/fundraisers/${item.slug}` as Route);
+                return (
+                  <article
+                    className="surface group overflow-hidden rounded-2xl"
+                    key={item.id}
                   >
-                    {item.emoji}
-                  </span>
-                  <span className="absolute right-3 top-3 rounded-full bg-white/75 px-2.5 py-1 text-xs font-semibold text-[#71545c] backdrop-blur">
-                    В сборе
-                  </span>
-                </div>
-                <div className="p-4">
-                  <div className="flex items-center gap-2">
-                    <Avatar name={item.name} index={index} />
-                    <p className="truncate text-sm font-semibold">
-                      {item.name}
-                      <span className="font-normal text-[#8e747c]"> · {item.city}</span>
-                    </p>
-                  </div>
-                  <h3 className="mt-3 min-h-12 text-base font-bold leading-6">
-                    {item.title}
-                  </h3>
-                  <div className="mt-3 flex items-baseline justify-between text-sm">
-                    <span className="font-bold text-[#c53d68]">{item.raised}</span>
-                    <span className="text-[#8e747c]">из {item.target}</span>
-                  </div>
-                  <div className="mt-2 h-2 overflow-hidden rounded-full bg-[#f6e8ec]">
-                    <div
-                      className="h-full rounded-full bg-[#df4f7d]"
-                      style={{ width: `${item.percent}%` }}
-                    />
-                  </div>
-                  <div className="mt-3 flex items-center justify-between text-xs text-[#8e747c]">
-                    <span className="inline-flex items-center gap-1">
-                      <UsersRound className="size-3.5" /> {item.people} участника
-                    </span>
-                    <span className="inline-flex items-center gap-1">
-                      <MessageCircle className="size-3.5" /> Обсуждение
-                    </span>
-                  </div>
-                </div>
-              </article>
-            ))}
-          </div>
+                    <Link href={href}>
+                      <div className="relative grid h-36 place-items-center bg-gradient-to-br from-[#fde3bc] to-[#f6b9aa]">
+                        <span
+                          className="drop-shadow-sm transition duration-300 group-hover:scale-110"
+                          style={{ fontSize: "4.25rem" }}
+                        >
+                          {category.emoji}
+                        </span>
+                        <span className="absolute right-3 top-3 rounded-full bg-white/75 px-2.5 py-1 text-xs font-semibold text-[#71545c] backdrop-blur">
+                          Новый сбор
+                        </span>
+                      </div>
+                      <div className="p-4">
+                        <div className="flex items-center gap-2">
+                          <Avatar index={index} name={item.authorName} />
+                          <p className="truncate text-sm font-semibold">
+                            {item.authorName}
+                            <span className="font-normal text-[#8e747c]">
+                              {item.city ? ` · ${item.city}` : ""}
+                            </span>
+                          </p>
+                        </div>
+                        <h3 className="mt-3 min-h-12 text-base font-bold leading-6">
+                          {item.title}
+                        </h3>
+                        <div className="mt-3 flex items-baseline justify-between text-sm">
+                          <span className="font-bold text-[#c53d68]">
+                            {formatRubles(item.currentAmountMinor)}
+                          </span>
+                          <span className="text-[#8e747c]">
+                            из {formatRubles(item.targetAmountMinor)}
+                          </span>
+                        </div>
+                        <div className="mt-2 h-2 overflow-hidden rounded-full bg-[#f6e8ec]">
+                          <div
+                            className="h-full rounded-full bg-[#df4f7d]"
+                            style={{ width: `${progress}%` }}
+                          />
+                        </div>
+                        <div className="mt-3 flex items-center justify-between text-xs text-[#8e747c]">
+                          <span className="inline-flex items-center gap-1">
+                            <UsersRound className="size-3.5" /> {item.participantsCount}{" "}
+                            участников
+                          </span>
+                          <span className="inline-flex items-center gap-1">
+                            <MessageCircle className="size-3.5" /> Скоро чат
+                          </span>
+                        </div>
+                      </div>
+                    </Link>
+                  </article>
+                );
+              })}
+            </div>
+          ) : (
+            <EmptyState
+              actionHref="/fundraisers/new"
+              actionLabel="Создать первый сбор"
+              description="Здесь появятся публичные сборы сообщества. Начните с собственной цели — она станет первой активностью в ленте."
+              title="Лента ждёт первую историю"
+            />
+          )}
         </section>
 
         <section className="mt-12 grid gap-5 lg:grid-cols-[1.35fr_0.65fr]">
@@ -192,7 +320,7 @@ export default function HomePage() {
               {CATEGORIES.slice(0, 8).map((category) => (
                 <Link
                   className="rounded-xl border border-[#f0e2e6] bg-[#fffafb] px-3 py-2 text-sm font-medium text-[#674f57] transition hover:border-[#efafc2] hover:bg-rose-50"
-                  href={`/discover?category=${category.slug}`}
+                  href="/discover"
                   key={category.slug}
                 >
                   <span className="mr-1.5">{category.emoji}</span>
@@ -201,7 +329,6 @@ export default function HomePage() {
               ))}
             </div>
           </div>
-
           <aside className="rounded-2xl bg-[#ffeabf] p-5 sm:p-6">
             <Heart className="size-5 fill-[#df4f7d] text-[#df4f7d]" />
             <h2 className="mt-3 text-xl font-bold text-[#5f3d2e]">Есть мечта?</h2>
@@ -211,39 +338,58 @@ export default function HomePage() {
             </p>
             <Link
               className="mt-4 inline-flex items-center gap-2 text-sm font-bold text-[#9c4a35]"
-              href="/auth/sign-in"
+              href="/wishes/new"
             >
               Начать с желания <ArrowRight className="size-4" />
             </Link>
           </aside>
         </section>
 
-        <section className="mt-12 overflow-hidden rounded-2xl border border-[#f0e1e5] bg-white px-5 py-7 sm:px-7">
-          <div className="grid items-center gap-6 md:grid-cols-[auto_1fr_auto]">
-            <div className="grid size-14 place-items-center rounded-2xl bg-[#fce5ec] text-[#d34872]">
-              <Send className="size-6" />
-            </div>
+        <section className="mt-12">
+          <div className="mb-5 flex items-end justify-between">
             <div>
-              <h2 className="text-lg font-bold">Каждый сбор — начало разговора</h2>
-              <p className="mt-1 text-sm leading-6 text-[#856e75]">
-                Поддерживайте, общайтесь, подписывайтесь и вдохновляйтесь желаниями
-                других.
-              </p>
+              <p className="text-sm font-semibold text-[#bd3e66]">Новое в сообществе</p>
+              <h2 className="mt-1 text-2xl font-bold">Люди и их желания</h2>
             </div>
-            <div className="flex -space-x-2">
-              {["Аня", "Миша", "Лера", "Илья"].map((name, index) => (
-                <Avatar index={index} key={name} name={name} />
-              ))}
-              <span className="grid size-9 place-items-center rounded-full border-2 border-white bg-[#f6e9ec] text-xs font-bold text-[#8d6672]">
-                +12
-              </span>
-            </div>
+            <Link
+              className="hidden text-sm font-semibold text-[#a13d5e] sm:inline"
+              href="/people"
+            >
+              Все люди →
+            </Link>
           </div>
+          {people.length > 0 ? (
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              {people.map((person, index) => (
+                <Link
+                  className="surface flex items-center gap-3 rounded-2xl p-4 transition hover:-translate-y-0.5 hover:shadow-glow"
+                  href={isDemo ? "/auth/sign-in" : (`/u/${person.username}` as Route)}
+                  key={person.id}
+                >
+                  <Avatar index={index} name={person.displayName} />
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-bold">{person.displayName}</p>
+                    <p className="truncate text-xs text-[#8e747c]">
+                      @{person.username}
+                      {person.city ? ` · ${person.city}` : ""}
+                    </p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <EmptyState
+              actionHref="/onboarding"
+              actionLabel="Создать профиль"
+              description="Публичные профили с желаниями появятся здесь после регистрации первых участников."
+              title="Здесь будут новые люди"
+            />
+          )}
         </section>
       </main>
       <footer className="border-t border-[#eee1e4] py-7 text-center text-sm text-[#8e747c]">
-        <CircleUserRound className="mr-1.5 inline size-4 align-text-bottom" />
-        GiftOS · Платформа желаний, поддержки и общения
+        <CircleUserRound className="mr-1.5 inline size-4 align-text-bottom" /> GiftOS ·
+        Платформа желаний, поддержки и общения
       </footer>
     </>
   );

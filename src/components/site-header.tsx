@@ -1,7 +1,10 @@
 import Link from "next/link";
 import { Bell, Gift, Search } from "lucide-react";
 
+import { AuthHeaderActions } from "@/components/auth-header-actions";
 import { APP_NAME } from "@/lib/constants";
+import { hasSupabaseEnvironment } from "@/lib/supabase/env";
+import { createClient } from "@/lib/supabase/server";
 
 const navItems = [
   { href: "/", label: "Лента" },
@@ -9,7 +12,28 @@ const navItems = [
   { href: "/discover", label: "Желания" },
 ] as const;
 
-export function SiteHeader() {
+export async function SiteHeader() {
+  let username: string | null = null;
+
+  if (hasSupabaseEnvironment()) {
+    try {
+      const supabase = await createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (user) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("username")
+          .eq("id", user.id)
+          .maybeSingle();
+        username = profile?.username ?? null;
+      }
+    } catch {
+      // Public pages remain available while Supabase is not connected.
+    }
+  }
+
   return (
     <header className="sticky top-0 z-20 border-b border-white/70 bg-[#fcf8f7]/80 backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-5 px-4 sm:px-6">
@@ -22,7 +46,6 @@ export function SiteHeader() {
           </span>
           <span className="text-lg">{APP_NAME}</span>
         </Link>
-
         <nav
           className="hidden items-center gap-1 md:flex"
           aria-label="Основная навигация"
@@ -37,7 +60,6 @@ export function SiteHeader() {
             </Link>
           ))}
         </nav>
-
         <div className="flex items-center gap-1.5">
           <button
             aria-label="Поиск"
@@ -53,12 +75,7 @@ export function SiteHeader() {
           >
             <Bell className="size-4" />
           </button>
-          <Link
-            className="ml-1 inline-flex h-9 items-center rounded-xl bg-[#df4f7d] px-3.5 text-sm font-semibold text-white transition hover:bg-[#c93f6d]"
-            href="/auth/sign-in"
-          >
-            Войти
-          </Link>
+          <AuthHeaderActions username={username} />
         </div>
       </div>
     </header>
