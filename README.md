@@ -1,1 +1,93 @@
-# giftos
+# GiftOS
+
+Социальная PWA-платформа желаний, коллективных сборов, поддержки и общения.
+
+> **Идея:** человек приходит не только собрать деньги, но и показать мечту, поддержать других, познакомиться и вернуться в живое сообщество. Центральный социальный объект — сбор.
+
+## Стек
+
+- Next.js 15 / React 19 / TypeScript;
+- Tailwind CSS и shadcn-совместимая компонентная база;
+- Supabase: Auth, Postgres, RLS, Storage, Realtime;
+- будущий платёжный партнёр подключается через изолированный server-side адаптер.
+
+## Запуск локально
+
+### 1. Установить зависимости
+
+```bash
+npm install
+```
+
+### 2. Задать окружение
+
+```bash
+cp .env.example .env.local
+```
+
+Для просмотра стартового интерфейса Supabase не нужен. Чтобы заработала авторизация, создайте проект Supabase и заполните в `.env.local`:
+
+```dotenv
+NEXT_PUBLIC_SUPABASE_URL=https://<project-ref>.supabase.co
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=<publishable-key>
+SUPABASE_SERVICE_ROLE_KEY=<server-only-service-role-key>
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+```
+
+Никогда не отправляйте `.env.local` и `SUPABASE_SERVICE_ROLE_KEY` в Git или браузер.
+
+### 3. Применить схему Supabase
+
+При установленном Supabase CLI и привязанном проекте:
+
+```bash
+supabase link --project-ref <project-ref>
+supabase db push
+```
+
+Для локального Supabase:
+
+```bash
+supabase start
+supabase db reset
+```
+
+Миграции находятся в `supabase/migrations`. Они создают доменную модель, RLS-политики, безопасные публичные views, категории и приватные Storage-бакеты.
+
+### 4. Запустить приложение
+
+```bash
+npm run dev
+```
+
+Откройте [http://localhost:3000](http://localhost:3000). Проверка доступности: [http://localhost:3000/api/health](http://localhost:3000/api/health).
+
+## Команды качества
+
+```bash
+npm run typecheck
+npm run lint
+npm run build
+npm run format:check
+```
+
+## Состояние этапа 0
+
+- [x] Каркас Next.js 15 + PWA manifest.
+- [x] Стартовый интерфейс ленты и экран входа email/SMS OTP.
+- [x] Клиенты Supabase для браузера, Server Components и доверенных webhook-задач.
+- [x] Базовая модель: профиль, интересы, желания, сборы, поддержка, чат, подписки, личные сообщения, уведомления, жалобы, блокировки и рефералы.
+- [x] RLS и разделение публичной витрины от сырых платёжных записей.
+- [x] Подготовлены категории и приватное медиахранилище.
+- [ ] Подключение настоящего Supabase-проекта.
+- [ ] CRUD профиля, желаний и сборов.
+- [ ] Тестовый платёжный адаптер и проверяемый webhook.
+
+Подробности: [архитектура](docs/ARCHITECTURE.md) и [MVP backlog](docs/MVP_BACKLOG.md).
+
+## Важные продуктовые ограничения
+
+- `public` сборы попадают в ленту; `unlisted` доступны по ссылке и не должны показываться в каталогах; `private` доступны только автору и приглашённым.
+- Публичная лента использует `public_fundraiser_feed`. Нельзя читать сырую таблицу `fundraiser_supports` для показа поддержек: для этого есть безопасный view `fundraiser_support_activity`.
+- Деньги не хранятся на счёте платформы. Статус поддержки меняется только после верификации callback от выбранного платёжного партнёра.
+- Реферальная награда не выдаётся за простую регистрацию: она проходит квалификацию, hold-период и антифрод-проверку.

@@ -1,0 +1,46 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 24 24% 97%;
+    --foreground: 349 22% 16%;
+    --card: 0 0% 100%;
+    --muted: 345 16% 94%;
+    --muted-foreground: 346 8% 45%;
+    --border: 346 17% 89%;
+    --primary: 343 76% 57%;
+    --primary-foreground: 0 0% 100%;
+    --accent: 36 95% 89%;
+  }
+
+  * {
+    border-color: hsl(var(--border));
+  }
+
+  html {
+    @apply scroll-smooth;
+  }
+
+  body {
+    @apply min-h-screen bg-[#fcf8f7] font-sans text-[#352329] antialiased;
+    background-image:
+      radial-gradient(circle at 7% 3%, rgba(255, 205, 179, 0.38), transparent 20rem),
+      radial-gradient(circle at 93% 8%, rgba(245, 194, 218, 0.34), transparent 22rem);
+  }
+
+  ::selection {
+    @apply bg-rose-200 text-rose-950;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .surface {
+    @apply border border-white/80 bg-white/80 shadow-[0_10px_30px_rgba(84,41,57,0.06)] backdrop-blur;
+  }
+}
