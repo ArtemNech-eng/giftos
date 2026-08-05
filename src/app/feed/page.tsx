@@ -8,8 +8,10 @@ import {
   MessageCircle,
   Music2,
   Plane,
+  Radio,
   Search,
   UserRound,
+  UsersRound,
   WalletCards,
 } from "lucide-react";
 
@@ -52,10 +54,46 @@ type WishPreview = {
   authorUsername: string;
 };
 
+type LiveRoomPreview = {
+  id: string;
+  slug: string;
+  title: string;
+  hostName: string;
+  hostUsername: string;
+  viewers: number;
+};
+
 const demoAuthors: StoryAuthor[] = [
   { id: "nastya", username: "nastya", displayName: "Настя", avatarPath: null },
   { id: "max", username: "max", displayName: "Макс", avatarPath: null },
   { id: "dima", username: "dima", displayName: "Дима", avatarPath: null },
+];
+
+const demoLiveRooms: LiveRoomPreview[] = [
+  {
+    id: "live-1",
+    slug: "live-demo-1",
+    title: "Играем и общаемся",
+    hostName: "Настя",
+    hostUsername: "nastya",
+    viewers: 128,
+  },
+  {
+    id: "live-2",
+    slug: "live-demo-2",
+    title: "Утренний кофе с Максом",
+    hostName: "Макс",
+    hostUsername: "max",
+    viewers: 64,
+  },
+  {
+    id: "live-3",
+    slug: "live-demo-3",
+    title: "Отвечаю на вопросы",
+    hostName: "Дима",
+    hostUsername: "dima",
+    viewers: 21,
+  },
 ];
 
 const demoWishes: WishPreview[] = [
@@ -118,44 +156,101 @@ const demoFundraisers: Fundraiser[] = [
   },
 ];
 
+async function buildLiveRooms(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  rooms: Array<{ id: string; slug: string; title: string; host_id: string }>,
+): Promise<LiveRoomPreview[]> {
+  if (rooms.length === 0) return [];
+  const hostIds = [...new Set(rooms.map((room) => room.host_id))];
+  const [{ data: hostProfiles }, { data: participants }] = await Promise.all([
+    supabase.from("profiles").select("id, username, display_name").in("id", hostIds),
+    supabase
+      .from("live_room_participants")
+      .select("room_id")
+      .in(
+        "room_id",
+        rooms.map((room) => room.id),
+      )
+      .is("left_at", null),
+  ]);
+  const hostById = new Map(
+    (hostProfiles ?? []).map((profile) => [profile.id, profile]),
+  );
+  const viewerCount = new Map<string, number>();
+  for (const participant of participants ?? [])
+    viewerCount.set(
+      participant.room_id,
+      (viewerCount.get(participant.room_id) ?? 0) + 1,
+    );
+  return rooms.flatMap((room) => {
+    const host = hostById.get(room.host_id);
+    return host
+      ? [
+          {
+            id: room.id,
+            slug: room.slug,
+            title: room.title,
+            hostName: host.display_name,
+            hostUsername: host.username,
+            viewers: viewerCount.get(room.id) ?? 1,
+          },
+        ]
+      : [];
+  });
+}
+
 async function getHomeData() {
   if (!hasSupabaseEnvironment()) {
     return {
       authors: demoAuthors,
       fundraisers: demoFundraisers,
       wishes: demoWishes,
+      liveRooms: demoLiveRooms,
       isDemo: true,
     };
   }
 
   try {
     const supabase = await createClient();
-    const [{ data: rawStories }, { data: rawFundraisers }, { data: rawWishes }] =
-      await Promise.all([
-        supabase
-          .from("stories")
-          .select("id, author_id, created_at")
-          .gt("expires_at", new Date().toISOString())
-          .order("created_at", { ascending: false })
-          .limit(30),
-        supabase
-          .from("public_fundraiser_feed")
-          .select(
-            "id, slug, title, category_slug, current_amount_minor, target_amount_minor, author_display_name, author_username",
-          )
-          .order("published_at", { ascending: false })
-          .limit(8),
-        supabase
-          .from("wishes")
-          .select(
-            "id, author_id, title, category_slug, also_wants_count, promoted_until, created_at",
-          )
-          .eq("visibility", "public")
-          .eq("is_archived", false)
-          .order("promoted_until", { ascending: false, nullsFirst: false })
-          .order("also_wants_count", { ascending: false })
-          .limit(12),
-      ]);
+    const [
+      { data: rawStories },
+      { data: rawFundraisers },
+      { data: rawWishes },
+      { data: rawLiveRooms },
+    ] = await Promise.all([
+      supabase
+        .from("stories")
+        .select("id, author_id, created_at")
+        .gt("expires_at", new Date().toISOString())
+        .order("created_at", { ascending: false })
+        .limit(30),
+      supabase
+        .from("public_fundraiser_feed")
+        .select(
+          "id, slug, title, category_slug, current_amount_minor, target_amount_minor, author_display_name, author_username",
+        )
+        .order("published_at", { ascending: false })
+        .limit(8),
+      supabase
+        .from("wishes")
+        .select(
+          "id, author_id, title, category_slug, also_wants_count, promoted_until, created_at",
+        )
+        .eq("visibility", "public")
+        .eq("is_archived", false)
+        .order("promoted_until", { ascending: false, nullsFirst: false })
+        .order("also_wants_count", { ascending: false })
+        .limit(12),
+      supabase
+        .from("live_rooms")
+        .select("id, slug, title, host_id")
+        .eq("status", "live")
+        .eq("visibility", "public")
+        .order("started_at", { ascending: false })
+        .limit(10),
+    ]);
+
+    const liveRooms = await buildLiveRooms(supabase, rawLiveRooms ?? []);
 
     const uniqueStoryAuthors = new Map<string, { id: string; author_id: string }>();
     for (const story of rawStories ?? []) {
@@ -224,9 +319,15 @@ async function getHomeData() {
         : [];
     });
 
-    return { authors, fundraisers, wishes, isDemo: false };
+    return { authors, fundraisers, wishes, liveRooms, isDemo: false };
   } catch {
-    return { authors: [], fundraisers: [], wishes: [], isDemo: false };
+    return {
+      authors: [],
+      fundraisers: [],
+      wishes: [],
+      liveRooms: [],
+      isDemo: false,
+    };
   }
 }
 
@@ -303,8 +404,9 @@ function BottomNav() {
 }
 
 export default async function HomePage() {
-  const { authors, fundraisers, wishes, isDemo } = await getHomeData();
+  const { authors, fundraisers, wishes, liveRooms, isDemo } = await getHomeData();
   const storyAuthors = authors.length > 0 ? authors : demoAuthors;
+  const liveRoomsToShow = liveRooms.length > 0 ? liveRooms : demoLiveRooms;
 
   return (
     <main className="mx-auto min-h-screen max-w-[430px] bg-[#0c0e14] px-4 pb-24 pt-5 text-white">
@@ -351,6 +453,48 @@ export default async function HomePage() {
                 <span className="w-16 truncate text-center text-xs text-[#e7e1ee]">
                   {author.displayName}
                 </span>
+              </Link>
+            );
+          })}
+        </div>
+      </section>
+
+      <section className="mt-7">
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="text-base font-bold">Сейчас в эфире</h2>
+          <Link className="text-xs font-medium text-[#b26fff]" href="/live/new">
+            Создать эфир ›
+          </Link>
+        </div>
+        <div className="flex gap-3 overflow-x-auto pb-2">
+          {liveRoomsToShow.map((room, index) => {
+            const href = isDemo ? "/auth/sign-in" : (`/live/${room.slug}` as Route);
+            return (
+              <Link
+                className="w-56 shrink-0 overflow-hidden rounded-2xl border border-white/10 bg-[#181a24]"
+                href={href}
+                key={room.id}
+              >
+                <div
+                  className={`relative flex h-24 items-center justify-center bg-gradient-to-br ${
+                    gradients[index % gradients.length]
+                  }/40`}
+                >
+                  <span className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-[#ff2d55] px-2 py-0.5 text-[10px] font-bold text-white">
+                    <span className="size-1.5 animate-pulse rounded-full bg-white" />
+                    LIVE
+                  </span>
+                  <Radio className="size-8 text-[#ffb7dd]" />
+                </div>
+                <div className="p-3">
+                  <p className="truncate text-sm font-bold">{room.title}</p>
+                  <p className="mt-1 flex items-center justify-between gap-2 text-xs text-[#aaa4b7]">
+                    <span className="truncate">{room.hostName}</span>
+                    <span className="flex shrink-0 items-center gap-1">
+                      <UsersRound className="size-3.5" /> {room.viewers}
+                    </span>
+                  </p>
+                </div>
               </Link>
             );
           })}

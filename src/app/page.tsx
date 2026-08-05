@@ -19,22 +19,84 @@ type CreatorPreview = {
   creator_headline: string | null;
 };
 
+type LiveRoomPreview = {
+  id: string;
+  slug: string;
+  title: string;
+  hostName: string;
+  viewers: number;
+};
+
 export default async function SeoLandingPage() {
   let creators: CreatorPreview[] = [];
+  let liveRooms: LiveRoomPreview[] = [];
   if (hasSupabaseEnvironment()) {
     try {
       const supabase = await createClient();
-      const { data } = await supabase
-        .from("profiles")
-        .select("username, display_name, creator_headline")
-        .eq("is_creator", true)
-        .eq("profile_visibility", "public")
-        .eq("is_suspended", false)
-        .order("created_at", { ascending: false })
-        .limit(6);
-      creators = (data ?? []) as CreatorPreview[];
+      const [{ data: creatorData }, { data: roomData }] = await Promise.all([
+        supabase
+          .from("profiles")
+          .select("username, display_name, creator_headline")
+          .eq("is_creator", true)
+          .eq("profile_visibility", "public")
+          .eq("is_suspended", false)
+          .order("created_at", { ascending: false })
+          .limit(6),
+        supabase
+          .from("live_rooms")
+          .select("id, slug, title, host_id")
+          .eq("status", "live")
+          .eq("visibility", "public")
+          .order("started_at", { ascending: false })
+          .limit(3),
+      ]);
+      creators = (creatorData ?? []) as CreatorPreview[];
+      const rooms = (roomData ?? []) as Array<{
+        id: string;
+        slug: string;
+        title: string;
+        host_id: string;
+      }>;
+      if (rooms.length > 0) {
+        const hostIds = [...new Set(rooms.map((room) => room.host_id))];
+        const [{ data: hostProfiles }, { data: participants }] = await Promise.all([
+          supabase.from("profiles").select("id, display_name").in("id", hostIds),
+          supabase
+            .from("live_room_participants")
+            .select("room_id")
+            .in(
+              "room_id",
+              rooms.map((room) => room.id),
+            )
+            .is("left_at", null),
+        ]);
+        const hostById = new Map(
+          (hostProfiles ?? []).map((profile) => [profile.id, profile]),
+        );
+        const viewerCount = new Map<string, number>();
+        for (const participant of participants ?? [])
+          viewerCount.set(
+            participant.room_id,
+            (viewerCount.get(participant.room_id) ?? 0) + 1,
+          );
+        liveRooms = rooms.flatMap((room) => {
+          const host = hostById.get(room.host_id);
+          return host
+            ? [
+                {
+                  id: room.id,
+                  slug: room.slug,
+                  title: room.title,
+                  hostName: host.display_name,
+                  viewers: viewerCount.get(room.id) ?? 1,
+                },
+              ]
+            : [];
+        });
+      }
     } catch {
       creators = [];
+      liveRooms = [];
     }
   }
 
@@ -216,6 +278,41 @@ export default async function SeoLandingPage() {
           </div>
         )}
       </section>
+
+      {liveRooms.length > 0 && (
+        <section className="mx-auto max-w-6xl px-5 pb-14 sm:px-8">
+          <div className="flex items-end justify-between">
+            <div>
+              <p className="text-sm font-semibold text-[#ff7fb5]">Прямо сейчас</p>
+              <h2 className="mt-1 text-2xl font-bold">Сейчас в эфире</h2>
+            </div>
+            <Link className="text-sm font-semibold text-[#eaa1d5]" href="/feed">
+              Открыть ленту ›
+            </Link>
+          </div>
+          <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {liveRooms.map((room) => (
+              <Link
+                className="border-white/8 rounded-2xl border bg-[#191b26] p-4 transition hover:border-[#ff5b99]"
+                href={`/live/${room.slug}`}
+                key={room.id}
+              >
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-[#ff2d55] px-2 py-0.5 text-[10px] font-bold text-white">
+                  <span className="size-1.5 animate-pulse rounded-full bg-white" />
+                  LIVE
+                </span>
+                <p className="mt-3 font-bold">{room.title}</p>
+                <p className="mt-1 flex items-center justify-between text-sm text-[#aea6b9]">
+                  <span className="truncate">{room.hostName}</span>
+                  <span className="flex shrink-0 items-center gap-1">
+                    <UsersRound className="size-4" /> {room.viewers}
+                  </span>
+                </p>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
 
       <section className="mx-auto max-w-6xl px-5 pb-20 sm:px-8">
         <div className="rounded-[2rem] bg-gradient-to-r from-[#f94c96] to-[#7a45ff] p-8 text-center">
