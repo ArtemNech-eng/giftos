@@ -6,6 +6,7 @@ import { notFound } from "next/navigation";
 
 import { blockUser, unblockUser } from "@/app/safety/actions";
 import { toggleUserFollow } from "@/app/social/actions";
+import { createCreatorPost } from "@/app/posts/actions";
 import { createStory } from "@/app/stories/actions";
 import { ReportForm } from "@/components/report-form";
 import { CATEGORIES } from "@/lib/constants";
@@ -75,6 +76,7 @@ export default async function ProfilePage({
     { data: rawWishes },
     { data: rawFundraisers },
     { data: rawStories },
+    { data: rawPosts },
     { count: followers },
   ] = await Promise.all([
     user && !isOwnProfile
@@ -123,6 +125,13 @@ export default async function ProfilePage({
       .gt("expires_at", new Date().toISOString())
       .order("created_at", { ascending: false })
       .limit(1),
+    supabase
+      .from("creator_posts")
+      .select("id, slug, title, body, published_at")
+      .eq("author_id", profile.id)
+      .eq("visibility", "public")
+      .order("published_at", { ascending: false })
+      .limit(3),
     supabase
       .from("user_follows")
       .select("*", { count: "exact", head: true })
@@ -346,6 +355,24 @@ export default async function ProfilePage({
         )}
       </section>
 
+      {rawPosts && rawPosts.length > 0 && (
+        <section className="mx-4 mt-5 space-y-2">
+          <p className="text-sm font-bold text-[#e5ddea]">Посты автора</p>
+          {rawPosts.map((post) => (
+            <Link
+              className="border-white/8 block rounded-2xl border bg-[#171923] p-4"
+              href={`/posts/${post.slug}` as Route}
+              key={post.id}
+            >
+              <h2 className="font-bold">{post.title}</h2>
+              <p className="mt-2 line-clamp-2 text-sm leading-6 text-[#b9b1c5]">
+                {post.body}
+              </p>
+            </Link>
+          ))}
+        </section>
+      )}
+
       {isOwnProfile && profile.is_creator && (
         <details className="mx-4 rounded-2xl border border-white/10 bg-[#171923] p-4">
           <summary className="cursor-pointer text-sm font-bold">
@@ -381,6 +408,44 @@ export default async function ProfilePage({
                 placeholder="49 ₽"
                 type="number"
               />
+              <button
+                className="rounded-xl bg-gradient-to-r from-[#ff4b8a] to-[#7d45ff] px-4 text-sm font-bold"
+                type="submit"
+              >
+                Опубликовать
+              </button>
+            </div>
+          </form>
+        </details>
+      )}
+      {isOwnProfile && profile.is_creator && (
+        <details className="mx-4 mt-3 rounded-2xl border border-white/10 bg-[#171923] p-4">
+          <summary className="cursor-pointer text-sm font-bold">Создать пост</summary>
+          <form action={createCreatorPost} className="mt-4">
+            <input name="username" type="hidden" value={profile.username} />
+            <input
+              className="w-full rounded-xl border border-white/10 bg-black/20 p-3 text-sm"
+              maxLength={160}
+              name="title"
+              placeholder="Заголовок поста"
+              required
+            />
+            <textarea
+              className="mt-3 min-h-32 w-full rounded-xl border border-white/10 bg-black/20 p-3 text-sm"
+              maxLength={10000}
+              name="body"
+              placeholder="Расскажите что-нибудь своей аудитории"
+              required
+            />
+            <div className="mt-3 flex gap-2">
+              <select
+                className="rounded-xl bg-black/20 px-3 text-sm"
+                defaultValue="public"
+                name="visibility"
+              >
+                <option value="public">Публично</option>
+                <option value="private">Только я</option>
+              </select>
               <button
                 className="rounded-xl bg-gradient-to-r from-[#ff4b8a] to-[#7d45ff] px-4 text-sm font-bold"
                 type="submit"

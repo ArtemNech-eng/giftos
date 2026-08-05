@@ -63,5 +63,5 @@ headline: Играю, общаюсь и публикую stories
 
 1. Dynamic metadata/OG/canonical для публичных целей и желаний — реализовано.
 2. JSON-LD `WebSite` для landing page — реализовано; далее добавить `Person`/`CreativeWork` для профилей и контента.
-3. Вечнозелёные creator posts, которые могут индексироваться, в отличие от stories.
+3. Вечнозелёные creator posts: публикация, публичная SEO-страница, metadata, Article JSON-LD и sitemap — реализовано.
 4. Video poster/transcoding и оптимизация Core Web Vitals.
