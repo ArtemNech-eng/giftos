@@ -109,14 +109,24 @@ export default async function StoryPage({
             <p className="font-bold">{author?.display_name ?? "Автор"}</p>
             <p className="text-xs text-[#b9b2c7]">Story до {expiry}</p>
           </div>
-          {author?.username && (
-            <Link
-              className="text-sm font-semibold text-[#a13d5e]"
-              href={`/u/${author.username}`}
-            >
-              Профиль
-            </Link>
-          )}
+          <div className="flex items-center gap-3">
+            {isAuthor && (
+              <Link
+                className="text-sm font-semibold text-[#d8a1ff]"
+                href={`/creator/stories/${story.id}/analytics`}
+              >
+                Аналитика
+              </Link>
+            )}
+            {author?.username && (
+              <Link
+                className="text-sm font-semibold text-[#a13d5e]"
+                href={`/u/${author.username}`}
+              >
+                Профиль
+              </Link>
+            )}
+          </div>
         </div>
         <div className="relative aspect-[9/16] max-h-[70vh] bg-[#2e2025]">
           {canWatch && videoUrl ? (
