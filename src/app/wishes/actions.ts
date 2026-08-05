@@ -65,6 +65,9 @@ export async function createWish(formData: FormData) {
 
   if (error) throw new Error(`Не удалось создать желание: ${error.message}`);
 
+  // A referral becomes active only after onboarding and a meaningful action.
+  await supabase.rpc("claim_referral_bonus_if_qualified");
+
   revalidatePath("/");
   redirect(`/wishes/${data.id}/edit`);
 }

@@ -3,11 +3,18 @@
 import { useState } from "react";
 import { Check, Copy } from "lucide-react";
 
-export function CreatorShareLink({ username }: { username: string }) {
+export function CreatorShareLink({
+  username,
+  path,
+}: {
+  username?: string;
+  path?: string;
+}) {
   const [copied, setCopied] = useState(false);
+  const targetPath = path ?? (username ? `/u/${username}` : "/");
 
   async function copyLink() {
-    await navigator.clipboard.writeText(`${window.location.origin}/u/${username}`);
+    await navigator.clipboard.writeText(`${window.location.origin}${targetPath}`);
     setCopied(true);
     window.setTimeout(() => setCopied(false), 1800);
   }
