@@ -904,6 +904,24 @@ export default async function HomePage({
         </section>
       )}
 
+      {cityMode && cityName && (
+        <Link
+          className="mb-5 flex items-center gap-3 rounded-2xl border border-[#ffd35e]/30 bg-gradient-to-r from-[#2b193f] to-[#1c1528] p-4"
+          href="/cities/battle"
+        >
+          <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-[#ffd35e]/15 text-2xl">
+            🏆
+          </span>
+          <span className="min-w-0 grow">
+            <span className="block text-sm font-bold">Битва городов</span>
+            <span className="mt-0.5 block text-xs text-[#b8b0c3]">
+              Помоги {cityName} стать первым — приглашай друзей и зарабатывай баллы
+            </span>
+          </span>
+          <span className="shrink-0 text-[#ffd35e]">›</span>
+        </Link>
+      )}
+
       {cityMode && cityName && cityPeople.length > 0 && (
         <>
           <section className="mt-1">

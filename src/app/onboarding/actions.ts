@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 
 import { requireUser } from "@/lib/auth";
+import { awardCityPoints } from "@/lib/city-battle";
 import { isUploadedFile, uploadOwnedImage } from "@/lib/media";
 import {
   optionalText,
@@ -88,6 +89,9 @@ export async function completeOnboarding(formData: FormData) {
   );
   if (interestsError)
     throw new Error(`Не удалось сохранить интересы: ${interestsError.message}`);
+
+  // City battle: qualified action (profile completed).
+  await awardCityPoints(supabase, "profile_completed", user.id);
 
   revalidatePath("/");
   revalidatePath(`/u/${username}`);

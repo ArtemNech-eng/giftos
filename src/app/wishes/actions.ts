@@ -5,6 +5,7 @@ import type { Route } from "next";
 import { redirect } from "next/navigation";
 
 import { requireUser } from "@/lib/auth";
+import { awardCityPoints } from "@/lib/city-battle";
 import { isUploadedFile, uploadOwnedImage } from "@/lib/media";
 import { parseAmountToMinor } from "@/lib/money";
 import { isValidUrl, optionalText, requiredText } from "@/lib/validation";
@@ -67,7 +68,13 @@ export async function createWish(formData: FormData) {
   if (error) throw new Error(`Не удалось создать желание: ${error.message}`);
 
   // A referral becomes active only after onboarding and a meaningful action.
-  await supabase.rpc("claim_referral_bonus_if_qualified");
+  const { data: claimed } = await supabase.rpc("claim_referral_bonus_if_qualified");
+
+  // City battle: qualified actions.
+  await awardCityPoints(supabase, "wish_published", data.id);
+  if (claimed === true) {
+    await awardCityPoints(supabase, "referral_qualified", `referral-${user.id}`);
+  }
 
   revalidatePath("/");
   redirect(`/wishes/${data.id}/edit`);

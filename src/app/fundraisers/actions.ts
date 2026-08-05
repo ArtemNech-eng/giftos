@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { requireUser } from "@/lib/auth";
+import { awardCityPoints } from "@/lib/city-battle";
 import { isUploadedFile, uploadOwnedImage } from "@/lib/media";
 import { parseAmountToMinor } from "@/lib/money";
 import { optionalText, requiredText } from "@/lib/validation";
@@ -90,22 +91,29 @@ export async function createFundraiser(formData: FormData) {
     : null;
   const slug = newSlug();
 
-  const { error } = await supabase.from("fundraisers").insert({
-    author_id: user.id,
-    wish_id: wishId,
-    slug,
-    title,
-    description,
-    cover_image_path: coverImagePath,
-    category_slug: categorySlug,
-    target_amount_minor: targetAmountMinor,
-    currency: "RUB",
-    visibility,
-    status: "active",
-    ends_at: endsAt,
-    published_at: new Date().toISOString(),
-  });
+  const { data: fundraiser, error } = await supabase
+    .from("fundraisers")
+    .insert({
+      author_id: user.id,
+      wish_id: wishId,
+      slug,
+      title,
+      description,
+      cover_image_path: coverImagePath,
+      category_slug: categorySlug,
+      target_amount_minor: targetAmountMinor,
+      currency: "RUB",
+      visibility,
+      status: "active",
+      ends_at: endsAt,
+      published_at: new Date().toISOString(),
+    })
+    .select("id")
+    .single();
   if (error) throw new Error(`Не удалось опубликовать сбор: ${error.message}`);
+
+  // City battle: qualified action (fundraiser published).
+  await awardCityPoints(supabase, "fundraiser_published", fundraiser?.id);
 
   revalidatePath("/");
   redirect(`/fundraisers/${slug}`);

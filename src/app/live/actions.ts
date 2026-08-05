@@ -6,6 +6,7 @@ import type { Route } from "next";
 import { redirect } from "next/navigation";
 
 import { requireUser } from "@/lib/auth";
+import { awardCityPoints } from "@/lib/city-battle";
 import { sendPushToUser } from "@/lib/push";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { optionalText, requiredText } from "@/lib/validation";
@@ -46,6 +47,10 @@ export async function createLiveRoom(formData: FormData) {
     .from("live_room_participants")
     .insert({ room_id: room.id, profile_id: user.id, role: "host" });
   await notifyFollowersAboutLiveRoom(user.id, room.id, slug, title);
+
+  // City battle: qualified action (live room started).
+  await awardCityPoints(supabase, "live_started", room.id);
+
   revalidatePath("/feed");
   redirect(`/live/${slug}` as Route);
 }
