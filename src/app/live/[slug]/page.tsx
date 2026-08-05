@@ -3,6 +3,7 @@ import { Copy, MessageCircle, UsersRound } from "lucide-react";
 import { notFound } from "next/navigation";
 
 import { inviteLiveCohost, sendLiveRoomMessage } from "@/app/live/actions";
+import { sendTestLiveGift } from "@/app/live/gifts/actions";
 import { LiveKitRoom } from "@/components/livekit-room";
 import { requireUser } from "@/lib/auth";
 
@@ -22,32 +23,42 @@ export default async function LiveRoomPage({
     .eq("slug", slug)
     .maybeSingle();
   if (!room || room.status !== "live") notFound();
-  const [{ data: host }, { data: messages }, { count: viewers }, { data: wish }] =
-    await Promise.all([
-      supabase
-        .from("profiles")
-        .select("username, display_name")
-        .eq("id", room.host_id)
-        .maybeSingle(),
-      supabase
-        .from("live_room_messages")
-        .select("id, author_id, body, created_at")
-        .eq("room_id", room.id)
-        .order("created_at", { ascending: true })
-        .limit(100),
-      supabase
-        .from("live_room_participants")
-        .select("*", { count: "exact", head: true })
-        .eq("room_id", room.id)
-        .is("left_at", null),
-      room.wish_id
-        ? supabase
-            .from("wishes")
-            .select("id, title, estimated_cost_minor")
-            .eq("id", room.wish_id)
-            .maybeSingle()
-        : Promise.resolve({ data: null }),
-    ]);
+  const [
+    { data: host },
+    { data: messages },
+    { count: viewers },
+    { data: wish },
+    { data: gifts },
+  ] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("username, display_name")
+      .eq("id", room.host_id)
+      .maybeSingle(),
+    supabase
+      .from("live_room_messages")
+      .select("id, author_id, body, created_at")
+      .eq("room_id", room.id)
+      .order("created_at", { ascending: true })
+      .limit(100),
+    supabase
+      .from("live_room_participants")
+      .select("*", { count: "exact", head: true })
+      .eq("room_id", room.id)
+      .is("left_at", null),
+    room.wish_id
+      ? supabase
+          .from("wishes")
+          .select("id, title, estimated_cost_minor")
+          .eq("id", room.wish_id)
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
+    supabase
+      .from("virtual_gifts")
+      .select("code, label, emoji, price_minor")
+      .eq("is_active", true)
+      .order("sort_order", { ascending: true }),
+  ]);
   const authorIds = [...new Set((messages ?? []).map((item) => item.author_id))];
   const { data: authors } = authorIds.length
     ? await supabase.from("profiles").select("id, display_name").in("id", authorIds)
@@ -104,6 +115,33 @@ export default async function LiveRoomPage({
           )}
         </div>
       </section>
+      {room.host_id !== user.id && gifts && gifts.length > 0 && (
+        <section className="mt-5 rounded-2xl border border-white/10 bg-[#171923] p-4">
+          <p className="font-bold">Отправить подарок в эфир</p>
+          <div className="mt-3 grid grid-cols-4 gap-2">
+            {gifts.map((gift) => (
+              <form action={sendTestLiveGift} key={gift.code}>
+                <input name="room_id" type="hidden" value={room.id} />
+                <input name="slug" type="hidden" value={slug} />
+                <input name="gift_code" type="hidden" value={gift.code} />
+                <button
+                  className="flex w-full flex-col items-center rounded-xl border border-white/10 bg-white/5 px-1 py-2 hover:border-[#ff77ba]"
+                  type="submit"
+                >
+                  <span className="text-2xl">{gift.emoji}</span>
+                  <span className="mt-1 text-[10px]">{gift.label}</span>
+                  <span className="text-[10px] text-[#ffb7dd]">
+                    {gift.price_minor / 100} ₽
+                  </span>
+                </button>
+              </form>
+            ))}
+          </div>
+          <p className="mt-3 text-xs text-[#a9a1b4]">
+            Подарки в тестовом режиме формируют test-доход автора.
+          </p>
+        </section>
+      )}
       {room.host_id === user.id && (
         <form
           action={inviteLiveCohost}
