@@ -14,6 +14,7 @@ const navItems = [
 
 export async function SiteHeader() {
   let username: string | null = null;
+  let unreadNotifications = 0;
 
   if (hasSupabaseEnvironment()) {
     try {
@@ -22,12 +23,16 @@ export async function SiteHeader() {
         data: { user },
       } = await supabase.auth.getUser();
       if (user) {
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("username")
-          .eq("id", user.id)
-          .maybeSingle();
+        const [{ data: profile }, { count }] = await Promise.all([
+          supabase.from("profiles").select("username").eq("id", user.id).maybeSingle(),
+          supabase
+            .from("notifications")
+            .select("*", { count: "exact", head: true })
+            .eq("recipient_id", user.id)
+            .is("read_at", null),
+        ]);
         username = profile?.username ?? null;
+        unreadNotifications = count ?? 0;
       }
     } catch {
       // Public pages remain available while Supabase is not connected.
@@ -68,13 +73,28 @@ export async function SiteHeader() {
           >
             <Search className="size-4" />
           </button>
-          <button
-            aria-label="Уведомления"
-            className="hidden size-9 place-items-center rounded-lg text-[#705c63] transition hover:bg-white hover:text-[#bd3e66] sm:grid"
-            type="button"
-          >
-            <Bell className="size-4" />
-          </button>
+          {username ? (
+            <Link
+              aria-label="Уведомления"
+              className="relative hidden size-9 place-items-center rounded-lg text-[#705c63] transition hover:bg-white hover:text-[#bd3e66] sm:grid"
+              href="/notifications"
+            >
+              <Bell className="size-4" />
+              {unreadNotifications > 0 && (
+                <span className="absolute right-1 top-1 grid min-w-4 place-items-center rounded-full bg-[#df4f7d] px-1 text-[10px] font-bold text-white">
+                  {unreadNotifications > 9 ? "9+" : unreadNotifications}
+                </span>
+              )}
+            </Link>
+          ) : (
+            <button
+              aria-label="Уведомления"
+              className="hidden size-9 place-items-center rounded-lg text-[#705c63] transition hover:bg-white hover:text-[#bd3e66] sm:grid"
+              type="button"
+            >
+              <Bell className="size-4" />
+            </button>
+          )}
           <AuthHeaderActions username={username} />
         </div>
       </div>

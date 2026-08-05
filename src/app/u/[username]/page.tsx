@@ -3,6 +3,7 @@ import type { Route } from "next";
 import { MapPin, UserPlus } from "lucide-react";
 import { notFound } from "next/navigation";
 
+import { toggleUserFollow } from "@/app/social/actions";
 import { EmptyState } from "@/components/empty-state";
 import { SiteHeader } from "@/components/site-header";
 import { CATEGORIES } from "@/lib/constants";
@@ -25,6 +26,20 @@ export default async function ProfilePage({
     .eq("username", username.toLowerCase())
     .maybeSingle();
   if (!profile) notFound();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const isOwnProfile = user?.id === profile.id;
+  const { data: existingFollow } =
+    user && !isOwnProfile
+      ? await supabase
+          .from("user_follows")
+          .select("follower_id")
+          .eq("follower_id", user.id)
+          .eq("following_id", profile.id)
+          .maybeSingle()
+      : { data: null };
 
   const avatarUrl = await getSignedImageUrl({
     bucket: "avatars",
@@ -90,13 +105,26 @@ export default async function ProfilePage({
                 )}
               </span>
               <div className="flex gap-2 sm:mb-1">
-                <button
-                  className="inline-flex h-10 items-center gap-2 rounded-xl bg-[#df4f7d] px-4 text-sm font-semibold text-white opacity-70"
-                  disabled
-                  type="button"
-                >
-                  <UserPlus className="size-4" /> Подписки — скоро
-                </button>
+                {user && !isOwnProfile ? (
+                  <form action={toggleUserFollow}>
+                    <input name="profile_id" type="hidden" value={profile.id} />
+                    <input name="username" type="hidden" value={profile.username} />
+                    <button
+                      className={`inline-flex h-10 items-center gap-2 rounded-xl px-4 text-sm font-semibold transition ${existingFollow ? "border border-[#ead9df] bg-white text-[#765f66] hover:border-[#df4f7d]" : "bg-[#df4f7d] text-white hover:bg-[#c93f6d]"}`}
+                      type="submit"
+                    >
+                      <UserPlus className="size-4" />
+                      {existingFollow ? "Вы подписаны" : "Подписаться"}
+                    </button>
+                  </form>
+                ) : !user ? (
+                  <Link
+                    className="inline-flex h-10 items-center gap-2 rounded-xl bg-[#df4f7d] px-4 text-sm font-semibold text-white transition hover:bg-[#c93f6d]"
+                    href="/auth/sign-in"
+                  >
+                    <UserPlus className="size-4" /> Подписаться
+                  </Link>
+                ) : null}
               </div>
             </div>
             <h1 className="mt-4 text-2xl font-bold tracking-tight">

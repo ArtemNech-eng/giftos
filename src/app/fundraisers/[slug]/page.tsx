@@ -7,6 +7,7 @@ import {
   postFundraiserComment,
   startFundraiserSupport,
 } from "@/app/fundraisers/support-actions";
+import { toggleFundraiserFollow } from "@/app/social/actions";
 import { EmptyState } from "@/components/empty-state";
 import { LiveDiscussionRefresh } from "@/components/live-discussion-refresh";
 import { CATEGORIES } from "@/lib/constants";
@@ -38,6 +39,15 @@ export default async function FundraiserPage({
     data: { user },
   } = await supabase.auth.getUser();
   const isAuthor = user?.id === fundraiser.author_id;
+  const { data: existingFundraiserFollow } =
+    user && !isAuthor
+      ? await supabase
+          .from("fundraiser_follows")
+          .select("profile_id")
+          .eq("profile_id", user.id)
+          .eq("fundraiser_id", fundraiser.id)
+          .maybeSingle()
+      : { data: null };
 
   const { data: author } = await supabase
     .from("profiles")
@@ -187,6 +197,18 @@ export default async function FundraiserPage({
             >
               <Share2 className="size-4" /> Поделиться
             </button>
+            {user && !isAuthor && (
+              <form action={toggleFundraiserFollow}>
+                <input name="fundraiser_id" type="hidden" value={fundraiser.id} />
+                <input name="fundraiser_slug" type="hidden" value={fundraiser.slug} />
+                <button
+                  className={`inline-flex h-11 items-center rounded-xl px-4 text-sm font-semibold transition ${existingFundraiserFollow ? "border border-[#ead9df] bg-white text-[#765f66] hover:border-[#df4f7d]" : "bg-[#fce5ec] text-[#bd3e66] hover:bg-[#f8d9e4]"}`}
+                  type="submit"
+                >
+                  {existingFundraiserFollow ? "Вы следите" : "Следить за сбором"}
+                </button>
+              </form>
+            )}
           </div>
           {user && fundraiser.status === "active" ? (
             <form

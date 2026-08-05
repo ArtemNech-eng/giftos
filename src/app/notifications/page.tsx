@@ -1,0 +1,154 @@
+import Link from "next/link";
+import type { Route } from "next";
+import { Bell, CheckCheck, Gift, Heart, UserPlus } from "lucide-react";
+
+import { markAllNotificationsRead } from "@/app/social/actions";
+import { EmptyState } from "@/components/empty-state";
+import { SiteHeader } from "@/components/site-header";
+import { requireUser } from "@/lib/auth";
+import { formatRubles } from "@/lib/money";
+
+export const metadata = { title: "Уведомления" };
+export const dynamic = "force-dynamic";
+
+type Notification = {
+  id: string;
+  actor_id: string | null;
+  type: string;
+  entity_type: string | null;
+  entity_id: string | null;
+  payload: Record<string, unknown>;
+  read_at: string | null;
+  created_at: string;
+};
+
+type Actor = { id: string; username: string; display_name: string };
+
+function notificationCopy(notification: Notification, actor: Actor | undefined) {
+  const actorName = actor?.display_name ?? "Пользователь";
+
+  if (notification.type === "user_followed") {
+    return {
+      icon: UserPlus,
+      title: `${actorName} подписался(-ась) на вас`,
+      href: actor ? (`/u/${actor.username}` as Route) : "/notifications",
+    };
+  }
+
+  if (notification.type === "private_fundraiser_invite") {
+    const title =
+      typeof notification.payload.fundraiser_title === "string"
+        ? notification.payload.fundraiser_title
+        : "приватный сбор";
+    return {
+      icon: Gift,
+      title: `${actorName} пригласил(-а) вас в «${title}»`,
+      href: "/invitations" as Route,
+    };
+  }
+
+  if (notification.type === "fundraiser_support_succeeded") {
+    const amount = Number(notification.payload.amount_minor ?? 0);
+    return {
+      icon: Heart,
+      title: `${actorName} поддержал(-а) ваш сбор на ${formatRubles(amount)}`,
+      href: "/notifications" as Route,
+    };
+  }
+
+  return {
+    icon: Bell,
+    title: "Новое событие в GiftOS",
+    href: "/notifications" as Route,
+  };
+}
+
+export default async function NotificationsPage() {
+  const { supabase, user } = await requireUser();
+  const { data: rawNotifications } = await supabase
+    .from("notifications")
+    .select("id, actor_id, type, entity_type, entity_id, payload, read_at, created_at")
+    .eq("recipient_id", user.id)
+    .order("created_at", { ascending: false })
+    .limit(50);
+  const notifications = (rawNotifications ?? []) as Notification[];
+  const actorIds = [
+    ...new Set(notifications.map((item) => item.actor_id).filter(Boolean)),
+  ] as string[];
+  const { data: rawActors } = actorIds.length
+    ? await supabase
+        .from("profiles")
+        .select("id, username, display_name")
+        .in("id", actorIds)
+    : { data: [] };
+  const actors = new Map((rawActors ?? []).map((actor) => [actor.id, actor as Actor]));
+  const hasUnread = notifications.some((item) => !item.read_at);
+
+  return (
+    <>
+      <SiteHeader />
+      <main className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
+        <div className="flex items-end justify-between gap-4">
+          <div>
+            <p className="text-sm font-semibold text-[#bd3e66]">Ваши события</p>
+            <h1 className="mt-1 text-3xl font-bold tracking-tight">Уведомления</h1>
+          </div>
+          {hasUnread && (
+            <form action={markAllNotificationsRead}>
+              <button
+                className="inline-flex h-10 items-center gap-2 rounded-xl border border-[#ead9df] bg-white px-3.5 text-sm font-semibold text-[#765f66] transition hover:border-[#df4f7d]"
+                type="submit"
+              >
+                <CheckCheck className="size-4" /> Прочитать всё
+              </button>
+            </form>
+          )}
+        </div>
+
+        <section className="mt-7">
+          {notifications.length === 0 ? (
+            <EmptyState
+              actionHref="/"
+              actionLabel="К ленте"
+              description="Когда кто-то поддержит ваш сбор, подпишется на вас или пригласит в приватный сбор, событие появится здесь."
+              title="Пока нет уведомлений"
+            />
+          ) : (
+            <div className="space-y-3">
+              {notifications.map((notification) => {
+                const copy = notificationCopy(
+                  notification,
+                  notification.actor_id ? actors.get(notification.actor_id) : undefined,
+                );
+                const Icon = copy.icon;
+                const date = new Intl.DateTimeFormat("ru-RU", {
+                  day: "numeric",
+                  month: "short",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                }).format(new Date(notification.created_at));
+                return (
+                  <Link
+                    className={`surface flex items-start gap-3 rounded-2xl p-4 transition hover:shadow-glow ${notification.read_at ? "opacity-70" : "border-[#efadc1]"}`}
+                    href={copy.href}
+                    key={notification.id}
+                  >
+                    <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#fce5ec] text-[#d34872]">
+                      <Icon className="size-5" />
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block text-sm font-semibold leading-6">
+                        {copy.title}
+                      </span>
+                      <span className="mt-1 block text-xs text-[#9b858c]">{date}</span>
+                    </span>
+                  </Link>
+                );
+              })}
+            </div>
+          )}
+        </section>
+      </main>
+    </>
+  );
+}
