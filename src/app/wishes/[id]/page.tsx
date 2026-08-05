@@ -3,7 +3,7 @@ import type { Metadata, Route } from "next";
 import { ExternalLink, Sparkles } from "lucide-react";
 import { notFound } from "next/navigation";
 
-import { cloneWish } from "@/app/wishes/actions";
+import { cloneWish, toggleAlsoWantWish } from "@/app/wishes/actions";
 import { CATEGORIES } from "@/lib/constants";
 import { getSignedImageUrl } from "@/lib/media";
 import { formatRubles } from "@/lib/money";
@@ -48,13 +48,25 @@ export default async function WishPage({
   const { data: wish } = await supabase
     .from("wishes")
     .select(
-      "id, author_id, title, description, image_path, product_url, estimated_cost_minor, category_slug, created_at",
+      "id, author_id, title, description, image_path, product_url, estimated_cost_minor, category_slug, also_wants_count, created_at",
     )
     .eq("id", id)
     .eq("visibility", "public")
     .eq("is_archived", false)
     .maybeSingle();
   if (!wish) notFound();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const { data: existingAlsoWant } = user
+    ? await supabase
+        .from("wish_also_wants")
+        .select("wish_id")
+        .eq("wish_id", wish.id)
+        .eq("profile_id", user.id)
+        .maybeSingle()
+    : { data: null };
 
   const { data: author } = await supabase
     .from("profiles")
@@ -115,7 +127,29 @@ export default async function WishPage({
               Примерная стоимость: {formatRubles(wish.estimated_cost_minor)}
             </p>
           )}
-          <div className="mt-7 flex flex-wrap gap-3">
+          <div className="mt-6 rounded-xl bg-[#fff0cf] px-4 py-3 text-sm text-[#765b45]">
+            ✨ <b>{wish.also_wants_count ?? 0}</b> человек тоже хотят это
+          </div>
+          <div className="mt-5 flex flex-wrap gap-3">
+            {user ? (
+              <form action={toggleAlsoWantWish}>
+                <input name="wish_id" type="hidden" value={wish.id} />
+                <button
+                  className={`inline-flex h-11 items-center gap-2 rounded-xl px-5 text-sm font-bold ${existingAlsoWant ? "border border-[#df4f7d] bg-white text-[#bd3e66]" : "bg-[#df4f7d] text-white"}`}
+                  type="submit"
+                >
+                  <Sparkles className="size-4" />{" "}
+                  {existingAlsoWant ? "Уже хочу" : "Хочу также"}
+                </button>
+              </form>
+            ) : (
+              <Link
+                className="inline-flex h-11 items-center gap-2 rounded-xl bg-[#df4f7d] px-5 text-sm font-bold text-white"
+                href="/auth/sign-in"
+              >
+                <Sparkles className="size-4" /> Хочу также
+              </Link>
+            )}
             <form action={cloneWish}>
               <input name="source_wish_id" type="hidden" value={wish.id} />
               <button

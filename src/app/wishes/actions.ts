@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import type { Route } from "next";
 import { redirect } from "next/navigation";
 
 import { requireUser } from "@/lib/auth";
@@ -111,6 +112,40 @@ export async function archiveWish(formData: FormData) {
   redirect("/");
 }
 
+export async function toggleAlsoWantWish(formData: FormData) {
+  const { supabase, user } = await requireUser();
+  const wishId = requiredText(formData.get("wish_id"), 100);
+  if (!wishId) throw new Error("Желание не найдено.");
+
+  const { data: wish } = await supabase
+    .from("wishes")
+    .select("id, visibility, is_archived")
+    .eq("id", wishId)
+    .maybeSingle();
+  if (!wish || wish.visibility !== "public" || wish.is_archived)
+    throw new Error("Это желание недоступно.");
+
+  const { data: existing } = await supabase
+    .from("wish_also_wants")
+    .select("wish_id")
+    .eq("wish_id", wishId)
+    .eq("profile_id", user.id)
+    .maybeSingle();
+  const { error } = existing
+    ? await supabase
+        .from("wish_also_wants")
+        .delete()
+        .eq("wish_id", wishId)
+        .eq("profile_id", user.id)
+    : await supabase
+        .from("wish_also_wants")
+        .insert({ wish_id: wishId, profile_id: user.id });
+  if (error) throw new Error(`Не удалось обновить «Хочу также»: ${error.message}`);
+
+  revalidatePath(`/wishes/${wishId}`);
+  redirect(`/wishes/${wishId}` as Route);
+}
+
 export async function cloneWish(formData: FormData) {
   const { supabase, user } = await requireUser();
   const sourceId = requiredText(formData.get("source_wish_id"), 100);
@@ -137,6 +172,13 @@ export async function cloneWish(formData: FormData) {
     .single();
   if (createError)
     throw new Error(`Не удалось создать похожее желание: ${createError.message}`);
+
+  await supabase
+    .from("wish_also_wants")
+    .upsert(
+      { wish_id: sourceId, profile_id: user.id },
+      { onConflict: "wish_id,profile_id" },
+    );
 
   redirect(`/wishes/${created.id}/edit`);
 }
