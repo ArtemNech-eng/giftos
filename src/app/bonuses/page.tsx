@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Copy, Gift, Sparkles, UsersRound } from "lucide-react";
 
 import { CreatorShareLink } from "@/components/creator-share-link";
+import { ReferralQrCode } from "@/components/referral-qr-code";
 import { requireUser } from "@/lib/auth";
 
 export const metadata = {
@@ -103,6 +104,11 @@ export default async function BonusesPage() {
         {referralPath && (
           <div className="mt-3">
             <CreatorShareLink path={referralPath} />
+          </div>
+        )}
+        {link && (
+          <div className="mt-5 flex justify-center">
+            <ReferralQrCode url={link} />
           </div>
         )}
       </section>
