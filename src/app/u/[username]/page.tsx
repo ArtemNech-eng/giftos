@@ -61,10 +61,13 @@ export async function generateMetadata({
 
 export default async function ProfilePage({
   params,
+  searchParams,
 }: {
   params: Promise<{ username: string }>;
+  searchParams: Promise<{ tab?: string }>;
 }) {
-  const { username } = await params;
+  const [{ username }, { tab: rawTab }] = await Promise.all([params, searchParams]);
+  const tab = rawTab === "stories" || rawTab === "posts" ? rawTab : "about";
   const supabase = await createClient();
   const { data: profile } = await supabase
     .from("profiles")
@@ -380,131 +383,171 @@ export default async function ProfilePage({
         )}
 
       <nav className="flex border-y border-white/10 text-sm font-semibold">
-        <span className="flex-1 border-b-2 border-[#ee4f9d] py-3 text-center">
-          Обо мне
-        </span>
-        <span className="flex-1 py-3 text-center text-[#aaa3b5]">Stories</span>
-        <span className="flex-1 py-3 text-center text-[#aaa3b5]">Посты</span>
+        {[
+          ["about", "Обо мне"],
+          ["stories", "Stories"],
+          ["posts", "Посты"],
+        ].map(([value, label]) => (
+          <Link
+            className={`flex-1 py-3 text-center ${tab === value ? "border-b-2 border-[#ee4f9d] text-white" : "text-[#aaa3b5]"}`}
+            href={
+              `/u/${profile.username}${value === "about" ? "" : `?tab=${value}`}` as Route
+            }
+            key={value}
+          >
+            {label}
+          </Link>
+        ))}
       </nav>
 
-      <section className="space-y-3 p-4">
-        {activeStory && (
-          <Link
-            className="flex items-center gap-3 rounded-2xl border border-[#b550ff]/40 bg-gradient-to-r from-[#23142e] to-[#191827] p-3"
-            href={`/stories/${activeStory.id}` as Route}
-          >
-            <span className="grid size-10 place-items-center rounded-xl bg-gradient-to-br from-[#ff4b8a] to-[#7d45ff]">
-              <Play className="size-5 fill-white" />
-            </span>
-            <span className="grow">
-              <b className="block text-sm">Новая video story</b>
-              <small className="text-xs text-[#b9b1c5]">Доступна сейчас</small>
-            </span>
-            <span className="text-sm text-[#d8a1ff]">Смотреть ›</span>
-          </Link>
-        )}
-        {rawOffers && rawOffers.length > 0 && (
-          <section className="border-white/8 rounded-2xl border bg-[#171923] p-4">
-            <h2 className="font-bold">Со мной можно</h2>
-            <div className="divide-white/8 mt-3 divide-y">
-              {rawOffers.map((offer) => {
-                const icons: Record<string, string> = {
-                  message: "💬",
-                  voice_call: "📞",
-                  video_call: "🎥",
-                  game: "🎮",
-                  activity: "✨",
-                  co_stream: "📺",
-                  custom: "⭐",
-                };
-                return (
-                  <div
-                    className="flex items-center justify-between py-3"
-                    key={offer.id}
-                  >
-                    <span className="flex items-center gap-3">
-                      <span className="text-lg">{icons[offer.kind] ?? "⭐"}</span>
-                      <span>
-                        <b className="block text-sm">{offer.title}</b>
-                        {offer.description && (
-                          <small className="block text-xs text-[#a9a1b4]">
-                            {offer.description}
-                          </small>
-                        )}
-                      </span>
-                    </span>
-                    {user && !isOwnProfile ? (
-                      <form action={createCreatorOfferRequest}>
-                        <input name="offer_id" type="hidden" value={offer.id} />
-                        <input name="username" type="hidden" value={profile.username} />
-                        <button
-                          className="rounded-lg bg-gradient-to-r from-[#ff4b8a] to-[#7d45ff] px-2.5 py-1.5 text-xs font-bold"
-                          type="submit"
-                        >
-                          {formatRubles(offer.price_minor)}
-                        </button>
-                      </form>
-                    ) : (
-                      <b className="text-sm text-[#ffd0eb]">
-                        {formatRubles(offer.price_minor)}
-                      </b>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </section>
-        )}
-        {rawFundraisers?.map((fundraiser) => {
-          const progress = Math.min(
-            100,
-            Math.round(
-              (Number(fundraiser.current_amount_minor) /
-                Number(fundraiser.target_amount_minor)) *
-                100,
-            ),
-          );
-          return (
+      {tab === "about" && (
+        <section className="space-y-3 p-4">
+          {activeStory && (
             <Link
-              className="border-white/8 block rounded-2xl border bg-[#181a24] p-4"
-              href={`/fundraisers/${fundraiser.slug}` as Route}
-              key={fundraiser.id}
+              className="flex items-center gap-3 rounded-2xl border border-[#b550ff]/40 bg-gradient-to-r from-[#23142e] to-[#191827] p-3"
+              href={`/stories/${activeStory.id}` as Route}
             >
-              <p className="text-xs text-[#aaa3b5]">Активная цель</p>
-              <b className="mt-1 block">{fundraiser.title}</b>
-              <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-white/10">
-                <div
-                  className="h-full rounded-full bg-gradient-to-r from-[#ff4b8a] to-[#7d45ff]"
-                  style={{ width: `${progress}%` }}
-                />
-              </div>
-              <p className="mt-2 text-xs text-[#d8d0e0]">
-                {formatRubles(fundraiser.current_amount_minor)} из{" "}
-                {formatRubles(fundraiser.target_amount_minor)}
-              </p>
+              <span className="grid size-10 place-items-center rounded-xl bg-gradient-to-br from-[#ff4b8a] to-[#7d45ff]">
+                <Play className="size-5 fill-white" />
+              </span>
+              <span className="grow">
+                <b className="block text-sm">Новая video story</b>
+                <small className="text-xs text-[#b9b1c5]">Доступна сейчас</small>
+              </span>
+              <span className="text-sm text-[#d8a1ff]">Смотреть ›</span>
             </Link>
-          );
-        })}
-        {media.length > 1 && (
-          <div className="grid grid-cols-3 gap-2">
-            {media
-              .slice(1)
-              .map(
-                (item) =>
-                  item.url && (
-                    <img
-                      alt=""
-                      className="aspect-square rounded-xl object-cover"
-                      key={item.id}
-                      src={item.url}
-                    />
-                  ),
-              )}
-          </div>
-        )}
-      </section>
+          )}
+          {rawOffers && rawOffers.length > 0 && (
+            <section className="border-white/8 rounded-2xl border bg-[#171923] p-4">
+              <h2 className="font-bold">Со мной можно</h2>
+              <div className="divide-white/8 mt-3 divide-y">
+                {rawOffers.map((offer) => {
+                  const icons: Record<string, string> = {
+                    message: "💬",
+                    voice_call: "📞",
+                    video_call: "🎥",
+                    game: "🎮",
+                    activity: "✨",
+                    co_stream: "📺",
+                    custom: "⭐",
+                  };
+                  return (
+                    <div
+                      className="flex items-center justify-between py-3"
+                      key={offer.id}
+                    >
+                      <span className="flex items-center gap-3">
+                        <span className="text-lg">{icons[offer.kind] ?? "⭐"}</span>
+                        <span>
+                          <b className="block text-sm">{offer.title}</b>
+                          {offer.description && (
+                            <small className="block text-xs text-[#a9a1b4]">
+                              {offer.description}
+                            </small>
+                          )}
+                        </span>
+                      </span>
+                      {user && !isOwnProfile ? (
+                        <form action={createCreatorOfferRequest}>
+                          <input name="offer_id" type="hidden" value={offer.id} />
+                          <input
+                            name="username"
+                            type="hidden"
+                            value={profile.username}
+                          />
+                          <button
+                            className="rounded-lg bg-gradient-to-r from-[#ff4b8a] to-[#7d45ff] px-2.5 py-1.5 text-xs font-bold"
+                            type="submit"
+                          >
+                            {formatRubles(offer.price_minor)}
+                          </button>
+                        </form>
+                      ) : (
+                        <b className="text-sm text-[#ffd0eb]">
+                          {formatRubles(offer.price_minor)}
+                        </b>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+          )}
+          {rawFundraisers?.map((fundraiser) => {
+            const progress = Math.min(
+              100,
+              Math.round(
+                (Number(fundraiser.current_amount_minor) /
+                  Number(fundraiser.target_amount_minor)) *
+                  100,
+              ),
+            );
+            return (
+              <Link
+                className="border-white/8 block rounded-2xl border bg-[#181a24] p-4"
+                href={`/fundraisers/${fundraiser.slug}` as Route}
+                key={fundraiser.id}
+              >
+                <p className="text-xs text-[#aaa3b5]">Активная цель</p>
+                <b className="mt-1 block">{fundraiser.title}</b>
+                <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-white/10">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-[#ff4b8a] to-[#7d45ff]"
+                    style={{ width: `${progress}%` }}
+                  />
+                </div>
+                <p className="mt-2 text-xs text-[#d8d0e0]">
+                  {formatRubles(fundraiser.current_amount_minor)} из{" "}
+                  {formatRubles(fundraiser.target_amount_minor)}
+                </p>
+              </Link>
+            );
+          })}
+          {media.length > 1 && (
+            <div className="grid grid-cols-3 gap-2">
+              {media
+                .slice(1)
+                .map(
+                  (item) =>
+                    item.url && (
+                      <img
+                        alt=""
+                        className="aspect-square rounded-xl object-cover"
+                        key={item.id}
+                        src={item.url}
+                      />
+                    ),
+                )}
+            </div>
+          )}
+        </section>
+      )}
 
-      {rawPosts && rawPosts.length > 0 && (
+      {tab === "stories" && (
+        <section className="space-y-3 p-4">
+          {activeStory ? (
+            <Link
+              className="flex items-center gap-3 rounded-2xl border border-[#b550ff]/40 bg-gradient-to-r from-[#23142e] to-[#191827] p-4"
+              href={`/stories/${activeStory.id}` as Route}
+            >
+              <span className="grid size-12 place-items-center rounded-xl bg-gradient-to-br from-[#ff4b8a] to-[#7d45ff]">
+                <Play className="size-6 fill-white" />
+              </span>
+              <span className="grow">
+                <b className="block">Новая video story</b>
+                <small className="text-xs text-[#b9b1c5]">Доступна сейчас</small>
+              </span>
+              <span className="text-[#d8a1ff]">Смотреть ›</span>
+            </Link>
+          ) : (
+            <div className="rounded-2xl border border-dashed border-white/15 p-6 text-center text-sm text-[#aaa2b4]">
+              Активных stories пока нет.
+            </div>
+          )}
+        </section>
+      )}
+
+      {tab === "posts" && rawPosts && rawPosts.length > 0 && (
         <section className="mx-4 mt-5 space-y-2">
           <p className="text-sm font-bold text-[#e5ddea]">Посты автора</p>
           {rawPosts.map((post) => (
