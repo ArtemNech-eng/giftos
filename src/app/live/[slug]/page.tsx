@@ -3,7 +3,6 @@ import { notFound } from "next/navigation";
 import {
   ArrowLeft,
   BarChart3,
-  Copy,
   Gift,
   HandCoins,
   MessageCircle,
@@ -14,6 +13,7 @@ import {
 import { endLiveRoom, inviteLiveCohost, removeLiveCohost } from "@/app/live/actions";
 import { sendTestLiveDonation } from "@/app/live/donations/actions";
 import { sendTestLiveGift } from "@/app/live/gifts/actions";
+import { CopyLiveRoomLinkButton } from "@/components/copy-live-room-link-button";
 import { LiveDonationEvents } from "@/components/live-donation-events";
 import { LiveGiftCounter } from "@/components/live-gift-counter";
 import { LiveGiftEvents } from "@/components/live-gift-events";
@@ -159,15 +159,10 @@ export default async function LiveRoomPage({
                   <BarChart3 className="size-4" />
                 </Link>
               )}
+              <CopyLiveRoomLinkButton slug={slug} />
             </>
           ) : (
-            <button
-              className="bg-white/8 grid size-9 place-items-center rounded-full"
-              title="Скопировать ссылку"
-              type="button"
-            >
-              <Copy className="size-4" />
-            </button>
+            <CopyLiveRoomLinkButton slug={slug} />
           )}
         </div>
       </header>
