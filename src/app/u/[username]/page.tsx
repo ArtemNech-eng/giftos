@@ -14,6 +14,7 @@ import {
   updateMessageRequestSettings,
 } from "@/app/creator/messages/actions";
 import {
+  cancelCreatorSubscription,
   testSubscribeToCreator,
   updateCreatorSubscriptionSettings,
 } from "@/app/creator/subscriptions/actions";
@@ -336,12 +337,7 @@ export default async function ProfilePage({
         !isOwnProfile &&
         profile.subscriptions_enabled &&
         profile.subscription_price_minor && (
-          <form
-            action={testSubscribeToCreator}
-            className="mx-4 mb-3 rounded-2xl border border-[#ff9ed0]/35 bg-gradient-to-r from-[#30182f] to-[#191827] p-4"
-          >
-            <input name="creator_id" type="hidden" value={profile.id} />
-            <input name="username" type="hidden" value={profile.username} />
+          <div className="mx-4 mb-3 rounded-2xl border border-[#ff9ed0]/35 bg-gradient-to-r from-[#30182f] to-[#191827] p-4">
             <div className="flex items-center justify-between">
               <span>
                 <b className="block">Подписка на автора</b>
@@ -353,14 +349,40 @@ export default async function ProfilePage({
                 {formatRubles(profile.subscription_price_minor)} / мес
               </b>
             </div>
-            <button
-              className={`mt-3 rounded-xl px-4 py-2 text-sm font-bold ${existingSubscription ? "bg-white/10 text-[#d8d0e0]" : "bg-gradient-to-r from-[#ff4b8a] to-[#7d45ff]"}`}
-              disabled={Boolean(existingSubscription)}
-              type="submit"
-            >
-              {existingSubscription ? "Вы подписаны" : "Подписаться в тестовом режиме"}
-            </button>
-          </form>
+            {existingSubscription ? (
+              <div className="mt-3 flex items-center justify-between gap-3">
+                <span className="text-xs text-[#b9b1c5]">
+                  Активна до{" "}
+                  {new Intl.DateTimeFormat("ru-RU", {
+                    day: "numeric",
+                    month: "short",
+                    year: "numeric",
+                  }).format(new Date(existingSubscription.expires_at))}
+                </span>
+                <form action={cancelCreatorSubscription}>
+                  <input name="creator_id" type="hidden" value={profile.id} />
+                  <input name="username" type="hidden" value={profile.username} />
+                  <button
+                    className="rounded-xl border border-[#ff5b99]/40 px-3 py-1.5 text-xs font-semibold text-[#ff9bc5]"
+                    type="submit"
+                  >
+                    Отменить
+                  </button>
+                </form>
+              </div>
+            ) : (
+              <form action={testSubscribeToCreator} className="mt-3">
+                <input name="creator_id" type="hidden" value={profile.id} />
+                <input name="username" type="hidden" value={profile.username} />
+                <button
+                  className="rounded-xl bg-gradient-to-r from-[#ff4b8a] to-[#7d45ff] px-4 py-2 text-sm font-bold"
+                  type="submit"
+                >
+                  Подписаться в тестовом режиме
+                </button>
+              </form>
+            )}
+          </div>
         )}
 
       {user &&

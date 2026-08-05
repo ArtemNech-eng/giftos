@@ -29,6 +29,25 @@ export async function updateCreatorSubscriptionSettings(formData: FormData) {
   redirect(`/u/${username}` as Route);
 }
 
+export async function cancelCreatorSubscription(formData: FormData) {
+  const { supabase, user } = await requireUser();
+  const creatorId = requiredText(formData.get("creator_id"), 100);
+  const username = requiredText(formData.get("username"), 100);
+  if (!creatorId || !username || creatorId === user.id)
+    throw new Error("Не удалось отменить подписку.");
+
+  const { error } = await supabase
+    .from("creator_subscriptions")
+    .update({ status: "cancelled" })
+    .eq("creator_id", creatorId)
+    .eq("subscriber_id", user.id)
+    .eq("status", "active");
+  if (error) throw new Error(`Не удалось отменить подписку: ${error.message}`);
+
+  revalidatePath(`/u/${username}`);
+  redirect(`/u/${username}?unsubscribed=1` as Route);
+}
+
 export async function testSubscribeToCreator(formData: FormData) {
   const { supabase, user } = await requireUser();
   const creatorId = requiredText(formData.get("creator_id"), 100);
