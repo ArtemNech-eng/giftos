@@ -97,17 +97,3 @@ export async function inviteLiveCohost(formData: FormData) {
   revalidatePath(`/live/${slug}`);
   redirect(`/live/${slug}?cohost=invited` as Route);
 }
-
-export async function sendLiveRoomMessage(formData: FormData) {
-  const { supabase, user } = await requireUser();
-  const roomId = requiredText(formData.get("room_id"), 100);
-  const slug = requiredText(formData.get("slug"), 100);
-  const body = requiredText(formData.get("body"), 2000);
-  if (!roomId || !slug || !body) throw new Error("Введите сообщение.");
-  const { error } = await supabase
-    .from("live_room_messages")
-    .insert({ room_id: roomId, author_id: user.id, body });
-  if (error) throw new Error(`Не удалось отправить сообщение: ${error.message}`);
-  revalidatePath(`/live/${slug}`);
-  redirect(`/live/${slug}` as Route);
-}

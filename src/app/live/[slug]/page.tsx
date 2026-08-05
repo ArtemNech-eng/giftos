@@ -2,9 +2,10 @@ import Link from "next/link";
 import { Copy, MessageCircle, UsersRound } from "lucide-react";
 import { notFound } from "next/navigation";
 
-import { inviteLiveCohost, sendLiveRoomMessage } from "@/app/live/actions";
+import { inviteLiveCohost } from "@/app/live/actions";
 import { sendTestLiveGift } from "@/app/live/gifts/actions";
 import { LiveKitRoom } from "@/components/livekit-room";
+import { LiveRoomRealtime } from "@/components/live-room-realtime";
 import { requireUser } from "@/lib/auth";
 
 export const metadata = { title: "Эфир", robots: { index: false, follow: false } };
@@ -171,36 +172,19 @@ export default async function LiveRoomPage({
         <div className="flex items-center gap-2">
           <MessageCircle className="size-5 text-[#d68cff]" />
           <h2 className="font-bold">Чат эфира</h2>
+          <span className="ml-auto text-xs text-[#a9a1b4]">в реальном времени</span>
         </div>
-        <div className="mt-4 max-h-64 space-y-3 overflow-y-auto">
-          {(messages ?? []).map((message) => (
-            <p className="text-sm" key={message.id}>
-              <b className="mr-2">
-                {message.author_id === user.id
-                  ? "Вы"
-                  : (names.get(message.author_id) ?? "Зритель")}
-              </b>
-              {message.body}
-            </p>
-          ))}
-        </div>
-        <form action={sendLiveRoomMessage} className="mt-4 flex gap-2">
-          <input name="room_id" type="hidden" value={room.id} />
-          <input name="slug" type="hidden" value={slug} />
-          <input
-            className="grow rounded-xl border border-white/10 bg-black/20 px-3 text-sm"
-            maxLength={2000}
-            name="body"
-            placeholder="Напишите сообщение"
-            required
-          />
-          <button
-            className="rounded-xl bg-gradient-to-r from-[#ff4b8a] to-[#7d45ff] px-4 text-sm font-bold"
-            type="submit"
-          >
-            Отправить
-          </button>
-        </form>
+        <LiveRoomRealtime
+          currentUserId={user.id}
+          initialMessages={(messages ?? []).map((message) => ({
+            id: message.id,
+            author_id: message.author_id,
+            body: message.body,
+            created_at: message.created_at,
+            author_name: names.get(message.author_id) ?? "Зритель",
+          }))}
+          roomId={room.id}
+        />
       </section>
     </main>
   );

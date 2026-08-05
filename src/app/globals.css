@@ -43,4 +43,27 @@
   .surface {
     @apply border border-white/80 bg-white/80 shadow-[0_10px_30px_rgba(84,41,57,0.06)] backdrop-blur;
   }
+
+  .live-reaction-float {
+    animation: live-reaction-float 2.6s ease-out forwards;
+  }
+}
+
+@keyframes live-reaction-float {
+  0% {
+    transform: translateY(0) scale(0.5);
+    opacity: 0;
+  }
+  15% {
+    transform: translateY(-10px) scale(1.2);
+    opacity: 1;
+  }
+  70% {
+    transform: translateY(-80px) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-150px) scale(0.9);
+    opacity: 0;
+  }
 }
