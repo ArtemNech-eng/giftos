@@ -61,7 +61,7 @@ headline: Играю, общаюсь и публикую stories
 
 ## Следующие SEO-задачи
 
-1. Dynamic metadata/OG/canonical для публичных целей и желаний.
-2. JSON-LD для профилей и вечнозелёного контента.
+1. Dynamic metadata/OG/canonical для публичных целей и желаний — реализовано.
+2. JSON-LD `WebSite` для landing page — реализовано; далее добавить `Person`/`CreativeWork` для профилей и контента.
 3. Вечнозелёные creator posts, которые могут индексироваться, в отличие от stories.
 4. Video poster/transcoding и оптимизация Core Web Vitals.

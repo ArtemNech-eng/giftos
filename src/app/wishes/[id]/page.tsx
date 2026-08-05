@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { Route } from "next";
+import type { Metadata, Route } from "next";
 import { ExternalLink, Sparkles } from "lucide-react";
 import { notFound } from "next/navigation";
 
@@ -7,9 +7,36 @@ import { cloneWish } from "@/app/wishes/actions";
 import { CATEGORIES } from "@/lib/constants";
 import { getSignedImageUrl } from "@/lib/media";
 import { formatRubles } from "@/lib/money";
+import { hasSupabaseEnvironment } from "@/lib/supabase/env";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  if (!hasSupabaseEnvironment()) return { robots: { index: false, follow: false } };
+  const supabase = await createClient();
+  const { data: wish } = await supabase
+    .from("wishes")
+    .select("title, description, visibility, is_archived")
+    .eq("id", id)
+    .maybeSingle();
+  if (!wish || wish.visibility !== "public" || wish.is_archived)
+    return { robots: { index: false, follow: false } };
+
+  const description =
+    wish.description ?? `Публичное желание в «Хочу также»: ${wish.title}.`;
+  return {
+    title: `${wish.title} — желание в «Хочу также»`,
+    description,
+    alternates: { canonical: `/wishes/${id}` },
+    openGraph: { title: `${wish.title} — «Хочу также»`, description, type: "article" },
+  };
+}
 
 export default async function WishPage({
   params,

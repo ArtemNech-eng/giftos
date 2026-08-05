@@ -40,6 +40,19 @@ export default async function SeoLandingPage() {
 
   return (
     <main className="min-h-screen bg-[#0c0e14] text-white">
+      <script
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "WebSite",
+            name: APP_NAME,
+            description:
+              "Платформа авторских страниц, video stories, общения и creator-аудитории.",
+            url: process.env.NEXT_PUBLIC_APP_URL ?? "https://hochutakzhe.ru",
+          }),
+        }}
+        type="application/ld+json"
+      />
       <header className="mx-auto flex max-w-6xl items-center justify-between px-5 py-5 sm:px-8">
         <Link className="flex items-center gap-2 text-xl font-bold" href="/">
           <span className="grid size-9 place-items-center rounded-xl bg-gradient-to-br from-[#ff4b8a] to-[#7d45ff] text-lg">

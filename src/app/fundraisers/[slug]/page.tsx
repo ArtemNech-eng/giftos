@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { CalendarDays, Gift, Lock, Share2, UsersRound } from "lucide-react";
 import { notFound } from "next/navigation";
 
@@ -14,9 +15,39 @@ import { ReportForm } from "@/components/report-form";
 import { CATEGORIES } from "@/lib/constants";
 import { getSignedImageUrl } from "@/lib/media";
 import { formatRubles } from "@/lib/money";
+import { hasSupabaseEnvironment } from "@/lib/supabase/env";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  if (!hasSupabaseEnvironment()) return { robots: { index: false, follow: false } };
+  const supabase = await createClient();
+  const { data: fundraiser } = await supabase
+    .from("public_fundraiser_feed")
+    .select("title, description")
+    .eq("slug", slug)
+    .maybeSingle();
+  if (!fundraiser) return { robots: { index: false, follow: false } };
+
+  const description =
+    fundraiser.description ?? `Публичная цель в «Хочу также»: ${fundraiser.title}.`;
+  return {
+    title: `${fundraiser.title} — поддержать в «Хочу также»`,
+    description,
+    alternates: { canonical: `/fundraisers/${slug}` },
+    openGraph: {
+      title: `${fundraiser.title} — «Хочу также»`,
+      description,
+      type: "article",
+    },
+  };
+}
 
 export default async function FundraiserPage({
   params,
