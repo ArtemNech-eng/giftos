@@ -7,6 +7,7 @@ import { notFound } from "next/navigation";
 import { blockUser, unblockUser } from "@/app/safety/actions";
 import { toggleUserFollow } from "@/app/social/actions";
 import { createCreatorOffer } from "@/app/creator/offers/actions";
+import { createCreatorOfferRequest } from "@/app/creator/offers/requests/actions";
 import { createCreatorPost } from "@/app/posts/actions";
 import {
   createPaidMessageRequest,
@@ -432,9 +433,22 @@ export default async function ProfilePage({
                         )}
                       </span>
                     </span>
-                    <b className="text-sm text-[#ffd0eb]">
-                      {formatRubles(offer.price_minor)}
-                    </b>
+                    {user && !isOwnProfile ? (
+                      <form action={createCreatorOfferRequest}>
+                        <input name="offer_id" type="hidden" value={offer.id} />
+                        <input name="username" type="hidden" value={profile.username} />
+                        <button
+                          className="rounded-lg bg-gradient-to-r from-[#ff4b8a] to-[#7d45ff] px-2.5 py-1.5 text-xs font-bold"
+                          type="submit"
+                        >
+                          {formatRubles(offer.price_minor)}
+                        </button>
+                      </form>
+                    ) : (
+                      <b className="text-sm text-[#ffd0eb]">
+                        {formatRubles(offer.price_minor)}
+                      </b>
+                    )}
                   </div>
                 );
               })}
@@ -554,13 +568,22 @@ export default async function ProfilePage({
         </details>
       )}
       {isOwnProfile && profile.is_creator && (
-        <Link
-          className="mx-4 mt-5 flex items-center justify-between rounded-2xl border border-white/10 bg-[#171923] px-4 py-3 text-sm font-bold"
-          href="/creator/earnings"
-        >
-          <span>Мой доход</span>
-          <span className="text-[#df9cff]">Открыть ›</span>
-        </Link>
+        <div className="mx-4 mt-5 grid grid-cols-2 gap-3">
+          <Link
+            className="flex items-center justify-between rounded-2xl border border-white/10 bg-[#171923] px-4 py-3 text-sm font-bold"
+            href="/creator/earnings"
+          >
+            <span>Мой доход</span>
+            <span className="text-[#df9cff]">›</span>
+          </Link>
+          <Link
+            className="flex items-center justify-between rounded-2xl border border-white/10 bg-[#171923] px-4 py-3 text-sm font-bold"
+            href="/creator/offer-requests"
+          >
+            <span>Запросы</span>
+            <span className="text-[#df9cff]">›</span>
+          </Link>
+        </div>
       )}
       {isOwnProfile && profile.is_creator && (
         <details className="mx-4 mt-3 rounded-2xl border border-white/10 bg-[#171923] p-4">
