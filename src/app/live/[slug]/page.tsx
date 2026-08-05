@@ -3,7 +3,9 @@ import { Copy, MessageCircle, UsersRound } from "lucide-react";
 import { notFound } from "next/navigation";
 
 import { inviteLiveCohost } from "@/app/live/actions";
+import { sendTestLiveDonation } from "@/app/live/donations/actions";
 import { sendTestLiveGift } from "@/app/live/gifts/actions";
+import { LiveDonationEvents } from "@/components/live-donation-events";
 import { LiveGiftEvents } from "@/components/live-gift-events";
 import { LiveKitRoom } from "@/components/livekit-room";
 import { LiveRoomRealtime } from "@/components/live-room-realtime";
@@ -92,6 +94,7 @@ export default async function LiveRoomPage({
             }))}
             roomId={room.id}
           />
+          <LiveDonationEvents currentUserId={user.id} roomId={room.id} />
         </div>
         <div className="p-4">
           <div className="flex items-start justify-between">
@@ -154,6 +157,44 @@ export default async function LiveRoomPage({
           <p className="mt-3 text-xs text-[#a9a1b4]">
             Подарки в тестовом режиме формируют test-доход автора.
           </p>
+        </section>
+      )}
+      {room.host_id !== user.id && (
+        <section className="mt-5 rounded-2xl border border-[#ff77ba]/25 bg-[#221522] p-4">
+          <p className="font-bold">Поддержать эфир</p>
+          <p className="mt-1 text-xs text-[#a9a1b4]">
+            Донат с сообщением появится у всех зрителей поверх видео. Тестовый режим:
+            деньги не списываются.
+          </p>
+          <form action={sendTestLiveDonation} className="mt-3 space-y-3">
+            <input name="room_id" type="hidden" value={room.id} />
+            <input name="slug" type="hidden" value={slug} />
+            <div className="flex gap-2">
+              <input
+                className="w-32 rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-sm"
+                inputMode="numeric"
+                maxLength={8}
+                min={1}
+                name="amount_rubles"
+                placeholder="Сумма, ₽"
+                required
+                type="number"
+              />
+              <input
+                className="grow rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-sm"
+                maxLength={500}
+                name="message"
+                placeholder="Сообщение (до 500 символов)"
+                required
+              />
+            </div>
+            <button
+              className="w-full rounded-xl bg-gradient-to-r from-[#ff4b8a] to-[#7d45ff] py-2.5 text-sm font-bold"
+              type="submit"
+            >
+              Отправить донат
+            </button>
+          </form>
         </section>
       )}
       {room.host_id === user.id && (

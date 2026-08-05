@@ -51,6 +51,29 @@
   .live-gift-event {
     animation: live-gift-event 4.5s ease-out forwards;
   }
+
+  .live-donation-event {
+    animation: live-donation-event 6s ease-out forwards;
+  }
+}
+
+@keyframes live-donation-event {
+  0% {
+    transform: translateX(-24px) scale(0.94);
+    opacity: 0;
+  }
+  8% {
+    transform: translateX(0) scale(1);
+    opacity: 1;
+  }
+  82% {
+    transform: translateX(0) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(-14px) scale(0.96);
+    opacity: 0;
+  }
 }
 
 @keyframes live-gift-event {
