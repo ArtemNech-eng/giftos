@@ -262,12 +262,16 @@ async function getHomeData() {
       popularFundraisers: demoFundraisers,
       growingFundraisers: demoFundraisers,
       recommendedAuthors: demoRecommendedAuthors,
+      personalAuthors: [],
       isDemo: true,
     };
   }
 
   try {
     const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     const [
       { data: rawStories },
       { data: rawFundraisers },
@@ -411,6 +415,50 @@ async function getHomeData() {
       followerCount: Number(item.follower_count),
     }));
 
+    // Personal recommendations: authors sharing the user's interests,
+    // excluding people the user already follows. Falls back to the general
+    // ranking when the user is anonymous or has no interests.
+    let personalAuthors: RecommendedAuthor[] = [];
+    if (user) {
+      const { data: myInterests } = await supabase
+        .from("profile_interests")
+        .select("category_slug")
+        .eq("profile_id", user.id);
+      const { data: myFollows } = await supabase
+        .from("user_follows")
+        .select("following_id")
+        .eq("follower_id", user.id);
+      const interestSlugs = (myInterests ?? []).map((item) => item.category_slug);
+      const followedIds = new Set((myFollows ?? []).map((item) => item.following_id));
+      if (interestSlugs.length > 0) {
+        const { data: matches } = await supabase
+          .from("profile_interests")
+          .select("profile_id")
+          .in("category_slug", interestSlugs)
+          .neq("profile_id", user.id)
+          .limit(50);
+        const candidateIds = [
+          ...new Set((matches ?? []).map((item) => item.profile_id)),
+        ].filter((id) => !followedIds.has(id));
+        if (candidateIds.length > 0) {
+          const { data: candidates } = await supabase
+            .from("public_recommended_authors")
+            .select("id, username, display_name, creator_headline, follower_count")
+            .in("id", candidateIds)
+            .limit(6);
+          personalAuthors = ((candidates ?? []) as Array<Record<string, unknown>>).map(
+            (item) => ({
+              id: String(item.id),
+              username: String(item.username),
+              displayName: String(item.display_name),
+              headline: item.creator_headline ? String(item.creator_headline) : null,
+              followerCount: Number(item.follower_count),
+            }),
+          );
+        }
+      }
+    }
+
     const mapWish = (item: Record<string, unknown>): WishPreview | null => {
       const profile = profileById.get(String(item.author_id));
       if (!profile) return null;
@@ -455,6 +503,7 @@ async function getHomeData() {
       popularFundraisers,
       growingFundraisers,
       recommendedAuthors,
+      personalAuthors,
       isDemo: false,
     };
   } catch {
@@ -468,6 +517,7 @@ async function getHomeData() {
       popularFundraisers: [],
       growingFundraisers: [],
       recommendedAuthors: [],
+      personalAuthors: [],
       isDemo: false,
     };
   }
@@ -615,6 +665,7 @@ export default async function HomePage() {
     popularFundraisers,
     growingFundraisers,
     recommendedAuthors,
+    personalAuthors,
     isDemo,
   } = await getHomeData();
   const storyAuthors = authors.length > 0 ? authors : demoAuthors;
@@ -842,6 +893,39 @@ export default async function HomePage() {
           ))}
         </div>
       </section>
+
+      {personalAuthors.length > 0 && (
+        <section className="mt-7">
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="text-base font-bold">💜 Для вас</h2>
+            <Link className="text-xs font-medium text-[#b26fff]" href="/discover">
+              Смотреть все ›
+            </Link>
+          </div>
+          <div className="space-y-2.5">
+            {personalAuthors.slice(0, 3).map((author) => (
+              <Link
+                className="border-white/8 flex items-center gap-3 rounded-2xl border bg-[#181a24] p-3 transition hover:border-[#8f48ff]/60"
+                href={isDemo ? "/auth/sign-in" : (`/u/${author.username}` as Route)}
+                key={author.id}
+              >
+                <span className="grid size-11 shrink-0 place-items-center rounded-full bg-gradient-to-br from-[#ff4b8a] to-[#7d45ff] text-sm font-bold text-white">
+                  {author.displayName.slice(0, 1).toUpperCase()}
+                </span>
+                <div className="min-w-0 grow">
+                  <p className="truncate text-sm font-bold">{author.displayName}</p>
+                  <p className="truncate text-xs text-[#aaa4b7]">
+                    {author.headline ?? "Автор в «Хочу также»"}
+                  </p>
+                </div>
+                <span className="shrink-0 text-xs text-[#aaa4b7]">
+                  {author.followerCount} подписчиков
+                </span>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
 
       <section className="mt-7">
         <div className="mb-3 flex items-center justify-between">
