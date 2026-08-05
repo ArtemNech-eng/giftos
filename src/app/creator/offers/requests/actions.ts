@@ -23,15 +23,33 @@ export async function createCreatorOfferRequest(formData: FormData) {
   if (!offer?.is_active || offer.creator_id === user.id)
     throw new Error("Это действие сейчас недоступно.");
 
-  const { error } = await supabase.from("creator_offer_requests").insert({
-    offer_id: offer.id,
-    creator_id: offer.creator_id,
-    requester_id: user.id,
-    note,
-    price_minor: offer.price_minor,
-    currency: offer.currency,
-  });
-  if (error) throw new Error(`Не удалось отправить запрос: ${error.message}`);
+  const { data: request, error } = await supabase
+    .from("creator_offer_requests")
+    .insert({
+      offer_id: offer.id,
+      creator_id: offer.creator_id,
+      requester_id: user.id,
+      note,
+      price_minor: offer.price_minor,
+      currency: offer.currency,
+    })
+    .select("id")
+    .single();
+  if (error || !request)
+    throw new Error(
+      `Не удалось отправить запрос: ${error?.message ?? "неизвестная ошибка"}`,
+    );
+
+  await createAdminClient()
+    .from("notifications")
+    .insert({
+      recipient_id: offer.creator_id,
+      actor_id: user.id,
+      type: "creator_offer_request",
+      entity_type: "creator_offer_request",
+      entity_id: request.id,
+      payload: { offer_id: offer.id, price_minor: offer.price_minor },
+    });
 
   revalidatePath(`/u/${username}`);
   redirect(`/u/${username}?offer_request=sent` as Route);
@@ -45,7 +63,7 @@ export async function decideCreatorOfferRequest(formData: FormData) {
 
   const { data: request } = await supabase
     .from("creator_offer_requests")
-    .select("id, creator_id, price_minor, currency, status")
+    .select("id, creator_id, requester_id, price_minor, currency, status")
     .eq("id", requestId)
     .eq("creator_id", user.id)
     .maybeSingle();
@@ -76,6 +94,20 @@ export async function decideCreatorOfferRequest(formData: FormData) {
       { onConflict: "source_type,source_id" },
     );
   }
+
+  await createAdminClient()
+    .from("notifications")
+    .insert({
+      recipient_id: request.requester_id,
+      actor_id: user.id,
+      type:
+        decision === "accepted"
+          ? "creator_offer_request_accepted"
+          : "creator_offer_request_rejected",
+      entity_type: "creator_offer_request",
+      entity_id: request.id,
+      payload: { price_minor: request.price_minor },
+    });
 
   revalidatePath("/creator/offer-requests");
   revalidatePath("/creator/earnings");

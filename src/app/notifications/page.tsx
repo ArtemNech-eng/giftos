@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { Route } from "next";
-import { Bell, CheckCheck, Gift, Heart, UserPlus } from "lucide-react";
+import { Bell, CheckCheck, Gift, Heart, MessageCircle, UserPlus } from "lucide-react";
 
 import { markAllNotificationsRead } from "@/app/social/actions";
 import { EmptyState } from "@/components/empty-state";
@@ -55,6 +55,42 @@ function notificationCopy(notification: Notification, actor: Actor | undefined) 
     return {
       icon: Heart,
       title: `${actorName} поддержал(-а) ваш сбор на ${formatRubles(amount)}`,
+      href: "/notifications" as Route,
+    };
+  }
+
+  if (
+    notification.type === "creator_offer_request" ||
+    notification.type === "paid_message_request"
+  ) {
+    return {
+      icon: MessageCircle,
+      title: `${actorName} отправил(-а) запрос на платное действие`,
+      href:
+        notification.type === "creator_offer_request"
+          ? ("/creator/offer-requests" as Route)
+          : ("/creator/requests" as Route),
+    };
+  }
+
+  if (
+    notification.type === "creator_offer_request_accepted" ||
+    notification.type === "paid_message_request_accepted"
+  ) {
+    return {
+      icon: Heart,
+      title: `${actorName} принял(-а) ваш запрос`,
+      href: "/notifications" as Route,
+    };
+  }
+
+  if (
+    notification.type === "creator_offer_request_rejected" ||
+    notification.type === "paid_message_request_rejected"
+  ) {
+    return {
+      icon: Bell,
+      title: `${actorName} отклонил(-а) ваш запрос`,
       href: "/notifications" as Route,
     };
   }

@@ -54,13 +54,31 @@ export async function createPaidMessageRequest(formData: FormData) {
     throw new Error("Автор сейчас не принимает платные запросы.");
   }
 
-  const { error } = await supabase.from("paid_message_requests").insert({
-    creator_id: creator.id,
-    sender_id: user.id,
-    body,
-    price_minor: creator.paid_message_price_minor,
-  });
-  if (error) throw new Error(`Не удалось отправить запрос: ${error.message}`);
+  const { data: request, error } = await supabase
+    .from("paid_message_requests")
+    .insert({
+      creator_id: creator.id,
+      sender_id: user.id,
+      body,
+      price_minor: creator.paid_message_price_minor,
+    })
+    .select("id")
+    .single();
+  if (error || !request)
+    throw new Error(
+      `Не удалось отправить запрос: ${error?.message ?? "неизвестная ошибка"}`,
+    );
+
+  await createAdminClient()
+    .from("notifications")
+    .insert({
+      recipient_id: creator.id,
+      actor_id: user.id,
+      type: "paid_message_request",
+      entity_type: "paid_message_request",
+      entity_id: request.id,
+      payload: { price_minor: creator.paid_message_price_minor },
+    });
 
   revalidatePath(`/u/${username}`);
   redirect(`/u/${username}?message_request=sent` as Route);
@@ -74,7 +92,7 @@ export async function decidePaidMessageRequest(formData: FormData) {
 
   const { data: request } = await supabase
     .from("paid_message_requests")
-    .select("id, creator_id, price_minor, currency, status")
+    .select("id, creator_id, sender_id, price_minor, currency, status")
     .eq("id", requestId)
     .eq("creator_id", user.id)
     .maybeSingle();
@@ -104,6 +122,20 @@ export async function decidePaidMessageRequest(formData: FormData) {
       { onConflict: "source_type,source_id" },
     );
   }
+
+  await createAdminClient()
+    .from("notifications")
+    .insert({
+      recipient_id: request.sender_id,
+      actor_id: user.id,
+      type:
+        decision === "accepted"
+          ? "paid_message_request_accepted"
+          : "paid_message_request_rejected",
+      entity_type: "paid_message_request",
+      entity_id: request.id,
+      payload: { price_minor: request.price_minor },
+    });
 
   revalidatePath("/creator/requests");
   revalidatePath("/creator/earnings");
