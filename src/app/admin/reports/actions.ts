@@ -44,6 +44,12 @@ export async function moderateTarget(formData: FormData) {
       .update({ is_hidden: true })
       .eq("id", targetId);
     if (error) throw new Error(error.message);
+  } else if (action === "hide_wish" && targetType === "wish") {
+    const { error } = await supabase
+      .from("wishes")
+      .update({ is_archived: true })
+      .eq("id", targetId);
+    if (error) throw new Error(error.message);
   } else if (action === "suspend_profile" && targetType === "profile") {
     const { error } = await supabase
       .from("profiles")
