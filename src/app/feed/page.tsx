@@ -63,6 +63,14 @@ type LiveRoomPreview = {
   viewers: number;
 };
 
+type RecommendedAuthor = {
+  id: string;
+  username: string;
+  displayName: string;
+  headline: string | null;
+  followerCount: number;
+};
+
 const demoAuthors: StoryAuthor[] = [
   { id: "nastya", username: "nastya", displayName: "Настя", avatarPath: null },
   { id: "max", username: "max", displayName: "Макс", avatarPath: null },
@@ -93,6 +101,30 @@ const demoLiveRooms: LiveRoomPreview[] = [
     hostName: "Дима",
     hostUsername: "dima",
     viewers: 21,
+  },
+];
+
+const demoRecommendedAuthors: RecommendedAuthor[] = [
+  {
+    id: "nastya",
+    username: "nastya",
+    displayName: "Настя",
+    headline: "Играю, общаюсь и публикую stories",
+    followerCount: 1240,
+  },
+  {
+    id: "max",
+    username: "max",
+    displayName: "Макс",
+    headline: "Музыка, гитары и живые эфиры",
+    followerCount: 876,
+  },
+  {
+    id: "dima",
+    username: "dima",
+    displayName: "Дима",
+    headline: "Путешествия и походы",
+    followerCount: 512,
   },
 ];
 
@@ -206,6 +238,9 @@ async function getHomeData() {
       fundraisers: demoFundraisers,
       wishes: demoWishes,
       liveRooms: demoLiveRooms,
+      popularFundraisers: demoFundraisers,
+      growingFundraisers: demoFundraisers,
+      recommendedAuthors: demoRecommendedAuthors,
       isDemo: true,
     };
   }
@@ -217,6 +252,9 @@ async function getHomeData() {
       { data: rawFundraisers },
       { data: rawWishes },
       { data: rawLiveRooms },
+      { data: rawPopular },
+      { data: rawGrowing },
+      { data: rawAuthors },
     ] = await Promise.all([
       supabase
         .from("stories")
@@ -248,6 +286,22 @@ async function getHomeData() {
         .eq("visibility", "public")
         .order("started_at", { ascending: false })
         .limit(10),
+      supabase
+        .from("public_popular_fundraisers")
+        .select(
+          "id, slug, title, category_slug, current_amount_minor, target_amount_minor, author_display_name, author_username, activity_score",
+        )
+        .limit(6),
+      supabase
+        .from("public_growing_fundraisers")
+        .select(
+          "id, slug, title, category_slug, current_amount_minor, target_amount_minor, author_display_name, author_username, weekly_supports",
+        )
+        .limit(6),
+      supabase
+        .from("public_recommended_authors")
+        .select("id, username, display_name, creator_headline, follower_count")
+        .limit(6),
     ]);
 
     const liveRooms = await buildLiveRooms(supabase, rawLiveRooms ?? []);
@@ -288,9 +342,7 @@ async function getHomeData() {
         : [];
     });
 
-    const fundraisers: Fundraiser[] = (
-      (rawFundraisers ?? []) as Array<Record<string, unknown>>
-    ).map((item) => ({
+    const mapFundraiser = (item: Record<string, unknown>): Fundraiser => ({
       id: String(item.id),
       slug: String(item.slug),
       title: String(item.title),
@@ -299,6 +351,28 @@ async function getHomeData() {
       targetAmountMinor: Number(item.target_amount_minor),
       authorName: String(item.author_display_name),
       authorUsername: String(item.author_username),
+    });
+
+    const fundraisers: Fundraiser[] = (
+      (rawFundraisers ?? []) as Array<Record<string, unknown>>
+    ).map(mapFundraiser);
+
+    const popularFundraisers: Fundraiser[] = (
+      (rawPopular ?? []) as Array<Record<string, unknown>>
+    ).map(mapFundraiser);
+
+    const growingFundraisers: Fundraiser[] = (
+      (rawGrowing ?? []) as Array<Record<string, unknown>>
+    ).map(mapFundraiser);
+
+    const recommendedAuthors: RecommendedAuthor[] = (
+      (rawAuthors ?? []) as Array<Record<string, unknown>>
+    ).map((item) => ({
+      id: String(item.id),
+      username: String(item.username),
+      displayName: String(item.display_name),
+      headline: item.creator_headline ? String(item.creator_headline) : null,
+      followerCount: Number(item.follower_count),
     }));
 
     const wishes: WishPreview[] = (
@@ -319,13 +393,25 @@ async function getHomeData() {
         : [];
     });
 
-    return { authors, fundraisers, wishes, liveRooms, isDemo: false };
+    return {
+      authors,
+      fundraisers,
+      wishes,
+      liveRooms,
+      popularFundraisers,
+      growingFundraisers,
+      recommendedAuthors,
+      isDemo: false,
+    };
   } catch {
     return {
       authors: [],
       fundraisers: [],
       wishes: [],
       liveRooms: [],
+      popularFundraisers: [],
+      growingFundraisers: [],
+      recommendedAuthors: [],
       isDemo: false,
     };
   }
@@ -336,6 +422,37 @@ const gradients = [
   "from-[#ff8854] via-[#f0448c] to-[#7e42ff]",
   "from-[#7e42ff] via-[#dc5cff] to-[#ffb75a]",
 ];
+
+function FundraiserLink({
+  fundraiser,
+  index,
+  href,
+}: {
+  fundraiser: Fundraiser;
+  index: number;
+  href: Route;
+}) {
+  const category =
+    CATEGORIES.find((item) => item.slug === fundraiser.categorySlug) ??
+    CATEGORIES.at(-1)!;
+  return (
+    <Link
+      className="border-white/8 flex items-center gap-3 rounded-2xl border bg-[#181a24] p-3 transition hover:border-[#8f48ff]/60"
+      href={href}
+    >
+      <Avatar index={index} name={fundraiser.authorName} />
+      <div className="min-w-0 grow">
+        <p className="truncate text-sm font-bold">{fundraiser.authorName}</p>
+        <p className="truncate text-xs text-[#aaa4b7]">
+          {category.emoji} {fundraiser.title}
+        </p>
+      </div>
+      <span className="rounded-lg bg-gradient-to-r from-[#ff4c87] to-[#7d45ff] px-2.5 py-1.5 text-xs font-semibold">
+        {formatRubles(fundraiser.currentAmountMinor)}
+      </span>
+    </Link>
+  );
+}
 
 function Avatar({
   name,
@@ -404,9 +521,24 @@ function BottomNav() {
 }
 
 export default async function HomePage() {
-  const { authors, fundraisers, wishes, liveRooms, isDemo } = await getHomeData();
+  const {
+    authors,
+    fundraisers,
+    wishes,
+    liveRooms,
+    popularFundraisers,
+    growingFundraisers,
+    recommendedAuthors,
+    isDemo,
+  } = await getHomeData();
   const storyAuthors = authors.length > 0 ? authors : demoAuthors;
   const liveRoomsToShow = liveRooms.length > 0 ? liveRooms : demoLiveRooms;
+  const popularToShow =
+    popularFundraisers.length > 0 ? popularFundraisers : demoFundraisers;
+  const growingToShow =
+    growingFundraisers.length > 0 ? growingFundraisers : demoFundraisers;
+  const authorsToShow =
+    recommendedAuthors.length > 0 ? recommendedAuthors : demoRecommendedAuthors;
 
   return (
     <main className="mx-auto min-h-screen max-w-[430px] bg-[#0c0e14] px-4 pb-24 pt-5 text-white">
@@ -543,32 +675,89 @@ export default async function HomePage() {
           </Link>
         </div>
         <div className="space-y-2.5">
-          {fundraisers.slice(0, 3).map((fundraiser, index) => {
-            const category =
-              CATEGORIES.find((item) => item.slug === fundraiser.categorySlug) ??
-              CATEGORIES.at(-1)!;
-            const href = isDemo
-              ? "/auth/sign-in"
-              : (`/fundraisers/${fundraiser.slug}` as Route);
-            return (
-              <Link
-                className="border-white/8 flex items-center gap-3 rounded-2xl border bg-[#181a24] p-3 transition hover:border-[#8f48ff]/60"
-                href={href}
-                key={fundraiser.id}
-              >
-                <Avatar index={index} name={fundraiser.authorName} />
-                <div className="min-w-0 grow">
-                  <p className="truncate text-sm font-bold">{fundraiser.authorName}</p>
-                  <p className="truncate text-xs text-[#aaa4b7]">
-                    {category.emoji} {fundraiser.title}
-                  </p>
-                </div>
-                <span className="rounded-lg bg-gradient-to-r from-[#ff4c87] to-[#7d45ff] px-2.5 py-1.5 text-xs font-semibold">
-                  {formatRubles(fundraiser.currentAmountMinor)}
-                </span>
-              </Link>
-            );
-          })}
+          {fundraisers.slice(0, 3).map((fundraiser, index) => (
+            <FundraiserLink
+              fundraiser={fundraiser}
+              href={
+                isDemo ? "/auth/sign-in" : (`/fundraisers/${fundraiser.slug}` as Route)
+              }
+              index={index}
+              key={fundraiser.id}
+            />
+          ))}
+        </div>
+      </section>
+
+      <section className="mt-7">
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="text-base font-bold">🔥 Популярные сборы</h2>
+          <Link className="text-xs font-medium text-[#b26fff]" href="/discover">
+            Смотреть все ›
+          </Link>
+        </div>
+        <div className="space-y-2.5">
+          {popularToShow.slice(0, 3).map((fundraiser, index) => (
+            <FundraiserLink
+              fundraiser={fundraiser}
+              href={
+                isDemo ? "/auth/sign-in" : (`/fundraisers/${fundraiser.slug}` as Route)
+              }
+              index={index}
+              key={fundraiser.id}
+            />
+          ))}
+        </div>
+      </section>
+
+      <section className="mt-7">
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="text-base font-bold">🚀 Быстро растут</h2>
+          <Link className="text-xs font-medium text-[#b26fff]" href="/discover">
+            Смотреть все ›
+          </Link>
+        </div>
+        <div className="space-y-2.5">
+          {growingToShow.slice(0, 3).map((fundraiser, index) => (
+            <FundraiserLink
+              fundraiser={fundraiser}
+              href={
+                isDemo ? "/auth/sign-in" : (`/fundraisers/${fundraiser.slug}` as Route)
+              }
+              index={index}
+              key={fundraiser.id}
+            />
+          ))}
+        </div>
+      </section>
+
+      <section className="mt-7">
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="text-base font-bold">Рекомендуем авторов</h2>
+          <Link className="text-xs font-medium text-[#b26fff]" href="/discover">
+            Смотреть все ›
+          </Link>
+        </div>
+        <div className="space-y-2.5">
+          {authorsToShow.slice(0, 3).map((author) => (
+            <Link
+              className="border-white/8 flex items-center gap-3 rounded-2xl border bg-[#181a24] p-3 transition hover:border-[#8f48ff]/60"
+              href={isDemo ? "/auth/sign-in" : (`/u/${author.username}` as Route)}
+              key={author.id}
+            >
+              <span className="grid size-11 shrink-0 place-items-center rounded-full bg-gradient-to-br from-[#ff4b8a] to-[#7d45ff] text-sm font-bold text-white">
+                {author.displayName.slice(0, 1).toUpperCase()}
+              </span>
+              <div className="min-w-0 grow">
+                <p className="truncate text-sm font-bold">{author.displayName}</p>
+                <p className="truncate text-xs text-[#aaa4b7]">
+                  {author.headline ?? "Автор в «Хочу также»"}
+                </p>
+              </div>
+              <span className="shrink-0 text-xs text-[#aaa4b7]">
+                {author.followerCount} подписчиков
+              </span>
+            </Link>
+          ))}
         </div>
       </section>
 
