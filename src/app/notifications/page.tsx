@@ -73,6 +73,16 @@ function notificationCopy(notification: Notification, actor: Actor | undefined) 
     };
   }
 
+  if (notification.type === "direct_message") {
+    return {
+      icon: MessageCircle,
+      title: `${actorName} отправил(-а) вам сообщение`,
+      href: notification.entity_id
+        ? (`/messages/${notification.entity_id}` as Route)
+        : "/messages",
+    };
+  }
+
   if (
     notification.type === "creator_offer_request_accepted" ||
     notification.type === "paid_message_request_accepted"

@@ -5,6 +5,7 @@ import type { Route } from "next";
 import { redirect } from "next/navigation";
 
 import { requireUser } from "@/lib/auth";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { requiredText } from "@/lib/validation";
 
 export async function sendDirectMessage(formData: FormData) {
@@ -21,6 +22,27 @@ export async function sendDirectMessage(formData: FormData) {
     .from("conversations")
     .update({ last_message_at: new Date().toISOString() })
     .eq("id", conversationId);
+
+  const { data: members } = await supabase
+    .from("conversation_members")
+    .select("profile_id")
+    .eq("conversation_id", conversationId);
+  const recipients = (members ?? []).filter((member) => member.profile_id !== user.id);
+  if (recipients.length > 0) {
+    await createAdminClient()
+      .from("notifications")
+      .insert(
+        recipients.map((member) => ({
+          recipient_id: member.profile_id,
+          actor_id: user.id,
+          type: "direct_message",
+          entity_type: "conversation",
+          entity_id: conversationId,
+          payload: { preview: body.slice(0, 120) },
+        })),
+      );
+  }
+
   revalidatePath(`/messages/${conversationId}`);
   redirect(`/messages/${conversationId}` as Route);
 }

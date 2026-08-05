@@ -3,6 +3,7 @@ import { ArrowLeft, Send } from "lucide-react";
 import { notFound } from "next/navigation";
 
 import { sendDirectMessage } from "@/app/messages/actions";
+import { LiveConversationRefresh } from "@/components/live-conversation-refresh";
 import { requireUser } from "@/lib/auth";
 
 export const metadata = { title: "Диалог", robots: { index: false, follow: false } };
@@ -36,6 +37,7 @@ export default async function ConversationPage({
   );
   return (
     <main className="mx-auto flex min-h-screen max-w-[430px] flex-col bg-[#0c0e14] px-4 py-5 text-white">
+      <LiveConversationRefresh conversationId={id} />
       <header className="flex items-center gap-3">
         <Link
           className="bg-white/8 grid size-9 place-items-center rounded-full"
