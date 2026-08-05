@@ -47,6 +47,29 @@
   .live-reaction-float {
     animation: live-reaction-float 2.6s ease-out forwards;
   }
+
+  .live-gift-event {
+    animation: live-gift-event 4.5s ease-out forwards;
+  }
+}
+
+@keyframes live-gift-event {
+  0% {
+    transform: translateY(18px) scale(0.92);
+    opacity: 0;
+  }
+  10% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+  80% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-10px) scale(0.95);
+    opacity: 0;
+  }
 }
 
 @keyframes live-reaction-float {

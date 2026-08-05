@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 
 import { inviteLiveCohost } from "@/app/live/actions";
 import { sendTestLiveGift } from "@/app/live/gifts/actions";
+import { LiveGiftEvents } from "@/components/live-gift-events";
 import { LiveKitRoom } from "@/components/livekit-room";
 import { LiveRoomRealtime } from "@/components/live-room-realtime";
 import { requireUser } from "@/lib/auth";
@@ -79,7 +80,19 @@ export default async function LiveRoomPage({
         </button>
       </header>
       <section className="mt-5 overflow-hidden rounded-[2rem] border border-white/10 bg-[#171923]">
-        <LiveKitRoom isHost={room.host_id === user.id} slug={slug} />
+        <div className="relative">
+          <LiveKitRoom isHost={room.host_id === user.id} slug={slug} />
+          <LiveGiftEvents
+            currentUserId={user.id}
+            gifts={(gifts ?? []).map((gift) => ({
+              code: gift.code,
+              label: gift.label,
+              emoji: gift.emoji,
+              price_minor: gift.price_minor,
+            }))}
+            roomId={room.id}
+          />
+        </div>
         <div className="p-4">
           <div className="flex items-start justify-between">
             <div>
