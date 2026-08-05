@@ -5,6 +5,7 @@ import type { Route } from "next";
 import { redirect } from "next/navigation";
 
 import { requireUser } from "@/lib/auth";
+import { ensureDirectConversation } from "@/lib/conversations";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { parseAmountToMinor } from "@/lib/money";
 import { requiredText } from "@/lib/validation";
@@ -105,9 +106,14 @@ export async function decidePaidMessageRequest(formData: FormData) {
     .eq("id", request.id);
   if (error) throw new Error(`Не удалось обработать запрос: ${error.message}`);
 
+  let conversationId: string | null = null;
   if (decision === "accepted") {
     const admin = createAdminClient();
     const fee = Math.round(Number(request.price_minor) * 0.2);
+    conversationId = await ensureDirectConversation(
+      request.creator_id,
+      request.sender_id,
+    );
     await admin.from("creator_ledger_entries").upsert(
       {
         creator_id: request.creator_id,
@@ -134,7 +140,7 @@ export async function decidePaidMessageRequest(formData: FormData) {
           : "paid_message_request_rejected",
       entity_type: "paid_message_request",
       entity_id: request.id,
-      payload: { price_minor: request.price_minor },
+      payload: { price_minor: request.price_minor, conversation_id: conversationId },
     });
 
   revalidatePath("/creator/requests");
