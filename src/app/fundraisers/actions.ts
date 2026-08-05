@@ -13,6 +13,33 @@ function newSlug() {
   return `f-${randomUUID().replaceAll("-", "")}`;
 }
 
+export async function invitePrivateFundraiserMember(formData: FormData) {
+  const { supabase } = await requireUser();
+  const fundraiserId = requiredText(formData.get("fundraiser_id"), 100);
+  const fundraiserSlug = requiredText(formData.get("fundraiser_slug"), 100);
+  const username = requiredText(formData.get("username"), 30).replace(/^@/, "");
+
+  if (!fundraiserId || !fundraiserSlug || !username) {
+    throw new Error("Укажите username пользователя для приглашения.");
+  }
+
+  const { data, error } = await supabase.rpc("invite_to_private_fundraiser", {
+    p_fundraiser_id: fundraiserId,
+    p_username: username,
+  });
+
+  if (error) throw new Error(`Не удалось отправить приглашение: ${error.message}`);
+
+  const invitation = Array.isArray(data) ? data[0] : data;
+  const message = invitation?.already_accepted
+    ? "already-member"
+    : `invited-${invitation?.username ?? username}`;
+
+  revalidatePath(`/fundraisers/${fundraiserSlug}`);
+  revalidatePath("/invitations");
+  redirect(`/fundraisers/${fundraiserSlug}?invite=${encodeURIComponent(message)}`);
+}
+
 export async function createFundraiser(formData: FormData) {
   const { supabase, user } = await requireUser();
   const title = requiredText(formData.get("title"), 120);

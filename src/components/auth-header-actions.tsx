@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import type { Route } from "next";
-import { LogOut, Plus } from "lucide-react";
+import { Inbox, LogOut, Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 import { createClient } from "@/lib/supabase/client";
@@ -36,6 +36,13 @@ export function AuthHeaderActions({ username }: { username: string | null }) {
         href="/wishes/new"
       >
         <Plus className="size-4" />
+      </Link>
+      <Link
+        aria-label="Приглашения"
+        className="grid size-9 place-items-center rounded-lg text-[#705c63] transition hover:bg-white hover:text-[#bd3e66]"
+        href="/invitations"
+      >
+        <Inbox className="size-4" />
       </Link>
       <Link
         className="hidden rounded-lg px-2 py-2 text-sm font-semibold text-[#705c63] transition hover:bg-white hover:text-[#bd3e66] sm:block"

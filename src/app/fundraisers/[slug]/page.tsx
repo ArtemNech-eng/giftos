@@ -2,6 +2,7 @@ import Link from "next/link";
 import { CalendarDays, Gift, Lock, Share2, UsersRound } from "lucide-react";
 import { notFound } from "next/navigation";
 
+import { invitePrivateFundraiserMember } from "@/app/fundraisers/actions";
 import { EmptyState } from "@/components/empty-state";
 import { CATEGORIES } from "@/lib/constants";
 import { getSignedImageUrl } from "@/lib/media";
@@ -12,10 +13,12 @@ export const dynamic = "force-dynamic";
 
 export default async function FundraiserPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ invite?: string }>;
 }) {
-  const { slug } = await params;
+  const [{ slug }, { invite }] = await Promise.all([params, searchParams]);
   const supabase = await createClient();
   const { data: fundraiser } = await supabase
     .from("fundraisers")
@@ -25,6 +28,11 @@ export default async function FundraiserPage({
     .eq("slug", slug)
     .maybeSingle();
   if (!fundraiser) notFound();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const isAuthor = user?.id === fundraiser.author_id;
 
   const { data: author } = await supabase
     .from("profiles")
@@ -157,6 +165,57 @@ export default async function FundraiserPage({
           </div>
         </div>
       </section>
+      {isAuthor && fundraiser.visibility === "private" && (
+        <section className="surface mt-6 rounded-2xl p-5 sm:p-6">
+          <p className="text-sm font-semibold text-[#bd3e66]">
+            Доступ к приватному сбору
+          </p>
+          <h2 className="mt-1 text-xl font-bold">Пригласить участника</h2>
+          <p className="mt-2 max-w-xl text-sm leading-6 text-[#826c73]">
+            Введите username пользователя. Он увидит приглашение в личном разделе и сам
+            подтвердит доступ.
+          </p>
+          <form
+            action={invitePrivateFundraiserMember}
+            className="mt-5 flex max-w-xl flex-col gap-2 sm:flex-row"
+          >
+            <input name="fundraiser_id" type="hidden" value={fundraiser.id} />
+            <input name="fundraiser_slug" type="hidden" value={fundraiser.slug} />
+            <label className="sr-only" htmlFor="invite-username">
+              Username пользователя
+            </label>
+            <div className="relative grow">
+              <span className="absolute left-3.5 top-2.5 text-sm text-[#9b858c]">
+                @
+              </span>
+              <input
+                className="h-11 w-full rounded-xl border border-[#e7d8dc] bg-white pl-7 pr-3.5 text-sm outline-none transition placeholder:text-[#b3a0a6] focus:border-[#df4f7d] focus:ring-4 focus:ring-[#df4f7d]/10"
+                id="invite-username"
+                maxLength={30}
+                name="username"
+                placeholder="username"
+                required
+              />
+            </div>
+            <button
+              className="inline-flex h-11 items-center justify-center rounded-xl bg-[#df4f7d] px-4 text-sm font-semibold text-white transition hover:bg-[#c93f6d]"
+              type="submit"
+            >
+              Пригласить
+            </button>
+          </form>
+          {invite === "already-member" && (
+            <p className="mt-3 text-sm text-emerald-700">
+              Этот пользователь уже принял приглашение.
+            </p>
+          )}
+          {invite?.startsWith("invited-") && (
+            <p className="mt-3 text-sm text-emerald-700">
+              Приглашение для @{invite.slice("invited-".length)} отправлено.
+            </p>
+          )}
+        </section>
+      )}
       <section className="mt-6">
         <EmptyState
           description="Чат под сбором появится вместе с поддержкой и Realtime. Здесь будут сообщения, вопросы и поздравления от участников."
