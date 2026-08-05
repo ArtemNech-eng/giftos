@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Bell, Gift, Search } from "lucide-react";
 
 import { AuthHeaderActions } from "@/components/auth-header-actions";
+import { LiveNotificationRefresh } from "@/components/live-notification-refresh";
 import { APP_NAME } from "@/lib/constants";
 import { hasSupabaseEnvironment } from "@/lib/supabase/env";
 import { createClient } from "@/lib/supabase/server";
@@ -14,6 +15,7 @@ const navItems = [
 
 export async function SiteHeader() {
   let username: string | null = null;
+  let userId: string | null = null;
   let unreadNotifications = 0;
 
   if (hasSupabaseEnvironment()) {
@@ -23,6 +25,7 @@ export async function SiteHeader() {
         data: { user },
       } = await supabase.auth.getUser();
       if (user) {
+        userId = user.id;
         const [{ data: profile }, { count }] = await Promise.all([
           supabase.from("profiles").select("username").eq("id", user.id).maybeSingle(),
           supabase
@@ -41,6 +44,7 @@ export async function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-20 border-b border-white/70 bg-[#fcf8f7]/80 backdrop-blur-xl">
+      {userId && <LiveNotificationRefresh recipientId={userId} />}
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-5 px-4 sm:px-6">
         <Link
           className="flex shrink-0 items-center gap-2 font-bold tracking-tight"
@@ -66,13 +70,13 @@ export async function SiteHeader() {
           ))}
         </nav>
         <div className="flex items-center gap-1.5">
-          <button
+          <Link
             aria-label="Поиск"
             className="grid size-9 place-items-center rounded-lg text-[#705c63] transition hover:bg-white hover:text-[#bd3e66]"
-            type="button"
+            href="/search"
           >
             <Search className="size-4" />
-          </button>
+          </Link>
           {username ? (
             <Link
               aria-label="Уведомления"
