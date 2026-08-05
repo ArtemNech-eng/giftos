@@ -12,6 +12,7 @@ import { notFound } from "next/navigation";
 import { promoteWishWithBonus } from "@/app/bonuses/actions";
 import { cloneWish, postWishComment, toggleAlsoWantWish } from "@/app/wishes/actions";
 import { LiveWishDiscussionRefresh } from "@/components/live-wish-discussion-refresh";
+import { ReportForm } from "@/components/report-form";
 import { CATEGORIES } from "@/lib/constants";
 import { getSignedImageUrl } from "@/lib/media";
 import { formatRubles } from "@/lib/money";
@@ -322,13 +323,22 @@ export default async function WishPage({
               const commentAuthor = profileById.get(comment.author_id);
               return (
                 <div className="rounded-xl bg-white/5 p-3" key={comment.id}>
-                  <p className="text-sm">
-                    <b className="mr-2">
-                      {comment.author_id === user?.id
-                        ? "Вы"
-                        : (commentAuthor?.display_name ?? "Зритель")}
-                    </b>
-                  </p>
+                  <div className="flex items-center gap-2">
+                    <p className="min-w-0 grow truncate text-sm">
+                      <b>
+                        {comment.author_id === user?.id
+                          ? "Вы"
+                          : (commentAuthor?.display_name ?? "Зритель")}
+                      </b>
+                    </p>
+                    {user && comment.author_id !== user.id && (
+                      <ReportForm
+                        returnTo={`/wishes/${wish.id}#discussion`}
+                        targetId={comment.id}
+                        targetType="wish_comment"
+                      />
+                    )}
+                  </div>
                   <p className="mt-1 whitespace-pre-wrap text-sm leading-6 text-[#d8d0e0]">
                     {comment.body}
                   </p>
