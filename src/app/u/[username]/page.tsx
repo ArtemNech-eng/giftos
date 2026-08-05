@@ -3,6 +3,7 @@ import type { Route } from "next";
 import { MapPin, UserPlus } from "lucide-react";
 import { notFound } from "next/navigation";
 
+import { deleteProfileMedia, uploadProfileMedia } from "@/app/profile/media/actions";
 import { blockUser, unblockUser } from "@/app/safety/actions";
 import { toggleUserFollow } from "@/app/social/actions";
 import { EmptyState } from "@/components/empty-state";
@@ -56,6 +57,20 @@ export default async function ProfilePage({
     bucket: "avatars",
     path: profile.avatar_path,
   });
+  const { data: rawGallery } = await supabase
+    .from("profile_media")
+    .select("id, storage_path, visibility, sort_order")
+    .eq("profile_id", profile.id)
+    .order("sort_order", { ascending: true });
+  const gallery = await Promise.all(
+    (rawGallery ?? []).map(async (media) => ({
+      ...media,
+      url: await getSignedImageUrl({
+        bucket: "profile-media",
+        path: media.storage_path,
+      }),
+    })),
+  );
 
   const [
     { data: wishes },
@@ -205,6 +220,97 @@ export default async function ProfilePage({
             )}
           </div>
         </section>
+
+        {(gallery.length > 0 || isOwnProfile) && (
+          <section className="surface mt-6 rounded-2xl p-5 sm:p-6">
+            <div className="flex items-end justify-between gap-3">
+              <div>
+                <p className="text-sm font-semibold text-[#bd3e66]">Личный контекст</p>
+                <h2 className="mt-1 text-xl font-bold">Фотографии</h2>
+              </div>
+              <span className="text-xs text-[#8e747c]">{gallery.length} / 6</span>
+            </div>
+            {gallery.length > 0 && (
+              <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
+                {gallery.map((media) => (
+                  <figure
+                    className="group relative aspect-square overflow-hidden rounded-xl bg-[#f7e8ec]"
+                    key={media.id}
+                  >
+                    {media.url ? (
+                      // eslint-disable-next-line @next/next/no-img-element -- signed Storage URL has no stable image host
+                      <img
+                        alt={`Фотография ${profile.display_name}`}
+                        className="size-full object-cover"
+                        src={media.url}
+                      />
+                    ) : (
+                      <span className="grid size-full place-items-center text-sm text-[#9b858c]">
+                        Фото недоступно
+                      </span>
+                    )}
+                    {isOwnProfile && (
+                      <form
+                        action={deleteProfileMedia}
+                        className="absolute right-2 top-2 opacity-0 transition group-hover:opacity-100"
+                      >
+                        <input name="media_id" type="hidden" value={media.id} />
+                        <input name="username" type="hidden" value={profile.username} />
+                        <button
+                          className="rounded-lg bg-black/60 px-2 py-1 text-xs font-semibold text-white"
+                          type="submit"
+                        >
+                          Удалить
+                        </button>
+                      </form>
+                    )}
+                  </figure>
+                ))}
+              </div>
+            )}
+            {isOwnProfile && gallery.length < 6 && (
+              <form
+                action={uploadProfileMedia}
+                className="mt-5 rounded-xl border border-dashed border-[#ead9df] bg-[#fffafb] p-4"
+                encType="multipart/form-data"
+              >
+                <input name="username" type="hidden" value={profile.username} />
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+                  <label className="grow text-sm font-semibold text-[#5c464d]">
+                    Добавить фотографии
+                    <input
+                      accept="image/jpeg,image/png,image/webp"
+                      className="mt-2 block w-full text-sm text-[#725c63] file:mr-3 file:rounded-lg file:border-0 file:bg-[#fce5ec] file:px-3 file:py-2 file:text-sm file:font-semibold file:text-[#bd3e66] hover:file:bg-[#f8d9e4]"
+                      multiple
+                      name="photos"
+                      type="file"
+                    />
+                  </label>
+                  <label className="text-sm font-semibold text-[#5c464d]">
+                    Видимость
+                    <select
+                      className="mt-2 block h-9 rounded-lg border border-[#e7d8dc] bg-white px-2 text-sm font-normal"
+                      defaultValue="public"
+                      name="visibility"
+                    >
+                      <option value="public">Публично</option>
+                      <option value="private">Только я</option>
+                    </select>
+                  </label>
+                  <button
+                    className="h-10 rounded-xl bg-[#df4f7d] px-4 text-sm font-semibold text-white transition hover:bg-[#c93f6d]"
+                    type="submit"
+                  >
+                    Загрузить
+                  </button>
+                </div>
+                <p className="mt-2 text-xs text-[#9b858c]">
+                  До шести фото в профиле. JPG, PNG или WebP, до 10 МБ каждое.
+                </p>
+              </form>
+            )}
+          </section>
+        )}
 
         <section className="mt-8">
           <div className="mb-4 flex items-end justify-between">

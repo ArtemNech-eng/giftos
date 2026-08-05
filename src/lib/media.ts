@@ -4,6 +4,8 @@ import { createAdminClient } from "@/lib/supabase/admin";
 
 const acceptedTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
 
+type MediaBucket = "avatars" | "profile-media" | "wish-media" | "fundraiser-media";
+
 export async function uploadOwnedImage({
   file,
   ownerId,
@@ -11,7 +13,7 @@ export async function uploadOwnedImage({
 }: {
   file: File;
   ownerId: string;
-  bucket: "avatars" | "wish-media" | "fundraiser-media";
+  bucket: MediaBucket;
 }) {
   if (!acceptedTypes.has(file.type)) {
     throw new Error("Поддерживаются только изображения JPG, PNG или WebP.");
@@ -39,7 +41,7 @@ export async function getSignedImageUrl({
   bucket,
   path,
 }: {
-  bucket: "avatars" | "wish-media" | "fundraiser-media";
+  bucket: MediaBucket;
   path: string | null | undefined;
 }) {
   if (!path) return null;
