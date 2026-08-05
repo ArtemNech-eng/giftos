@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { Metadata, Route } from "next";
 /* eslint-disable @next/next/no-img-element -- profile and story media use signed Storage URLs */
-import { ArrowLeft, MoreHorizontal, Play } from "lucide-react";
+import { ArrowLeft, MoreHorizontal, Play, Radio } from "lucide-react";
 import { notFound } from "next/navigation";
 
 import { blockUser, unblockUser } from "@/app/safety/actions";
@@ -93,6 +93,7 @@ export default async function ProfilePage({
     { data: rawPosts },
     { data: rawOffers },
     { count: followers },
+    { data: activeLive },
   ] = await Promise.all([
     user && !isOwnProfile
       ? supabase
@@ -168,6 +169,15 @@ export default async function ProfilePage({
       .from("user_follows")
       .select("*", { count: "exact", head: true })
       .eq("following_id", profile.id),
+    supabase
+      .from("live_rooms")
+      .select("id, slug, title, status")
+      .eq("host_id", profile.id)
+      .eq("status", "live")
+      .eq("visibility", "public")
+      .order("started_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
   ]);
 
   const avatarUrl = await getSignedImageUrl({
@@ -275,6 +285,14 @@ export default async function ProfilePage({
             <span className="rounded-full bg-gradient-to-r from-[#f94d96] to-[#8953ff] px-2 py-1 text-xs font-semibold">
               Автор
             </span>
+          )}
+          {activeLive && (
+            <Link
+              className="inline-flex items-center gap-1.5 rounded-full bg-[#ff2d55] px-2.5 py-1 text-xs font-bold text-white"
+              href={`/live/${activeLive.slug}` as Route}
+            >
+              <span className="size-1.5 animate-pulse rounded-full bg-white" />В эфире
+            </Link>
           )}
         </div>
         <p className="mt-1 text-sm text-[#b9b1c5]">
@@ -402,6 +420,28 @@ export default async function ProfilePage({
 
       {tab === "about" && (
         <section className="space-y-3 p-4">
+          {activeLive && (
+            <Link
+              className="flex items-center gap-3 rounded-2xl border border-[#ff2d55]/50 bg-gradient-to-r from-[#2a1222] to-[#1b1528] p-3"
+              href={`/live/${activeLive.slug}` as Route}
+            >
+              <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#ff2d55]">
+                <Radio className="size-5 fill-white text-white" />
+              </span>
+              <span className="min-w-0 grow">
+                <span className="flex items-center gap-1.5 text-xs font-bold text-[#ff7fb5]">
+                  <span className="size-1.5 animate-pulse rounded-full bg-[#ff2d55]" />
+                  СЕЙЧАС В ЭФИРЕ
+                </span>
+                <span className="mt-0.5 block truncate text-sm font-bold">
+                  {activeLive.title}
+                </span>
+              </span>
+              <span className="shrink-0 text-xs font-semibold text-[#ffb7dd]">
+                Смотреть ›
+              </span>
+            </Link>
+          )}
           {activeStory && (
             <Link
               className="flex items-center gap-3 rounded-2xl border border-[#b550ff]/40 bg-gradient-to-r from-[#23142e] to-[#191827] p-3"
