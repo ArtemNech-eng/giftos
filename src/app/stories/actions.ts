@@ -49,24 +49,49 @@ export async function testUnlockStory(formData: FormData) {
 
   const { data: story } = await supabase
     .from("stories")
-    .select("id, author_id, expires_at")
+    .select("id, author_id, expires_at, unlock_price_minor, currency")
     .eq("id", storyId)
     .maybeSingle();
   if (!story || new Date(story.expires_at) <= new Date())
     throw new Error("Story больше недоступна.");
 
   const admin = createAdminClient();
-  const { error } = await admin.from("story_unlocks").upsert(
+  const { data: unlock, error } = await admin
+    .from("story_unlocks")
+    .upsert(
+      {
+        story_id: story.id,
+        viewer_id: user.id,
+        status: "unlocked",
+        provider: "stub",
+        unlocked_at: new Date().toISOString(),
+      },
+      { onConflict: "story_id,viewer_id" },
+    )
+    .select("id")
+    .single();
+  if (error || !unlock)
+    throw new Error(
+      `Не удалось открыть story: ${error?.message ?? "неизвестная ошибка"}`,
+    );
+
+  const grossMinor = Number(story.unlock_price_minor ?? 0);
+  const platformFeeMinor = Math.round(grossMinor * 0.2);
+  const { error: ledgerError } = await admin.from("creator_ledger_entries").upsert(
     {
-      story_id: story.id,
-      viewer_id: user.id,
-      status: "unlocked",
-      provider: "stub",
-      unlocked_at: new Date().toISOString(),
+      creator_id: story.author_id,
+      source_type: "story_unlock",
+      source_id: unlock.id,
+      gross_minor: grossMinor,
+      platform_fee_minor: platformFeeMinor,
+      creator_net_minor: grossMinor - platformFeeMinor,
+      currency: story.currency,
+      status: "test",
     },
-    { onConflict: "story_id,viewer_id" },
+    { onConflict: "source_type,source_id" },
   );
-  if (error) throw new Error(`Не удалось открыть story: ${error.message}`);
+  if (ledgerError)
+    throw new Error(`Не удалось зафиксировать тестовый доход: ${ledgerError.message}`);
 
   revalidatePath(`/stories/${story.id}`);
   redirect(`/stories/${story.id}` as Route);

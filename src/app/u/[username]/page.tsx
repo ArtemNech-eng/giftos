@@ -419,6 +419,15 @@ export default async function ProfilePage({
         </details>
       )}
       {isOwnProfile && profile.is_creator && (
+        <Link
+          className="mx-4 mt-5 flex items-center justify-between rounded-2xl border border-white/10 bg-[#171923] px-4 py-3 text-sm font-bold"
+          href="/creator/earnings"
+        >
+          <span>Мой доход</span>
+          <span className="text-[#df9cff]">Открыть ›</span>
+        </Link>
+      )}
+      {isOwnProfile && profile.is_creator && (
         <details className="mx-4 mt-3 rounded-2xl border border-white/10 bg-[#171923] p-4">
           <summary className="cursor-pointer text-sm font-bold">Создать пост</summary>
           <form action={createCreatorPost} className="mt-4">
