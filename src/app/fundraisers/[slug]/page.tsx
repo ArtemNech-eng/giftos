@@ -3,6 +3,10 @@ import { CalendarDays, Gift, Lock, Share2, UsersRound } from "lucide-react";
 import { notFound } from "next/navigation";
 
 import { invitePrivateFundraiserMember } from "@/app/fundraisers/actions";
+import {
+  postFundraiserComment,
+  startFundraiserSupport,
+} from "@/app/fundraisers/support-actions";
 import { EmptyState } from "@/components/empty-state";
 import { CATEGORIES } from "@/lib/constants";
 import { getSignedImageUrl } from "@/lib/media";
@@ -16,9 +20,9 @@ export default async function FundraiserPage({
   searchParams,
 }: {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ invite?: string }>;
+  searchParams: Promise<{ invite?: string; supported?: string }>;
 }) {
-  const [{ slug }, { invite }] = await Promise.all([params, searchParams]);
+  const [{ slug }, { invite, supported }] = await Promise.all([params, searchParams]);
   const supabase = await createClient();
   const { data: fundraiser } = await supabase
     .from("fundraisers")
@@ -39,6 +43,28 @@ export default async function FundraiserPage({
     .select("username, display_name, city, show_city")
     .eq("id", fundraiser.author_id)
     .maybeSingle();
+  const { data: comments } = await supabase
+    .from("fundraiser_comment_feed")
+    .select("id, display_author_id, body, support_id, support_visibility, created_at")
+    .eq("fundraiser_id", fundraiser.id)
+    .order("created_at", { ascending: true });
+  const commenterIds = [
+    ...new Set(
+      (comments ?? [])
+        .map((comment) => comment.display_author_id)
+        .filter((authorId): authorId is string => Boolean(authorId)),
+    ),
+  ];
+  const { data: commenterProfiles } = commenterIds.length
+    ? await supabase
+        .from("profiles")
+        .select("id, username, display_name")
+        .in("id", commenterIds)
+    : { data: [] };
+  const commenterById = new Map(
+    (commenterProfiles ?? []).map((profile) => [profile.id, profile]),
+  );
+
   const coverImageUrl = await getSignedImageUrl({
     bucket: "fundraiser-media",
     path: fundraiser.cover_image_path,
@@ -148,14 +174,12 @@ export default async function FundraiserPage({
               )}
             </div>
           </div>
+          {supported === "1" && (
+            <p className="mt-5 rounded-xl bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+              Спасибо! Поддержка подтверждена, а ваше сообщение добавлено в обсуждение.
+            </p>
+          )}
           <div className="mt-5 flex flex-wrap gap-3">
-            <button
-              className="inline-flex h-11 items-center gap-2 rounded-xl bg-[#df4f7d] px-5 text-sm font-bold text-white opacity-70"
-              disabled
-              type="button"
-            >
-              <Gift className="size-4" /> Поддержка — следующий этап
-            </button>
             <button
               className="inline-flex h-11 items-center gap-2 rounded-xl border border-[#ead9df] bg-white px-4 text-sm font-semibold text-[#765f66] transition hover:border-[#df4f7d]"
               type="button"
@@ -163,6 +187,85 @@ export default async function FundraiserPage({
               <Share2 className="size-4" /> Поделиться
             </button>
           </div>
+          {user && fundraiser.status === "active" ? (
+            <form
+              action={startFundraiserSupport}
+              className="mt-6 rounded-2xl border border-[#f0e1e5] bg-[#fffafb] p-4 sm:p-5"
+            >
+              <input name="fundraiser_id" type="hidden" value={fundraiser.id} />
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
+                <div className="grow">
+                  <label
+                    className="mb-1.5 block text-sm font-semibold text-[#5c464d]"
+                    htmlFor="support-amount"
+                  >
+                    Поддержать на, ₽
+                  </label>
+                  <input
+                    className="h-11 w-full rounded-xl border border-[#e7d8dc] bg-white px-3.5 text-sm outline-none transition placeholder:text-[#b3a0a6] focus:border-[#df4f7d] focus:ring-4 focus:ring-[#df4f7d]/10"
+                    id="support-amount"
+                    inputMode="decimal"
+                    min="1"
+                    name="amount"
+                    placeholder="2000"
+                    required
+                    type="number"
+                  />
+                </div>
+                <button
+                  className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-[#df4f7d] px-5 text-sm font-bold text-white transition hover:bg-[#c93f6d]"
+                  type="submit"
+                >
+                  <Gift className="size-4" /> Поддержать
+                </button>
+              </div>
+              <label className="mt-4 block">
+                <span className="mb-1.5 block text-sm font-semibold text-[#5c464d]">
+                  Сообщение вместе с поддержкой
+                </span>
+                <textarea
+                  className="min-h-20 w-full rounded-xl border border-[#e7d8dc] bg-white px-3.5 py-3 text-sm outline-none transition placeholder:text-[#b3a0a6] focus:border-[#df4f7d] focus:ring-4 focus:ring-[#df4f7d]/10"
+                  maxLength={1000}
+                  name="message"
+                  placeholder="Например: С днём рождения! ❤️"
+                />
+              </label>
+              <fieldset className="mt-4">
+                <legend className="text-sm font-semibold text-[#5c464d]">
+                  Как показать поддержку?
+                </legend>
+                <div className="mt-2 flex flex-wrap gap-x-4 gap-y-2 text-sm text-[#725c63]">
+                  <label className="inline-flex items-center gap-1.5">
+                    <input
+                      defaultChecked
+                      name="visibility"
+                      type="radio"
+                      value="exact"
+                    />{" "}
+                    С суммой
+                  </label>
+                  <label className="inline-flex items-center gap-1.5">
+                    <input name="visibility" type="radio" value="activity_only" />{" "}
+                    Только факт участия
+                  </label>
+                  <label className="inline-flex items-center gap-1.5">
+                    <input name="visibility" type="radio" value="anonymous" /> Анонимно
+                  </label>
+                </div>
+              </fieldset>
+              <p className="mt-3 text-xs leading-5 text-[#9b858c]">
+                Сейчас используется тестовый платёжный режим: реальные деньги не
+                списываются.
+              </p>
+            </form>
+          ) : !user ? (
+            <Link
+              className="mt-6 inline-flex h-11 items-center gap-2 rounded-xl bg-[#df4f7d] px-5 text-sm font-bold text-white transition hover:bg-[#c93f6d]"
+              href="/auth/sign-in"
+            >
+              <Gift className="size-4" /> Войти, чтобы поддержать
+            </Link>
+          ) : null}
         </div>
       </section>
       {isAuthor && fundraiser.visibility === "private" && (
@@ -216,11 +319,94 @@ export default async function FundraiserPage({
           )}
         </section>
       )}
-      <section className="mt-6">
-        <EmptyState
-          description="Чат под сбором появится вместе с поддержкой и Realtime. Здесь будут сообщения, вопросы и поздравления от участников."
-          title="Обсуждение скоро появится"
-        />
+      <section className="mt-6" id="discussion">
+        <div className="surface rounded-2xl p-5 sm:p-6">
+          <p className="text-sm font-semibold text-[#bd3e66]">Люди вокруг цели</p>
+          <h2 className="mt-1 text-2xl font-bold">Обсуждение</h2>
+          {user ? (
+            <form action={postFundraiserComment} className="mt-5">
+              <input name="fundraiser_id" type="hidden" value={fundraiser.id} />
+              <input name="fundraiser_slug" type="hidden" value={fundraiser.slug} />
+              <label className="sr-only" htmlFor="comment-body">
+                Новое сообщение
+              </label>
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <textarea
+                  className="min-h-11 grow rounded-xl border border-[#e7d8dc] bg-white px-3.5 py-3 text-sm outline-none transition placeholder:text-[#b3a0a6] focus:border-[#df4f7d] focus:ring-4 focus:ring-[#df4f7d]/10"
+                  id="comment-body"
+                  maxLength={2000}
+                  name="body"
+                  placeholder="Поделитесь мыслью или поддержите автора…"
+                  required
+                />
+                <button
+                  className="inline-flex h-11 items-center justify-center rounded-xl bg-[#df4f7d] px-4 text-sm font-semibold text-white transition hover:bg-[#c93f6d]"
+                  type="submit"
+                >
+                  Отправить
+                </button>
+              </div>
+            </form>
+          ) : (
+            <p className="mt-5 text-sm text-[#826c73]">
+              Чтобы участвовать в обсуждении,{" "}
+              <Link className="font-semibold text-[#a13d5e]" href="/auth/sign-in">
+                войдите в GiftOS
+              </Link>
+              .
+            </p>
+          )}
+          {(comments?.length ?? 0) > 0 ? (
+            <div className="mt-6 space-y-4">
+              {comments!.map((comment) => {
+                const commenter = comment.display_author_id
+                  ? commenterById.get(comment.display_author_id)
+                  : null;
+                const isAnonymousSupport =
+                  comment.support_id && comment.support_visibility === "anonymous";
+                const createdAt = new Intl.DateTimeFormat("ru-RU", {
+                  day: "numeric",
+                  month: "short",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                }).format(new Date(comment.created_at));
+                const displayName = isAnonymousSupport
+                  ? "Анонимный участник"
+                  : (commenter?.display_name ?? "Участник GiftOS");
+                return (
+                  <article className="flex gap-3" key={comment.id}>
+                    <span className="grid size-9 shrink-0 place-items-center rounded-full bg-[#f5d9e2] text-sm font-bold text-[#a64c68]">
+                      {displayName.slice(0, 1).toUpperCase()}
+                    </span>
+                    <div className="min-w-0">
+                      <p className="text-sm">
+                        <span className="font-bold">{displayName}</span>
+                        {comment.support_id && (
+                          <span className="ml-2 rounded-full bg-[#fff0cf] px-2 py-0.5 text-xs font-semibold text-[#a76a22]">
+                            {isAnonymousSupport
+                              ? "Поддержал анонимно"
+                              : "Поддержал сбор"}
+                          </span>
+                        )}
+                        <span className="ml-2 text-xs text-[#9b858c]">{createdAt}</span>
+                      </p>
+                      <p className="mt-1 whitespace-pre-wrap text-sm leading-6 text-[#604a52]">
+                        {comment.body}
+                      </p>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="mt-6">
+              <EmptyState
+                description="Будьте первым, кто поддержит автора словами. Сообщение вместе с поддержкой тоже появится здесь."
+                title="Обсуждение только начинается"
+              />
+            </div>
+          )}
+        </div>
       </section>
     </main>
   );

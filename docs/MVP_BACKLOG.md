@@ -37,13 +37,16 @@
 
 ## Срез 3 — поддержка и общение
 
-- [ ] `PaymentProvider` тестового режима и защищённая endpoint/webhook схема.
-- [ ] Поддержка: сумма, отображение суммы/факта/анонимно, сообщение.
-- [ ] Idempotent подтверждение платежа и пересчёт прогресса.
-- [ ] Чат под публичным сбором и Supabase Realtime.
+- [x] `PaymentProvider` тестового режима и защищённая endpoint/webhook схема.
+- [x] Поддержка: сумма, отображение суммы/факта/анонимно, сообщение.
+- [x] Идемпотентная финализация поддержки и пересчёт прогресса.
+- [x] Сообщение вместе с поддержкой автоматически создаёт запись в обсуждении.
+- [x] Базовое обсуждение под сбором без Realtime.
+- [ ] Подключить Supabase Realtime для чата.
 - [ ] Подписка на человека и сбор, уведомления.
+- [ ] Интеграция с выбранным платёжным партнёром после юридической проверки.
 
-**Метрики:** `checkout_started`, `support_succeeded`, `support_message_created`, `comment_created`, `follow_created`, `fundraiser_follow_created`.
+**Метрики для подключения вместе с analytics:** `checkout_started`, `support_succeeded`, `support_message_created`, `comment_created`, `follow_created`, `fundraiser_follow_created`.
 
 ## Срез 4 — discovery и безопасность
 
