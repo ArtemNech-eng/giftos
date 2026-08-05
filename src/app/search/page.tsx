@@ -258,6 +258,12 @@ export default async function SearchPage({
           <section className="mt-8 rounded-2xl bg-[#fff8f9] p-5">
             <p className="font-semibold">Попробуйте найти по интересу</p>
             <div className="mt-4 flex flex-wrap gap-2">
+              <Link
+                className="rounded-xl border border-[#f0e2e6] bg-white px-3 py-2 text-sm font-medium text-[#674f57] transition hover:border-[#efafc2] hover:bg-rose-50"
+                href="/events"
+              >
+                📅 События города
+              </Link>
               {CATEGORIES.slice(0, 10).map((category) => (
                 <Link
                   className="rounded-xl border border-[#f0e2e6] bg-white px-3 py-2 text-sm font-medium text-[#674f57] transition hover:border-[#efafc2] hover:bg-rose-50"

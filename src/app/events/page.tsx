@@ -33,10 +33,11 @@ type EventRow = {
 export default async function EventsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ city?: string }>;
+  searchParams: Promise<{ city?: string; q?: string }>;
 }) {
   const { supabase, user } = await requireUser();
-  const { city: cityFilter = "" } = await searchParams;
+  const { city: cityFilter = "", q: rawQuery = "" } = await searchParams;
+  const query = rawQuery.trim().slice(0, 80);
 
   const { data: profile } = await supabase
     .from("profiles")
@@ -51,7 +52,7 @@ export default async function EventsPage({
     .eq("is_cancelled", false)
     .gte("starts_at", new Date().toISOString())
     .order("starts_at", { ascending: true })
-    .limit(50);
+    .limit(100);
 
   let events = ((rawEvents ?? []) as unknown as EventRow[]).map((row) => ({
     ...row,
@@ -59,6 +60,15 @@ export default async function EventsPage({
   }));
   if (cityOnly && profile?.city_id) {
     events = events.filter((event) => event.scope === "open" || event.city?.name);
+  }
+  if (query) {
+    const lower = query.toLowerCase();
+    events = events.filter(
+      (event) =>
+        event.title.toLowerCase().includes(lower) ||
+        (event.description ?? "").toLowerCase().includes(lower) ||
+        (event.city?.name ?? "").toLowerCase().includes(lower),
+    );
   }
 
   const upcoming = events.slice(0, 20);
@@ -102,12 +112,33 @@ export default async function EventsPage({
         </Link>
       </nav>
 
+      <form className="mt-4 flex gap-2" method="get">
+        <input name="city" type="hidden" value={cityOnly ? "my" : ""} />
+        <input
+          className="grow rounded-xl border border-white/10 bg-black/20 px-3 py-2.5 text-sm"
+          defaultValue={query}
+          maxLength={80}
+          name="q"
+          placeholder="Поиск событий: название, город…"
+        />
+        <button
+          className="rounded-xl bg-gradient-to-r from-[#ff4b8a] to-[#7d45ff] px-4 text-sm font-bold"
+          type="submit"
+        >
+          Найти
+        </button>
+      </form>
+
       <section className="mt-6">
         {upcoming.length === 0 ? (
           <EmptyState
             actionHref="/events/new"
             actionLabel="Создать событие"
-            description="Встречи, прогулки и турниры появятся здесь."
+            description={
+              query
+                ? `По запросу «${query}» ничего не найдено.`
+                : "Встречи, прогулки и турниры появятся здесь."
+            }
             title="Событий пока нет"
           />
         ) : (
