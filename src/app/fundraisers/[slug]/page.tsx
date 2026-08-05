@@ -10,6 +10,7 @@ import {
 import { toggleFundraiserFollow } from "@/app/social/actions";
 import { EmptyState } from "@/components/empty-state";
 import { LiveDiscussionRefresh } from "@/components/live-discussion-refresh";
+import { ReportForm } from "@/components/report-form";
 import { CATEGORIES } from "@/lib/constants";
 import { getSignedImageUrl } from "@/lib/media";
 import { formatRubles } from "@/lib/money";
@@ -198,16 +199,23 @@ export default async function FundraiserPage({
               <Share2 className="size-4" /> Поделиться
             </button>
             {user && !isAuthor && (
-              <form action={toggleFundraiserFollow}>
-                <input name="fundraiser_id" type="hidden" value={fundraiser.id} />
-                <input name="fundraiser_slug" type="hidden" value={fundraiser.slug} />
-                <button
-                  className={`inline-flex h-11 items-center rounded-xl px-4 text-sm font-semibold transition ${existingFundraiserFollow ? "border border-[#ead9df] bg-white text-[#765f66] hover:border-[#df4f7d]" : "bg-[#fce5ec] text-[#bd3e66] hover:bg-[#f8d9e4]"}`}
-                  type="submit"
-                >
-                  {existingFundraiserFollow ? "Вы следите" : "Следить за сбором"}
-                </button>
-              </form>
+              <>
+                <form action={toggleFundraiserFollow}>
+                  <input name="fundraiser_id" type="hidden" value={fundraiser.id} />
+                  <input name="fundraiser_slug" type="hidden" value={fundraiser.slug} />
+                  <button
+                    className={`inline-flex h-11 items-center rounded-xl px-4 text-sm font-semibold transition ${existingFundraiserFollow ? "border border-[#ead9df] bg-white text-[#765f66] hover:border-[#df4f7d]" : "bg-[#fce5ec] text-[#bd3e66] hover:bg-[#f8d9e4]"}`}
+                    type="submit"
+                  >
+                    {existingFundraiserFollow ? "Вы следите" : "Следить за сбором"}
+                  </button>
+                </form>
+                <ReportForm
+                  returnTo={`/fundraisers/${fundraiser.slug}`}
+                  targetId={fundraiser.id}
+                  targetType="fundraiser"
+                />
+              </>
             )}
           </div>
           {user && fundraiser.status === "active" ? (
@@ -417,6 +425,15 @@ export default async function FundraiserPage({
                       <p className="mt-1 whitespace-pre-wrap text-sm leading-6 text-[#604a52]">
                         {comment.body}
                       </p>
+                      {user && comment.display_author_id !== user.id && (
+                        <div className="mt-1">
+                          <ReportForm
+                            returnTo={`/fundraisers/${fundraiser.slug}`}
+                            targetId={comment.id}
+                            targetType="comment"
+                          />
+                        </div>
+                      )}
                     </div>
                   </article>
                 );

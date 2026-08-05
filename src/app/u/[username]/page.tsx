@@ -3,8 +3,10 @@ import type { Route } from "next";
 import { MapPin, UserPlus } from "lucide-react";
 import { notFound } from "next/navigation";
 
+import { blockUser, unblockUser } from "@/app/safety/actions";
 import { toggleUserFollow } from "@/app/social/actions";
 import { EmptyState } from "@/components/empty-state";
+import { ReportForm } from "@/components/report-form";
 import { SiteHeader } from "@/components/site-header";
 import { CATEGORIES } from "@/lib/constants";
 import { getSignedImageUrl } from "@/lib/media";
@@ -38,6 +40,15 @@ export default async function ProfilePage({
           .select("follower_id")
           .eq("follower_id", user.id)
           .eq("following_id", profile.id)
+          .maybeSingle()
+      : { data: null };
+  const { data: existingBlock } =
+    user && !isOwnProfile
+      ? await supabase
+          .from("blocks")
+          .select("blocker_id")
+          .eq("blocker_id", user.id)
+          .eq("blocked_id", profile.id)
           .maybeSingle()
       : { data: null };
 
@@ -104,19 +115,40 @@ export default async function ProfilePage({
                   profile.display_name.slice(0, 1).toUpperCase()
                 )}
               </span>
-              <div className="flex gap-2 sm:mb-1">
+              <div className="flex items-center gap-2 sm:mb-1">
                 {user && !isOwnProfile ? (
-                  <form action={toggleUserFollow}>
-                    <input name="profile_id" type="hidden" value={profile.id} />
-                    <input name="username" type="hidden" value={profile.username} />
-                    <button
-                      className={`inline-flex h-10 items-center gap-2 rounded-xl px-4 text-sm font-semibold transition ${existingFollow ? "border border-[#ead9df] bg-white text-[#765f66] hover:border-[#df4f7d]" : "bg-[#df4f7d] text-white hover:bg-[#c93f6d]"}`}
-                      type="submit"
-                    >
-                      <UserPlus className="size-4" />
-                      {existingFollow ? "Вы подписаны" : "Подписаться"}
-                    </button>
-                  </form>
+                  <>
+                    <form action={toggleUserFollow}>
+                      <input name="profile_id" type="hidden" value={profile.id} />
+                      <input name="username" type="hidden" value={profile.username} />
+                      <button
+                        className={`inline-flex h-10 items-center gap-2 rounded-xl px-4 text-sm font-semibold transition ${existingFollow ? "border border-[#ead9df] bg-white text-[#765f66] hover:border-[#df4f7d]" : "bg-[#df4f7d] text-white hover:bg-[#c93f6d]"}`}
+                        type="submit"
+                      >
+                        <UserPlus className="size-4" />
+                        {existingFollow ? "Вы подписаны" : "Подписаться"}
+                      </button>
+                    </form>
+                    <form action={existingBlock ? unblockUser : blockUser}>
+                      <input name="blocked_id" type="hidden" value={profile.id} />
+                      <input
+                        name="return_to"
+                        type="hidden"
+                        value={`/u/${profile.username}`}
+                      />
+                      <button
+                        className="h-10 rounded-xl px-2.5 text-sm font-semibold text-[#8e747c] transition hover:bg-rose-50 hover:text-[#bd3e66]"
+                        type="submit"
+                      >
+                        {existingBlock ? "Разблокировать" : "Блок"}
+                      </button>
+                    </form>
+                    <ReportForm
+                      returnTo={`/u/${profile.username}`}
+                      targetId={profile.id}
+                      targetType="profile"
+                    />
+                  </>
                 ) : !user ? (
                   <Link
                     className="inline-flex h-10 items-center gap-2 rounded-xl bg-[#df4f7d] px-4 text-sm font-semibold text-white transition hover:bg-[#c93f6d]"

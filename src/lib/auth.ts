@@ -13,3 +13,16 @@ export async function requireUser() {
 
   return { supabase, user };
 }
+
+export async function requireModerator() {
+  const { supabase, user } = await requireUser();
+  const { data: role } = await supabase
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (role?.role !== "moderator" && role?.role !== "admin") redirect("/");
+
+  return { supabase, user, role: role.role };
+}
