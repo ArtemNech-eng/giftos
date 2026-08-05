@@ -1048,6 +1048,22 @@ export default async function HomePage({
               </div>
             </section>
           )}
+
+          <Link
+            className="mt-7 flex items-center gap-3 rounded-2xl border border-[#7fd8ff]/25 bg-gradient-to-r from-[#14222b] to-[#181a2b] p-4"
+            href="/events"
+          >
+            <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-[#7fd8ff]/15 text-2xl">
+              📅
+            </span>
+            <span className="min-w-0 grow">
+              <span className="block text-sm font-bold">События города</span>
+              <span className="mt-0.5 block text-xs text-[#b8b0c3]">
+                Встречи, прогулки и турниры — создайте или присоединяйтесь
+              </span>
+            </span>
+            <span className="shrink-0 text-[#7fd8ff]">›</span>
+          </Link>
         </>
       )}
 
