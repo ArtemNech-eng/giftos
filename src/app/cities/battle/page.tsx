@@ -147,7 +147,9 @@ export default async function CityBattlePage() {
         </div>
         <Link
           className="mt-4 inline-flex h-10 items-center rounded-xl bg-gradient-to-r from-[#ff4b8a] to-[#7d45ff] px-4 text-sm font-bold"
-          href="/bonuses"
+          href={
+            myCityName ? `/bonuses?city=${encodeURIComponent(myCityName)}` : "/bonuses"
+          }
         >
           Пригласить друга ›
         </Link>

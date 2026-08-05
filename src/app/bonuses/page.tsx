@@ -22,17 +22,11 @@ type BonusEntry = {
 export default async function BonusesPage() {
   const { supabase, user } = await requireUser();
   const [
-    { data: referralCode },
     { data: wallet },
     { data: rawEntries },
     { data: referrals },
     { data: settings },
   ] = await Promise.all([
-    supabase
-      .from("referral_codes")
-      .select("code")
-      .eq("owner_id", user.id)
-      .maybeSingle(),
     supabase
       .from("bonus_wallets")
       .select("available_balance, total_earned, total_spent")
@@ -57,10 +51,16 @@ export default async function BonusesPage() {
   ]);
   const entries = (rawEntries ?? []) as BonusEntry[];
   const reward = settings?.referral_reward ?? 200;
-  const referralPath = referralCode?.code ? `/r/${referralCode.code}` : "";
+  const { data: referralLink } = await supabase.rpc("create_referral_link", {
+    p_user_id: user.id,
+  });
+  const referralPath = referralLink ?? "";
   const link = referralPath
     ? `${process.env.NEXT_PUBLIC_APP_URL ?? "https://hochutakzhe.ru"}${referralPath}`
     : "";
+  const cityTag = referralPath.includes("?city=")
+    ? decodeURIComponent(referralPath.split("?city=")[1]).replace(/-/g, " ")
+    : null;
 
   return (
     <main className="mx-auto min-h-screen max-w-[430px] bg-[#0c0e14] px-4 py-5 text-white">
@@ -101,6 +101,11 @@ export default async function BonusesPage() {
         <div className="mt-4 break-all rounded-xl bg-black/20 p-3 text-xs text-[#d9d1e2]">
           {link || "Ссылка появится после настройки профиля"}
         </div>
+        {cityTag && (
+          <p className="mt-2 text-xs font-semibold text-[#ffd35e]">
+            📍 Приведи друга в {cityTag} — и город получит баллы в битве!
+          </p>
+        )}
         {referralPath && (
           <div className="mt-3">
             <CreatorShareLink path={referralPath} />
