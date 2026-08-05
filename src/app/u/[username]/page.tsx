@@ -19,6 +19,8 @@ import {
   updateCreatorSubscriptionSettings,
 } from "@/app/creator/subscriptions/actions";
 import { createStory } from "@/app/stories/actions";
+import { CreatorShareLink } from "@/components/creator-share-link";
+import { ProfileQrCode } from "@/components/profile-qr-code";
 import { ReportForm } from "@/components/report-form";
 import { CATEGORIES } from "@/lib/constants";
 import { getSignedImageUrl } from "@/lib/media";
@@ -689,6 +691,20 @@ export default async function ProfilePage({
             <span className="text-[#df9cff]">›</span>
           </Link>
         </div>
+      )}
+      {isOwnProfile && (
+        <details className="mx-4 mt-3 rounded-2xl border border-white/10 bg-[#171923] p-4">
+          <summary className="cursor-pointer text-sm font-bold">
+            Поделиться профилем
+          </summary>
+          <div className="mt-4 flex flex-col items-center gap-3">
+            <CreatorShareLink username={profile.username} />
+            <ProfileQrCode
+              name={profile.display_name}
+              url={`${process.env.NEXT_PUBLIC_APP_URL ?? "https://hochutakzhe.ru"}/u/${profile.username}`}
+            />
+          </div>
+        </details>
       )}
       {isOwnProfile && profile.is_creator && (
         <details className="mx-4 mt-3 rounded-2xl border border-white/10 bg-[#171923] p-4">
