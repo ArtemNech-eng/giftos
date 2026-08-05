@@ -3,7 +3,9 @@ import { LockKeyhole, Play, Sparkles } from "lucide-react";
 import { notFound } from "next/navigation";
 
 import { sendTestStoryGift } from "@/app/stories/gifts/actions";
+import { toggleStoryReaction } from "@/app/stories/reactions/actions";
 import { testUnlockStory } from "@/app/stories/actions";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { formatRubles } from "@/lib/money";
 import { getSignedImageUrl } from "@/lib/media";
 import { createClient } from "@/lib/supabase/server";
@@ -31,6 +33,20 @@ export default async function StoryPage({
     data: { user },
   } = await supabase.auth.getUser();
   const isAuthor = user?.id === story.author_id;
+  if (user && !isAuthor) {
+    try {
+      await createAdminClient().from("story_views").upsert(
+        {
+          story_id: story.id,
+          viewer_id: user.id,
+          viewed_at: new Date().toISOString(),
+        },
+        { onConflict: "story_id,viewer_id" },
+      );
+    } catch {
+      // A story remains viewable if a local test environment has no service key.
+    }
+  }
   const { data: unlock } =
     user && !isAuthor
       ? await supabase
@@ -42,22 +58,27 @@ export default async function StoryPage({
       : { data: null };
   const canWatch =
     story.access_type === "free" || isAuthor || unlock?.status === "unlocked";
-  const [{ data: author }, { data: gifts }, { data: storyGifts }] = await Promise.all([
-    supabase
-      .from("profiles")
-      .select("username, display_name")
-      .eq("id", story.author_id)
-      .maybeSingle(),
-    supabase
-      .from("virtual_gifts")
-      .select("code, label, emoji, price_minor, currency")
-      .eq("is_active", true)
-      .order("sort_order", { ascending: true }),
-    supabase
-      .from("story_gifts")
-      .select("gift_code, price_minor")
-      .eq("story_id", story.id),
-  ]);
+  const [{ data: author }, { data: gifts }, { data: storyGifts }, { data: reactions }] =
+    await Promise.all([
+      supabase
+        .from("profiles")
+        .select("username, display_name")
+        .eq("id", story.author_id)
+        .maybeSingle(),
+      supabase
+        .from("virtual_gifts")
+        .select("code, label, emoji, price_minor, currency")
+        .eq("is_active", true)
+        .order("sort_order", { ascending: true }),
+      supabase
+        .from("story_gifts")
+        .select("gift_code, price_minor")
+        .eq("story_id", story.id),
+      supabase
+        .from("story_reactions")
+        .select("reaction, sender_id")
+        .eq("story_id", story.id),
+    ]);
   const videoUrl = canWatch
     ? await getSignedImageUrl({ bucket: "story-media", path: story.media_path })
     : null;
@@ -67,6 +88,18 @@ export default async function StoryPage({
     day: "numeric",
     month: "short",
   }).format(new Date(story.expires_at));
+  const reactionConfig = [
+    { code: "heart", emoji: "❤️" },
+    { code: "fire", emoji: "🔥" },
+    { code: "wow", emoji: "😮" },
+  ];
+  const reactionCount = (code: string) =>
+    reactions?.filter((item) => item.reaction === code).length ?? 0;
+  const hasReaction = (code: string) =>
+    Boolean(
+      user &&
+      reactions?.some((item) => item.reaction === code && item.sender_id === user.id),
+    );
 
   return (
     <main className="mx-auto flex min-h-screen max-w-xl items-center bg-[#0c0e14] px-4 py-8 text-white">
@@ -131,6 +164,34 @@ export default async function StoryPage({
         </div>
         {story.caption && (
           <p className="p-4 text-sm leading-6 text-[#ddd5e6]">{story.caption}</p>
+        )}
+        {canWatch && (
+          <section className="border-t border-white/10 px-4 pt-4">
+            <div className="flex gap-2">
+              {reactionConfig.map((reaction) =>
+                user ? (
+                  <form action={toggleStoryReaction} key={reaction.code}>
+                    <input name="story_id" type="hidden" value={story.id} />
+                    <input name="reaction" type="hidden" value={reaction.code} />
+                    <button
+                      className={`rounded-full border px-3 py-1.5 text-sm transition ${hasReaction(reaction.code) ? "border-[#ff77ba] bg-[#3a1a35]" : "border-white/10 bg-white/5"}`}
+                      type="submit"
+                    >
+                      {reaction.emoji} {reactionCount(reaction.code) || ""}
+                    </button>
+                  </form>
+                ) : (
+                  <Link
+                    className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-sm"
+                    href="/auth/sign-in"
+                    key={reaction.code}
+                  >
+                    {reaction.emoji} {reactionCount(reaction.code) || ""}
+                  </Link>
+                ),
+              )}
+            </div>
+          </section>
         )}
         {canWatch && user && !isAuthor && gifts && gifts.length > 0 && (
           <section className="border-t border-white/10 p-4">
