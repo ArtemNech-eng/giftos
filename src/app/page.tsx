@@ -13,6 +13,7 @@ import {
 
 import { EmptyState } from "@/components/empty-state";
 import { SiteHeader } from "@/components/site-header";
+import { StoryStrip } from "@/components/story-strip";
 import { APP_NAME, CATEGORIES } from "@/lib/constants";
 import { getSignedImageUrl } from "@/lib/media";
 import { formatRubles } from "@/lib/money";
@@ -292,6 +293,7 @@ export default async function HomePage() {
     <>
       <SiteHeader />
       <main className="mx-auto max-w-5xl px-4 pb-16 pt-6 sm:px-6 sm:pt-8">
+        <StoryStrip />
         <section className="surface flex flex-col gap-4 rounded-2xl p-5 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-sm font-semibold text-[#bd3e66]">Желания людей</p>

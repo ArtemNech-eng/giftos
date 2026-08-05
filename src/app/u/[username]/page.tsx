@@ -4,6 +4,7 @@ import { MapPin, UserPlus } from "lucide-react";
 import { notFound } from "next/navigation";
 
 import { deleteProfileMedia, uploadProfileMedia } from "@/app/profile/media/actions";
+import { createStory } from "@/app/stories/actions";
 import { blockUser, unblockUser } from "@/app/safety/actions";
 import { toggleUserFollow } from "@/app/social/actions";
 import { EmptyState } from "@/components/empty-state";
@@ -316,6 +317,70 @@ export default async function ProfilePage({
                 </p>
               </form>
             )}
+          </section>
+        )}
+
+        {isOwnProfile && profile.is_creator && (
+          <section className="surface mt-6 rounded-2xl p-5 sm:p-6">
+            <p className="text-sm font-semibold text-[#bd3e66]">Контент автора</p>
+            <h2 className="mt-1 text-xl font-bold">Новая video story</h2>
+            <p className="mt-2 text-sm leading-6 text-[#826c73]">
+              Короткое вертикальное видео будет доступно 24 часа. Платное открытие пока
+              работает в тестовом режиме.
+            </p>
+            <form action={createStory} className="mt-5" encType="multipart/form-data">
+              <input name="username" type="hidden" value={profile.username} />
+              <label className="block text-sm font-semibold text-[#5c464d]">
+                Видео
+                <input
+                  accept="video/mp4,video/webm"
+                  className="mt-2 block w-full text-sm text-[#725c63] file:mr-3 file:rounded-lg file:border-0 file:bg-[#fce5ec] file:px-3 file:py-2 file:text-sm file:font-semibold file:text-[#bd3e66] hover:file:bg-[#f8d9e4]"
+                  name="video"
+                  required
+                  type="file"
+                />
+              </label>
+              <textarea
+                className="mt-4 min-h-20 w-full rounded-xl border border-[#e7d8dc] bg-white px-3 py-2 text-sm outline-none focus:border-[#df4f7d] focus:ring-4 focus:ring-[#df4f7d]/10"
+                maxLength={500}
+                name="caption"
+                placeholder="Подпись к story"
+              />
+              <div className="mt-4 flex flex-wrap items-end gap-3">
+                <label className="text-sm font-semibold text-[#5c464d]">
+                  Доступ
+                  <select
+                    className="mt-2 block h-9 rounded-lg border border-[#e7d8dc] bg-white px-2 text-sm font-normal"
+                    defaultValue="free"
+                    name="access_type"
+                  >
+                    <option value="free">Бесплатно</option>
+                    <option value="paid">Платное открытие</option>
+                  </select>
+                </label>
+                <label className="text-sm font-semibold text-[#5c464d]">
+                  Цена, ₽
+                  <input
+                    className="mt-2 block h-9 w-28 rounded-lg border border-[#e7d8dc] bg-white px-2 text-sm font-normal"
+                    inputMode="decimal"
+                    min="1"
+                    name="unlock_price"
+                    placeholder="49"
+                    type="number"
+                  />
+                </label>
+                <button
+                  className="h-10 rounded-xl bg-[#df4f7d] px-4 text-sm font-semibold text-white transition hover:bg-[#c93f6d]"
+                  type="submit"
+                >
+                  Опубликовать
+                </button>
+              </div>
+              <p className="mt-2 text-xs text-[#9b858c]">
+                MP4 или WebM, до 50 МБ. Видео до 60 секунд рекомендуется для первой
+                версии.
+              </p>
+            </form>
           </section>
         )}
 
