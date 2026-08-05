@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Copy, MessageCircle, UsersRound } from "lucide-react";
+import { BarChart3, Copy, MessageCircle, UsersRound } from "lucide-react";
 import { notFound } from "next/navigation";
 
 import { inviteLiveCohost } from "@/app/live/actions";
@@ -77,9 +77,21 @@ export default async function LiveRoomPage({
         <Link className="text-sm text-[#e3a3d5]" href="/feed">
           ← Лента
         </Link>
-        <button className="bg-white/8 grid size-9 place-items-center rounded-full">
-          <Copy className="size-4" />
-        </button>
+        <div className="flex items-center gap-2">
+          {room.host_id === user.id && (
+            <Link
+              aria-label="Аналитика эфира"
+              className="bg-white/8 grid size-9 place-items-center rounded-full"
+              href={`/live/${slug}/analytics`}
+              title="Аналитика эфира"
+            >
+              <BarChart3 className="size-4" />
+            </Link>
+          )}
+          <button className="bg-white/8 grid size-9 place-items-center rounded-full">
+            <Copy className="size-4" />
+          </button>
+        </div>
       </header>
       <section className="mt-5 overflow-hidden rounded-[2rem] border border-white/10 bg-[#171923]">
         <div className="relative">
