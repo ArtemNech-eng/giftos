@@ -14,10 +14,10 @@ GiftOS — социальная платформа желаний и сборо�
 | -------------- | -------------------------------------------- | -------------------------------------------------- |
 | Web / PWA      | Next.js 15, App Router, TypeScript           | Интерфейс, SEO-страницы сборов, серверные маршруты |
 | UI             | Tailwind CSS + shadcn-совместимые компоненты | Единый интерфейс и доступность                     |
-| Auth           | Supabase Auth                                | Magic link по email и OTP по телефону              |
-| Данные         | Supabase Postgres + RLS                      | Доменная модель и авторизация на уровне БД         |
-| Реальное время | Supabase Realtime                            | Чат сбора и уведомления                            |
-| Файлы          | Supabase Storage                             | Аватары и изображения, доступ через signed URL     |
+| Auth           | Self-hosted Supabase Auth в РФ               | Magic link по email и OTP по телефону              |
+| Данные         | Self-hosted Supabase Postgres + RLS в РФ     | Доменная модель и авторизация на уровне БД         |
+| Реальное время | Self-hosted Supabase Realtime в РФ           | Чат сбора и уведомления                            |
+| Файлы          | Self-hosted Supabase Storage в РФ            | Аватары и изображения, доступ через signed URL     |
 | Платежи        | Адаптер внешнего партнёра                    | Создание платежа, верификация webhook, возвраты    |
 
 ## Структура кода

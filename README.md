@@ -8,7 +8,7 @@
 
 - Next.js 15 / React 19 / TypeScript;
 - Tailwind CSS и shadcn-совместимая компонентная база;
-- Supabase: Auth, Postgres, RLS, Storage, Realtime;
+- self-hosted Supabase в российской инфраструктуре: Auth, Postgres, RLS, Storage, Realtime;
 - будущий платёжный партнёр подключается через изолированный server-side адаптер.
 
 ## Запуск локально
@@ -25,34 +25,27 @@ npm install
 cp .env.example .env.local
 ```
 
-Для просмотра стартового интерфейса Supabase не нужен. Чтобы заработала авторизация, создайте проект Supabase и заполните в `.env.local`:
+Для просмотра стартового интерфейса Supabase не нужен. Production GiftOS использует **self-hosted Supabase в российской инфраструктуре**, а не Supabase Cloud. После развертывания заполните в `.env.local` адрес собственного API:
 
 ```dotenv
-NEXT_PUBLIC_SUPABASE_URL=https://<project-ref>.supabase.co
+NEXT_PUBLIC_SUPABASE_URL=https://supabase.giftos.ru
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=<publishable-key>
 SUPABASE_SERVICE_ROLE_KEY=<server-only-service-role-key>
-NEXT_PUBLIC_APP_URL=http://localhost:3000
+NEXT_PUBLIC_APP_URL=https://giftos.ru
 ```
 
-Никогда не отправляйте `.env.local` и `SUPABASE_SERVICE_ROLE_KEY` в Git или браузер.
+Никогда не отправляйте `.env.local` и `SUPABASE_SERVICE_ROLE_KEY` в Git или браузер. Правила production-размещения описаны в [docs/INFRASTRUCTURE_RU.md](docs/INFRASTRUCTURE_RU.md).
 
 ### 3. Применить схему Supabase
 
-При установленном Supabase CLI и привязанном проекте:
-
-```bash
-supabase link --project-ref <project-ref>
-supabase db push
-```
-
-Для локального Supabase:
+Для локальной разработки используйте только синтетические данные:
 
 ```bash
 supabase start
 supabase db reset
 ```
 
-Миграции находятся в `supabase/migrations`. Они создают доменную модель, RLS-политики, безопасные публичные views, категории и приватные Storage-бакеты.
+Production-миграции из `supabase/migrations` применяются к self-hosted PostgreSQL через защищённый CI/CD-канал после развертывания российской инфраструктуры. Не подключайте production ПДн к Supabase Cloud.
 
 ### 4. Запустить приложение
 
@@ -83,7 +76,7 @@ npm run format:check
 - [x] Создание, изменение, архивирование и клонирование желаний («Я тоже хочу»).
 - [x] Создание публичного, по ссылке и приватного сбора.
 - [x] Главная лента читает реальные публичные сборы и профили после подключения Supabase.
-- [ ] Подключение настоящего Supabase-проекта и применение миграций в нём.
+- [ ] Развёртывание self-hosted Supabase в российской инфраструктуре и применение миграций.
 - [ ] Приглашения в приватные сборы.
 - [ ] Тестовый платёжный адаптер, поддержка и проверяемый webhook.
 
