@@ -97,3 +97,27 @@ export async function inviteLiveCohost(formData: FormData) {
   revalidatePath(`/live/${slug}`);
   redirect(`/live/${slug}?cohost=invited` as Route);
 }
+
+export async function endLiveRoom(formData: FormData) {
+  const { supabase, user } = await requireUser();
+  const slug = requiredText(formData.get("slug"), 100);
+  if (!slug) throw new Error("Эфир не указан.");
+  const { data: room } = await supabase
+    .from("live_rooms")
+    .select("id, host_id, status")
+    .eq("slug", slug)
+    .maybeSingle();
+  if (!room || room.host_id !== user.id)
+    throw new Error("Только ведущий может завершить эфир.");
+  if (room.status !== "live") throw new Error("Эфир уже завершён.");
+
+  const { error } = await supabase
+    .from("live_rooms")
+    .update({ status: "ended", ended_at: new Date().toISOString() })
+    .eq("id", room.id);
+  if (error) throw new Error(`Не удалось завершить эфир: ${error.message}`);
+
+  revalidatePath(`/live/${slug}`);
+  revalidatePath("/creator/dashboard");
+  redirect(`/live/${slug}` as Route);
+}

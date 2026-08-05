@@ -1,8 +1,17 @@
 import Link from "next/link";
-import { BarChart3, Copy, MessageCircle, UsersRound } from "lucide-react";
 import { notFound } from "next/navigation";
+import {
+  ArrowLeft,
+  BarChart3,
+  Copy,
+  Gift,
+  HandCoins,
+  MessageCircle,
+  Square,
+  UsersRound,
+} from "lucide-react";
 
-import { inviteLiveCohost } from "@/app/live/actions";
+import { endLiveRoom, inviteLiveCohost } from "@/app/live/actions";
 import { sendTestLiveDonation } from "@/app/live/donations/actions";
 import { sendTestLiveGift } from "@/app/live/gifts/actions";
 import { LiveDonationEvents } from "@/components/live-donation-events";
@@ -27,14 +36,13 @@ export default async function LiveRoomPage({
     .select("id, host_id, title, description, status, wish_id")
     .eq("slug", slug)
     .maybeSingle();
-  if (!room || room.status !== "live") notFound();
+  if (!room) notFound();
   const [
     { data: host },
     { data: messages },
     { count: viewers },
     { data: wish },
     { data: gifts },
-    { count: giftCount },
   ] = await Promise.all([
     supabase
       .from("profiles")
@@ -64,11 +72,32 @@ export default async function LiveRoomPage({
       .select("code, label, emoji, price_minor")
       .eq("is_active", true)
       .order("sort_order", { ascending: true }),
+  ]);
+  const [
+    { count: giftCount },
+    { count: donationCount },
+    { data: giftTotal },
+    { data: donationTotal },
+  ] = await Promise.all([
     supabase
       .from("live_room_gifts")
       .select("*", { count: "exact", head: true })
       .eq("room_id", room.id),
+    supabase
+      .from("live_room_donations")
+      .select("*", { count: "exact", head: true })
+      .eq("room_id", room.id),
+    supabase.from("live_room_gifts").select("price_minor").eq("room_id", room.id),
+    supabase.from("live_room_donations").select("amount_minor").eq("room_id", room.id),
   ]);
+  const giftTotalMinor = (giftTotal ?? []).reduce(
+    (sum, gift) => sum + Number(gift.price_minor),
+    0,
+  );
+  const donationTotalMinor = (donationTotal ?? []).reduce(
+    (sum, donation) => sum + Number(donation.amount_minor),
+    0,
+  );
   const authorIds = [...new Set((messages ?? []).map((item) => item.author_id))];
   const { data: authors } = authorIds.length
     ? await supabase.from("profiles").select("id, display_name").in("id", authorIds)
@@ -80,24 +109,43 @@ export default async function LiveRoomPage({
   return (
     <main className="mx-auto min-h-screen max-w-[430px] bg-[#0c0e14] px-4 py-5 text-white">
       <header className="flex items-center justify-between">
-        <Link className="text-sm text-[#e3a3d5]" href="/feed">
-          ← Лента
-        </Link>
+        {room.host_id === user.id ? (
+          <Link
+            aria-label="Назад"
+            className="bg-white/8 grid size-9 place-items-center rounded-full"
+            href="/creator/dashboard"
+          >
+            <ArrowLeft className="size-5" />
+          </Link>
+        ) : (
+          <Link className="text-sm text-[#e3a3d5]" href="/feed">
+            ← Лента
+          </Link>
+        )}
         <div className="flex items-center gap-2">
-          <LiveGiftCounter initialCount={giftCount ?? 0} roomId={room.id} />
-          {room.host_id === user.id && (
-            <Link
-              aria-label="Аналитика эфира"
+          {room.status === "live" ? (
+            <>
+              <LiveGiftCounter initialCount={giftCount ?? 0} roomId={room.id} />
+              {room.host_id === user.id && (
+                <Link
+                  aria-label="Аналитика эфира"
+                  className="bg-white/8 grid size-9 place-items-center rounded-full"
+                  href={`/live/${slug}/analytics`}
+                  title="Аналитика эфира"
+                >
+                  <BarChart3 className="size-4" />
+                </Link>
+              )}
+            </>
+          ) : (
+            <button
               className="bg-white/8 grid size-9 place-items-center rounded-full"
-              href={`/live/${slug}/analytics`}
-              title="Аналитика эфира"
+              title="Скопировать ссылку"
+              type="button"
             >
-              <BarChart3 className="size-4" />
-            </Link>
+              <Copy className="size-4" />
+            </button>
           )}
-          <button className="bg-white/8 grid size-9 place-items-center rounded-full">
-            <Copy className="size-4" />
-          </button>
         </div>
       </header>
       <section className="mt-5 overflow-hidden rounded-[2rem] border border-white/10 bg-[#171923]">
@@ -118,20 +166,30 @@ export default async function LiveRoomPage({
         <div className="p-4">
           <div className="flex items-start justify-between">
             <div>
-              <p className="text-xs text-[#ff7fb5]">🔴 В ЭФИРЕ</p>
+              {room.status === "live" ? (
+                <p className="text-xs text-[#ff7fb5]">🔴 В ЭФИРЕ</p>
+              ) : (
+                <p className="text-xs text-[#9f97aa]">ЭФИР ЗАВЕРШЁН</p>
+              )}
               <h1 className="mt-1 text-xl font-bold">{room.title}</h1>
               <p className="mt-1 text-sm text-[#b9b1c5]">
                 {host?.display_name ?? "Автор"}
               </p>
             </div>
-            <span className="flex items-center gap-1 text-xs text-[#cfc6d8]">
-              <UsersRound className="size-4" /> {viewers ?? 0}
-            </span>
+            {room.status === "live" ? (
+              <span className="flex items-center gap-1 text-xs text-[#cfc6d8]">
+                <UsersRound className="size-4" /> {viewers ?? 0}
+              </span>
+            ) : (
+              <span className="flex items-center gap-1 text-xs text-[#cfc6d8]">
+                <UsersRound className="size-4" /> {viewers ?? 0}
+              </span>
+            )}
           </div>
           {room.description && (
             <p className="mt-4 text-sm leading-6 text-[#d8d0e0]">{room.description}</p>
           )}
-          {wish && (
+          {wish && room.status === "live" && (
             <Link
               className="mt-4 flex justify-between rounded-xl bg-[#281633] p-3"
               href={`/wishes/${wish.id}`}
@@ -149,36 +207,72 @@ export default async function LiveRoomPage({
               </b>
             </Link>
           )}
+          {room.status === "ended" && (
+            <div className="mt-4 rounded-xl bg-white/5 p-3">
+              <p className="text-xs text-[#9f97aa]">Итоги эфира</p>
+              <div className="mt-2 flex items-center gap-4 text-sm">
+                <span className="flex items-center gap-1 text-[#d8d0e0]">
+                  <MessageCircle className="size-4" /> {messages?.length ?? 0}
+                </span>
+                <span className="flex items-center gap-1 text-[#d8d0e0]">
+                  <Gift className="size-4" /> {giftCount ?? 0}
+                </span>
+                <span className="flex items-center gap-1 text-[#d8d0e0]">
+                  <HandCoins className="size-4" /> {donationCount ?? 0}
+                </span>
+                <span className="ml-auto text-[#ffd0eb]">
+                  {((giftTotalMinor + donationTotalMinor) / 100).toLocaleString(
+                    "ru-RU",
+                  )}{" "}
+                  ₽
+                </span>
+              </div>
+            </div>
+          )}
         </div>
       </section>
-      {room.host_id !== user.id && gifts && gifts.length > 0 && (
-        <section className="mt-5 rounded-2xl border border-white/10 bg-[#171923] p-4">
-          <p className="font-bold">Отправить подарок в эфир</p>
-          <div className="mt-3 grid grid-cols-4 gap-2">
-            {gifts.map((gift) => (
-              <form action={sendTestLiveGift} key={gift.code}>
-                <input name="room_id" type="hidden" value={room.id} />
-                <input name="slug" type="hidden" value={slug} />
-                <input name="gift_code" type="hidden" value={gift.code} />
-                <button
-                  className="flex w-full flex-col items-center rounded-xl border border-white/10 bg-white/5 px-1 py-2 hover:border-[#ff77ba]"
-                  type="submit"
-                >
-                  <span className="text-2xl">{gift.emoji}</span>
-                  <span className="mt-1 text-[10px]">{gift.label}</span>
-                  <span className="text-[10px] text-[#ffb7dd]">
-                    {gift.price_minor / 100} ₽
-                  </span>
-                </button>
-              </form>
-            ))}
-          </div>
-          <p className="mt-3 text-xs text-[#a9a1b4]">
-            Подарки в тестовом режиме формируют test-доход автора.
-          </p>
-        </section>
+      {room.status === "live" && room.host_id === user.id && (
+        <form action={endLiveRoom} className="mt-5">
+          <input name="slug" type="hidden" value={slug} />
+          <button
+            className="flex w-full items-center justify-center gap-2 rounded-2xl border border-[#ff5b99]/40 bg-[#2a1222] py-3 text-sm font-bold text-[#ff9bc5]"
+            type="submit"
+          >
+            <Square className="size-4" /> Завершить эфир
+          </button>
+        </form>
       )}
-      {room.host_id !== user.id && (
+      {room.status === "live" &&
+        room.host_id !== user.id &&
+        gifts &&
+        gifts.length > 0 && (
+          <section className="mt-5 rounded-2xl border border-white/10 bg-[#171923] p-4">
+            <p className="font-bold">Отправить подарок в эфир</p>
+            <div className="mt-3 grid grid-cols-4 gap-2">
+              {gifts.map((gift) => (
+                <form action={sendTestLiveGift} key={gift.code}>
+                  <input name="room_id" type="hidden" value={room.id} />
+                  <input name="slug" type="hidden" value={slug} />
+                  <input name="gift_code" type="hidden" value={gift.code} />
+                  <button
+                    className="flex w-full flex-col items-center rounded-xl border border-white/10 bg-white/5 px-1 py-2 hover:border-[#ff77ba]"
+                    type="submit"
+                  >
+                    <span className="text-2xl">{gift.emoji}</span>
+                    <span className="mt-1 text-[10px]">{gift.label}</span>
+                    <span className="text-[10px] text-[#ffb7dd]">
+                      {gift.price_minor / 100} ₽
+                    </span>
+                  </button>
+                </form>
+              ))}
+            </div>
+            <p className="mt-3 text-xs text-[#a9a1b4]">
+              Подарки в тестовом режиме формируют test-доход автора.
+            </p>
+          </section>
+        )}
+      {room.status === "live" && room.host_id !== user.id && (
         <section className="mt-5 rounded-2xl border border-[#ff77ba]/25 bg-[#221522] p-4">
           <p className="font-bold">Поддержать эфир</p>
           <p className="mt-1 text-xs text-[#a9a1b4]">
@@ -216,7 +310,7 @@ export default async function LiveRoomPage({
           </form>
         </section>
       )}
-      {room.host_id === user.id && (
+      {room.status === "live" && room.host_id === user.id && (
         <form
           action={inviteLiveCohost}
           className="mt-5 rounded-2xl border border-[#b550ff]/35 bg-[#1b1528] p-4"
@@ -245,19 +339,36 @@ export default async function LiveRoomPage({
         <div className="flex items-center gap-2">
           <MessageCircle className="size-5 text-[#d68cff]" />
           <h2 className="font-bold">Чат эфира</h2>
-          <span className="ml-auto text-xs text-[#a9a1b4]">в реальном времени</span>
+          {room.status === "live" && (
+            <span className="ml-auto text-xs text-[#a9a1b4]">в реальном времени</span>
+          )}
         </div>
-        <LiveRoomRealtime
-          currentUserId={user.id}
-          initialMessages={(messages ?? []).map((message) => ({
-            id: message.id,
-            author_id: message.author_id,
-            body: message.body,
-            created_at: message.created_at,
-            author_name: names.get(message.author_id) ?? "Зритель",
-          }))}
-          roomId={room.id}
-        />
+        {room.status === "live" ? (
+          <LiveRoomRealtime
+            currentUserId={user.id}
+            initialMessages={(messages ?? []).map((message) => ({
+              id: message.id,
+              author_id: message.author_id,
+              body: message.body,
+              created_at: message.created_at,
+              author_name: names.get(message.author_id) ?? "Зритель",
+            }))}
+            roomId={room.id}
+          />
+        ) : (
+          <div className="mt-4 max-h-64 space-y-3 overflow-y-auto">
+            {(messages ?? []).map((message) => (
+              <p className="text-sm" key={message.id}>
+                <b className="mr-2">
+                  {message.author_id === user.id
+                    ? "Вы"
+                    : (names.get(message.author_id) ?? "Зритель")}
+                </b>
+                {message.body}
+              </p>
+            ))}
+          </div>
+        )}
       </section>
     </main>
   );

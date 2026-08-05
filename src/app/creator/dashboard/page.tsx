@@ -7,6 +7,7 @@ import {
   Gift,
   MessageCircle,
   Play,
+  Radio,
   UsersRound,
   WalletCards,
 } from "lucide-react";
@@ -34,6 +35,7 @@ export default async function CreatorDashboardPage() {
     { count: posts },
     { count: requests },
     { data: ledger },
+    { data: liveRooms },
   ] = await Promise.all([
     supabase
       .from("user_follows")
@@ -57,11 +59,18 @@ export default async function CreatorDashboardPage() {
       .from("creator_ledger_entries")
       .select("creator_net_minor")
       .eq("creator_id", user.id),
+    supabase
+      .from("live_rooms")
+      .select("id, slug, title, status")
+      .eq("host_id", user.id)
+      .order("started_at", { ascending: false })
+      .limit(5),
   ]);
   const income = (ledger ?? []).reduce(
     (sum, item) => sum + Number(item.creator_net_minor),
     0,
   );
+  const activeLive = (liveRooms ?? []).find((room) => room.status === "live");
 
   return (
     <main className="mx-auto min-h-screen max-w-[430px] bg-[#0c0e14] px-4 py-5 text-white">
@@ -103,6 +112,41 @@ export default async function CreatorDashboardPage() {
               <CreatorShareLink username={profile.username} />
             </div>
           </section>
+          {activeLive ? (
+            <section className="mt-5 overflow-hidden rounded-2xl border border-[#ff5b99]/40 bg-gradient-to-br from-[#2a1222] to-[#171a2b] p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-bold text-[#ff7fb5]">🔴 Сейчас в эфире</p>
+                  <p className="mt-1 font-bold">{activeLive.title}</p>
+                </div>
+                <Link
+                  className="rounded-xl bg-gradient-to-r from-[#ff4b8a] to-[#7d45ff] px-4 py-2 text-sm font-bold"
+                  href={`/live/${activeLive.slug}`}
+                >
+                  Открыть
+                </Link>
+              </div>
+            </section>
+          ) : (
+            <section className="mt-5 rounded-2xl border border-white/10 bg-[#171923] p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-semibold">Эфиры</p>
+                  <p className="mt-1 text-xs text-[#aaa2b4]">
+                    Создайте комнату и пригласите зрителей.
+                  </p>
+                </div>
+                <Link
+                  aria-label="Создать эфир"
+                  className="grid size-10 place-items-center rounded-full bg-gradient-to-r from-[#ff4b8a] to-[#7d45ff]"
+                  href="/live/new"
+                  title="Создать эфир"
+                >
+                  <Radio className="size-5" />
+                </Link>
+              </div>
+            </section>
+          )}
           <section className="mt-5 rounded-[2rem] bg-gradient-to-br from-[#291940] to-[#171a2b] p-6">
             <p className="text-sm text-[#c5bdd0]">Тестовый баланс</p>
             <p className="mt-2 text-4xl font-bold">{formatRubles(income)}</p>
