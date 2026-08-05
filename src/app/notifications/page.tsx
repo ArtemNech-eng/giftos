@@ -2,6 +2,8 @@ import Link from "next/link";
 import type { Route } from "next";
 import {
   Bell,
+  CalendarDays,
+  CalendarX2,
   CheckCheck,
   Gift,
   Heart,
@@ -103,6 +105,37 @@ function notificationCopy(notification: Notification, actor: Actor | undefined) 
       icon: Radio,
       title: `${actorName} начал(а) эфир «${roomTitle}»`,
       href: slug ? (`/live/${slug}` as Route) : "/feed",
+    };
+  }
+
+  if (notification.type === "event_created") {
+    const eventTitle =
+      typeof notification.payload.event_title === "string"
+        ? notification.payload.event_title
+        : "событие";
+    const isOpen = notification.payload.scope === "open";
+    return {
+      icon: CalendarDays,
+      title: isOpen
+        ? `${actorName} создал(а) открытое событие «${eventTitle}»`
+        : `В вашем городе: «${eventTitle}»`,
+      href: notification.entity_id
+        ? (`/events/${notification.entity_id}` as Route)
+        : "/events",
+    };
+  }
+
+  if (notification.type === "event_cancelled") {
+    const eventTitle =
+      typeof notification.payload.event_title === "string"
+        ? notification.payload.event_title
+        : "событие";
+    return {
+      icon: CalendarX2,
+      title: `Событие «${eventTitle}» отменено`,
+      href: notification.entity_id
+        ? (`/events/${notification.entity_id}` as Route)
+        : "/events",
     };
   }
 

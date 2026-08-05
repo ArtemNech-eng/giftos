@@ -5,6 +5,8 @@ import type { Route } from "next";
 import { redirect } from "next/navigation";
 
 import { requireUser } from "@/lib/auth";
+import { sendPushToUser } from "@/lib/push";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { optionalText, requiredText } from "@/lib/validation";
 
 export async function createEvent(formData: FormData) {
@@ -28,7 +30,7 @@ export async function createEvent(formData: FormData) {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("city_id")
+    .select("city_id, display_name")
     .eq("id", user.id)
     .maybeSingle();
 
@@ -43,9 +45,20 @@ export async function createEvent(formData: FormData) {
       scope,
       starts_at: startsAt.toISOString(),
     })
-    .select("id")
+    .select("id, city_id, scope, title, starts_at")
     .single();
   if (error) throw new Error(`Не удалось создать событие: ${error.message}`);
+
+  // Notify: local events -> city residents; open events -> author's followers.
+  await notifyAboutEvent({
+    eventId: event.id,
+    scope: event.scope,
+    cityId: event.city_id,
+    title: event.title,
+    actorId: user.id,
+    actorName: profile?.display_name ?? "Автор",
+    startsAt: event.starts_at,
+  });
 
   revalidatePath("/feed");
   revalidatePath("/events");
@@ -89,14 +102,134 @@ export async function cancelEvent(formData: FormData) {
   const eventId = requiredText(formData.get("event_id"), 100);
   if (!eventId) throw new Error("Событие не найдено.");
 
-  const { error } = await supabase
+  const { data: event, error } = await supabase
     .from("events")
     .update({ is_cancelled: true })
     .eq("id", eventId)
-    .eq("author_id", user.id);
+    .eq("author_id", user.id)
+    .select("id, title")
+    .single();
   if (error) throw new Error(`Не удалось отменить событие: ${error.message}`);
+
+  // Notify attendees that the event was cancelled.
+  const admin = createAdminClient();
+  const { data: attendees } = await admin
+    .from("event_attendees")
+    .select("profile_id")
+    .eq("event_id", eventId);
+  if (attendees && attendees.length > 0) {
+    await admin.from("notifications").insert(
+      attendees
+        .filter((row) => row.profile_id !== user.id)
+        .map((row) => ({
+          recipient_id: row.profile_id,
+          actor_id: user.id,
+          type: "event_cancelled",
+          entity_type: "event",
+          entity_id: event.id,
+          payload: { event_title: event.title },
+        })),
+    );
+  }
 
   revalidatePath(`/events/${eventId}`);
   revalidatePath("/events");
   redirect(`/events/${eventId}` as Route);
+}
+
+async function notifyAboutEvent({
+  eventId,
+  scope,
+  cityId,
+  title,
+  actorId,
+  actorName,
+  startsAt,
+}: {
+  eventId: string;
+  scope: "local" | "open";
+  cityId: string | null;
+  title: string;
+  actorId: string;
+  actorName: string;
+  startsAt: string;
+}) {
+  const admin = createAdminClient();
+
+  if (scope === "local" && cityId) {
+    // Local event: notify residents of the same city.
+    const { data: residents } = await admin
+      .from("profiles")
+      .select("id")
+      .eq("city_id", cityId)
+      .eq("is_suspended", false)
+      .limit(200);
+    const residentIds = (residents ?? [])
+      .map((row) => row.id)
+      .filter((id) => id !== actorId);
+    if (residentIds.length === 0) return;
+
+    const { data: blockedBy } = await admin
+      .from("blocks")
+      .select("blocker_id")
+      .in("blocker_id", residentIds)
+      .eq("blocked_id", actorId);
+    const blockedSet = new Set((blockedBy ?? []).map((row) => row.blocker_id));
+    const recipients = residentIds.filter((id) => !blockedSet.has(id));
+    if (recipients.length === 0) return;
+
+    await admin.from("notifications").insert(
+      recipients.map((recipientId) => ({
+        recipient_id: recipientId,
+        actor_id: actorId,
+        type: "event_created",
+        entity_type: "event",
+        entity_id: eventId,
+        payload: { event_title: title, scope: "local" },
+      })),
+    );
+    const dateLabel = new Intl.DateTimeFormat("ru-RU", {
+      day: "numeric",
+      month: "short",
+      hour: "2-digit",
+      minute: "2-digit",
+    }).format(new Date(startsAt));
+    await Promise.all(
+      recipients.map((recipientId) =>
+        sendPushToUser(recipientId, {
+          title: `В вашем городе: ${title}`,
+          body: `${actorName} · ${dateLabel}`,
+          url: `/events/${eventId}`,
+        }),
+      ),
+    );
+  } else {
+    // Open event: notify the author's followers.
+    const { data: followers } = await admin
+      .from("user_follows")
+      .select("follower_id")
+      .eq("following_id", actorId)
+      .limit(200);
+    if (!followers || followers.length === 0) return;
+    const followerIds = followers.map((row) => row.follower_id);
+    const { data: blockedBy } = await admin
+      .from("blocks")
+      .select("blocker_id")
+      .in("blocker_id", followerIds)
+      .eq("blocked_id", actorId);
+    const blockedSet = new Set((blockedBy ?? []).map((row) => row.blocker_id));
+    const recipients = followerIds.filter((id) => !blockedSet.has(id));
+    if (recipients.length === 0) return;
+
+    await admin.from("notifications").insert(
+      recipients.map((recipientId) => ({
+        recipient_id: recipientId,
+        actor_id: actorId,
+        type: "event_created",
+        entity_type: "event",
+        entity_id: eventId,
+        payload: { event_title: title, scope: "open" },
+      })),
+    );
+  }
 }
