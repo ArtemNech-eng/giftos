@@ -153,6 +153,43 @@ export async function toggleAlsoWantWish(formData: FormData) {
   redirect(`/wishes/${wishId}` as Route);
 }
 
+/**
+ * Feed version of the «Хочу также» toggle: updates the count via the DB
+ * trigger and refreshes the feed in place, without navigating away.
+ */
+export async function toggleAlsoWantWishFromFeed(formData: FormData) {
+  const { supabase, user } = await requireUser();
+  const wishId = requiredText(formData.get("wish_id"), 100);
+  if (!wishId) return;
+
+  const { data: wish } = await supabase
+    .from("wishes")
+    .select("id, visibility, is_archived")
+    .eq("id", wishId)
+    .maybeSingle();
+  if (!wish || wish.visibility !== "public" || wish.is_archived) return;
+
+  const { data: existing } = await supabase
+    .from("wish_also_wants")
+    .select("wish_id")
+    .eq("wish_id", wishId)
+    .eq("profile_id", user.id)
+    .maybeSingle();
+  const { error } = existing
+    ? await supabase
+        .from("wish_also_wants")
+        .delete()
+        .eq("wish_id", wishId)
+        .eq("profile_id", user.id)
+    : await supabase
+        .from("wish_also_wants")
+        .insert({ wish_id: wishId, profile_id: user.id });
+  if (error) throw new Error(`Не удалось обновить «Хочу также»: ${error.message}`);
+
+  revalidatePath("/feed");
+  revalidatePath(`/wishes/${wishId}`);
+}
+
 export async function postWishComment(formData: FormData) {
   const { supabase, user } = await requireUser();
   const wishId = requiredText(formData.get("wish_id"), 100);

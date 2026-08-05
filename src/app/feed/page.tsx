@@ -15,6 +15,7 @@ import {
   WalletCards,
 } from "lucide-react";
 
+import { FeedWishToggle } from "@/components/feed-wish-toggle";
 import { APP_NAME, CATEGORIES } from "@/lib/constants";
 import { formatRubles } from "@/lib/money";
 import { hasSupabaseEnvironment } from "@/lib/supabase/env";
@@ -52,6 +53,7 @@ type WishPreview = {
   alsoWantsCount: number;
   authorName: string;
   authorUsername: string;
+  userWantsIt: boolean;
 };
 
 type LiveRoomPreview = {
@@ -170,6 +172,7 @@ const demoNewWishes: WishPreview[] = [
     title: "Курс по 3D-моделированию",
     categorySlug: "hobbies",
     alsoWantsCount: 42,
+    userWantsIt: false,
     authorName: "Кира",
     authorUsername: "kira",
   },
@@ -178,6 +181,7 @@ const demoNewWishes: WishPreview[] = [
     title: "Велосипед для города",
     categorySlug: "sport",
     alsoWantsCount: 18,
+    userWantsIt: false,
     authorName: "Тимур",
     authorUsername: "timur",
   },
@@ -189,6 +193,7 @@ const demoWishes: WishPreview[] = [
     title: "Новый MacBook для видео",
     categorySlug: "electronics",
     alsoWantsCount: 1284,
+    userWantsIt: true,
     authorName: "Настя",
     authorUsername: "nastya",
   },
@@ -197,6 +202,7 @@ const demoWishes: WishPreview[] = [
     title: "Увидеть Японию весной",
     categorySlug: "travel",
     alsoWantsCount: 864,
+    userWantsIt: false,
     authorName: "Лиза",
     authorUsername: "liza",
   },
@@ -205,6 +211,7 @@ const demoWishes: WishPreview[] = [
     title: "Собрать домашнюю студию",
     categorySlug: "music",
     alsoWantsCount: 521,
+    userWantsIt: false,
     authorName: "Макс",
     authorUsername: "max",
   },
@@ -500,6 +507,17 @@ async function getHomeData(scope: "city" | "global" = "global") {
       }
     }
 
+    // Wish ids the current user marked with «Хочу также» (for the toggle state).
+    const myAlsoWantIds = new Set<string>();
+    if (user) {
+      const { data: myAlsoWants } = await supabase
+        .from("wish_also_wants")
+        .select("wish_id")
+        .eq("profile_id", user.id)
+        .limit(200);
+      for (const row of myAlsoWants ?? []) myAlsoWantIds.add(String(row.wish_id));
+    }
+
     const mapWish = (item: Record<string, unknown>): WishPreview | null => {
       const profile = profileById.get(String(item.author_id));
       if (!profile) return null;
@@ -510,6 +528,7 @@ async function getHomeData(scope: "city" | "global" = "global") {
         alsoWantsCount: Number(item.also_wants_count),
         authorName: profile.display_name,
         authorUsername: profile.username,
+        userWantsIt: myAlsoWantIds.has(String(item.id)),
       };
     };
 
@@ -689,19 +708,22 @@ function WishLink({
   const category =
     CATEGORIES.find((item) => item.slug === wish.categorySlug) ?? CATEGORIES.at(-1)!;
   return (
-    <Link
-      className="border-white/8 flex items-center gap-3 rounded-2xl border bg-[#181a24] p-3"
-      href={href}
-    >
-      <Avatar index={index} name={wish.authorName} />
-      <div className="min-w-0 grow">
-        <p className="truncate text-sm font-bold">{wish.title}</p>
-        <p className="truncate text-xs text-[#aaa4b7]">
-          {category.emoji} {wish.authorName} · {wish.alsoWantsCount} хотят также
-        </p>
-      </div>
-      <span className="text-xl">✨</span>
-    </Link>
+    <div className="border-white/8 flex items-center gap-3 rounded-2xl border bg-[#181a24] p-3">
+      <Link className="flex min-w-0 grow items-center gap-3" href={href}>
+        <Avatar index={index} name={wish.authorName} />
+        <div className="min-w-0 grow">
+          <p className="truncate text-sm font-bold">{wish.title}</p>
+          <p className="truncate text-xs text-[#aaa4b7]">
+            {category.emoji} {wish.authorName}
+          </p>
+        </div>
+      </Link>
+      <FeedWishToggle
+        initialActive={wish.userWantsIt}
+        initialCount={wish.alsoWantsCount}
+        wishId={wish.id}
+      />
+    </div>
   );
 }
 
