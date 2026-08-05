@@ -21,6 +21,7 @@ type PlaceRow = {
   kind: "fixed" | "personal" | "temporary";
   creator_id: string | null;
   promoted_until: string | null;
+  pinned_until: string | null;
 };
 
 export default async function PlacesPage() {
@@ -43,9 +44,12 @@ export default async function PlacesPage() {
 
     const { data: rawPlaces } = await supabase
       .from("places")
-      .select("id, name, description, emoji, kind, creator_id, promoted_until")
+      .select(
+        "id, name, description, emoji, kind, creator_id, promoted_until, pinned_until",
+      )
       .eq("city_id", profile.city_id)
       .eq("is_active", true)
+      .order("pinned_until", { ascending: false, nullsFirst: false })
       .order("promoted_until", { ascending: false, nullsFirst: false })
       .order("created_at", { ascending: true })
       .limit(100);
@@ -82,6 +86,9 @@ export default async function PlacesPage() {
 
   const now = Date.now();
   const sorted = [...places].sort((a, b) => {
+    const aPinned = a.pinned_until && new Date(a.pinned_until).getTime() > now;
+    const bPinned = b.pinned_until && new Date(b.pinned_until).getTime() > now;
+    if (aPinned !== bPinned) return aPinned ? -1 : 1;
     const aPromoted = a.promoted_until && new Date(a.promoted_until).getTime() > now;
     const bPromoted = b.promoted_until && new Date(b.promoted_until).getTime() > now;
     if (aPromoted !== bPromoted) return aPromoted ? -1 : 1;
@@ -144,6 +151,12 @@ export default async function PlacesPage() {
                         🔥
                       </span>
                     )}
+                    {place.pinned_until &&
+                      new Date(place.pinned_until).getTime() > Date.now() && (
+                        <span className="rounded-full bg-[#ff4b8a]/20 px-1.5 py-0.5 text-[10px] font-semibold text-[#ff9bc5]">
+                          📌 Закреплено
+                        </span>
+                      )}
                     {place.promoted_until &&
                       new Date(place.promoted_until).getTime() > Date.now() && (
                         <span className="rounded-full bg-[#ffd35e]/25 px-1.5 py-0.5 text-[10px] font-semibold text-[#ffd35e]">

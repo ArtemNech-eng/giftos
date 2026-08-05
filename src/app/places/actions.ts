@@ -84,6 +84,21 @@ export async function promotePlaceWithBonus(formData: FormData) {
   redirect(`/places/${placeId}?promoted=1` as Route);
 }
 
+/** Pin the hangout: creator spends ⭐ to keep the place at the very top. */
+export async function pinPlaceWithBonus(formData: FormData) {
+  const { supabase } = await requireUser();
+  const placeId = requiredText(formData.get("place_id"), 100);
+  if (!placeId) throw new Error("Место не найдено.");
+  const { error } = await supabase.rpc("pin_place_with_hocu_bonus", {
+    p_place_id: placeId,
+  });
+  if (error) throw new Error(`Не удалось закрепить тусовку: ${error.message}`);
+  revalidatePath("/places");
+  revalidatePath(`/places/${placeId}`);
+  revalidatePath("/bonuses");
+  redirect(`/places/${placeId}?pinned=1` as Route);
+}
+
 /** Send a virtual gift to a person met in the place. */
 export async function sendPlaceGift(formData: FormData) {
   const { supabase, user } = await requireUser();

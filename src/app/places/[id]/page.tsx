@@ -8,6 +8,7 @@ import {
   inviteToPlace,
   joinPlace,
   leavePlace,
+  pinPlaceWithBonus,
   promotePlaceWithBonus,
 } from "@/app/places/actions";
 import { LivePlaceChat } from "@/components/live-place-chat";
@@ -270,6 +271,18 @@ export default async function PlacePage({
             </form>
             <p className="mt-2 text-xs text-[#a9a1b4]">
               Поднятое место 24 часа показывается первым в списке города.
+            </p>
+            <form action={pinPlaceWithBonus} className="mt-2">
+              <input name="place_id" type="hidden" value={place.id} />
+              <button
+                className="flex w-full items-center justify-center gap-2 rounded-xl border border-[#ff4b8a]/40 bg-[#2a1222] py-2.5 text-sm font-bold text-[#ff9bc5]"
+                type="submit"
+              >
+                📌 Закрепить на неделю за 500 ⭐
+              </button>
+            </form>
+            <p className="mt-2 text-xs text-[#a9a1b4]">
+              Закреплённое место всегда вверху списка города (7 дней).
             </p>
             <form action={inviteToPlace} className="mt-3">
               <input name="place_id" type="hidden" value={place.id} />
