@@ -26,12 +26,19 @@ export async function GET(request: NextRequest) {
 
   const { data: room } = await supabase
     .from("live_rooms")
-    .select("host_id, status")
+    .select("id, host_id, status")
     .eq("slug", roomSlug)
     .maybeSingle();
   if (!room || room.status !== "live")
     return NextResponse.json({ error: "Room not found." }, { status: 404 });
 
+  const { data: participant } = await supabase
+    .from("live_room_participants")
+    .select("role")
+    .eq("room_id", room.id)
+    .eq("profile_id", user.id)
+    .maybeSingle();
+  const canPublish = room.host_id === user.id || participant?.role === "cohost";
   const token = new AccessToken(apiKey, apiSecret, {
     identity: user.id,
     name: user.email ?? user.id,
@@ -39,7 +46,7 @@ export async function GET(request: NextRequest) {
   token.addGrant({
     roomJoin: true,
     room: roomSlug,
-    canPublish: room.host_id === user.id,
+    canPublish,
     canSubscribe: true,
     canPublishData: true,
   });

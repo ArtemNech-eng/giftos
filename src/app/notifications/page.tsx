@@ -73,6 +73,16 @@ function notificationCopy(notification: Notification, actor: Actor | undefined) 
     };
   }
 
+  if (notification.type === "live_cohost_invite") {
+    const slug =
+      typeof notification.payload.slug === "string" ? notification.payload.slug : null;
+    return {
+      icon: MessageCircle,
+      title: `${actorName} пригласил(-а) вас в совместный эфир`,
+      href: slug ? (`/live/${slug}` as Route) : "/notifications",
+    };
+  }
+
   if (notification.type === "direct_message") {
     return {
       icon: MessageCircle,

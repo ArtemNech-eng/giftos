@@ -6,6 +6,7 @@ import type { Route } from "next";
 import { redirect } from "next/navigation";
 
 import { requireUser } from "@/lib/auth";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { optionalText, requiredText } from "@/lib/validation";
 
 export async function createLiveRoom(formData: FormData) {
@@ -45,6 +46,56 @@ export async function createLiveRoom(formData: FormData) {
     .insert({ room_id: room.id, profile_id: user.id, role: "host" });
   revalidatePath("/feed");
   redirect(`/live/${slug}` as Route);
+}
+
+export async function inviteLiveCohost(formData: FormData) {
+  const { supabase, user } = await requireUser();
+  const roomId = requiredText(formData.get("room_id"), 100);
+  const slug = requiredText(formData.get("slug"), 100);
+  const username = requiredText(formData.get("username"), 30)
+    .replace(/^@/, "")
+    .toLowerCase();
+  if (!roomId || !slug || !username)
+    throw new Error("Укажите пользователя для совместного эфира.");
+
+  const { data: room } = await supabase
+    .from("live_rooms")
+    .select("id, host_id, title")
+    .eq("id", roomId)
+    .eq("host_id", user.id)
+    .maybeSingle();
+  if (!room) throw new Error("Только ведущий может приглашать co-host.");
+  const { data: target } = await supabase
+    .from("profiles")
+    .select("id")
+    .eq("username", username)
+    .maybeSingle();
+  if (!target || target.id === user.id)
+    throw new Error("Этот пользователь недоступен.");
+
+  const admin = createAdminClient();
+  const { error } = await admin.from("live_room_participants").upsert(
+    {
+      room_id: room.id,
+      profile_id: target.id,
+      role: "cohost",
+      joined_at: new Date().toISOString(),
+      left_at: null,
+    },
+    { onConflict: "room_id,profile_id" },
+  );
+  if (error) throw new Error(`Не удалось пригласить co-host: ${error.message}`);
+  await admin.from("notifications").insert({
+    recipient_id: target.id,
+    actor_id: user.id,
+    type: "live_cohost_invite",
+    entity_type: "live_room",
+    entity_id: room.id,
+    payload: { slug, title: room.title },
+  });
+
+  revalidatePath(`/live/${slug}`);
+  redirect(`/live/${slug}?cohost=invited` as Route);
 }
 
 export async function sendLiveRoomMessage(formData: FormData) {

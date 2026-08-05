@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Copy, MessageCircle, UsersRound } from "lucide-react";
 import { notFound } from "next/navigation";
 
-import { sendLiveRoomMessage } from "@/app/live/actions";
+import { inviteLiveCohost, sendLiveRoomMessage } from "@/app/live/actions";
 import { LiveKitRoom } from "@/components/livekit-room";
 import { requireUser } from "@/lib/auth";
 
@@ -104,6 +104,31 @@ export default async function LiveRoomPage({
           )}
         </div>
       </section>
+      {room.host_id === user.id && (
+        <form
+          action={inviteLiveCohost}
+          className="mt-5 rounded-2xl border border-[#b550ff]/35 bg-[#1b1528] p-4"
+        >
+          <input name="room_id" type="hidden" value={room.id} />
+          <input name="slug" type="hidden" value={slug} />
+          <p className="text-sm font-bold">Пригласить второго ведущего</p>
+          <div className="mt-3 flex gap-2">
+            <input
+              className="grow rounded-xl border border-white/10 bg-black/20 px-3 text-sm"
+              maxLength={30}
+              name="username"
+              placeholder="@username"
+              required
+            />
+            <button
+              className="rounded-xl bg-gradient-to-r from-[#ff4b8a] to-[#7d45ff] px-4 text-sm font-bold"
+              type="submit"
+            >
+              Пригласить
+            </button>
+          </div>
+        </form>
+      )}
       <section className="mt-5 rounded-2xl border border-white/10 bg-[#171923] p-4">
         <div className="flex items-center gap-2">
           <MessageCircle className="size-5 text-[#d68cff]" />
