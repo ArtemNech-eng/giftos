@@ -11,6 +11,7 @@ import {
   WalletCards,
 } from "lucide-react";
 
+import { CreatorShareLink } from "@/components/creator-share-link";
 import { requireUser } from "@/lib/auth";
 import { formatRubles } from "@/lib/money";
 
@@ -93,7 +94,16 @@ export default async function CreatorDashboardPage() {
               <Bell className="size-5" />
             </Link>
           </header>
-          <section className="mt-6 rounded-[2rem] bg-gradient-to-br from-[#291940] to-[#171a2b] p-6">
+          <section className="mt-5 rounded-2xl border border-white/10 bg-[#171923] p-4">
+            <p className="text-sm font-semibold">Приводите аудиторию</p>
+            <p className="mt-1 text-xs leading-5 text-[#aaa2b4]">
+              Разместите персональную ссылку в Telegram, VK или социальных сетях.
+            </p>
+            <div className="mt-3">
+              <CreatorShareLink username={profile.username} />
+            </div>
+          </section>
+          <section className="mt-5 rounded-[2rem] bg-gradient-to-br from-[#291940] to-[#171a2b] p-6">
             <p className="text-sm text-[#c5bdd0]">Тестовый баланс</p>
             <p className="mt-2 text-4xl font-bold">{formatRubles(income)}</p>
             <Link
