@@ -12,6 +12,7 @@ import {
 
 import { markAllNotificationsRead } from "@/app/social/actions";
 import { EmptyState } from "@/components/empty-state";
+import { PushNotificationButton } from "@/components/push-notification-button";
 import { SiteHeader } from "@/components/site-header";
 import { requireUser } from "@/lib/auth";
 import { formatRubles } from "@/lib/money";
@@ -185,6 +186,16 @@ export default async function NotificationsPage() {
             </form>
           )}
         </div>
+
+        <section className="mt-6 rounded-2xl bg-[#fff8f9] p-4">
+          <p className="font-semibold">Браузерные уведомления</p>
+          <p className="mt-1 text-sm leading-5 text-[#826c73]">
+            Получайте push, когда любимый автор выходит в эфир.
+          </p>
+          <div className="mt-3">
+            <PushNotificationButton />
+          </div>
+        </section>
 
         <section className="mt-7">
           {notifications.length === 0 ? (

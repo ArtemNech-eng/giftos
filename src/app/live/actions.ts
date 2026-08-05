@@ -6,6 +6,7 @@ import type { Route } from "next";
 import { redirect } from "next/navigation";
 
 import { requireUser } from "@/lib/auth";
+import { sendPushToUser } from "@/lib/push";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { optionalText, requiredText } from "@/lib/validation";
 
@@ -83,6 +84,22 @@ async function notifyFollowersAboutLiveRoom(
       entity_id: roomId,
       payload: { slug, title },
     })),
+  );
+
+  // Web push: deliver to followers who enabled browser notifications.
+  const { data: host } = await admin
+    .from("profiles")
+    .select("display_name")
+    .eq("id", hostId)
+    .maybeSingle();
+  await Promise.all(
+    recipients.map((recipientId) =>
+      sendPushToUser(recipientId, {
+        title: `${host?.display_name ?? "Автор"} начал(а) эфир`,
+        body: title,
+        url: `/live/${slug}`,
+      }),
+    ),
   );
 }
 
