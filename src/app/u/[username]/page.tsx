@@ -11,6 +11,10 @@ import {
   createPaidMessageRequest,
   updateMessageRequestSettings,
 } from "@/app/creator/messages/actions";
+import {
+  testSubscribeToCreator,
+  updateCreatorSubscriptionSettings,
+} from "@/app/creator/subscriptions/actions";
 import { createStory } from "@/app/stories/actions";
 import { ReportForm } from "@/components/report-form";
 import { CATEGORIES } from "@/lib/constants";
@@ -63,7 +67,7 @@ export default async function ProfilePage({
   const { data: profile } = await supabase
     .from("profiles")
     .select(
-      "id, username, display_name, bio, city, show_city, avatar_path, is_creator, creator_headline, message_requests_enabled, paid_message_price_minor",
+      "id, username, display_name, bio, city, show_city, avatar_path, is_creator, creator_headline, message_requests_enabled, paid_message_price_minor, subscriptions_enabled, subscription_price_minor",
     )
     .eq("username", username.toLowerCase())
     .maybeSingle();
@@ -76,6 +80,7 @@ export default async function ProfilePage({
   const [
     { data: existingFollow },
     { data: existingBlock },
+    { data: existingSubscription },
     { data: rawMedia },
     { data: rawWishes },
     { data: rawFundraisers },
@@ -97,6 +102,16 @@ export default async function ProfilePage({
           .select("blocker_id")
           .eq("blocker_id", user.id)
           .eq("blocked_id", profile.id)
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
+    user && !isOwnProfile
+      ? supabase
+          .from("creator_subscriptions")
+          .select("id, status, expires_at")
+          .eq("creator_id", profile.id)
+          .eq("subscriber_id", user.id)
+          .eq("status", "active")
+          .gt("expires_at", new Date().toISOString())
           .maybeSingle()
       : Promise.resolve({ data: null }),
     supabase
@@ -285,6 +300,37 @@ export default async function ProfilePage({
           </span>
         </div>
       </section>
+
+      {user &&
+        !isOwnProfile &&
+        profile.subscriptions_enabled &&
+        profile.subscription_price_minor && (
+          <form
+            action={testSubscribeToCreator}
+            className="mx-4 mb-3 rounded-2xl border border-[#ff9ed0]/35 bg-gradient-to-r from-[#30182f] to-[#191827] p-4"
+          >
+            <input name="creator_id" type="hidden" value={profile.id} />
+            <input name="username" type="hidden" value={profile.username} />
+            <div className="flex items-center justify-between">
+              <span>
+                <b className="block">Подписка на автора</b>
+                <small className="text-xs text-[#b9b1c5]">
+                  Закрытые публикации и будущие бонусы
+                </small>
+              </span>
+              <b className="text-[#ffd0eb]">
+                {formatRubles(profile.subscription_price_minor)} / мес
+              </b>
+            </div>
+            <button
+              className={`mt-3 rounded-xl px-4 py-2 text-sm font-bold ${existingSubscription ? "bg-white/10 text-[#d8d0e0]" : "bg-gradient-to-r from-[#ff4b8a] to-[#7d45ff]"}`}
+              disabled={Boolean(existingSubscription)}
+              type="submit"
+            >
+              {existingSubscription ? "Вы подписаны" : "Подписаться в тестовом режиме"}
+            </button>
+          </form>
+        )}
 
       {user &&
         !isOwnProfile &&
@@ -494,6 +540,44 @@ export default async function ProfilePage({
                 }
                 min="1"
                 name="paid_message_price"
+                type="number"
+              />
+            </label>
+            <button
+              className="mt-3 rounded-xl bg-gradient-to-r from-[#ff4b8a] to-[#7d45ff] px-4 py-2 text-sm font-bold"
+              type="submit"
+            >
+              Сохранить
+            </button>
+          </form>
+        </details>
+      )}
+      {isOwnProfile && profile.is_creator && (
+        <details className="mx-4 mt-3 rounded-2xl border border-white/10 bg-[#171923] p-4">
+          <summary className="cursor-pointer text-sm font-bold">
+            Настроить подписку автора
+          </summary>
+          <form action={updateCreatorSubscriptionSettings} className="mt-4">
+            <input name="username" type="hidden" value={profile.username} />
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                defaultChecked={profile.subscriptions_enabled}
+                name="subscriptions_enabled"
+                type="checkbox"
+              />{" "}
+              Включить тестовую подписку
+            </label>
+            <label className="mt-3 block text-sm text-[#c9c1d2]">
+              Цена в месяц, ₽
+              <input
+                className="mt-2 block w-28 rounded-xl border border-white/10 bg-black/20 p-2 text-sm"
+                defaultValue={
+                  profile.subscription_price_minor
+                    ? Number(profile.subscription_price_minor) / 100
+                    : "99"
+                }
+                min="1"
+                name="subscription_price"
                 type="number"
               />
             </label>
