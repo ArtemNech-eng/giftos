@@ -80,7 +80,7 @@ npm run format:check
 - [ ] Приглашения в приватные сборы.
 - [ ] Тестовый платёжный адаптер, поддержка и проверяемый webhook.
 
-Подробности: [архитектура](docs/ARCHITECTURE.md) и [MVP backlog](docs/MVP_BACKLOG.md).
+Подробности: [контекст ИИ](docs/КОНТЕКСТ_ИИ.md), [архитектура](docs/ARCHITECTURE.md), [инфраструктура в РФ](docs/INFRASTRUCTURE_RU.md) и [MVP backlog](docs/MVP_BACKLOG.md).
 
 ## Важные продуктовые ограничения
 
