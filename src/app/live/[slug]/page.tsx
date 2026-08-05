@@ -11,7 +11,7 @@ import {
   UsersRound,
 } from "lucide-react";
 
-import { endLiveRoom, inviteLiveCohost } from "@/app/live/actions";
+import { endLiveRoom, inviteLiveCohost, removeLiveCohost } from "@/app/live/actions";
 import { sendTestLiveDonation } from "@/app/live/donations/actions";
 import { sendTestLiveGift } from "@/app/live/gifts/actions";
 import { LiveDonationEvents } from "@/components/live-donation-events";
@@ -40,6 +40,7 @@ export default async function LiveRoomPage({
   const [
     { data: host },
     { data: messages },
+    { data: participants },
     { count: viewers },
     { data: wish },
     { data: gifts },
@@ -55,6 +56,11 @@ export default async function LiveRoomPage({
       .eq("room_id", room.id)
       .order("created_at", { ascending: true })
       .limit(100),
+    supabase
+      .from("live_room_participants")
+      .select("profile_id, role, left_at")
+      .eq("room_id", room.id)
+      .is("left_at", null),
     supabase
       .from("live_room_participants")
       .select("*", { count: "exact", head: true })
@@ -105,6 +111,21 @@ export default async function LiveRoomPage({
   const names = new Map(
     (authors ?? []).map((author) => [author.id, author.display_name]),
   );
+
+  const cohosts = (participants ?? []).filter(
+    (participant) => participant.role === "cohost",
+  );
+  const cohostIds = cohosts.map((cohost) => cohost.profile_id);
+  const { data: cohostProfiles } = cohostIds.length
+    ? await supabase
+        .from("profiles")
+        .select("id, display_name, avatar_url")
+        .in("id", cohostIds)
+    : { data: [] };
+  const cohostNames = new Map(
+    (cohostProfiles ?? []).map((profile) => [profile.id, profile.display_name]),
+  );
+  const isCohost = cohostIds.includes(user.id);
 
   return (
     <main className="mx-auto min-h-screen max-w-[430px] bg-[#0c0e14] px-4 py-5 text-white">
@@ -231,6 +252,85 @@ export default async function LiveRoomPage({
           )}
         </div>
       </section>
+      {room.status === "live" && (
+        <section className="mt-5 rounded-2xl border border-white/10 bg-[#171923] p-4">
+          <div className="flex items-center gap-2">
+            <UsersRound className="size-5 text-[#9e88ff]" />
+            <h2 className="font-bold">В эфире</h2>
+            <span className="ml-auto text-xs text-[#a9a1b4]">
+              {viewers ?? 0} зрителей
+            </span>
+          </div>
+          <div className="mt-3 space-y-2">
+            <div className="flex items-center gap-3 rounded-xl bg-white/5 px-3 py-2">
+              <span className="grid size-9 shrink-0 place-items-center rounded-full bg-gradient-to-br from-[#ffd35e] to-[#ff9b3d] text-sm">
+                👑
+              </span>
+              <div className="min-w-0">
+                <p className="truncate text-sm font-semibold">
+                  {host?.display_name ?? "Ведущий"}
+                  {room.host_id === user.id && (
+                    <span className="ml-2 text-xs font-normal text-[#ffd35e]">
+                      это вы
+                    </span>
+                  )}
+                </p>
+                <p className="text-xs text-[#a9a1b4]">Ведущий</p>
+              </div>
+            </div>
+            {cohosts.length === 0 ? (
+              <p className="rounded-xl bg-white/5 px-3 py-2 text-xs text-[#a9a1b4]">
+                Со-ведущих пока нет — пригласите второго ведущего.
+              </p>
+            ) : (
+              cohosts.map((cohost) => (
+                <div
+                  className="flex items-center gap-3 rounded-xl bg-white/5 px-3 py-2"
+                  key={cohost.profile_id}
+                >
+                  <span className="grid size-9 shrink-0 place-items-center rounded-full bg-gradient-to-br from-[#e17dff] to-[#9e88ff] text-sm">
+                    🎙
+                  </span>
+                  <div className="min-w-0 grow">
+                    <p className="truncate text-sm font-semibold">
+                      {cohostNames.get(cohost.profile_id) ?? "Со-ведущий"}
+                      {cohost.profile_id === user.id && (
+                        <span className="ml-2 text-xs font-normal text-[#e17dff]">
+                          это вы
+                        </span>
+                      )}
+                    </p>
+                    <p className="text-xs text-[#a9a1b4]">Со-ведущий</p>
+                  </div>
+                  {room.host_id === user.id && cohost.profile_id !== user.id && (
+                    <form action={removeLiveCohost} className="shrink-0">
+                      <input name="room_id" type="hidden" value={room.id} />
+                      <input name="slug" type="hidden" value={slug} />
+                      <input
+                        name="profile_id"
+                        type="hidden"
+                        value={cohost.profile_id}
+                      />
+                      <button
+                        className="rounded-lg border border-[#ff5b99]/40 px-2 py-1 text-xs text-[#ff9bc5]"
+                        title="Снять со-ведущего"
+                        type="submit"
+                      >
+                        Снять
+                      </button>
+                    </form>
+                  )}
+                </div>
+              ))
+            )}
+          </div>
+          {isCohost && (
+            <p className="mt-3 rounded-xl border border-[#e17dff]/30 bg-[#1b1528] px-3 py-2 text-xs text-[#e7c9f5]">
+              Вы — со-ведущий: помогаете вести эфир вместе с ведущим.
+            </p>
+          )}
+        </section>
+      )}
       {room.status === "live" && room.host_id === user.id && (
         <form action={endLiveRoom} className="mt-5">
           <input name="slug" type="hidden" value={slug} />

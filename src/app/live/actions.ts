@@ -98,6 +98,34 @@ export async function inviteLiveCohost(formData: FormData) {
   redirect(`/live/${slug}?cohost=invited` as Route);
 }
 
+export async function removeLiveCohost(formData: FormData) {
+  const { supabase, user } = await requireUser();
+  const roomId = requiredText(formData.get("room_id"), 100);
+  const slug = requiredText(formData.get("slug"), 100);
+  const profileId = requiredText(formData.get("profile_id"), 100);
+  if (!roomId || !slug || !profileId) throw new Error("Не удалось снять со-ведущего.");
+
+  const { data: room } = await supabase
+    .from("live_rooms")
+    .select("id, host_id")
+    .eq("id", roomId)
+    .eq("host_id", user.id)
+    .maybeSingle();
+  if (!room) throw new Error("Только ведущий может снять co-host.");
+
+  const admin = createAdminClient();
+  const { error } = await admin
+    .from("live_room_participants")
+    .delete()
+    .eq("room_id", room.id)
+    .eq("profile_id", profileId)
+    .eq("role", "cohost");
+  if (error) throw new Error(`Не удалось снять co-host: ${error.message}`);
+
+  revalidatePath(`/live/${slug}`);
+  redirect(`/live/${slug}?cohost=removed` as Route);
+}
+
 export async function endLiveRoom(formData: FormData) {
   const { supabase, user } = await requireUser();
   const slug = requiredText(formData.get("slug"), 100);
