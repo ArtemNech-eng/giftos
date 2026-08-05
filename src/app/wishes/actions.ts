@@ -146,6 +146,31 @@ export async function toggleAlsoWantWish(formData: FormData) {
   redirect(`/wishes/${wishId}` as Route);
 }
 
+export async function postWishComment(formData: FormData) {
+  const { supabase, user } = await requireUser();
+  const wishId = requiredText(formData.get("wish_id"), 100);
+  const body = requiredText(formData.get("body"), 2000);
+  if (!wishId || !body) throw new Error("Введите сообщение для обсуждения.");
+
+  const { data: wish } = await supabase
+    .from("wishes")
+    .select("id, visibility, is_archived")
+    .eq("id", wishId)
+    .maybeSingle();
+  if (!wish || wish.visibility !== "public" || wish.is_archived)
+    throw new Error("Это желание недоступно.");
+
+  const { error } = await supabase.from("wish_comments").insert({
+    wish_id: wishId,
+    author_id: user.id,
+    body,
+  });
+  if (error) throw new Error(`Не удалось отправить сообщение: ${error.message}`);
+
+  revalidatePath(`/wishes/${wishId}`);
+  redirect(`/wishes/${wishId}#discussion` as Route);
+}
+
 export async function cloneWish(formData: FormData) {
   const { supabase, user } = await requireUser();
   const sourceId = requiredText(formData.get("source_wish_id"), 100);
