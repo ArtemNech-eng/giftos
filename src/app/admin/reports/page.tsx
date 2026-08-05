@@ -5,7 +5,7 @@ import { moderateTarget, resolveReport } from "@/app/admin/reports/actions";
 import { EmptyState } from "@/components/empty-state";
 import { requireModerator } from "@/lib/auth";
 
-export const metadata = { title: "Модерация" };
+export const metadata = { title: "Модерация", robots: { index: false, follow: false } };
 export const dynamic = "force-dynamic";
 
 type Report = {

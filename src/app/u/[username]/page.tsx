@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { Route } from "next";
+import type { Metadata, Route } from "next";
 /* eslint-disable @next/next/no-img-element -- profile and story media use signed Storage URLs */
 import { ArrowLeft, MoreHorizontal, Play } from "lucide-react";
 import { notFound } from "next/navigation";
@@ -11,9 +11,42 @@ import { ReportForm } from "@/components/report-form";
 import { CATEGORIES } from "@/lib/constants";
 import { getSignedImageUrl } from "@/lib/media";
 import { formatRubles } from "@/lib/money";
+import { hasSupabaseEnvironment } from "@/lib/supabase/env";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ username: string }>;
+}): Promise<Metadata> {
+  const { username } = await params;
+  if (!hasSupabaseEnvironment()) return { robots: { index: false, follow: false } };
+  const supabase = await createClient();
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("display_name, bio, creator_headline, profile_visibility")
+    .eq("username", username.toLowerCase())
+    .maybeSingle();
+  if (!profile || profile.profile_visibility !== "public")
+    return { robots: { index: false, follow: false } };
+
+  const description =
+    profile.creator_headline ??
+    profile.bio ??
+    `Страница автора ${profile.display_name} в «Хочу также».`;
+  return {
+    title: `${profile.display_name} — автор в «Хочу также»`,
+    description,
+    alternates: { canonical: `/u/${username}` },
+    openGraph: {
+      title: `${profile.display_name} — «Хочу также»`,
+      description,
+      type: "profile",
+    },
+  };
+}
 
 export default async function ProfilePage({
   params,

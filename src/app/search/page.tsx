@@ -9,7 +9,7 @@ import { formatRubles } from "@/lib/money";
 import { hasSupabaseEnvironment } from "@/lib/supabase/env";
 import { createClient } from "@/lib/supabase/server";
 
-export const metadata = { title: "Поиск" };
+export const metadata = { title: "Поиск", robots: { index: false, follow: false } };
 export const dynamic = "force-dynamic";
 
 type FundraiserResult = {

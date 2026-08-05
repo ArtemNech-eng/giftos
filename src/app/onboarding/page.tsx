@@ -7,7 +7,10 @@ import { SubmitButton } from "@/components/submit-button";
 import { CATEGORIES } from "@/lib/constants";
 import { requireUser } from "@/lib/auth";
 
-export const metadata = { title: "Создание профиля" };
+export const metadata = {
+  title: "Создание профиля",
+  robots: { index: false, follow: false },
+};
 
 export default async function OnboardingPage() {
   const { supabase, user } = await requireUser();
@@ -19,7 +22,7 @@ export default async function OnboardingPage() {
     .eq("id", user.id)
     .maybeSingle();
 
-  if (profile?.onboarding_completed_at) redirect("/");
+  if (profile?.onboarding_completed_at) redirect("/feed");
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-10 sm:px-6 sm:py-14">

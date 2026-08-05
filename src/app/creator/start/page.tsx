@@ -6,7 +6,10 @@ import { FieldLabel, inputClassName, textAreaClassName } from "@/components/form
 import { SubmitButton } from "@/components/submit-button";
 import { requireUser } from "@/lib/auth";
 
-export const metadata = { title: "Создать страницу автора" };
+export const metadata = {
+  title: "Создать страницу автора",
+  robots: { index: false, follow: false },
+};
 
 export default async function CreatorStartPage() {
   const { supabase, user } = await requireUser();

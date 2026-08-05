@@ -7,7 +7,10 @@ export function CreatorBottomNav() {
       className="fixed inset-x-0 bottom-0 z-30 mx-auto flex max-w-md items-center justify-around border-t border-white/10 bg-[#11131c]/95 px-3 py-2 text-[#b9b2c7] backdrop-blur md:hidden"
       aria-label="Нижняя навигация"
     >
-      <Link className="grid place-items-center gap-1 text-xs hover:text-white" href="/">
+      <Link
+        className="grid place-items-center gap-1 text-xs hover:text-white"
+        href="/feed"
+      >
         <House className="size-5" />
         Главная
       </Link>

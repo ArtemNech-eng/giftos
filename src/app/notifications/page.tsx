@@ -8,7 +8,10 @@ import { SiteHeader } from "@/components/site-header";
 import { requireUser } from "@/lib/auth";
 import { formatRubles } from "@/lib/money";
 
-export const metadata = { title: "Уведомления" };
+export const metadata = {
+  title: "Уведомления",
+  robots: { index: false, follow: false },
+};
 export const dynamic = "force-dynamic";
 
 type Notification = {

@@ -81,5 +81,5 @@ export async function completeOnboarding(formData: FormData) {
 
   revalidatePath("/");
   revalidatePath(`/u/${username}`);
-  redirect("/");
+  redirect("/feed");
 }

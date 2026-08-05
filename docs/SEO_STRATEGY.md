@@ -51,10 +51,17 @@ headline: Играю, общаюсь и публикую stories
 
 Эти данные видит пользователь и поисковый робот. Визуальная тёмная оболочка не мешает индексации.
 
-## Ближайшая реализация
+## Реализовано
 
-1. Вынести mobile feed из `/` в `/feed`.
-2. Сделать `/` SEO landing page, которая объясняет продукт и ссылается на публичных авторов/категории.
-3. Добавить metadata/OG/robots/sitemap для существующих публичных маршрутов.
-4. Добавить `noindex` для stories, поиска и авторизованных разделов.
-5. После этого развивать video stories и creator-профили без потери SEO.
+- Mobile creator feed перенесён в `/feed`.
+- `/` стал серверной SEO landing page с текстом, CTA, категориями и ссылками на авторов.
+- Добавлены `robots.txt` и динамический `sitemap.xml`.
+- `/stories/[id]`, `/search`, onboarding, creator setup, notifications и admin получили `noindex`.
+- Публичный creator-профиль получил серверную dynamic metadata и Open Graph основу.
+
+## Следующие SEO-задачи
+
+1. Dynamic metadata/OG/canonical для публичных целей и желаний.
+2. JSON-LD для профилей и вечнозелёного контента.
+3. Вечнозелёные creator posts, которые могут индексироваться, в отличие от stories.
+4. Video poster/transcoding и оптимизация Core Web Vitals.
