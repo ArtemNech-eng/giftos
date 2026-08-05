@@ -56,12 +56,12 @@ export default async function StoryPage({
   }).format(new Date(story.expires_at));
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-xl items-center px-4 py-8">
-      <section className="surface w-full overflow-hidden rounded-[2rem]">
+    <main className="mx-auto flex min-h-screen max-w-xl items-center bg-[#0c0e14] px-4 py-8 text-white">
+      <section className="w-full overflow-hidden rounded-[2rem] border border-white/10 bg-[#171923] shadow-[0_18px_60px_rgba(0,0,0,0.4)]">
         <div className="flex items-center justify-between p-4">
           <div>
             <p className="font-bold">{author?.display_name ?? "Автор"}</p>
-            <p className="text-xs text-[#8e747c]">Story до {expiry}</p>
+            <p className="text-xs text-[#b9b2c7]">Story до {expiry}</p>
           </div>
           {author?.username && (
             <Link
@@ -117,7 +117,7 @@ export default async function StoryPage({
           )}
         </div>
         {story.caption && (
-          <p className="p-4 text-sm leading-6 text-[#604a52]">{story.caption}</p>
+          <p className="p-4 text-sm leading-6 text-[#ddd5e6]">{story.caption}</p>
         )}
       </section>
     </main>

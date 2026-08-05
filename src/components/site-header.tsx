@@ -43,7 +43,7 @@ export async function SiteHeader() {
   }
 
   return (
-    <header className="sticky top-0 z-20 border-b border-white/70 bg-[#fcf8f7]/80 backdrop-blur-xl">
+    <header className="sticky top-0 z-20 border-b border-white/10 bg-[#0b0d13]/90 text-white backdrop-blur-xl">
       {userId && <LiveNotificationRefresh recipientId={userId} />}
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-5 px-4 sm:px-6">
         <Link
@@ -61,7 +61,7 @@ export async function SiteHeader() {
         >
           {navItems.map((item) => (
             <Link
-              className="rounded-lg px-3 py-2 text-sm font-medium text-[#705c63] transition hover:bg-white hover:text-[#bd3e66]"
+              className="rounded-lg px-3 py-2 text-sm font-medium text-[#c3bed0] transition hover:bg-white/10 hover:text-white"
               href={item.href}
               key={item.href}
             >
@@ -72,7 +72,7 @@ export async function SiteHeader() {
         <div className="flex items-center gap-1.5">
           <Link
             aria-label="Поиск"
-            className="grid size-9 place-items-center rounded-lg text-[#705c63] transition hover:bg-white hover:text-[#bd3e66]"
+            className="grid size-9 place-items-center rounded-lg text-[#c3bed0] transition hover:bg-white/10 hover:text-white"
             href="/search"
           >
             <Search className="size-4" />
@@ -80,7 +80,7 @@ export async function SiteHeader() {
           {username ? (
             <Link
               aria-label="Уведомления"
-              className="relative hidden size-9 place-items-center rounded-lg text-[#705c63] transition hover:bg-white hover:text-[#bd3e66] sm:grid"
+              className="relative hidden size-9 place-items-center rounded-lg text-[#c3bed0] transition hover:bg-white/10 hover:text-white sm:grid"
               href="/notifications"
             >
               <Bell className="size-4" />
@@ -93,7 +93,7 @@ export async function SiteHeader() {
           ) : (
             <button
               aria-label="Уведомления"
-              className="hidden size-9 place-items-center rounded-lg text-[#705c63] transition hover:bg-white hover:text-[#bd3e66] sm:grid"
+              className="hidden size-9 place-items-center rounded-lg text-[#c3bed0] transition hover:bg-white/10 hover:text-white sm:grid"
               type="button"
             >
               <Bell className="size-4" />

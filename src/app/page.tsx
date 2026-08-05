@@ -11,6 +11,7 @@ import {
   UsersRound,
 } from "lucide-react";
 
+import { CreatorBottomNav } from "@/components/creator-bottom-nav";
 import { EmptyState } from "@/components/empty-state";
 import { SiteHeader } from "@/components/site-header";
 import { StoryStrip } from "@/components/story-strip";
@@ -211,7 +212,7 @@ function ProfileFundraiserCard({
     : (`/fundraisers/${item.slug}` as Route);
 
   return (
-    <article className="surface rounded-2xl p-4 transition hover:shadow-glow sm:p-5">
+    <article className="rounded-2xl border border-white/10 bg-[#171923] p-4 text-white shadow-[0_10px_30px_rgba(0,0,0,0.25)] transition hover:border-[#8b3dff]/60 sm:p-5">
       <div className="flex items-start gap-3">
         <Link href={profileHref}>
           <Avatar imageUrl={item.avatarUrl} index={index} name={item.authorName} />
@@ -221,7 +222,7 @@ function ProfileFundraiserCard({
             <p className="truncate font-bold transition hover:text-[#bd3e66]">
               {item.authorName}
             </p>
-            <p className="mt-0.5 truncate text-xs text-[#8e747c]">
+            <p className="mt-0.5 truncate text-xs text-[#a8a1b2]">
               @{item.authorUsername}
               {item.city ? ` · ${item.city}` : ""}
             </p>
@@ -236,18 +237,18 @@ function ProfileFundraiserCard({
         <p className="text-sm text-[#856e75]">Главное желание</p>
         <h2 className="mt-1 text-lg font-bold leading-6">{item.title}</h2>
         {item.description && (
-          <p className="mt-2 line-clamp-2 text-sm leading-6 text-[#725c63]">
+          <p className="mt-2 line-clamp-2 text-sm leading-6 text-[#c8c0d1]">
             {item.description}
           </p>
         )}
       </Link>
 
-      <div className="mt-4 rounded-xl bg-[#fff8f9] p-3.5">
+      <div className="mt-4 rounded-xl bg-[#0f1119] p-3.5">
         <div className="flex items-center justify-between gap-3">
           <span className="text-sm font-semibold text-[#c53d68]">
             {formatRubles(item.currentAmountMinor)}
           </span>
-          <span className="text-xs text-[#8e747c]">
+          <span className="text-xs text-[#a8a1b2]">
             из {formatRubles(item.targetAmountMinor)}
           </span>
         </div>
@@ -257,7 +258,7 @@ function ProfileFundraiserCard({
             style={{ width: `${progress}%` }}
           />
         </div>
-        <div className="mt-2.5 flex items-center gap-4 text-xs text-[#8e747c]">
+        <div className="mt-2.5 flex items-center gap-4 text-xs text-[#a8a1b2]">
           <span className="inline-flex items-center gap-1">
             <UsersRound className="size-3.5" /> {item.participantsCount} участников
           </span>
@@ -276,7 +277,7 @@ function ProfileFundraiserCard({
         </Link>
         <Link
           aria-label={`Открыть профиль ${item.authorName}`}
-          className="inline-flex h-10 items-center justify-center rounded-xl border border-[#ead9df] bg-white px-3 text-sm font-semibold text-[#765f66] transition hover:border-[#df4f7d]"
+          className="inline-flex h-10 items-center justify-center rounded-xl border border-white/15 bg-white/5 px-3 text-sm font-semibold text-[#e3ddea] transition hover:border-[#df4f7d]"
           href={profileHref}
         >
           Профиль
@@ -292,15 +293,15 @@ export default async function HomePage() {
   return (
     <>
       <SiteHeader />
-      <main className="mx-auto max-w-5xl px-4 pb-16 pt-6 sm:px-6 sm:pt-8">
+      <main className="mx-auto min-h-screen max-w-5xl bg-[#0c0e14] px-4 pb-20 pt-6 text-white sm:px-6 sm:pt-8">
         <StoryStrip />
-        <section className="surface flex flex-col gap-4 rounded-2xl p-5 sm:flex-row sm:items-center sm:justify-between">
+        <section className="flex flex-col gap-4 rounded-2xl border border-white/10 bg-gradient-to-r from-[#1d1028] to-[#151725] p-5 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-sm font-semibold text-[#bd3e66]">Желания людей</p>
             <h1 className="mt-1 text-2xl font-bold tracking-tight">
               Посмотрите, что сейчас важно другим
             </h1>
-            <p className="mt-2 text-sm leading-6 text-[#826c73]">
+            <p className="mt-2 text-sm leading-6 text-[#b8b1c3]">
               Создайте желание, поделитесь им — и позвольте людям поддержать вашу
               историю.
             </p>
@@ -313,7 +314,7 @@ export default async function HomePage() {
               <Sparkles className="size-4" /> Хочу также
             </Link>
             <Link
-              className="inline-flex h-10 shrink-0 items-center justify-center rounded-xl border border-[#ead9df] bg-white px-4 text-sm font-semibold text-[#765f66] transition hover:border-[#df4f7d]"
+              className="inline-flex h-10 shrink-0 items-center justify-center rounded-xl border border-[#ead9df] bg-white px-4 text-sm font-semibold text-[#d8d0e0] transition hover:border-[#df4f7d]"
               href="/wishes/new"
             >
               <Plus className="mr-1.5 size-4" /> Желание
@@ -334,7 +335,7 @@ export default async function HomePage() {
                 Новые
               </span>
               <Link
-                className="rounded-lg px-3 py-1.5 font-semibold text-[#765f66] transition hover:bg-white"
+                className="rounded-lg px-3 py-1.5 font-semibold text-[#d8d0e0] transition hover:bg-white"
                 href="/discover"
               >
                 Все желания
@@ -369,7 +370,7 @@ export default async function HomePage() {
         </section>
 
         <section className="mt-10 grid gap-5 lg:grid-cols-[1.25fr_0.75fr]">
-          <div className="surface rounded-2xl p-5">
+          <div className="rounded-2xl border border-white/10 bg-[#171923] p-5">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-semibold text-[#bd3e66]">Интересы</p>
@@ -391,17 +392,17 @@ export default async function HomePage() {
               ))}
             </div>
           </div>
-          <aside className="rounded-2xl bg-[#fff0cf] p-5">
+          <aside className="rounded-2xl bg-gradient-to-br from-[#351b3d] to-[#25172f] p-5">
             <Heart className="size-5 fill-[#df4f7d] text-[#df4f7d]" />
-            <h2 className="mt-3 text-xl font-bold text-[#5f3d2e]">
+            <h2 className="mt-3 text-xl font-bold text-white">
               Одна мечта — уже начало
             </h2>
-            <p className="mt-2 text-sm leading-6 text-[#79584b]">
+            <p className="mt-2 text-sm leading-6 text-[#d4c7db]">
               Необязательно сразу создавать сбор. Начните с желания, а решение о
               поддержке придёт потом.
             </p>
             <Link
-              className="mt-4 inline-flex items-center gap-2 text-sm font-bold text-[#9c4a35]"
+              className="mt-4 inline-flex items-center gap-2 text-sm font-bold text-[#f4b1db]"
               href="/wishes/new"
             >
               Добавить желание <ArrowRight className="size-4" />
@@ -430,7 +431,7 @@ export default async function HomePage() {
                   <Avatar index={index} name={person.displayName} size="small" />
                   <div className="min-w-0">
                     <p className="truncate text-sm font-bold">{person.displayName}</p>
-                    <p className="truncate text-xs text-[#8e747c]">
+                    <p className="truncate text-xs text-[#a8a1b2]">
                       @{person.username}
                       {person.city ? ` · ${person.city}` : ""}
                     </p>
@@ -448,7 +449,8 @@ export default async function HomePage() {
           )}
         </section>
       </main>
-      <footer className="border-t border-[#eee1e4] py-7 text-center text-sm text-[#8e747c]">
+      <CreatorBottomNav />
+      <footer className="border-t border-white/10 bg-[#0c0e14] py-7 text-center text-sm text-[#a8a1b2]">
         <CircleUserRound className="mr-1.5 inline size-4 align-text-bottom" />{" "}
         {APP_NAME} · Люди, эфиры и авторские страницы
       </footer>

@@ -39,20 +39,20 @@ export function AuthHeaderActions({ username }: { username: string | null }) {
       </Link>
       <Link
         aria-label="Приглашения"
-        className="grid size-9 place-items-center rounded-lg text-[#705c63] transition hover:bg-white hover:text-[#bd3e66]"
+        className="grid size-9 place-items-center rounded-lg text-[#c3bed0] transition hover:bg-white/10 hover:text-white"
         href="/invitations"
       >
         <Inbox className="size-4" />
       </Link>
       <Link
-        className="hidden rounded-lg px-2 py-2 text-sm font-semibold text-[#705c63] transition hover:bg-white hover:text-[#bd3e66] sm:block"
+        className="hidden rounded-lg px-2 py-2 text-sm font-semibold text-[#c3bed0] transition hover:bg-white/10 hover:text-white sm:block"
         href={`/u/${username}` as Route}
       >
         Профиль
       </Link>
       <button
         aria-label="Выйти"
-        className="grid size-9 place-items-center rounded-lg text-[#705c63] transition hover:bg-white hover:text-[#bd3e66]"
+        className="grid size-9 place-items-center rounded-lg text-[#c3bed0] transition hover:bg-white/10 hover:text-white"
         onClick={signOut}
         type="button"
       >
