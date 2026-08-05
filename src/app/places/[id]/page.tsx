@@ -3,7 +3,7 @@ import type { Route } from "next";
 import { ArrowLeft, MapPin, UsersRound } from "lucide-react";
 import { notFound } from "next/navigation";
 
-import { enterPlace, joinPlace, leavePlace } from "@/app/places/actions";
+import { enterPlace, inviteToPlace, joinPlace, leavePlace } from "@/app/places/actions";
 import { LivePlaceChat } from "@/components/live-place-chat";
 import { requireUser } from "@/lib/auth";
 
@@ -24,14 +24,21 @@ export default async function PlacePage({
   const { supabase, user } = await requireUser();
   const { data: place } = await supabase
     .from("places")
-    .select("id, city_id, creator_id, name, description, emoji, kind")
+    .select("id, city_id, creator_id, name, description, emoji, kind, created_at")
     .eq("id", id)
     .eq("is_active", true)
     .maybeSingle();
   if (!place) notFound();
 
   const cutoff = new Date(Date.now() - ONLINE_WINDOW).toISOString();
-  const [{ data: presence }, { data: messages }, { data: member }] = await Promise.all([
+  const [
+    { data: presence },
+    { data: messages },
+    { data: member },
+    { count: memberCount },
+    { count: messageCount },
+    { count: liveCount },
+  ] = await Promise.all([
     supabase
       .from("place_presence")
       .select("profile_id, last_seen_at")
@@ -51,6 +58,19 @@ export default async function PlacePage({
       .eq("place_id", id)
       .eq("profile_id", user.id)
       .maybeSingle(),
+    supabase
+      .from("place_members")
+      .select("*", { count: "exact", head: true })
+      .eq("place_id", id),
+    supabase
+      .from("place_messages")
+      .select("*", { count: "exact", head: true })
+      .eq("place_id", id),
+    supabase
+      .from("live_rooms")
+      .select("*", { count: "exact", head: true })
+      .eq("host_id", place.creator_id ?? "")
+      .eq("status", "live"),
   ]);
   const online = (presence ?? []).length;
   const onlineIds = (presence ?? []).map((row) => row.profile_id);
@@ -104,6 +124,18 @@ export default async function PlacePage({
                 : "человек"}
           </p>
         </div>
+        <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-[#aaa4b7]">
+          <span>{memberCount ?? 0} участников</span>
+          <span>{messageCount ?? 0} сообщений</span>
+          {place.kind !== "fixed" && <span>{liveCount ?? 0} эфиров</span>}
+          <span>
+            Создано{" "}
+            {new Intl.DateTimeFormat("ru-RU", {
+              day: "numeric",
+              month: "short",
+            }).format(new Date(place.created_at))}
+          </span>
+        </div>
         {place.description && (
           <p className="mt-2 text-sm leading-6 text-[#b9b1c5]">{place.description}</p>
         )}
@@ -155,6 +187,27 @@ export default async function PlacePage({
             </form>
           )}
         </div>
+        {place.creator_id === user.id && place.kind !== "fixed" && (
+          <form action={inviteToPlace} className="mt-4 border-t border-white/10 pt-3">
+            <input name="place_id" type="hidden" value={place.id} />
+            <p className="text-xs font-semibold text-[#e7c9f5]">Позвать в тусовку</p>
+            <div className="mt-2 flex gap-2">
+              <input
+                className="grow rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-sm"
+                maxLength={30}
+                name="username"
+                placeholder="@username"
+                required
+              />
+              <button
+                className="rounded-xl bg-gradient-to-r from-[#ff4b8a] to-[#7d45ff] px-4 text-sm font-bold"
+                type="submit"
+              >
+                Позвать
+              </button>
+            </div>
+          </form>
+        )}
       </section>
 
       <section className="mt-5 rounded-2xl border border-white/10 bg-[#171923] p-4">

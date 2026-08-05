@@ -5,7 +5,69 @@ import type { Route } from "next";
 import { redirect } from "next/navigation";
 
 import { requireUser } from "@/lib/auth";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { optionalText, requiredText } from "@/lib/validation";
+
+/** Invite a user (by username) into a personal/temporary place. */
+export async function inviteToPlace(formData: FormData) {
+  const { supabase, user } = await requireUser();
+  const placeId = requiredText(formData.get("place_id"), 100);
+  const username = requiredText(formData.get("username"), 30)
+    .replace(/^@/, "")
+    .toLowerCase();
+  if (!placeId || !username) throw new Error("Укажите пользователя.");
+
+  const { data: place } = await supabase
+    .from("places")
+    .select("id, creator_id, name, emoji, kind")
+    .eq("id", placeId)
+    .eq("is_active", true)
+    .maybeSingle();
+  if (!place || place.kind === "fixed") throw new Error("Это место нельзя изменить.");
+  if (place.creator_id !== user.id)
+    throw new Error("Только создатель места может приглашать.");
+
+  const { data: target } = await supabase
+    .from("profiles")
+    .select("id")
+    .eq("username", username)
+    .maybeSingle();
+  if (!target || target.id === user.id)
+    throw new Error("Этот пользователь недоступен.");
+
+  const admin = createAdminClient();
+  const { error } = await admin
+    .from("place_members")
+    .upsert(
+      { place_id: place.id, profile_id: target.id, role: "member" },
+      { onConflict: "place_id,profile_id" },
+    );
+  if (error) throw new Error(`Не удалось пригласить: ${error.message}`);
+
+  await admin.from("notifications").insert({
+    recipient_id: target.id,
+    actor_id: user.id,
+    type: "place_invite",
+    entity_type: "place",
+    entity_id: place.id,
+    payload: { place_name: `${place.emoji} ${place.name}` },
+  });
+
+  revalidatePath(`/places/${place.id}`);
+  redirect(`/places/${place.id}?invited=1` as Route);
+}
+
+/** Temporary places older than 24 hours become inactive (archived). */
+export async function archiveTemporaryPlaces() {
+  const { supabase } = await requireUser();
+  await supabase
+    .from("places")
+    .update({ is_active: false })
+    .eq("kind", "temporary")
+    .lt("created_at", new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
+    .eq("is_active", true);
+  revalidatePath("/places");
+}
 
 export async function enterPlace(formData: FormData) {
   const { supabase, user } = await requireUser();

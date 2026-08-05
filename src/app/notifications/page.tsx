@@ -7,6 +7,7 @@ import {
   CheckCheck,
   Gift,
   Heart,
+  MapPin,
   MessageCircle,
   Radio,
   UserPlus,
@@ -136,6 +137,20 @@ function notificationCopy(notification: Notification, actor: Actor | undefined) 
       href: notification.entity_id
         ? (`/events/${notification.entity_id}` as Route)
         : "/events",
+    };
+  }
+
+  if (notification.type === "place_invite") {
+    const placeName =
+      typeof notification.payload.place_name === "string"
+        ? notification.payload.place_name
+        : "тусовку";
+    return {
+      icon: MapPin,
+      title: `${actorName} позвал(а) вас в ${placeName}`,
+      href: notification.entity_id
+        ? (`/places/${notification.entity_id}` as Route)
+        : "/places",
     };
   }
 
