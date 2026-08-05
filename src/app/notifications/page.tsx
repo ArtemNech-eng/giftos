@@ -10,6 +10,7 @@ import {
   MapPin,
   MessageCircle,
   Radio,
+  Sparkles,
   UserPlus,
 } from "lucide-react";
 
@@ -68,6 +69,30 @@ function notificationCopy(notification: Notification, actor: Actor | undefined) 
       icon: Heart,
       title: `${actorName} поддержал(-а) ваш сбор на ${formatRubles(amount)}`,
       href: "/notifications" as Route,
+    };
+  }
+
+  if (notification.type === "fundraiser_gift") {
+    const slug =
+      typeof notification.payload.slug === "string" ? notification.payload.slug : null;
+    return {
+      icon: Gift,
+      title: `${actorName} отправил(а) подарок в ваш сбор`,
+      href: slug ? (`/fundraisers/${slug}` as Route) : "/notifications",
+    };
+  }
+
+  if (notification.type === "wish_also_want") {
+    const wishTitle =
+      typeof notification.payload.wish_title === "string"
+        ? notification.payload.wish_title
+        : "ваше желание";
+    return {
+      icon: Sparkles,
+      title: `${actorName} тоже хочет «${wishTitle}»`,
+      href: notification.entity_id
+        ? (`/wishes/${notification.entity_id}` as Route)
+        : "/notifications",
     };
   }
 

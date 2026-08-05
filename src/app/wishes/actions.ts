@@ -8,6 +8,7 @@ import { requireUser } from "@/lib/auth";
 import { awardCityPoints } from "@/lib/city-battle";
 import { isUploadedFile, uploadOwnedImage } from "@/lib/media";
 import { parseAmountToMinor } from "@/lib/money";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { isValidUrl, optionalText, requiredText } from "@/lib/validation";
 
 function wishInput(formData: FormData) {
@@ -126,7 +127,7 @@ export async function toggleAlsoWantWish(formData: FormData) {
 
   const { data: wish } = await supabase
     .from("wishes")
-    .select("id, visibility, is_archived")
+    .select("id, author_id, title, visibility, is_archived")
     .eq("id", wishId)
     .maybeSingle();
   if (!wish || wish.visibility !== "public" || wish.is_archived)
@@ -148,6 +149,20 @@ export async function toggleAlsoWantWish(formData: FormData) {
         .from("wish_also_wants")
         .insert({ wish_id: wishId, profile_id: user.id });
   if (error) throw new Error(`Не удалось обновить «Хочу также»: ${error.message}`);
+
+  // Notify the wish author when someone marks «Хочу также» (not on removal).
+  if (!existing && wish.author_id !== user.id) {
+    await createAdminClient()
+      .from("notifications")
+      .insert({
+        recipient_id: wish.author_id,
+        actor_id: user.id,
+        type: "wish_also_want",
+        entity_type: "wish",
+        entity_id: wish.id,
+        payload: { wish_title: wish.title },
+      });
+  }
 
   revalidatePath(`/wishes/${wishId}`);
   redirect(`/wishes/${wishId}` as Route);

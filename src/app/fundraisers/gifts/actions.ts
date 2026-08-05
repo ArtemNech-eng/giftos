@@ -68,6 +68,16 @@ export async function sendTestFundraiserGift(formData: FormData) {
   if (ledgerError)
     throw new Error(`Не удалось начислить тестовый доход: ${ledgerError.message}`);
 
+  // Notify the fundraiser author about the gift.
+  await admin.from("notifications").insert({
+    recipient_id: fundraiser.author_id,
+    actor_id: user.id,
+    type: "fundraiser_gift",
+    entity_type: "fundraiser",
+    entity_id: fundraiser.id,
+    payload: { gift_code: gift.code, slug },
+  });
+
   // No redirect: the gift streams through Realtime to everyone in the room.
   revalidatePath(`/fundraisers/${slug}`);
   revalidatePath("/creator/earnings");
