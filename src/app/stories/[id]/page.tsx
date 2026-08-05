@@ -2,6 +2,7 @@ import Link from "next/link";
 import { LockKeyhole, Play, Sparkles } from "lucide-react";
 import { notFound } from "next/navigation";
 
+import { sendTestStoryGift } from "@/app/stories/gifts/actions";
 import { testUnlockStory } from "@/app/stories/actions";
 import { formatRubles } from "@/lib/money";
 import { getSignedImageUrl } from "@/lib/media";
@@ -41,11 +42,22 @@ export default async function StoryPage({
       : { data: null };
   const canWatch =
     story.access_type === "free" || isAuthor || unlock?.status === "unlocked";
-  const { data: author } = await supabase
-    .from("profiles")
-    .select("username, display_name")
-    .eq("id", story.author_id)
-    .maybeSingle();
+  const [{ data: author }, { data: gifts }, { data: storyGifts }] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("username, display_name")
+      .eq("id", story.author_id)
+      .maybeSingle(),
+    supabase
+      .from("virtual_gifts")
+      .select("code, label, emoji, price_minor, currency")
+      .eq("is_active", true)
+      .order("sort_order", { ascending: true }),
+    supabase
+      .from("story_gifts")
+      .select("gift_code, price_minor")
+      .eq("story_id", story.id),
+  ]);
   const videoUrl = canWatch
     ? await getSignedImageUrl({ bucket: "story-media", path: story.media_path })
     : null;
@@ -119,6 +131,39 @@ export default async function StoryPage({
         </div>
         {story.caption && (
           <p className="p-4 text-sm leading-6 text-[#ddd5e6]">{story.caption}</p>
+        )}
+        {canWatch && user && !isAuthor && gifts && gifts.length > 0 && (
+          <section className="border-t border-white/10 p-4">
+            <div className="mb-3 flex items-center justify-between">
+              <p className="font-semibold">Отправить подарок</p>
+              <span className="text-xs text-[#b9b2c7]">
+                {storyGifts?.length ?? 0} подарков
+              </span>
+            </div>
+            <div className="grid grid-cols-4 gap-2">
+              {gifts.map((gift) => (
+                <form action={sendTestStoryGift} key={gift.code}>
+                  <input name="story_id" type="hidden" value={story.id} />
+                  <input name="gift_code" type="hidden" value={gift.code} />
+                  <button
+                    className="flex w-full flex-col items-center rounded-xl border border-white/10 bg-white/5 px-1 py-2 transition hover:border-[#ff77ba] hover:bg-[#2b1933]"
+                    type="submit"
+                  >
+                    <span className="text-2xl">{gift.emoji}</span>
+                    <span className="mt-1 text-[10px] text-[#d7cfdf]">
+                      {gift.label}
+                    </span>
+                    <span className="text-[10px] text-[#ffb7dd]">
+                      {formatRubles(gift.price_minor)}
+                    </span>
+                  </button>
+                </form>
+              ))}
+            </div>
+            <p className="mt-3 text-xs text-[#9f97aa]">
+              Подарки работают в тестовом режиме и формируют тестовый доход автора.
+            </p>
+          </section>
         )}
       </section>
     </main>
