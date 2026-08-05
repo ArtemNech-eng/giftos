@@ -1,459 +1,361 @@
 import Link from "next/link";
 import type { Route } from "next";
 import {
-  ArrowRight,
-  ChevronRight,
-  CircleUserRound,
-  Heart,
+  Bell,
+  CirclePlus,
+  Compass,
+  Gamepad2,
   MessageCircle,
-  Plus,
-  Sparkles,
-  UsersRound,
+  Music2,
+  Plane,
+  Search,
+  UserRound,
+  WalletCards,
 } from "lucide-react";
 
-import { CreatorBottomNav } from "@/components/creator-bottom-nav";
-import { EmptyState } from "@/components/empty-state";
-import { SiteHeader } from "@/components/site-header";
-import { StoryStrip } from "@/components/story-strip";
 import { APP_NAME, CATEGORIES } from "@/lib/constants";
-import { getSignedImageUrl } from "@/lib/media";
 import { formatRubles } from "@/lib/money";
 import { hasSupabaseEnvironment } from "@/lib/supabase/env";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
-type FeedItem = {
+type Fundraiser = {
   id: string;
   slug: string;
   title: string;
-  description: string | null;
   categorySlug: string | null;
-  targetAmountMinor: number;
   currentAmountMinor: number;
-  participantsCount: number;
+  targetAmountMinor: number;
   authorName: string;
   authorUsername: string;
-  city: string | null;
-  avatarUrl: string | null;
 };
 
-type PersonItem = {
+type StoryAuthor = {
   id: string;
   username: string;
   displayName: string;
-  city: string | null;
+  avatarPath: string | null;
+  storyId?: string;
 };
 
-const demoFundraisers: FeedItem[] = [
+const demoAuthors: StoryAuthor[] = [
+  { id: "nastya", username: "nastya", displayName: "Настя", avatarPath: null },
+  { id: "max", username: "max", displayName: "Макс", avatarPath: null },
+  { id: "dima", username: "dima", displayName: "Дима", avatarPath: null },
+];
+
+const demoFundraisers: Fundraiser[] = [
   {
     id: "demo-1",
     slug: "demo-1",
     title: "Камера для первых съёмок",
-    description: "Хочу начать снимать людей и рассказывать их истории.",
     categorySlug: "hobbies",
-    targetAmountMinor: 15000000,
     currentAmountMinor: 8750000,
-    participantsCount: 43,
-    authorName: "Настя Орлова",
+    targetAmountMinor: 15000000,
+    authorName: "Настя",
     authorUsername: "nastya",
-    city: "Казань",
-    avatarUrl: null,
   },
   {
     id: "demo-2",
     slug: "demo-2",
-    title: "Моя первая электрогитара",
-    description: "Собираю на инструмент, чтобы наконец начать играть в группе.",
+    title: "Первая электрогитара",
     categorySlug: "music",
-    targetAmountMinor: 6500000,
     currentAmountMinor: 2840000,
-    participantsCount: 19,
-    authorName: "Максим Белов",
+    targetAmountMinor: 6500000,
+    authorName: "Макс",
     authorUsername: "max",
-    city: "Москва",
-    avatarUrl: null,
   },
   {
     id: "demo-3",
     slug: "demo-3",
     title: "Увидеть цветение сакуры",
-    description: "Мечтаю впервые попасть в Японию весной.",
     categorySlug: "travel",
-    targetAmountMinor: 18000000,
     currentAmountMinor: 6320000,
-    participantsCount: 31,
-    authorName: "Лиза Соколова",
+    targetAmountMinor: 18000000,
+    authorName: "Лиза",
     authorUsername: "liza",
-    city: "Санкт-Петербург",
-    avatarUrl: null,
-  },
-];
-
-const demoPeople: PersonItem[] = [
-  { id: "person-1", username: "nastya", displayName: "Настя Орлова", city: "Казань" },
-  { id: "person-2", username: "max", displayName: "Максим Белов", city: "Москва" },
-  {
-    id: "person-3",
-    username: "liza",
-    displayName: "Лиза Соколова",
-    city: "Санкт-Петербург",
   },
 ];
 
 async function getHomeData() {
   if (!hasSupabaseEnvironment()) {
-    return { fundraisers: demoFundraisers, people: demoPeople, isDemo: true };
+    return { authors: demoAuthors, fundraisers: demoFundraisers, isDemo: true };
   }
 
   try {
     const supabase = await createClient();
-    const [{ data: rawFundraisers }, { data: rawPeople }] = await Promise.all([
+    const [{ data: rawStories }, { data: rawFundraisers }] = await Promise.all([
+      supabase
+        .from("stories")
+        .select("id, author_id, created_at")
+        .gt("expires_at", new Date().toISOString())
+        .order("created_at", { ascending: false })
+        .limit(30),
       supabase
         .from("public_fundraiser_feed")
         .select(
-          "id, slug, title, description, category_slug, target_amount_minor, current_amount_minor, participant_count, author_display_name, author_username, author_city, author_avatar_path",
+          "id, slug, title, category_slug, current_amount_minor, target_amount_minor, author_display_name, author_username",
         )
         .order("published_at", { ascending: false })
-        .limit(12),
-      supabase
-        .from("profiles")
-        .select("id, username, display_name, city, show_city")
-        .eq("profile_visibility", "public")
-        .eq("is_suspended", false)
-        .order("created_at", { ascending: false })
-        .limit(6),
+        .limit(8),
     ]);
 
-    const parsedFundraisers = (
+    const uniqueStoryAuthors = new Map<string, { id: string; author_id: string }>();
+    for (const story of rawStories ?? []) {
+      if (!uniqueStoryAuthors.has(story.author_id))
+        uniqueStoryAuthors.set(story.author_id, story);
+    }
+    const storyRows = [...uniqueStoryAuthors.values()].slice(0, 8);
+    const { data: profiles } = storyRows.length
+      ? await supabase
+          .from("profiles")
+          .select("id, username, display_name, avatar_path")
+          .in(
+            "id",
+            storyRows.map((story) => story.author_id),
+          )
+      : { data: [] };
+    const profileById = new Map(
+      (profiles ?? []).map((profile) => [profile.id, profile]),
+    );
+    const authors: StoryAuthor[] = storyRows.flatMap((story) => {
+      const profile = profileById.get(story.author_id);
+      return profile
+        ? [
+            {
+              id: profile.id,
+              username: profile.username,
+              displayName: profile.display_name,
+              avatarPath: profile.avatar_path,
+              storyId: story.id,
+            },
+          ]
+        : [];
+    });
+
+    const fundraisers: Fundraiser[] = (
       (rawFundraisers ?? []) as Array<Record<string, unknown>>
     ).map((item) => ({
       id: String(item.id),
       slug: String(item.slug),
       title: String(item.title),
-      description: item.description ? String(item.description) : null,
       categorySlug: item.category_slug ? String(item.category_slug) : null,
-      targetAmountMinor: Number(item.target_amount_minor),
       currentAmountMinor: Number(item.current_amount_minor),
-      participantsCount: Number(item.participant_count),
+      targetAmountMinor: Number(item.target_amount_minor),
       authorName: String(item.author_display_name),
       authorUsername: String(item.author_username),
-      city: item.author_city ? String(item.author_city) : null,
-      avatarPath: item.author_avatar_path ? String(item.author_avatar_path) : null,
-    }));
-    const fundraisers: FeedItem[] = await Promise.all(
-      parsedFundraisers.map(async ({ avatarPath, ...item }) => ({
-        ...item,
-        avatarUrl: await getSignedImageUrl({ bucket: "avatars", path: avatarPath }),
-      })),
-    );
-    const people: PersonItem[] = (
-      (rawPeople ?? []) as Array<Record<string, unknown>>
-    ).map((item) => ({
-      id: String(item.id),
-      username: String(item.username),
-      displayName: String(item.display_name),
-      city: item.show_city && item.city ? String(item.city) : null,
     }));
 
-    return { fundraisers, people, isDemo: false };
+    return { authors, fundraisers, isDemo: false };
   } catch {
-    return { fundraisers: [], people: [], isDemo: false };
+    return { authors: [], fundraisers: [], isDemo: false };
   }
 }
 
+const gradients = [
+  "from-[#f0448c] via-[#7e42ff] to-[#4bc9ff]",
+  "from-[#ff8854] via-[#f0448c] to-[#7e42ff]",
+  "from-[#7e42ff] via-[#dc5cff] to-[#ffb75a]",
+];
+
 function Avatar({
   name,
+  index,
   imageUrl,
-  index = 0,
-  size = "normal",
 }: {
   name: string;
+  index: number;
   imageUrl?: string | null;
-  index?: number;
-  size?: "small" | "normal";
 }) {
-  const colors = ["bg-[#f0b5a7]", "bg-[#b9d6ca]", "bg-[#c7b3db]", "bg-[#f0cb81]"];
-  const dimensions = size === "small" ? "size-9 text-xs" : "size-12 text-base";
-
   return (
     <span
-      className={`grid shrink-0 place-items-center overflow-hidden rounded-full border-2 border-white font-bold text-[#563941] shadow-sm ${dimensions} ${colors[index % colors.length]}`}
+      className={`grid size-14 place-items-center overflow-hidden rounded-full bg-gradient-to-br p-0.5 ${gradients[index % gradients.length]}`}
     >
-      {imageUrl ? (
-        // eslint-disable-next-line @next/next/no-img-element -- a signed Storage URL has no stable image host
-        <img alt={`Аватар ${name}`} className="size-full object-cover" src={imageUrl} />
-      ) : (
-        name.slice(0, 1).toUpperCase()
-      )}
+      <span className="grid size-full place-items-center overflow-hidden rounded-full bg-[#2b1b30] text-lg font-bold text-white">
+        {imageUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element -- signed Storage URL has no stable image host
+          <img alt="" className="size-full object-cover" src={imageUrl} />
+        ) : (
+          name.slice(0, 1).toUpperCase()
+        )}
+      </span>
     </span>
   );
 }
 
-function ProfileFundraiserCard({
-  item,
-  index,
-  isDemo,
-}: {
-  item: FeedItem;
-  index: number;
-  isDemo: boolean;
-}) {
-  const category =
-    CATEGORIES.find((categoryItem) => categoryItem.slug === item.categorySlug) ??
-    CATEGORIES.at(-1)!;
-  const progress = Math.min(
-    100,
-    Math.round((item.currentAmountMinor / item.targetAmountMinor) * 100),
-  );
-  const profileHref = isDemo ? "/auth/sign-in" : (`/u/${item.authorUsername}` as Route);
-  const fundraiserHref = isDemo
-    ? "/auth/sign-in"
-    : (`/fundraisers/${item.slug}` as Route);
-
+function BottomNav() {
   return (
-    <article className="rounded-2xl border border-white/10 bg-[#171923] p-4 text-white shadow-[0_10px_30px_rgba(0,0,0,0.25)] transition hover:border-[#8b3dff]/60 sm:p-5">
-      <div className="flex items-start gap-3">
-        <Link href={profileHref}>
-          <Avatar imageUrl={item.avatarUrl} index={index} name={item.authorName} />
-        </Link>
-        <div className="min-w-0 grow">
-          <Link className="block" href={profileHref}>
-            <p className="truncate font-bold transition hover:text-[#bd3e66]">
-              {item.authorName}
-            </p>
-            <p className="mt-0.5 truncate text-xs text-[#a8a1b2]">
-              @{item.authorUsername}
-              {item.city ? ` · ${item.city}` : ""}
-            </p>
-          </Link>
-          <span className="mt-2 inline-flex rounded-full bg-[#fff1f4] px-2.5 py-1 text-xs font-semibold text-[#a34c67]">
-            {category.emoji} {category.label}
-          </span>
-        </div>
-      </div>
-
-      <Link className="mt-4 block" href={fundraiserHref}>
-        <p className="text-sm text-[#856e75]">Главное желание</p>
-        <h2 className="mt-1 text-lg font-bold leading-6">{item.title}</h2>
-        {item.description && (
-          <p className="mt-2 line-clamp-2 text-sm leading-6 text-[#c8c0d1]">
-            {item.description}
-          </p>
-        )}
+    <nav
+      className="fixed inset-x-0 bottom-0 z-30 mx-auto flex max-w-[430px] items-center justify-around border-t border-white/10 bg-[#10121b]/95 px-3 py-2 text-[#aaa4b7] backdrop-blur"
+      aria-label="Нижняя навигация"
+    >
+      <Link className="grid place-items-center gap-1 text-xs text-white" href="/">
+        <Compass className="size-5 fill-current" />
+        Главная
       </Link>
-
-      <div className="mt-4 rounded-xl bg-[#0f1119] p-3.5">
-        <div className="flex items-center justify-between gap-3">
-          <span className="text-sm font-semibold text-[#c53d68]">
-            {formatRubles(item.currentAmountMinor)}
-          </span>
-          <span className="text-xs text-[#a8a1b2]">
-            из {formatRubles(item.targetAmountMinor)}
-          </span>
-        </div>
-        <div className="mt-2 h-2 overflow-hidden rounded-full bg-[#f6e8ec]">
-          <div
-            className="h-full rounded-full bg-[#df4f7d]"
-            style={{ width: `${progress}%` }}
-          />
-        </div>
-        <div className="mt-2.5 flex items-center gap-4 text-xs text-[#a8a1b2]">
-          <span className="inline-flex items-center gap-1">
-            <UsersRound className="size-3.5" /> {item.participantsCount} участников
-          </span>
-          <span className="inline-flex items-center gap-1">
-            <MessageCircle className="size-3.5" /> Обсуждение
-          </span>
-        </div>
-      </div>
-
-      <div className="mt-4 flex gap-2">
-        <Link
-          className="inline-flex h-10 flex-1 items-center justify-center rounded-xl bg-[#df4f7d] px-3 text-sm font-semibold text-white transition hover:bg-[#c93f6d]"
-          href={fundraiserHref}
-        >
-          <Heart className="mr-1.5 size-4" /> Поддержать
-        </Link>
-        <Link
-          aria-label={`Открыть профиль ${item.authorName}`}
-          className="inline-flex h-10 items-center justify-center rounded-xl border border-white/15 bg-white/5 px-3 text-sm font-semibold text-[#e3ddea] transition hover:border-[#df4f7d]"
-          href={profileHref}
-        >
-          Профиль
-        </Link>
-      </div>
-    </article>
+      <Link
+        className="grid place-items-center gap-1 text-xs hover:text-white"
+        href="/search"
+      >
+        <Search className="size-5" />
+        Поиск
+      </Link>
+      <Link
+        className="-mt-6 grid size-14 place-items-center rounded-full bg-gradient-to-br from-[#ff4b8a] to-[#7d45ff] text-white shadow-[0_8px_28px_rgba(173,67,255,0.55)]"
+        href="/creator/start"
+      >
+        <CirclePlus className="size-7" />
+      </Link>
+      <Link
+        className="grid place-items-center gap-1 text-xs hover:text-white"
+        href="/notifications"
+      >
+        <MessageCircle className="size-5" />
+        Активность
+      </Link>
+      <Link
+        className="grid place-items-center gap-1 text-xs hover:text-white"
+        href="/auth/sign-in"
+      >
+        <UserRound className="size-5" />
+        Профиль
+      </Link>
+    </nav>
   );
 }
 
 export default async function HomePage() {
-  const { fundraisers, people, isDemo } = await getHomeData();
+  const { authors, fundraisers, isDemo } = await getHomeData();
+  const storyAuthors = authors.length > 0 ? authors : demoAuthors;
 
   return (
-    <>
-      <SiteHeader />
-      <main className="mx-auto min-h-screen max-w-5xl bg-[#0c0e14] px-4 pb-20 pt-6 text-white sm:px-6 sm:pt-8">
-        <StoryStrip />
-        <section className="flex flex-col gap-4 rounded-2xl border border-white/10 bg-gradient-to-r from-[#1d1028] to-[#151725] p-5 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <p className="text-sm font-semibold text-[#bd3e66]">Желания людей</p>
-            <h1 className="mt-1 text-2xl font-bold tracking-tight">
-              Посмотрите, что сейчас важно другим
-            </h1>
-            <p className="mt-2 text-sm leading-6 text-[#b8b1c3]">
-              Создайте желание, поделитесь им — и позвольте людям поддержать вашу
-              историю.
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <Link
-              className="inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-xl bg-[#df4f7d] px-4 text-sm font-semibold text-white transition hover:bg-[#c93f6d]"
-              href="/creator/start"
-            >
-              <Sparkles className="size-4" /> Хочу также
-            </Link>
-            <Link
-              className="inline-flex h-10 shrink-0 items-center justify-center rounded-xl border border-[#ead9df] bg-white px-4 text-sm font-semibold text-[#d8d0e0] transition hover:border-[#df4f7d]"
-              href="/wishes/new"
-            >
-              <Plus className="mr-1.5 size-4" /> Желание
-            </Link>
-          </div>
-        </section>
+    <main className="mx-auto min-h-screen max-w-[430px] bg-[#0c0e14] px-4 pb-24 pt-5 text-white">
+      <header className="mb-7 flex items-center justify-between">
+        <Link
+          className="flex items-center gap-2 text-lg font-bold tracking-tight"
+          href="/"
+        >
+          <span className="grid size-8 place-items-center rounded-xl bg-gradient-to-br from-[#ff4b8a] to-[#7d45ff] text-sm">
+            ♡
+          </span>
+          {APP_NAME}
+        </Link>
+        <div className="flex items-center gap-3">
+          <span className="inline-flex items-center gap-1 text-xs font-semibold text-[#ffd260]">
+            <WalletCards className="size-4" /> 2 450
+          </span>
+          <Link
+            className="grid size-8 place-items-center rounded-full border border-white/15 text-[#c5becf]"
+            href="/notifications"
+          >
+            <Bell className="size-4" />
+          </Link>
+        </div>
+      </header>
 
-        <section className="mt-8" id="feed">
-          <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
-            <div>
-              <p className="text-sm font-semibold text-[#bd3e66]">Лента анкет</p>
-              <h2 className="mt-1 text-2xl font-bold tracking-tight">
-                Люди и их сборы
-              </h2>
-            </div>
-            <div className="flex gap-2 text-sm">
-              <span className="rounded-lg bg-[#fff0f4] px-3 py-1.5 font-semibold text-[#bd3e66]">
-                Новые
-              </span>
+      <section>
+        <div className="mb-3 flex items-center justify-between">
+          <h1 className="text-base font-bold">Новые stories</h1>
+          <span className="text-xs font-medium text-[#b26fff]">Смотреть все ›</span>
+        </div>
+        <div className="flex gap-3 overflow-x-auto pb-2">
+          {storyAuthors.map((author, index) => {
+            const href = author.storyId
+              ? (`/stories/${author.storyId}` as Route)
+              : "/creator/start";
+            return (
               <Link
-                className="rounded-lg px-3 py-1.5 font-semibold text-[#d8d0e0] transition hover:bg-white"
-                href="/discover"
+                className="flex w-16 shrink-0 flex-col items-center gap-1.5"
+                href={href}
+                key={author.id}
               >
-                Все желания
+                <Avatar imageUrl={null} index={index} name={author.displayName} />
+                <span className="w-16 truncate text-center text-xs text-[#e7e1ee]">
+                  {author.displayName}
+                </span>
               </Link>
-            </div>
-          </div>
-          {isDemo && (
-            <p className="mb-4 rounded-xl bg-amber-50 px-3.5 py-2.5 text-xs leading-5 text-amber-800">
-              Пока это демонстрационные анкеты. После подключения Supabase здесь
-              появятся реальные публичные профили с актуальными сборами.
-            </p>
-          )}
-          {fundraisers.length > 0 ? (
-            <div className="grid gap-4 md:grid-cols-2">
-              {fundraisers.map((item, index) => (
-                <ProfileFundraiserCard
-                  index={index}
-                  isDemo={isDemo}
-                  item={item}
-                  key={item.id}
-                />
-              ))}
-            </div>
-          ) : (
-            <EmptyState
-              actionHref="/fundraisers/new"
-              actionLabel="Создать первый сбор"
-              description="Здесь появятся анкеты людей с их активными целями. Начните со своей истории."
-              title="Лента ждёт первую анкету"
-            />
-          )}
-        </section>
+            );
+          })}
+        </div>
+      </section>
 
-        <section className="mt-10 grid gap-5 lg:grid-cols-[1.25fr_0.75fr]">
-          <div className="rounded-2xl border border-white/10 bg-[#171923] p-5">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-semibold text-[#bd3e66]">Интересы</p>
-                <h2 className="mt-1 text-xl font-bold">Найдите близкое по духу</h2>
-              </div>
-              <Link className="text-sm font-semibold text-[#a13d5e]" href="/discover">
-                Смотреть всё <ChevronRight className="inline size-4" />
+      <section className="mt-7">
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="text-base font-bold">Можно поддержать</h2>
+          <Link className="text-xs font-medium text-[#b26fff]" href="/discover">
+            Смотреть все ›
+          </Link>
+        </div>
+        <div className="space-y-2.5">
+          {fundraisers.slice(0, 3).map((fundraiser, index) => {
+            const category =
+              CATEGORIES.find((item) => item.slug === fundraiser.categorySlug) ??
+              CATEGORIES.at(-1)!;
+            const href = isDemo
+              ? "/auth/sign-in"
+              : (`/fundraisers/${fundraiser.slug}` as Route);
+            return (
+              <Link
+                className="border-white/8 flex items-center gap-3 rounded-2xl border bg-[#181a24] p-3 transition hover:border-[#8f48ff]/60"
+                href={href}
+                key={fundraiser.id}
+              >
+                <Avatar index={index} name={fundraiser.authorName} />
+                <div className="min-w-0 grow">
+                  <p className="truncate text-sm font-bold">{fundraiser.authorName}</p>
+                  <p className="truncate text-xs text-[#aaa4b7]">
+                    {category.emoji} {fundraiser.title}
+                  </p>
+                </div>
+                <span className="rounded-lg bg-gradient-to-r from-[#ff4c87] to-[#7d45ff] px-2.5 py-1.5 text-xs font-semibold">
+                  {formatRubles(fundraiser.currentAmountMinor)}
+                </span>
               </Link>
-            </div>
-            <div className="mt-5 flex flex-wrap gap-2">
-              {CATEGORIES.slice(0, 8).map((category) => (
-                <Link
-                  className="rounded-xl border border-[#f0e2e6] bg-[#fffafb] px-3 py-2 text-sm font-medium text-[#674f57] transition hover:border-[#efafc2] hover:bg-rose-50"
-                  href={`/search?q=${encodeURIComponent(category.label)}` as Route}
-                  key={category.slug}
-                >
-                  {category.emoji} {category.label}
-                </Link>
-              ))}
-            </div>
-          </div>
-          <aside className="rounded-2xl bg-gradient-to-br from-[#351b3d] to-[#25172f] p-5">
-            <Heart className="size-5 fill-[#df4f7d] text-[#df4f7d]" />
-            <h2 className="mt-3 text-xl font-bold text-white">
-              Одна мечта — уже начало
-            </h2>
-            <p className="mt-2 text-sm leading-6 text-[#d4c7db]">
-              Необязательно сразу создавать сбор. Начните с желания, а решение о
-              поддержке придёт потом.
-            </p>
+            );
+          })}
+        </div>
+      </section>
+
+      <section className="border-white/8 mt-7 rounded-2xl border bg-gradient-to-br from-[#1f1631] to-[#171824] p-4">
+        <p className="text-sm font-bold">Хочешь тоже зарабатывать?</p>
+        <p className="mt-1 text-xs leading-5 text-[#b9b1c5]">
+          Создай страницу автора, публикуй stories и собери свою аудиторию.
+        </p>
+        <Link
+          className="mt-3 inline-flex h-9 items-center rounded-xl bg-white px-3.5 text-xs font-bold text-[#3a1a49]"
+          href="/creator/start"
+        >
+          ✨ Хочу также
+        </Link>
+      </section>
+
+      <section className="mt-7">
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="text-base font-bold">Популярные интересы</h2>
+          <Link className="text-xs font-medium text-[#b26fff]" href="/search">
+            Смотреть все ›
+          </Link>
+        </div>
+        <div className="grid grid-cols-4 gap-2">
+          {[
+            { icon: Gamepad2, label: "Игры", color: "text-[#ad79ff]" },
+            { icon: Music2, label: "Музыка", color: "text-[#fd65b6]" },
+            { icon: MessageCircle, label: "Общение", color: "text-[#ffbd65]" },
+            { icon: Plane, label: "Путешествия", color: "text-[#7aa9ff]" },
+          ].map(({ icon: Icon, label, color }) => (
             <Link
-              className="mt-4 inline-flex items-center gap-2 text-sm font-bold text-[#f4b1db]"
-              href="/wishes/new"
+              className="border-white/8 rounded-2xl border bg-[#181a24] p-3 text-center"
+              href={`/search?q=${encodeURIComponent(label)}` as Route}
+              key={label}
             >
-              Добавить желание <ArrowRight className="size-4" />
+              <Icon className={`mx-auto size-6 ${color}`} />
+              <span className="mt-2 block text-xs font-medium">{label}</span>
             </Link>
-          </aside>
-        </section>
-
-        <section className="mt-10">
-          <div className="mb-4 flex items-end justify-between">
-            <div>
-              <p className="text-sm font-semibold text-[#bd3e66]">Новые в сообществе</p>
-              <h2 className="mt-1 text-xl font-bold">Ещё люди</h2>
-            </div>
-            <Link className="text-sm font-semibold text-[#a13d5e]" href="/people">
-              Все люди →
-            </Link>
-          </div>
-          {people.length > 0 ? (
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {people.map((person, index) => (
-                <Link
-                  className="surface flex items-center gap-3 rounded-2xl p-3.5 transition hover:shadow-glow"
-                  href={isDemo ? "/auth/sign-in" : (`/u/${person.username}` as Route)}
-                  key={person.id}
-                >
-                  <Avatar index={index} name={person.displayName} size="small" />
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-bold">{person.displayName}</p>
-                    <p className="truncate text-xs text-[#a8a1b2]">
-                      @{person.username}
-                      {person.city ? ` · ${person.city}` : ""}
-                    </p>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          ) : (
-            <EmptyState
-              actionHref="/onboarding"
-              actionLabel="Создать профиль"
-              description="Публичные профили появятся здесь после регистрации первых участников."
-              title="Здесь будут новые люди"
-            />
-          )}
-        </section>
-      </main>
-      <CreatorBottomNav />
-      <footer className="border-t border-white/10 bg-[#0c0e14] py-7 text-center text-sm text-[#a8a1b2]">
-        <CircleUserRound className="mr-1.5 inline size-4 align-text-bottom" />{" "}
-        {APP_NAME} · Люди, эфиры и авторские страницы
-      </footer>
-    </>
+          ))}
+        </div>
+      </section>
+      <BottomNav />
+    </main>
   );
 }
