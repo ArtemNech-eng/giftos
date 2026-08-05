@@ -3,6 +3,7 @@ import { ArrowLeft, LockKeyhole } from "lucide-react";
 
 import { requireUser } from "@/lib/auth";
 import { formatRubles } from "@/lib/money";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { EmptyState } from "@/components/empty-state";
 
 export const metadata = {
@@ -12,8 +13,12 @@ export const metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function MyStoryOpensPage() {
-  const { supabase, user } = await requireUser();
-  const { data: rawOpens } = await supabase
+  const { user } = await requireUser();
+  // Admin client on purpose: RLS only exposes non-expired stories, but the
+  // opens history must keep expired stories too. Strictly scoped to the
+  // current user's own unlocks.
+  const admin = createAdminClient();
+  const { data: rawOpens } = await admin
     .from("story_unlocks")
     .select("id, unlocked_at, stories!inner(id, caption, unlock_price_minor)")
     .eq("viewer_id", user.id)
