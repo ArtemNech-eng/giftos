@@ -6,6 +6,7 @@ import { inviteLiveCohost } from "@/app/live/actions";
 import { sendTestLiveDonation } from "@/app/live/donations/actions";
 import { sendTestLiveGift } from "@/app/live/gifts/actions";
 import { LiveDonationEvents } from "@/components/live-donation-events";
+import { LiveGiftCounter } from "@/components/live-gift-counter";
 import { LiveGiftEvents } from "@/components/live-gift-events";
 import { LiveKitRoom } from "@/components/livekit-room";
 import { LiveRoomRealtime } from "@/components/live-room-realtime";
@@ -33,6 +34,7 @@ export default async function LiveRoomPage({
     { count: viewers },
     { data: wish },
     { data: gifts },
+    { count: giftCount },
   ] = await Promise.all([
     supabase
       .from("profiles")
@@ -62,6 +64,10 @@ export default async function LiveRoomPage({
       .select("code, label, emoji, price_minor")
       .eq("is_active", true)
       .order("sort_order", { ascending: true }),
+    supabase
+      .from("live_room_gifts")
+      .select("*", { count: "exact", head: true })
+      .eq("room_id", room.id),
   ]);
   const authorIds = [...new Set((messages ?? []).map((item) => item.author_id))];
   const { data: authors } = authorIds.length
@@ -78,6 +84,7 @@ export default async function LiveRoomPage({
           ← Лента
         </Link>
         <div className="flex items-center gap-2">
+          <LiveGiftCounter initialCount={giftCount ?? 0} roomId={room.id} />
           {room.host_id === user.id && (
             <Link
               aria-label="Аналитика эфира"
