@@ -50,6 +50,7 @@ export default async function CreatorEarningsPage() {
     );
   const labels: Record<string, string> = {
     story_unlock: "Платные stories",
+    message_request: "Платные сообщения",
     support: "Поддержка",
     subscription: "Подписки",
     gift: "Подарки",
@@ -108,7 +109,13 @@ export default async function CreatorEarningsPage() {
           <section className="mt-6">
             <h2 className="font-bold">Источники дохода</h2>
             <div className="mt-3 space-y-2">
-              {["story_unlock", "support", "subscription", "gift"].map((type) => (
+              {[
+                "story_unlock",
+                "message_request",
+                "support",
+                "subscription",
+                "gift",
+              ].map((type) => (
                 <div
                   className="border-white/8 flex items-center justify-between rounded-xl border bg-[#171923] px-4 py-3"
                   key={type}

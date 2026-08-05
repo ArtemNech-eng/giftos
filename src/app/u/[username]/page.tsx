@@ -7,6 +7,10 @@ import { notFound } from "next/navigation";
 import { blockUser, unblockUser } from "@/app/safety/actions";
 import { toggleUserFollow } from "@/app/social/actions";
 import { createCreatorPost } from "@/app/posts/actions";
+import {
+  createPaidMessageRequest,
+  updateMessageRequestSettings,
+} from "@/app/creator/messages/actions";
 import { createStory } from "@/app/stories/actions";
 import { ReportForm } from "@/components/report-form";
 import { CATEGORIES } from "@/lib/constants";
@@ -59,7 +63,7 @@ export default async function ProfilePage({
   const { data: profile } = await supabase
     .from("profiles")
     .select(
-      "id, username, display_name, bio, city, show_city, avatar_path, is_creator, creator_headline",
+      "id, username, display_name, bio, city, show_city, avatar_path, is_creator, creator_headline, message_requests_enabled, paid_message_price_minor",
     )
     .eq("username", username.toLowerCase())
     .maybeSingle();
@@ -282,6 +286,43 @@ export default async function ProfilePage({
         </div>
       </section>
 
+      {user &&
+        !isOwnProfile &&
+        profile.message_requests_enabled &&
+        profile.paid_message_price_minor && (
+          <form
+            action={createPaidMessageRequest}
+            className="mx-4 mb-5 rounded-2xl border border-[#b550ff]/35 bg-gradient-to-r from-[#25152f] to-[#181927] p-4"
+          >
+            <input name="creator_id" type="hidden" value={profile.id} />
+            <input name="username" type="hidden" value={profile.username} />
+            <div className="flex items-center justify-between">
+              <span>
+                <b className="block">Написать сообщение</b>
+                <small className="text-xs text-[#b9b1c5]">
+                  Автор примет или отклонит запрос
+                </small>
+              </span>
+              <b className="text-[#ffd0eb]">
+                {formatRubles(profile.paid_message_price_minor)}
+              </b>
+            </div>
+            <textarea
+              className="mt-3 min-h-20 w-full rounded-xl border border-white/10 bg-black/20 p-3 text-sm"
+              maxLength={2000}
+              name="body"
+              placeholder="Напишите первое сообщение"
+              required
+            />
+            <button
+              className="mt-3 rounded-xl bg-gradient-to-r from-[#ff4b8a] to-[#7d45ff] px-4 py-2 text-sm font-bold"
+              type="submit"
+            >
+              Отправить запрос
+            </button>
+          </form>
+        )}
+
       <nav className="flex border-y border-white/10 text-sm font-semibold">
         <span className="flex-1 border-b-2 border-[#ee4f9d] py-3 text-center">
           Обо мне
@@ -426,6 +467,44 @@ export default async function ProfilePage({
           <span>Мой доход</span>
           <span className="text-[#df9cff]">Открыть ›</span>
         </Link>
+      )}
+      {isOwnProfile && profile.is_creator && (
+        <details className="mx-4 mt-3 rounded-2xl border border-white/10 bg-[#171923] p-4">
+          <summary className="cursor-pointer text-sm font-bold">
+            Настроить запросы на сообщения
+          </summary>
+          <form action={updateMessageRequestSettings} className="mt-4">
+            <input name="username" type="hidden" value={profile.username} />
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                defaultChecked={profile.message_requests_enabled}
+                name="message_requests_enabled"
+                type="checkbox"
+              />{" "}
+              Принимать платные запросы
+            </label>
+            <label className="mt-3 block text-sm text-[#c9c1d2]">
+              Тестовая цена, ₽
+              <input
+                className="mt-2 block w-28 rounded-xl border border-white/10 bg-black/20 p-2 text-sm"
+                defaultValue={
+                  profile.paid_message_price_minor
+                    ? Number(profile.paid_message_price_minor) / 100
+                    : "49"
+                }
+                min="1"
+                name="paid_message_price"
+                type="number"
+              />
+            </label>
+            <button
+              className="mt-3 rounded-xl bg-gradient-to-r from-[#ff4b8a] to-[#7d45ff] px-4 py-2 text-sm font-bold"
+              type="submit"
+            >
+              Сохранить
+            </button>
+          </form>
+        </details>
       )}
       {isOwnProfile && profile.is_creator && (
         <details className="mx-4 mt-3 rounded-2xl border border-white/10 bg-[#171923] p-4">
