@@ -24,6 +24,15 @@ export default async function OnboardingPage() {
 
   if (profile?.onboarding_completed_at) redirect("/feed");
 
+  const { data: cities } = await supabase
+    .from("cities")
+    .select("name")
+    .eq("is_active", true)
+    .order("sort_order", { ascending: true })
+    .order("name", { ascending: true })
+    .limit(50);
+  const cityNames = (cities ?? []).map((city) => city.name);
+
   return (
     <main className="mx-auto max-w-3xl px-4 py-10 sm:px-6 sm:py-14">
       <div className="mb-7 text-center">
@@ -104,10 +113,16 @@ export default async function OnboardingPage() {
               className={inputClassName}
               defaultValue={profile?.city ?? ""}
               id="city"
+              list="city-options"
               maxLength={100}
               name="city"
-              placeholder="Казань"
+              placeholder="Будённовск"
             />
+            <datalist id="city-options">
+              {cityNames.map((name) => (
+                <option key={name} value={name} />
+              ))}
+            </datalist>
             <label className="mt-2 flex cursor-pointer items-center gap-2 text-sm text-[#725c63]">
               <input
                 defaultChecked={profile?.show_city ?? false}
