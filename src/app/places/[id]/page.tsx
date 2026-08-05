@@ -25,7 +25,9 @@ export default async function PlacePage({
   const { supabase, user } = await requireUser();
   const { data: place } = await supabase
     .from("places")
-    .select("id, city_id, creator_id, name, description, emoji, kind, created_at")
+    .select(
+      "id, city_id, creator_id, name, description, emoji, kind, created_at, popularity_score",
+    )
     .eq("id", id)
     .eq("is_active", true)
     .maybeSingle();
@@ -136,7 +138,22 @@ export default async function PlacePage({
       </header>
 
       <section className="mt-5 rounded-2xl border border-white/10 bg-[#171923] p-4">
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          {place.kind !== "fixed" && place.creator_id && (
+            <span className="rounded-full bg-[#ffd35e]/15 px-2.5 py-1 text-xs font-bold text-[#ffd35e]">
+              👑 Создатель
+            </span>
+          )}
+          {place.popularity_score >= 10 && (
+            <span className="rounded-full bg-[#ff4b8a]/15 px-2.5 py-1 text-xs font-bold text-[#ff9bc5]">
+              🔥 Популярная тусовка
+            </span>
+          )}
+          <span className="rounded-full bg-white/5 px-2.5 py-1 text-xs text-[#aaa4b7]">
+            {place.popularity_score} активность
+          </span>
+        </div>
+        <div className="mt-3 flex items-center gap-2">
           <UsersRound className="size-5 text-[#9e88ff]" />
           <p className="text-sm font-bold">
             Сейчас здесь {online}{" "}

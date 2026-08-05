@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { Route } from "next";
-import { MapPin, Plus, UsersRound } from "lucide-react";
+import { MapPin, Plus, Trophy, UsersRound } from "lucide-react";
 
 import { requireUser } from "@/lib/auth";
 import { EmptyState } from "@/components/empty-state";
@@ -160,6 +160,12 @@ export default async function PlacesPage() {
         href="/places/new"
       >
         <MapPin className="size-4" /> Создать свою тусовку
+      </Link>
+      <Link
+        className="mt-3 flex items-center justify-center gap-2 text-sm font-semibold text-[#ffd35e]"
+        href="/places/leaderboard"
+      >
+        <Trophy className="size-4" /> Рейтинги города
       </Link>
     </main>
   );
