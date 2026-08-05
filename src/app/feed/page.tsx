@@ -128,6 +128,25 @@ const demoRecommendedAuthors: RecommendedAuthor[] = [
   },
 ];
 
+const demoNewWishes: WishPreview[] = [
+  {
+    id: "wish-4",
+    title: "Курс по 3D-моделированию",
+    categorySlug: "hobbies",
+    alsoWantsCount: 42,
+    authorName: "Кира",
+    authorUsername: "kira",
+  },
+  {
+    id: "wish-5",
+    title: "Велосипед для города",
+    categorySlug: "sport",
+    alsoWantsCount: 18,
+    authorName: "Тимур",
+    authorUsername: "timur",
+  },
+];
+
 const demoWishes: WishPreview[] = [
   {
     id: "wish-1",
@@ -237,6 +256,8 @@ async function getHomeData() {
       authors: demoAuthors,
       fundraisers: demoFundraisers,
       wishes: demoWishes,
+      newWishes: demoNewWishes,
+      growingWishes: demoWishes,
       liveRooms: demoLiveRooms,
       popularFundraisers: demoFundraisers,
       growingFundraisers: demoFundraisers,
@@ -251,6 +272,8 @@ async function getHomeData() {
       { data: rawStories },
       { data: rawFundraisers },
       { data: rawWishes },
+      { data: rawNewWishes },
+      { data: rawGrowingWishes },
       { data: rawLiveRooms },
       { data: rawPopular },
       { data: rawGrowing },
@@ -279,6 +302,19 @@ async function getHomeData() {
         .order("promoted_until", { ascending: false, nullsFirst: false })
         .order("also_wants_count", { ascending: false })
         .limit(12),
+      supabase
+        .from("wishes")
+        .select("id, author_id, title, category_slug, also_wants_count, created_at")
+        .eq("visibility", "public")
+        .eq("is_archived", false)
+        .order("created_at", { ascending: false })
+        .limit(6),
+      supabase
+        .from("public_growing_wishes")
+        .select(
+          "id, author_id, title, category_slug, also_wants_count, weekly_also_wants",
+        )
+        .limit(6),
       supabase
         .from("live_rooms")
         .select("id, slug, title, host_id")
@@ -375,28 +411,46 @@ async function getHomeData() {
       followerCount: Number(item.follower_count),
     }));
 
+    const mapWish = (item: Record<string, unknown>): WishPreview | null => {
+      const profile = profileById.get(String(item.author_id));
+      if (!profile) return null;
+      return {
+        id: String(item.id),
+        title: String(item.title),
+        categorySlug: item.category_slug ? String(item.category_slug) : null,
+        alsoWantsCount: Number(item.also_wants_count),
+        authorName: profile.display_name,
+        authorUsername: profile.username,
+      };
+    };
+
     const wishes: WishPreview[] = (
       (rawWishes ?? []) as Array<Record<string, unknown>>
     ).flatMap((item) => {
-      const profile = profileById.get(String(item.author_id));
-      return profile
-        ? [
-            {
-              id: String(item.id),
-              title: String(item.title),
-              categorySlug: item.category_slug ? String(item.category_slug) : null,
-              alsoWantsCount: Number(item.also_wants_count),
-              authorName: profile.display_name,
-              authorUsername: profile.username,
-            },
-          ]
-        : [];
+      const mapped = mapWish(item);
+      return mapped ? [mapped] : [];
+    });
+
+    const newWishes: WishPreview[] = (
+      (rawNewWishes ?? []) as Array<Record<string, unknown>>
+    ).flatMap((item) => {
+      const mapped = mapWish(item);
+      return mapped ? [mapped] : [];
+    });
+
+    const growingWishes: WishPreview[] = (
+      (rawGrowingWishes ?? []) as Array<Record<string, unknown>>
+    ).flatMap((item) => {
+      const mapped = mapWish(item);
+      return mapped ? [mapped] : [];
     });
 
     return {
       authors,
       fundraisers,
       wishes,
+      newWishes,
+      growingWishes,
       liveRooms,
       popularFundraisers,
       growingFundraisers,
@@ -408,6 +462,8 @@ async function getHomeData() {
       authors: [],
       fundraisers: [],
       wishes: [],
+      newWishes: [],
+      growingWishes: [],
       liveRooms: [],
       popularFundraisers: [],
       growingFundraisers: [],
@@ -422,6 +478,34 @@ const gradients = [
   "from-[#ff8854] via-[#f0448c] to-[#7e42ff]",
   "from-[#7e42ff] via-[#dc5cff] to-[#ffb75a]",
 ];
+
+function WishLink({
+  wish,
+  index,
+  href,
+}: {
+  wish: WishPreview;
+  index: number;
+  href: Route;
+}) {
+  const category =
+    CATEGORIES.find((item) => item.slug === wish.categorySlug) ?? CATEGORIES.at(-1)!;
+  return (
+    <Link
+      className="border-white/8 flex items-center gap-3 rounded-2xl border bg-[#181a24] p-3"
+      href={href}
+    >
+      <Avatar index={index} name={wish.authorName} />
+      <div className="min-w-0 grow">
+        <p className="truncate text-sm font-bold">{wish.title}</p>
+        <p className="truncate text-xs text-[#aaa4b7]">
+          {category.emoji} {wish.authorName} · {wish.alsoWantsCount} хотят также
+        </p>
+      </div>
+      <span className="text-xl">✨</span>
+    </Link>
+  );
+}
 
 function FundraiserLink({
   fundraiser,
@@ -525,6 +609,8 @@ export default async function HomePage() {
     authors,
     fundraisers,
     wishes,
+    newWishes,
+    growingWishes,
     liveRooms,
     popularFundraisers,
     growingFundraisers,
@@ -635,35 +721,62 @@ export default async function HomePage() {
 
       <section className="mt-7">
         <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-base font-bold">Популярные желания</h2>
+          <h2 className="text-base font-bold">✨ Популярные желания</h2>
           <Link className="text-xs font-medium text-[#b26fff]" href="/discover">
             Смотреть все ›
           </Link>
         </div>
         <div className="space-y-2.5">
-          {(wishes.length ? wishes : demoWishes).slice(0, 3).map((wish, index) => {
-            const category =
-              CATEGORIES.find((item) => item.slug === wish.categorySlug) ??
-              CATEGORIES.at(-1)!;
-            const href = isDemo ? "/auth/sign-in" : (`/wishes/${wish.id}` as Route);
-            return (
-              <Link
-                className="border-white/8 flex items-center gap-3 rounded-2xl border bg-[#181a24] p-3"
-                href={href}
+          {(wishes.length ? wishes : demoWishes).slice(0, 3).map((wish, index) => (
+            <WishLink
+              href={isDemo ? "/auth/sign-in" : (`/wishes/${wish.id}` as Route)}
+              index={index}
+              key={wish.id}
+              wish={wish}
+            />
+          ))}
+        </div>
+      </section>
+
+      <section className="mt-7">
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="text-base font-bold">🆕 Новые желания</h2>
+          <Link className="text-xs font-medium text-[#b26fff]" href="/discover">
+            Смотреть все ›
+          </Link>
+        </div>
+        <div className="space-y-2.5">
+          {(newWishes.length ? newWishes : demoWishes)
+            .slice(0, 3)
+            .map((wish, index) => (
+              <WishLink
+                href={isDemo ? "/auth/sign-in" : (`/wishes/${wish.id}` as Route)}
+                index={index}
                 key={wish.id}
-              >
-                <Avatar index={index} name={wish.authorName} />
-                <div className="min-w-0 grow">
-                  <p className="truncate text-sm font-bold">{wish.title}</p>
-                  <p className="truncate text-xs text-[#aaa4b7]">
-                    {category.emoji} {wish.authorName} · {wish.alsoWantsCount} хотят
-                    также
-                  </p>
-                </div>
-                <span className="text-xl">✨</span>
-              </Link>
-            );
-          })}
+                wish={wish}
+              />
+            ))}
+        </div>
+      </section>
+
+      <section className="mt-7">
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="text-base font-bold">🚀 Желания растут</h2>
+          <Link className="text-xs font-medium text-[#b26fff]" href="/discover">
+            Смотреть все ›
+          </Link>
+        </div>
+        <div className="space-y-2.5">
+          {(growingWishes.length ? growingWishes : demoWishes)
+            .slice(0, 3)
+            .map((wish, index) => (
+              <WishLink
+                href={isDemo ? "/auth/sign-in" : (`/wishes/${wish.id}` as Route)}
+                index={index}
+                key={wish.id}
+                wish={wish}
+              />
+            ))}
         </div>
       </section>
 
