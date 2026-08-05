@@ -194,7 +194,7 @@ function BottomNav() {
       className="fixed inset-x-0 bottom-0 z-30 mx-auto flex max-w-[430px] items-center justify-around border-t border-white/10 bg-[#10121b]/95 px-3 py-2 text-[#aaa4b7] backdrop-blur"
       aria-label="Нижняя навигация"
     >
-      <Link className="grid place-items-center gap-1 text-xs text-white" href="/">
+      <Link className="grid place-items-center gap-1 text-xs text-white" href="/feed">
         <Compass className="size-5 fill-current" />
         Главная
       </Link>
