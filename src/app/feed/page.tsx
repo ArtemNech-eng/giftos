@@ -147,9 +147,12 @@ async function getHomeData() {
           .limit(8),
         supabase
           .from("wishes")
-          .select("id, author_id, title, category_slug, also_wants_count, created_at")
+          .select(
+            "id, author_id, title, category_slug, also_wants_count, promoted_until, created_at",
+          )
           .eq("visibility", "public")
           .eq("is_archived", false)
+          .order("promoted_until", { ascending: false, nullsFirst: false })
           .order("also_wants_count", { ascending: false })
           .limit(12),
       ]);

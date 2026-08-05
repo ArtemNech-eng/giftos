@@ -3,6 +3,7 @@ import type { Metadata, Route } from "next";
 import { ExternalLink, Sparkles } from "lucide-react";
 import { notFound } from "next/navigation";
 
+import { promoteWishWithBonus } from "@/app/bonuses/actions";
 import { cloneWish, toggleAlsoWantWish } from "@/app/wishes/actions";
 import { CATEGORIES } from "@/lib/constants";
 import { getSignedImageUrl } from "@/lib/media";
@@ -59,6 +60,7 @@ export default async function WishPage({
   const {
     data: { user },
   } = await supabase.auth.getUser();
+  const isAuthor = user?.id === wish.author_id;
   const { data: existingAlsoWant } = user
     ? await supabase
         .from("wish_also_wants")
@@ -159,6 +161,17 @@ export default async function WishPage({
                 <Sparkles className="size-4" /> Я тоже хочу
               </button>
             </form>
+            {isAuthor && (
+              <form action={promoteWishWithBonus}>
+                <input name="wish_id" type="hidden" value={wish.id} />
+                <button
+                  className="inline-flex h-11 items-center gap-2 rounded-xl border border-[#ffd35e]/50 bg-[#fff0c6] px-4 text-sm font-bold text-[#7a5015]"
+                  type="submit"
+                >
+                  ⭐ Продвинуть за 500 ⭐
+                </button>
+              </form>
+            )}
             {wish.product_url && (
               <a
                 className="inline-flex h-11 items-center gap-2 rounded-xl border border-[#ead9df] bg-white px-4 text-sm font-semibold text-[#765f66] transition hover:border-[#df4f7d]"
