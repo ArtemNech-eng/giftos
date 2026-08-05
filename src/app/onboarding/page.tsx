@@ -1,10 +1,12 @@
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 import { CheckCircle2 } from "lucide-react";
 
 import { completeOnboarding } from "@/app/onboarding/actions";
 import { FieldLabel, inputClassName, textAreaClassName } from "@/components/form-field";
 import { SubmitButton } from "@/components/submit-button";
 import { CATEGORIES } from "@/lib/constants";
+import { detectCityByIp } from "@/lib/geo";
 import { requireUser } from "@/lib/auth";
 
 export const metadata = {
@@ -23,6 +25,19 @@ export default async function OnboardingPage() {
     .maybeSingle();
 
   if (profile?.onboarding_completed_at) redirect("/feed");
+
+  // Prefill the city from the visitor's IP (best-effort, Dadata).
+  let detectedCity: string | null = null;
+  if (!profile?.city) {
+    const headerList = await headers();
+    const forwarded =
+      headerList.get("x-forwarded-for") ?? headerList.get("x-real-ip") ?? "";
+    const clientIp = forwarded.split(",")[0]?.trim();
+    if (clientIp) {
+      const geo = await detectCityByIp(clientIp);
+      detectedCity = geo?.city ?? null;
+    }
+  }
 
   const { data: cities } = await supabase
     .from("cities")
@@ -111,13 +126,18 @@ export default async function OnboardingPage() {
             </FieldLabel>
             <input
               className={inputClassName}
-              defaultValue={profile?.city ?? ""}
+              defaultValue={profile?.city ?? detectedCity ?? ""}
               id="city"
               list="city-options"
               maxLength={100}
               name="city"
               placeholder="Будённовск"
             />
+            {detectedCity && !profile?.city && (
+              <p className="mt-1.5 text-xs text-[#8a7d95]">
+                📍 Определили город по IP: {detectedCity}. Можно изменить.
+              </p>
+            )}
             <datalist id="city-options">
               {cityNames.map((name) => (
                 <option key={name} value={name} />
