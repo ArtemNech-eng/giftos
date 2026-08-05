@@ -1,7 +1,7 @@
 {
-  "name": "GiftOS",
-  "short_name": "GiftOS",
-  "description": "Желания, которые объединяют.",
+  "name": "Хочу также",
+  "short_name": "Хочу также",
+  "description": "Общайся, выходи в эфир, зарабатывай на своей аудитории.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#fcf8f7",

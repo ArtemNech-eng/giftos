@@ -15,4 +15,4 @@ export const CATEGORIES = [
   { slug: "other", label: "Другое", emoji: "💫" },
 ] as const;
 
-export const APP_NAME = "GiftOS";
+export const APP_NAME = "Хочу также";

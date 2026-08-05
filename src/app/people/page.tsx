@@ -42,7 +42,9 @@ export default async function PeoplePage() {
       <main className="mx-auto max-w-5xl px-4 py-10 sm:px-6">
         <div className="flex items-end justify-between gap-4">
           <div>
-            <p className="text-sm font-semibold text-[#bd3e66]">Сообщество GiftOS</p>
+            <p className="text-sm font-semibold text-[#bd3e66]">
+              Сообщество «Хочу также»
+            </p>
             <h1 className="mt-1 text-3xl font-bold tracking-tight">
               Люди и их желания
             </h1>

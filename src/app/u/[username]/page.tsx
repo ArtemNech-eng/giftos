@@ -25,7 +25,9 @@ export default async function ProfilePage({
   const supabase = await createClient();
   const { data: profile } = await supabase
     .from("profiles")
-    .select("id, username, display_name, bio, city, show_city, avatar_path, created_at")
+    .select(
+      "id, username, display_name, bio, city, show_city, avatar_path, is_creator, creator_headline, created_at",
+    )
     .eq("username", username.toLowerCase())
     .maybeSingle();
   if (!profile) notFound();
@@ -186,8 +188,13 @@ export default async function ProfilePage({
                 </span>
               ) : null}
             </p>
+            {profile.creator_headline && (
+              <p className="mt-4 text-base font-semibold text-[#5a3e47]">
+                {profile.creator_headline}
+              </p>
+            )}
             {profile.bio && (
-              <p className="mt-4 max-w-2xl whitespace-pre-wrap text-sm leading-6 text-[#654e55]">
+              <p className="mt-2 max-w-2xl whitespace-pre-wrap text-sm leading-6 text-[#654e55]">
                 {profile.bio}
               </p>
             )}

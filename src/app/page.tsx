@@ -7,12 +7,13 @@ import {
   Heart,
   MessageCircle,
   Plus,
+  Sparkles,
   UsersRound,
 } from "lucide-react";
 
 import { EmptyState } from "@/components/empty-state";
 import { SiteHeader } from "@/components/site-header";
-import { CATEGORIES } from "@/lib/constants";
+import { APP_NAME, CATEGORIES } from "@/lib/constants";
 import { getSignedImageUrl } from "@/lib/media";
 import { formatRubles } from "@/lib/money";
 import { hasSupabaseEnvironment } from "@/lib/supabase/env";
@@ -302,12 +303,20 @@ export default async function HomePage() {
               историю.
             </p>
           </div>
-          <Link
-            className="inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-xl bg-[#df4f7d] px-4 text-sm font-semibold text-white transition hover:bg-[#c93f6d]"
-            href="/wishes/new"
-          >
-            <Plus className="size-4" /> Создать желание
-          </Link>
+          <div className="flex flex-wrap gap-2">
+            <Link
+              className="inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-xl bg-[#df4f7d] px-4 text-sm font-semibold text-white transition hover:bg-[#c93f6d]"
+              href="/creator/start"
+            >
+              <Sparkles className="size-4" /> Хочу также
+            </Link>
+            <Link
+              className="inline-flex h-10 shrink-0 items-center justify-center rounded-xl border border-[#ead9df] bg-white px-4 text-sm font-semibold text-[#765f66] transition hover:border-[#df4f7d]"
+              href="/wishes/new"
+            >
+              <Plus className="mr-1.5 size-4" /> Желание
+            </Link>
+          </div>
         </section>
 
         <section className="mt-8" id="feed">
@@ -438,8 +447,8 @@ export default async function HomePage() {
         </section>
       </main>
       <footer className="border-t border-[#eee1e4] py-7 text-center text-sm text-[#8e747c]">
-        <CircleUserRound className="mr-1.5 inline size-4 align-text-bottom" /> GiftOS ·
-        Платформа желаний, поддержки и общения
+        <CircleUserRound className="mr-1.5 inline size-4 align-text-bottom" />{" "}
+        {APP_NAME} · Люди, эфиры и авторские страницы
       </footer>
     </>
   );

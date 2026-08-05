@@ -58,7 +58,7 @@ function notificationCopy(notification: Notification, actor: Actor | undefined) 
 
   return {
     icon: Bell,
-    title: "Новое событие в GiftOS",
+    title: "Новое событие в «Хочу также»",
     href: "/notifications" as Route,
   };
 }

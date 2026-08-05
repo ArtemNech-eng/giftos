@@ -383,7 +383,7 @@ export default async function FundraiserPage({
             <p className="mt-5 text-sm text-[#826c73]">
               Чтобы участвовать в обсуждении,{" "}
               <Link className="font-semibold text-[#a13d5e]" href="/auth/sign-in">
-                войдите в GiftOS
+                войдите в «Хочу также»
               </Link>
               .
             </p>
@@ -404,7 +404,7 @@ export default async function FundraiserPage({
                 }).format(new Date(comment.created_at));
                 const displayName = isAnonymousSupport
                   ? "Анонимный участник"
-                  : (commenter?.display_name ?? "Участник GiftOS");
+                  : (commenter?.display_name ?? "Участник «Хочу также»");
                 return (
                   <article className="flex gap-3" key={comment.id}>
                     <span className="grid size-9 shrink-0 place-items-center rounded-full bg-[#f5d9e2] text-sm font-bold text-[#a64c68]">

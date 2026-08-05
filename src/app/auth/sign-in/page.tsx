@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Gift } from "lucide-react";
 
 import { AuthForm } from "@/app/auth/sign-in/auth-form";
+import { APP_NAME } from "@/lib/constants";
 
 export const metadata = { title: "Вход" };
 
@@ -13,7 +14,7 @@ export default function SignInPage() {
           <span className="grid size-9 place-items-center rounded-xl bg-[#df4f7d] text-white">
             <Gift className="size-5" />
           </span>
-          GiftOS
+          {APP_NAME}
         </Link>
         <h1 className="mt-7 text-2xl font-bold tracking-tight">Добро пожаловать</h1>
         <p className="mt-2 text-sm leading-6 text-[#826c73]">

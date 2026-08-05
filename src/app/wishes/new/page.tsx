@@ -23,7 +23,7 @@ export default async function NewWishPage() {
           <Heart className="size-6 fill-current" />
         </span>
         <p className="mt-4 text-sm font-semibold text-[#bd3e66]">
-          С чего начинается GiftOS
+          С чего начинается «Хочу также»
         </p>
         <h1 className="mt-1 text-3xl font-bold tracking-tight">Создайте желание</h1>
         <p className="mt-3 max-w-xl text-sm leading-6 text-[#826c73]">

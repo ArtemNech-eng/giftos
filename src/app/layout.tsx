@@ -4,11 +4,12 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: {
-    default: "GiftOS — желания, которые объединяют",
-    template: "%s · GiftOS",
+    default: "Хочу также — общайся, выходи в эфир, зарабатывай",
+    template: "%s · Хочу также",
   },
-  description: "Социальная платформа желаний, коллективных сборов, подарков и общения.",
-  applicationName: "GiftOS",
+  description:
+    "Социальная creator-платформа общения, эфиров, поддержки и авторских страниц.",
+  applicationName: "Хочу также",
   manifest: "/manifest.webmanifest",
   icons: {
     icon: "/icon.svg",

@@ -108,7 +108,7 @@ export default async function SearchPage({
       <main className="mx-auto max-w-5xl px-4 py-10 sm:px-6">
         <div>
           <p className="text-sm font-semibold text-[#bd3e66]">Открывайте новое</p>
-          <h1 className="mt-1 text-3xl font-bold tracking-tight">Поиск GiftOS</h1>
+          <h1 className="mt-1 text-3xl font-bold tracking-tight">Поиск «Хочу также»</h1>
           <p className="mt-3 max-w-xl text-sm leading-6 text-[#826c73]">
             Ищите людей, публичные желания и сборы по названию или категории.
           </p>
