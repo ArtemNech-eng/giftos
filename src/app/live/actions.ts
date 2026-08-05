@@ -44,8 +44,46 @@ export async function createLiveRoom(formData: FormData) {
   await supabase
     .from("live_room_participants")
     .insert({ room_id: room.id, profile_id: user.id, role: "host" });
+  await notifyFollowersAboutLiveRoom(user.id, room.id, slug, title);
   revalidatePath("/feed");
   redirect(`/live/${slug}` as Route);
+}
+
+async function notifyFollowersAboutLiveRoom(
+  hostId: string,
+  roomId: string,
+  slug: string,
+  title: string,
+) {
+  const admin = createAdminClient();
+  const { data: followers } = await admin
+    .from("user_follows")
+    .select("follower_id")
+    .eq("following_id", hostId)
+    .limit(200);
+  if (!followers || followers.length === 0) return;
+
+  // Skip followers who blocked the host: they must not receive anything.
+  const followerIds = followers.map((item) => item.follower_id);
+  const { data: blockedBy } = await admin
+    .from("blocks")
+    .select("blocker_id")
+    .in("blocker_id", followerIds)
+    .eq("blocked_id", hostId);
+  const blockedSet = new Set((blockedBy ?? []).map((item) => item.blocker_id));
+  const recipients = followerIds.filter((id) => !blockedSet.has(id));
+  if (recipients.length === 0) return;
+
+  await admin.from("notifications").insert(
+    recipients.map((recipientId) => ({
+      recipient_id: recipientId,
+      actor_id: hostId,
+      type: "live_started",
+      entity_type: "live_room",
+      entity_id: roomId,
+      payload: { slug, title },
+    })),
+  );
 }
 
 export async function inviteLiveCohost(formData: FormData) {

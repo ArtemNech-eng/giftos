@@ -1,6 +1,14 @@
 import Link from "next/link";
 import type { Route } from "next";
-import { Bell, CheckCheck, Gift, Heart, MessageCircle, UserPlus } from "lucide-react";
+import {
+  Bell,
+  CheckCheck,
+  Gift,
+  Heart,
+  MessageCircle,
+  Radio,
+  UserPlus,
+} from "lucide-react";
 
 import { markAllNotificationsRead } from "@/app/social/actions";
 import { EmptyState } from "@/components/empty-state";
@@ -80,6 +88,20 @@ function notificationCopy(notification: Notification, actor: Actor | undefined) 
       icon: MessageCircle,
       title: `${actorName} пригласил(-а) вас в совместный эфир`,
       href: slug ? (`/live/${slug}` as Route) : "/notifications",
+    };
+  }
+
+  if (notification.type === "live_started") {
+    const slug =
+      typeof notification.payload.slug === "string" ? notification.payload.slug : null;
+    const roomTitle =
+      typeof notification.payload.title === "string"
+        ? notification.payload.title
+        : "эфир";
+    return {
+      icon: Radio,
+      title: `${actorName} начал(а) эфир «${roomTitle}»`,
+      href: slug ? (`/live/${slug}` as Route) : "/feed",
     };
   }
 
