@@ -18,6 +18,7 @@ import { LiveDonationEvents } from "@/components/live-donation-events";
 import { LiveGiftCounter } from "@/components/live-gift-counter";
 import { LiveGiftEvents } from "@/components/live-gift-events";
 import { LiveKitRoom } from "@/components/livekit-room";
+import { LiveRoomPresence } from "@/components/live-room-presence";
 import { LiveRoomRealtime } from "@/components/live-room-realtime";
 import { requireUser } from "@/lib/auth";
 
@@ -169,6 +170,7 @@ export default async function LiveRoomPage({
           )}
         </div>
       </header>
+      {room.status === "live" && <LiveRoomPresence roomId={room.id} slug={slug} />}
       <section className="mt-5 overflow-hidden rounded-[2rem] border border-white/10 bg-[#171923]">
         <div className="relative">
           <LiveKitRoom isHost={room.host_id === user.id} slug={slug} />

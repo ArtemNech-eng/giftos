@@ -126,6 +126,56 @@ export async function removeLiveCohost(formData: FormData) {
   redirect(`/live/${slug}?cohost=removed` as Route);
 }
 
+export async function joinLiveRoom(formData: FormData) {
+  const { supabase, user } = await requireUser();
+  const roomId = requiredText(formData.get("room_id"), 100);
+  const slug = requiredText(formData.get("slug"), 100);
+  if (!roomId || !slug) return;
+
+  const { data: room } = await supabase
+    .from("live_rooms")
+    .select("id, status")
+    .eq("id", roomId)
+    .maybeSingle();
+  if (!room || room.status !== "live") return;
+
+  const now = new Date().toISOString();
+  const { data: existing } = await supabase
+    .from("live_room_participants")
+    .select("role")
+    .eq("room_id", room.id)
+    .eq("profile_id", user.id)
+    .maybeSingle();
+  if (existing) {
+    // Keep the existing role (host/cohost/viewer), just mark presence.
+    await supabase
+      .from("live_room_participants")
+      .update({ left_at: null, joined_at: now })
+      .eq("room_id", room.id)
+      .eq("profile_id", user.id);
+  } else {
+    await supabase
+      .from("live_room_participants")
+      .insert({ room_id: room.id, profile_id: user.id, role: "viewer" });
+  }
+  revalidatePath(`/live/${slug}`);
+}
+
+export async function leaveLiveRoom(formData: FormData) {
+  const { supabase, user } = await requireUser();
+  const roomId = requiredText(formData.get("room_id"), 100);
+  const slug = requiredText(formData.get("slug"), 100);
+  if (!roomId || !slug) return;
+
+  await supabase
+    .from("live_room_participants")
+    .update({ left_at: new Date().toISOString() })
+    .eq("room_id", roomId)
+    .eq("profile_id", user.id)
+    .eq("role", "viewer");
+  revalidatePath(`/live/${slug}`);
+}
+
 export async function endLiveRoom(formData: FormData) {
   const { supabase, user } = await requireUser();
   const slug = requiredText(formData.get("slug"), 100);
