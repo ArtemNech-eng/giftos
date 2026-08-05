@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Copy, Gift, Sparkles, UsersRound } from "lucide-react";
+import { Copy, Gift, ShoppingBag, Sparkles, UsersRound } from "lucide-react";
 
 import { CreatorShareLink } from "@/components/creator-share-link";
 import { ReferralQrCode } from "@/components/referral-qr-code";
@@ -164,7 +164,13 @@ export default async function BonusesPage() {
         )}
       </section>
       <Link
-        className="mt-7 flex items-center justify-center gap-2 text-sm font-semibold text-[#e8a1d5]"
+        className="mt-5 flex items-center justify-center gap-2 text-sm font-semibold text-[#ffd35e]"
+        href="/shop"
+      >
+        <ShoppingBag className="size-4" /> Магазин: товары, VIP, подарки
+      </Link>
+      <Link
+        className="mt-3 flex items-center justify-center gap-2 text-sm font-semibold text-[#e8a1d5]"
         href="/creator/dashboard"
       >
         <Copy className="size-4" /> К панели автора

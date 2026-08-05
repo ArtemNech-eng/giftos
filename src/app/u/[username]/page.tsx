@@ -20,6 +20,7 @@ import {
 } from "@/app/creator/subscriptions/actions";
 import { createStory } from "@/app/stories/actions";
 import { CreatorShareLink } from "@/components/creator-share-link";
+import { ProfileGiftButton } from "@/components/profile-gift-button";
 import { ProfileQrCode } from "@/components/profile-qr-code";
 import { ReportForm } from "@/components/report-form";
 import { CATEGORIES } from "@/lib/constants";
@@ -97,6 +98,9 @@ export default async function ProfilePage({
     { data: rawOffers },
     { count: followers },
     { data: activeLive },
+    { data: vip },
+    { data: rawReceivedGifts },
+    { data: giftCatalog },
   ] = await Promise.all([
     user && !isOwnProfile
       ? supabase
@@ -181,6 +185,23 @@ export default async function ProfilePage({
       .order("started_at", { ascending: false })
       .limit(1)
       .maybeSingle(),
+    supabase
+      .from("vip_subscriptions")
+      .select("expires_at, status")
+      .eq("profile_id", profile.id)
+      .maybeSingle(),
+    supabase
+      .from("profile_gifts")
+      .select("sender_id, gift_code, price_stars, created_at")
+      .eq("recipient_id", profile.id)
+      .order("created_at", { ascending: false })
+      .limit(20),
+    supabase
+      .from("virtual_gifts")
+      .select("code, label, emoji, price_stars")
+      .eq("is_active", true)
+      .eq("economy", "platform")
+      .order("sort_order", { ascending: true }),
   ]);
 
   const avatarUrl = await getSignedImageUrl({
@@ -201,6 +222,35 @@ export default async function ProfilePage({
   const interests = CATEGORIES.filter((category) =>
     rawWishes?.some((wish) => wish.category_slug === category.slug),
   ).slice(0, 4);
+
+  const vipActive = Boolean(
+    vip && vip.status === "active" && new Date(vip.expires_at) > new Date(),
+  );
+  const followerCount = followers ?? 0;
+  const level = {
+    star: { label: "💎 Звезда", color: "text-[#e17dff] border-[#e17dff]/40" },
+    author: { label: "🎤 Автор", color: "text-[#7fd8ff] border-[#7fd8ff]/40" },
+    popular: { label: "🔥 Популярный", color: "text-[#ff9bc5] border-[#ff9bc5]/40" },
+    active: { label: "⭐ Активный", color: "text-[#8df0b4] border-[#8df0b4]/40" },
+    novice: { label: "🌱 Новичок", color: "text-[#aaa4b7] border-white/15" },
+  }[
+    followerCount >= 5000
+      ? "star"
+      : followerCount >= 500
+        ? "author"
+        : followerCount >= 50
+          ? "popular"
+          : followerCount >= 5
+            ? "active"
+            : "novice"
+  ];
+  const receivedGifts = (rawReceivedGifts ?? []) as Array<{
+    sender_id: string;
+    gift_code: string;
+    price_stars: number;
+    created_at: string;
+  }>;
+  const giftEmoji = new Map((giftCatalog ?? []).map((gift) => [gift.code, gift.emoji]));
 
   return (
     <main className="mx-auto min-h-screen max-w-[430px] bg-[#0c0e14] pb-24 text-white">
@@ -248,6 +298,18 @@ export default async function ProfilePage({
           </span>
           {user && !isOwnProfile ? (
             <div className="flex gap-2">
+              {giftCatalog && giftCatalog.length > 0 && (
+                <ProfileGiftButton
+                  gifts={giftCatalog.map((gift) => ({
+                    code: gift.code,
+                    label: gift.label,
+                    emoji: gift.emoji,
+                    price_stars: gift.price_stars ?? 0,
+                  }))}
+                  recipientId={profile.id}
+                  username={profile.username}
+                />
+              )}
               <form action={toggleUserFollow}>
                 <input name="profile_id" type="hidden" value={profile.id} />
                 <input name="username" type="hidden" value={profile.username} />
@@ -289,6 +351,16 @@ export default async function ProfilePage({
               Автор
             </span>
           )}
+          {vipActive && (
+            <span className="rounded-full border border-[#ffd35e]/50 bg-[#2a2215] px-2 py-1 text-xs font-bold text-[#ffd35e]">
+              👑 VIP
+            </span>
+          )}
+          <span
+            className={`rounded-full border px-2 py-1 text-xs font-semibold ${level.color}`}
+          >
+            {level.label}
+          </span>
           {activeLive && (
             <Link
               className="inline-flex items-center gap-1.5 rounded-full bg-[#ff2d55] px-2.5 py-1 text-xs font-bold text-white"
@@ -333,6 +405,27 @@ export default async function ProfilePage({
             <small className="text-xs text-[#aaa3b5]">Фото</small>
           </span>
         </div>
+        {receivedGifts.length > 0 && (
+          <div className="mt-5 rounded-2xl border border-white/10 bg-[#171923] p-4">
+            <p className="text-sm font-bold">🎁 Подарки</p>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {receivedGifts.slice(0, 10).map((gift, index) => (
+                <span
+                  className="grid size-10 place-items-center rounded-xl border border-white/10 bg-white/5 text-xl"
+                  key={`${gift.gift_code}-${index}`}
+                  title={`${gift.gift_code} · ${gift.price_stars} ⭐`}
+                >
+                  {giftEmoji.get(gift.gift_code) ?? "🎁"}
+                </span>
+              ))}
+              {receivedGifts.length > 10 && (
+                <span className="grid size-10 place-items-center rounded-xl border border-white/10 bg-white/5 text-xs text-[#aaa4b7]">
+                  +{receivedGifts.length - 10}
+                </span>
+              )}
+            </div>
+          </div>
+        )}
       </section>
 
       {user &&
