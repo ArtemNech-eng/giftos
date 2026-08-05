@@ -1,6 +1,11 @@
 import Link from "next/link";
 import type { Route } from "next";
-import { Compass, Search as SearchIcon, UsersRound } from "lucide-react";
+import {
+  Compass,
+  MessageSquareText,
+  Search as SearchIcon,
+  UsersRound,
+} from "lucide-react";
 
 import { EmptyState } from "@/components/empty-state";
 import { SiteHeader } from "@/components/site-header";
@@ -39,6 +44,16 @@ type PersonResult = {
   show_city: boolean;
 };
 
+type CommentResult = {
+  id: string;
+  body: string;
+  created_at: string;
+  targetType: "fundraiser" | "wish";
+  targetTitle: string;
+  targetHref: string;
+  authorName: string;
+};
+
 export default async function SearchPage({
   searchParams,
 }: {
@@ -55,6 +70,8 @@ export default async function SearchPage({
   let fundraisers: FundraiserResult[] = [];
   let wishes: WishResult[] = [];
   let people: PersonResult[] = [];
+  let interestPeople: PersonResult[] = [];
+  let comments: CommentResult[] = [];
 
   if (hasSupabaseEnvironment() && query.length >= 2) {
     const supabase = await createClient();
@@ -73,7 +90,13 @@ export default async function SearchPage({
       .eq("is_archived", false)
       .limit(12);
 
-    const [fundraiserResponse, wishResponse, personResponse] = await Promise.all([
+    const [
+      fundraiserResponse,
+      wishResponse,
+      personResponse,
+      interestResponse,
+      commentResponse,
+    ] = await Promise.all([
       matchedCategory
         ? fundraiserQuery.eq("category_slug", matchedCategory.slug)
         : fundraiserQuery.textSearch("search_document", query, {
@@ -91,16 +114,100 @@ export default async function SearchPage({
         .select("id, username, display_name, bio, city, show_city")
         .eq("profile_visibility", "public")
         .eq("is_suspended", false)
-        .or(`username.ilike.%${query}%,display_name.ilike.%${query}%`)
+        .or(
+          `username.ilike.%${query}%,display_name.ilike.%${query}%,and(city.ilike.%${query}%,show_city.is.true)`,
+        )
         .limit(12),
+      matchedCategory
+        ? supabase
+            .from("profile_interests")
+            .select("profile_id")
+            .eq("category_slug", matchedCategory.slug)
+            .limit(30)
+        : Promise.resolve({ data: [] }),
+      Promise.all([
+        supabase
+          .from("fundraiser_comments")
+          .select(
+            "id, body, created_at, fundraisers!inner(id, slug, title), profiles!inner(display_name)",
+          )
+          .ilike("body", `%${query}%`)
+          .order("created_at", { ascending: false })
+          .limit(8),
+        supabase
+          .from("wish_comments")
+          .select(
+            "id, body, created_at, wishes!inner(id, title), profiles!inner(display_name)",
+          )
+          .ilike("body", `%${query}%`)
+          .order("created_at", { ascending: false })
+          .limit(8),
+      ]),
     ]);
 
     fundraisers = (fundraiserResponse.data ?? []) as FundraiserResult[];
     wishes = (wishResponse.data ?? []) as WishResult[];
     people = (personResponse.data ?? []) as PersonResult[];
+
+    const interestProfileIds = (interestResponse.data ?? []).map(
+      (row: { profile_id: string }) => row.profile_id,
+    );
+    if (interestProfileIds.length > 0) {
+      const { data: interestProfiles } = await supabase
+        .from("profiles")
+        .select("id, username, display_name, bio, city, show_city")
+        .eq("profile_visibility", "public")
+        .eq("is_suspended", false)
+        .in("id", interestProfileIds)
+        .limit(12);
+      interestPeople = (interestProfiles ?? []) as PersonResult[];
+    }
+
+    const [fundraiserComments, wishComments] = commentResponse;
+    const rawComments: CommentResult[] = [
+      ...(fundraiserComments.data ?? []).flatMap((row) => {
+        const fundraiser = row.fundraisers?.[0];
+        const author = row.profiles?.[0];
+        return fundraiser && author
+          ? [
+              {
+                id: row.id,
+                body: row.body,
+                created_at: row.created_at,
+                targetType: "fundraiser" as const,
+                targetTitle: fundraiser.title,
+                targetHref: `/fundraisers/${fundraiser.slug}`,
+                authorName: author.display_name,
+              },
+            ]
+          : [];
+      }),
+      ...(wishComments.data ?? []).flatMap((row) => {
+        const wish = row.wishes?.[0];
+        const author = row.profiles?.[0];
+        return wish && author
+          ? [
+              {
+                id: row.id,
+                body: row.body,
+                created_at: row.created_at,
+                targetType: "wish" as const,
+                targetTitle: wish.title,
+                targetHref: `/wishes/${wish.id}`,
+                authorName: author.display_name,
+              },
+            ]
+          : [];
+      }),
+    ];
+    comments = rawComments
+      .sort(
+        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+      )
+      .slice(0, 8);
   }
 
-  const total = fundraisers.length + wishes.length + people.length;
+  const total = fundraisers.length + wishes.length + people.length + comments.length;
 
   return (
     <>
@@ -110,7 +217,7 @@ export default async function SearchPage({
           <p className="text-sm font-semibold text-[#bd3e66]">Открывайте новое</p>
           <h1 className="mt-1 text-3xl font-bold tracking-tight">Поиск «Хочу также»</h1>
           <p className="mt-3 max-w-xl text-sm leading-6 text-[#826c73]">
-            Ищите людей, публичные желания и сборы по названию или категории.
+            Ищите людей, желания, сборы и обсуждения по названию, интересу или городу.
           </p>
         </div>
 
@@ -126,7 +233,7 @@ export default async function SearchPage({
               id="global-search"
               maxLength={80}
               name="q"
-              placeholder="Например: фотография, Настя, Япония"
+              placeholder="Например: фотография, Москва, Настя"
               type="search"
             />
           </div>
@@ -244,6 +351,45 @@ export default async function SearchPage({
                 </div>
               </section>
             )}
+            {interestPeople.length > 0 && (
+              <section>
+                <div className="mb-4 flex items-center gap-2">
+                  <UsersRound className="size-5 text-[#d34872]" />
+                  <h2 className="text-xl font-bold">
+                    Люди по интересу: {matchedCategory?.label}
+                  </h2>
+                </div>
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {interestPeople.map((person, index) => (
+                    <Link
+                      className="surface flex items-center gap-3 rounded-2xl p-5 transition hover:-translate-y-0.5 hover:shadow-glow"
+                      href={`/u/${person.username}` as Route}
+                      key={person.id}
+                    >
+                      <span
+                        className={`grid size-11 place-items-center rounded-xl text-lg font-bold text-white ${["bg-[#e2a9a2]", "bg-[#9fc6b6]", "bg-[#b7a1d2]"][index % 3]}`}
+                      >
+                        {person.display_name.slice(0, 1).toUpperCase()}
+                      </span>
+                      <span className="min-w-0">
+                        <span className="block truncate font-bold">
+                          {person.display_name}
+                        </span>
+                        <span className="mt-1 block truncate text-sm text-[#8e747c]">
+                          @{person.username}
+                          {person.show_city && person.city ? ` · ${person.city}` : ""}
+                        </span>
+                        {person.bio && (
+                          <span className="mt-2 line-clamp-2 block text-sm leading-5 text-[#725c63]">
+                            {person.bio}
+                          </span>
+                        )}
+                      </span>
+                    </Link>
+                  ))}
+                </div>
+              </section>
+            )}
             {people.length > 0 && (
               <section>
                 <div className="mb-4 flex items-center gap-2">
@@ -276,6 +422,34 @@ export default async function SearchPage({
                           </span>
                         )}
                       </span>
+                    </Link>
+                  ))}
+                </div>
+              </section>
+            )}
+            {comments.length > 0 && (
+              <section>
+                <div className="mb-4 flex items-center gap-2">
+                  <MessageSquareText className="size-5 text-[#d34872]" />
+                  <h2 className="text-xl font-bold">Обсуждения</h2>
+                </div>
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {comments.map((comment) => (
+                    <Link
+                      className="surface rounded-2xl p-5 transition hover:-translate-y-0.5 hover:shadow-glow"
+                      href={comment.targetHref as Route}
+                      key={`${comment.targetType}-${comment.id}`}
+                    >
+                      <p className="text-xs font-semibold uppercase tracking-wide text-[#b08c97]">
+                        {comment.targetType === "fundraiser" ? "Сбор" : "Желание"} ·{" "}
+                        {comment.authorName}
+                      </p>
+                      <p className="mt-3 line-clamp-3 text-sm leading-6 text-[#654e55]">
+                        {comment.body}
+                      </p>
+                      <p className="mt-4 truncate text-sm font-bold text-[#bd3e66]">
+                        {comment.targetTitle}
+                      </p>
                     </Link>
                   ))}
                 </div>
