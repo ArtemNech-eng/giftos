@@ -7,7 +7,16 @@ import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { optionalText, requiredText } from "@/lib/validation";
 
-const reportTypes = new Set(["profile", "wish", "fundraiser", "comment", "message"]);
+const reportTypes = new Set([
+  "profile",
+  "wish",
+  "fundraiser",
+  "comment",
+  "message",
+  "story",
+  "wish_comment",
+  "live_room",
+]);
 const reportReasons = new Set([
   "fraud",
   "prohibited_content",

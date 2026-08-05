@@ -50,6 +50,24 @@ export async function moderateTarget(formData: FormData) {
       .update({ is_archived: true })
       .eq("id", targetId);
     if (error) throw new Error(error.message);
+  } else if (action === "hide_wish_comment" && targetType === "wish_comment") {
+    const { error } = await supabase
+      .from("wish_comments")
+      .update({ is_hidden: true })
+      .eq("id", targetId);
+    if (error) throw new Error(error.message);
+  } else if (action === "hide_story" && targetType === "story") {
+    const { error } = await supabase
+      .from("stories")
+      .update({ moderation_status: "rejected", moderated_at: new Date().toISOString() })
+      .eq("id", targetId);
+    if (error) throw new Error(error.message);
+  } else if (action === "end_live_room" && targetType === "live_room") {
+    const { error } = await supabase
+      .from("live_rooms")
+      .update({ status: "ended", ended_at: new Date().toISOString() })
+      .eq("id", targetId);
+    if (error) throw new Error(error.message);
   } else if (action === "suspend_profile" && targetType === "profile") {
     const { error } = await supabase
       .from("profiles")

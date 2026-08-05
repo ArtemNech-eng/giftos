@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { sendTestStoryGift } from "@/app/stories/gifts/actions";
 import { toggleStoryReaction } from "@/app/stories/reactions/actions";
 import { testUnlockStory } from "@/app/stories/actions";
+import { ReportForm } from "@/components/report-form";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { formatRubles } from "@/lib/money";
 import { getSignedImageUrl } from "@/lib/media";
@@ -133,6 +134,13 @@ export default async function StoryPage({
               >
                 Мои открытия
               </Link>
+            )}
+            {user && !isAuthor && (
+              <ReportForm
+                returnTo={`/stories/${story.id}`}
+                targetId={story.id}
+                targetType="story"
+              />
             )}
             {author?.username && (
               <Link

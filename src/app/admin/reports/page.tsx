@@ -11,7 +11,15 @@ export const dynamic = "force-dynamic";
 type Report = {
   id: string;
   reporter_id: string;
-  target_type: "profile" | "wish" | "fundraiser" | "comment" | "message";
+  target_type:
+    | "profile"
+    | "wish"
+    | "fundraiser"
+    | "comment"
+    | "message"
+    | "story"
+    | "wish_comment"
+    | "live_room";
   target_id: string;
   reason: string;
   details: string | null;
@@ -35,11 +43,18 @@ const targetLabels: Record<string, string> = {
   fundraiser: "сбор",
   comment: "сообщение",
   message: "сообщение",
+  story: "video story",
+  wish_comment: "комментарий желания",
+  live_room: "эфир",
 };
 
 function moderationActionFor(type: Report["target_type"]) {
   if (type === "comment") return { value: "hide_comment", label: "Скрыть сообщение" };
+  if (type === "wish_comment")
+    return { value: "hide_wish_comment", label: "Скрыть комментарий" };
   if (type === "wish") return { value: "hide_wish", label: "Скрыть желание" };
+  if (type === "story") return { value: "hide_story", label: "Скрыть story" };
+  if (type === "live_room") return { value: "end_live_room", label: "Завершить эфир" };
   if (type === "profile")
     return { value: "suspend_profile", label: "Заблокировать профиль" };
   if (type === "fundraiser")
@@ -81,14 +96,18 @@ export default async function AdminReportsPage({
 
   const reports = (rawReports ?? []) as Report[];
 
-  // Resolve target context: profile names, wish titles, fundraiser titles.
+  // Resolve target context: profile names, wish/fundraiser/story/live titles.
   const profiles = new Map<string, string>();
   const wishes = new Map<string, string>();
   const fundraisers = new Map<string, string>();
+  const stories = new Map<string, string>();
+  const liveRooms = new Map<string, string>();
   for (const report of reports) {
     if (report.target_type === "profile") profiles.set(report.target_id, "");
     if (report.target_type === "wish") wishes.set(report.target_id, "");
     if (report.target_type === "fundraiser") fundraisers.set(report.target_id, "");
+    if (report.target_type === "story") stories.set(report.target_id, "");
+    if (report.target_type === "live_room") liveRooms.set(report.target_id, "");
   }
   if (profiles.size > 0) {
     const { data } = await supabase
@@ -111,12 +130,29 @@ export default async function AdminReportsPage({
       .in("id", [...fundraisers.keys()]);
     for (const row of data ?? []) fundraisers.set(row.id, row.title);
   }
+  if (stories.size > 0) {
+    const { data } = await supabase
+      .from("stories")
+      .select("id, caption")
+      .in("id", [...stories.keys()]);
+    for (const row of data ?? []) stories.set(row.id, row.caption ?? "Video story");
+  }
+  if (liveRooms.size > 0) {
+    const { data } = await supabase
+      .from("live_rooms")
+      .select("id, title")
+      .in("id", [...liveRooms.keys()]);
+    for (const row of data ?? []) liveRooms.set(row.id, row.title);
+  }
 
   function targetContext(report: Report) {
     if (report.target_type === "profile") return profiles.get(report.target_id) ?? null;
     if (report.target_type === "wish") return wishes.get(report.target_id) ?? null;
     if (report.target_type === "fundraiser")
       return fundraisers.get(report.target_id) ?? null;
+    if (report.target_type === "story") return stories.get(report.target_id) ?? null;
+    if (report.target_type === "live_room")
+      return liveRooms.get(report.target_id) ?? null;
     return null;
   }
 

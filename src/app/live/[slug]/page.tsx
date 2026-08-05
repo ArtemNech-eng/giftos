@@ -20,6 +20,7 @@ import { LiveGiftEvents } from "@/components/live-gift-events";
 import { LiveKitRoom } from "@/components/livekit-room";
 import { LiveRoomPresence } from "@/components/live-room-presence";
 import { LiveRoomRealtime } from "@/components/live-room-realtime";
+import { ReportForm } from "@/components/report-form";
 import { requireUser } from "@/lib/auth";
 
 export const metadata = { title: "Эфир", robots: { index: false, follow: false } };
@@ -259,6 +260,13 @@ export default async function LiveRoomPage({
           <div className="flex items-center gap-2">
             <UsersRound className="size-5 text-[#9e88ff]" />
             <h2 className="font-bold">В эфире</h2>
+            {room.host_id !== user.id && (
+              <ReportForm
+                returnTo={`/live/${slug}`}
+                targetId={room.id}
+                targetType="live_room"
+              />
+            )}
             <span className="ml-auto text-xs text-[#a9a1b4]">
               {viewers ?? 0} зрителей
             </span>
