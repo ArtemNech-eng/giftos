@@ -6,6 +6,7 @@ import { notFound } from "next/navigation";
 
 import { blockUser, unblockUser } from "@/app/safety/actions";
 import { toggleUserFollow } from "@/app/social/actions";
+import { createCreatorOffer } from "@/app/creator/offers/actions";
 import { createCreatorPost } from "@/app/posts/actions";
 import {
   createPaidMessageRequest,
@@ -86,6 +87,7 @@ export default async function ProfilePage({
     { data: rawFundraisers },
     { data: rawStories },
     { data: rawPosts },
+    { data: rawOffers },
     { count: followers },
   ] = await Promise.all([
     user && !isOwnProfile
@@ -151,6 +153,13 @@ export default async function ProfilePage({
       .eq("visibility", "public")
       .order("published_at", { ascending: false })
       .limit(3),
+    supabase
+      .from("creator_offers")
+      .select("id, kind, title, description, price_minor, currency")
+      .eq("creator_id", profile.id)
+      .eq("is_active", true)
+      .order("sort_order", { ascending: true })
+      .limit(6),
     supabase
       .from("user_follows")
       .select("*", { count: "exact", head: true })
@@ -393,6 +402,45 @@ export default async function ProfilePage({
             <span className="text-sm text-[#d8a1ff]">Смотреть ›</span>
           </Link>
         )}
+        {rawOffers && rawOffers.length > 0 && (
+          <section className="border-white/8 rounded-2xl border bg-[#171923] p-4">
+            <h2 className="font-bold">Со мной можно</h2>
+            <div className="divide-white/8 mt-3 divide-y">
+              {rawOffers.map((offer) => {
+                const icons: Record<string, string> = {
+                  message: "💬",
+                  voice_call: "📞",
+                  video_call: "🎥",
+                  game: "🎮",
+                  activity: "✨",
+                  co_stream: "📺",
+                  custom: "⭐",
+                };
+                return (
+                  <div
+                    className="flex items-center justify-between py-3"
+                    key={offer.id}
+                  >
+                    <span className="flex items-center gap-3">
+                      <span className="text-lg">{icons[offer.kind] ?? "⭐"}</span>
+                      <span>
+                        <b className="block text-sm">{offer.title}</b>
+                        {offer.description && (
+                          <small className="block text-xs text-[#a9a1b4]">
+                            {offer.description}
+                          </small>
+                        )}
+                      </span>
+                    </span>
+                    <b className="text-sm text-[#ffd0eb]">
+                      {formatRubles(offer.price_minor)}
+                    </b>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        )}
         {rawFundraisers?.map((fundraiser) => {
           const progress = Math.min(
             100,
@@ -587,6 +635,58 @@ export default async function ProfilePage({
             >
               Сохранить
             </button>
+          </form>
+        </details>
+      )}
+      {isOwnProfile && profile.is_creator && (
+        <details className="mx-4 mt-3 rounded-2xl border border-white/10 bg-[#171923] p-4">
+          <summary className="cursor-pointer text-sm font-bold">
+            Добавить действие
+          </summary>
+          <form action={createCreatorOffer} className="mt-4">
+            <input name="username" type="hidden" value={profile.username} />
+            <select
+              className="w-full rounded-xl border border-white/10 bg-black/20 p-3 text-sm"
+              defaultValue="message"
+              name="kind"
+            >
+              <option value="message">Сообщение</option>
+              <option value="voice_call">Голосовой разговор</option>
+              <option value="video_call">Видеозвонок</option>
+              <option value="game">Поиграть вместе</option>
+              <option value="activity">Совместная активность</option>
+              <option value="co_stream">Совместный эфир</option>
+              <option value="custom">Другое</option>
+            </select>
+            <input
+              className="mt-3 w-full rounded-xl border border-white/10 bg-black/20 p-3 text-sm"
+              maxLength={80}
+              name="title"
+              placeholder="Например: Поговорить 15 минут"
+              required
+            />
+            <textarea
+              className="mt-3 min-h-16 w-full rounded-xl border border-white/10 bg-black/20 p-3 text-sm"
+              maxLength={300}
+              name="description"
+              placeholder="Коротко опишите формат"
+            />
+            <div className="mt-3 flex gap-2">
+              <input
+                className="w-28 rounded-xl border border-white/10 bg-black/20 p-3 text-sm"
+                min="1"
+                name="price"
+                placeholder="299 ₽"
+                required
+                type="number"
+              />
+              <button
+                className="rounded-xl bg-gradient-to-r from-[#ff4b8a] to-[#7d45ff] px-4 text-sm font-bold"
+                type="submit"
+              >
+                Добавить
+              </button>
+            </div>
           </form>
         </details>
       )}
