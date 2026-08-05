@@ -11,6 +11,7 @@ import {
   promotePlaceWithBonus,
 } from "@/app/places/actions";
 import { LivePlaceChat } from "@/components/live-place-chat";
+import { PlaceGiftButton } from "@/components/place-gift-button";
 import { ReportForm } from "@/components/report-form";
 import { requireUser } from "@/lib/auth";
 
@@ -100,6 +101,12 @@ export default async function PlacePage({
       .limit(3),
   ]);
   const online = (presence ?? []).length;
+  const { data: giftCatalog } = await supabase
+    .from("virtual_gifts")
+    .select("code, label, emoji, price_minor")
+    .eq("is_active", true)
+    .order("sort_order", { ascending: true })
+    .limit(8);
   const onlineIds = (presence ?? []).map((row) => row.profile_id);
   const { data: onlineProfiles } = onlineIds.length
     ? await supabase
@@ -190,17 +197,32 @@ export default async function PlacePage({
             <p className="text-xs text-[#aaa4b7]">Пока пусто — будь первым здесь!</p>
           ) : (
             people.map((person) => (
-              <Link
-                className="border-white/8 flex items-center gap-1.5 rounded-full border bg-white/5 px-2.5 py-1 text-xs transition hover:border-[#8df0b4]/60"
-                href={`/u/${person.username}` as Route}
+              <span
+                className="border-white/8 flex items-center gap-2 rounded-full border bg-white/5 py-1 pl-2.5 pr-1 text-xs"
                 key={person.id}
-                title="Подойти и познакомиться"
               >
-                <span className="size-1.5 rounded-full bg-[#8df0b4]" />
-                {person.display_name}
-                {person.is_creator && " 👑"}
-                <span className="text-[10px] text-[#8df0b4]">Подойти</span>
-              </Link>
+                <Link
+                  className="flex items-center gap-1.5 transition hover:text-[#8df0b4]"
+                  href={`/u/${person.username}` as Route}
+                  title="Подойти и познакомиться"
+                >
+                  <span className="size-1.5 rounded-full bg-[#8df0b4]" />
+                  {person.display_name}
+                  {person.is_creator && " 👑"}
+                </Link>
+                {person.id !== user.id && giftCatalog && giftCatalog.length > 0 && (
+                  <PlaceGiftButton
+                    gifts={giftCatalog.map((gift) => ({
+                      code: gift.code,
+                      label: gift.label,
+                      emoji: gift.emoji,
+                      price_minor: gift.price_minor,
+                    }))}
+                    placeId={place.id}
+                    recipientId={person.id}
+                  />
+                )}
+              </span>
             ))
           )}
         </div>

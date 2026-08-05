@@ -154,6 +154,20 @@ function notificationCopy(notification: Notification, actor: Actor | undefined) 
     };
   }
 
+  if (notification.type === "place_gift") {
+    const giftLabel =
+      typeof notification.payload.gift_label === "string"
+        ? notification.payload.gift_label
+        : "подарок";
+    return {
+      icon: Gift,
+      title: `${actorName} отправил(а) вам подарок (${giftLabel})`,
+      href: notification.entity_id
+        ? (`/places/${notification.entity_id}` as Route)
+        : "/places",
+    };
+  }
+
   if (notification.type === "direct_message") {
     return {
       icon: MessageCircle,

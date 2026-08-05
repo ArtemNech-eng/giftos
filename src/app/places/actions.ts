@@ -84,6 +84,69 @@ export async function promotePlaceWithBonus(formData: FormData) {
   redirect(`/places/${placeId}?promoted=1` as Route);
 }
 
+/** Send a virtual gift to a person met in the place. */
+export async function sendPlaceGift(formData: FormData) {
+  const { supabase, user } = await requireUser();
+  const placeId = requiredText(formData.get("place_id"), 100);
+  const recipientId = requiredText(formData.get("recipient_id"), 100);
+  const giftCode = requiredText(formData.get("gift_code"), 40);
+  if (!placeId || !recipientId || !giftCode || recipientId === user.id)
+    throw new Error("Выберите подарок.");
+
+  const { data: gift } = await supabase
+    .from("virtual_gifts")
+    .select("code, price_minor, currency")
+    .eq("code", giftCode)
+    .eq("is_active", true)
+    .maybeSingle();
+  if (!gift) throw new Error("Подарок недоступен.");
+
+  const admin = createAdminClient();
+  const { data: sent, error } = await admin
+    .from("place_gifts")
+    .insert({
+      place_id: placeId,
+      sender_id: user.id,
+      recipient_id: recipientId,
+      gift_code: gift.code,
+      price_minor: gift.price_minor,
+      currency: gift.currency,
+    })
+    .select("id")
+    .single();
+  if (error || !sent)
+    throw new Error(
+      `Не удалось отправить подарок: ${error?.message ?? "неизвестная ошибка"}`,
+    );
+
+  const gross = Number(gift.price_minor);
+  const fee = Math.round(gross * 0.2);
+  const { error: ledgerError } = await admin.from("creator_ledger_entries").insert({
+    creator_id: recipientId,
+    source_type: "gift",
+    source_id: sent.id,
+    gross_minor: gross,
+    platform_fee_minor: fee,
+    creator_net_minor: gross - fee,
+    currency: gift.currency,
+    status: "test",
+  });
+  if (ledgerError)
+    throw new Error(`Не удалось начислить тестовый доход: ${ledgerError.message}`);
+
+  await admin.from("notifications").insert({
+    recipient_id: recipientId,
+    actor_id: user.id,
+    type: "place_gift",
+    entity_type: "place",
+    entity_id: placeId,
+    payload: { gift_label: gift.code, place_id: placeId },
+  });
+
+  revalidatePath(`/places/${placeId}`);
+  redirect(`/places/${placeId}?gift=sent` as Route);
+}
+
 export async function enterPlace(formData: FormData) {
   const { supabase, user } = await requireUser();
   const placeId = requiredText(formData.get("place_id"), 100);
