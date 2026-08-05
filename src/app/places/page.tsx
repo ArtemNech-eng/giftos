@@ -20,6 +20,7 @@ type PlaceRow = {
   emoji: string;
   kind: "fixed" | "personal" | "temporary";
   creator_id: string | null;
+  promoted_until: string | null;
 };
 
 export default async function PlacesPage() {
@@ -42,9 +43,10 @@ export default async function PlacesPage() {
 
     const { data: rawPlaces } = await supabase
       .from("places")
-      .select("id, name, description, emoji, kind, creator_id")
+      .select("id, name, description, emoji, kind, creator_id, promoted_until")
       .eq("city_id", profile.city_id)
       .eq("is_active", true)
+      .order("promoted_until", { ascending: false, nullsFirst: false })
       .order("created_at", { ascending: true })
       .limit(100);
     const rows = (rawPlaces ?? []) as PlaceRow[];
@@ -78,7 +80,13 @@ export default async function PlacesPage() {
     }));
   }
 
-  const sorted = [...places].sort((a, b) => b.online - a.online);
+  const now = Date.now();
+  const sorted = [...places].sort((a, b) => {
+    const aPromoted = a.promoted_until && new Date(a.promoted_until).getTime() > now;
+    const bPromoted = b.promoted_until && new Date(b.promoted_until).getTime() > now;
+    if (aPromoted !== bPromoted) return aPromoted ? -1 : 1;
+    return b.online - a.online;
+  });
 
   return (
     <main className="mx-auto min-h-screen max-w-[430px] bg-[#0c0e14] px-4 py-5 text-white">
@@ -136,6 +144,12 @@ export default async function PlacesPage() {
                         🔥
                       </span>
                     )}
+                    {place.promoted_until &&
+                      new Date(place.promoted_until).getTime() > Date.now() && (
+                        <span className="rounded-full bg-[#ffd35e]/25 px-1.5 py-0.5 text-[10px] font-semibold text-[#ffd35e]">
+                          🚀 Поднято
+                        </span>
+                      )}
                   </span>
                   <span className="mt-0.5 flex items-center gap-3 text-xs text-[#aaa4b7]">
                     <span className="inline-flex items-center gap-1">

@@ -69,6 +69,21 @@ export async function archiveTemporaryPlaces() {
   revalidatePath("/places");
 }
 
+/** Boost the hangout: creator spends ⭐ to lift the place in the city list. */
+export async function promotePlaceWithBonus(formData: FormData) {
+  const { supabase } = await requireUser();
+  const placeId = requiredText(formData.get("place_id"), 100);
+  if (!placeId) throw new Error("Место не найдено.");
+  const { error } = await supabase.rpc("promote_place_with_hocu_bonus", {
+    p_place_id: placeId,
+  });
+  if (error) throw new Error(`Не удалось поднять тусовку: ${error.message}`);
+  revalidatePath("/places");
+  revalidatePath(`/places/${placeId}`);
+  revalidatePath("/bonuses");
+  redirect(`/places/${placeId}?promoted=1` as Route);
+}
+
 export async function enterPlace(formData: FormData) {
   const { supabase, user } = await requireUser();
   const placeId = requiredText(formData.get("place_id"), 100);

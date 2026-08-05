@@ -3,7 +3,13 @@ import type { Route } from "next";
 import { ArrowLeft, CalendarDays, MapPin, UsersRound } from "lucide-react";
 import { notFound } from "next/navigation";
 
-import { enterPlace, inviteToPlace, joinPlace, leavePlace } from "@/app/places/actions";
+import {
+  enterPlace,
+  inviteToPlace,
+  joinPlace,
+  leavePlace,
+  promotePlaceWithBonus,
+} from "@/app/places/actions";
 import { LivePlaceChat } from "@/components/live-place-chat";
 import { ReportForm } from "@/components/report-form";
 import { requireUser } from "@/lib/auth";
@@ -230,25 +236,39 @@ export default async function PlacePage({
           )}
         </div>
         {place.creator_id === user.id && place.kind !== "fixed" && (
-          <form action={inviteToPlace} className="mt-4 border-t border-white/10 pt-3">
-            <input name="place_id" type="hidden" value={place.id} />
-            <p className="text-xs font-semibold text-[#e7c9f5]">Позвать в тусовку</p>
-            <div className="mt-2 flex gap-2">
-              <input
-                className="grow rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-sm"
-                maxLength={30}
-                name="username"
-                placeholder="@username"
-                required
-              />
+          <div className="mt-4 border-t border-white/10 pt-3">
+            <form action={promotePlaceWithBonus}>
+              <input name="place_id" type="hidden" value={place.id} />
               <button
-                className="rounded-xl bg-gradient-to-r from-[#ff4b8a] to-[#7d45ff] px-4 text-sm font-bold"
+                className="flex w-full items-center justify-center gap-2 rounded-xl border border-[#ffd35e]/40 bg-[#2a2215] py-2.5 text-sm font-bold text-[#ffd35e]"
                 type="submit"
               >
-                Позвать
+                🚀 Поднять тусовку за 200 ⭐
               </button>
-            </div>
-          </form>
+            </form>
+            <p className="mt-2 text-xs text-[#a9a1b4]">
+              Поднятое место 24 часа показывается первым в списке города.
+            </p>
+            <form action={inviteToPlace} className="mt-3">
+              <input name="place_id" type="hidden" value={place.id} />
+              <p className="text-xs font-semibold text-[#e7c9f5]">Позвать в тусовку</p>
+              <div className="mt-2 flex gap-2">
+                <input
+                  className="grow rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-sm"
+                  maxLength={30}
+                  name="username"
+                  placeholder="@username"
+                  required
+                />
+                <button
+                  className="rounded-xl bg-gradient-to-r from-[#ff4b8a] to-[#7d45ff] px-4 text-sm font-bold"
+                  type="submit"
+                >
+                  Позвать
+                </button>
+              </div>
+            </form>
+          </div>
         )}
       </section>
 
