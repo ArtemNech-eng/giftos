@@ -28,19 +28,50 @@ export default async function StoryAnalyticsPage({
     .maybeSingle();
   if (!story) notFound();
 
-  const [{ count: views }, { data: reactions }, { data: gifts }, { data: unlocks }] =
-    await Promise.all([
-      supabase
-        .from("story_views")
-        .select("*", { count: "exact", head: true })
-        .eq("story_id", story.id),
-      supabase.from("story_reactions").select("reaction").eq("story_id", story.id),
-      supabase
-        .from("story_gifts")
-        .select("id, gift_code, price_minor")
-        .eq("story_id", story.id),
-      supabase.from("story_unlocks").select("id, status").eq("story_id", story.id),
-    ]);
+  const [
+    { count: views },
+    { data: reactions },
+    { data: gifts },
+    { data: unlocks },
+    { data: rawViewers },
+    { data: rawUnlockers },
+  ] = await Promise.all([
+    supabase
+      .from("story_views")
+      .select("*", { count: "exact", head: true })
+      .eq("story_id", story.id),
+    supabase.from("story_reactions").select("reaction").eq("story_id", story.id),
+    supabase
+      .from("story_gifts")
+      .select("id, gift_code, price_minor")
+      .eq("story_id", story.id),
+    supabase.from("story_unlocks").select("id, status").eq("story_id", story.id),
+    supabase
+      .from("story_views")
+      .select("viewer_id, viewed_at")
+      .eq("story_id", story.id)
+      .order("viewed_at", { ascending: false })
+      .limit(10),
+    supabase
+      .from("story_unlocks")
+      .select("viewer_id, unlocked_at")
+      .eq("story_id", story.id)
+      .eq("status", "unlocked")
+      .order("unlocked_at", { ascending: false })
+      .limit(10),
+  ]);
+  const viewerIds = [
+    ...new Set([
+      ...(rawViewers ?? []).map((item) => item.viewer_id),
+      ...(rawUnlockers ?? []).map((item) => item.viewer_id),
+    ]),
+  ];
+  const { data: viewerProfiles } = viewerIds.length
+    ? await supabase.from("profiles").select("id, display_name").in("id", viewerIds)
+    : { data: [] };
+  const viewerNames = new Map(
+    (viewerProfiles ?? []).map((profile) => [profile.id, profile.display_name]),
+  );
   const sourceIds = [
     ...(gifts ?? []).map((gift) => gift.id),
     ...(unlocks ?? []).map((unlock) => unlock.id),
@@ -127,6 +158,58 @@ export default async function StoryAnalyticsPage({
           </div>
         </div>
       </section>
+      {(rawViewers?.length ?? 0) > 0 && (
+        <section className="mt-6">
+          <h2 className="font-bold">Зрители</h2>
+          <div className="mt-3 space-y-2">
+            {(rawViewers ?? []).map((viewer) => (
+              <div
+                className="border-white/8 flex items-center justify-between rounded-xl border bg-[#171923] p-3"
+                key={viewer.viewer_id}
+              >
+                <span className="text-sm text-[#d6cede]">
+                  {viewerNames.get(viewer.viewer_id) ?? "Пользователь"}
+                </span>
+                <span className="text-xs text-[#9991a3]">
+                  {new Intl.DateTimeFormat("ru-RU", {
+                    day: "numeric",
+                    month: "short",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  }).format(new Date(viewer.viewed_at))}
+                </span>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+      {(rawUnlockers?.length ?? 0) > 0 && (
+        <section className="mt-6">
+          <h2 className="font-bold">Открыли платную</h2>
+          <div className="mt-3 space-y-2">
+            {(rawUnlockers ?? []).map((unlocker) => (
+              <div
+                className="border-white/8 flex items-center justify-between rounded-xl border bg-[#171923] p-3"
+                key={unlocker.viewer_id}
+              >
+                <span className="text-sm text-[#d6cede]">
+                  {viewerNames.get(unlocker.viewer_id) ?? "Пользователь"}
+                </span>
+                <span className="text-xs text-[#9991a3]">
+                  {unlocker.unlocked_at
+                    ? new Intl.DateTimeFormat("ru-RU", {
+                        day: "numeric",
+                        month: "short",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      }).format(new Date(unlocker.unlocked_at))
+                    : "—"}
+                </span>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
       <section className="mt-6">
         <h2 className="font-bold">Монетизация</h2>
         <div className="mt-3 space-y-2">

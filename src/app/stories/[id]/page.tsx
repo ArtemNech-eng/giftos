@@ -118,6 +118,14 @@ export default async function StoryPage({
                 Аналитика
               </Link>
             )}
+            {user && !isAuthor && (
+              <Link
+                className="text-sm font-semibold text-[#b9b2c7]"
+                href="/stories/opens"
+              >
+                Мои открытия
+              </Link>
+            )}
             {author?.username && (
               <Link
                 className="text-sm font-semibold text-[#a13d5e]"
