@@ -8,6 +8,7 @@ import {
   startFundraiserSupport,
 } from "@/app/fundraisers/support-actions";
 import { EmptyState } from "@/components/empty-state";
+import { LiveDiscussionRefresh } from "@/components/live-discussion-refresh";
 import { CATEGORIES } from "@/lib/constants";
 import { getSignedImageUrl } from "@/lib/media";
 import { formatRubles } from "@/lib/money";
@@ -320,6 +321,7 @@ export default async function FundraiserPage({
         </section>
       )}
       <section className="mt-6" id="discussion">
+        <LiveDiscussionRefresh fundraiserId={fundraiser.id} />
         <div className="surface rounded-2xl p-5 sm:p-6">
           <p className="text-sm font-semibold text-[#bd3e66]">Люди вокруг цели</p>
           <h2 className="mt-1 text-2xl font-bold">Обсуждение</h2>
