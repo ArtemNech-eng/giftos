@@ -43,10 +43,46 @@ type StoryAuthor = {
   storyId?: string;
 };
 
+type WishPreview = {
+  id: string;
+  title: string;
+  categorySlug: string | null;
+  alsoWantsCount: number;
+  authorName: string;
+  authorUsername: string;
+};
+
 const demoAuthors: StoryAuthor[] = [
   { id: "nastya", username: "nastya", displayName: "Настя", avatarPath: null },
   { id: "max", username: "max", displayName: "Макс", avatarPath: null },
   { id: "dima", username: "dima", displayName: "Дима", avatarPath: null },
+];
+
+const demoWishes: WishPreview[] = [
+  {
+    id: "wish-1",
+    title: "Новый MacBook для видео",
+    categorySlug: "electronics",
+    alsoWantsCount: 1284,
+    authorName: "Настя",
+    authorUsername: "nastya",
+  },
+  {
+    id: "wish-2",
+    title: "Увидеть Японию весной",
+    categorySlug: "travel",
+    alsoWantsCount: 864,
+    authorName: "Лиза",
+    authorUsername: "liza",
+  },
+  {
+    id: "wish-3",
+    title: "Собрать домашнюю студию",
+    categorySlug: "music",
+    alsoWantsCount: 521,
+    authorName: "Макс",
+    authorUsername: "max",
+  },
 ];
 
 const demoFundraisers: Fundraiser[] = [
@@ -84,26 +120,39 @@ const demoFundraisers: Fundraiser[] = [
 
 async function getHomeData() {
   if (!hasSupabaseEnvironment()) {
-    return { authors: demoAuthors, fundraisers: demoFundraisers, isDemo: true };
+    return {
+      authors: demoAuthors,
+      fundraisers: demoFundraisers,
+      wishes: demoWishes,
+      isDemo: true,
+    };
   }
 
   try {
     const supabase = await createClient();
-    const [{ data: rawStories }, { data: rawFundraisers }] = await Promise.all([
-      supabase
-        .from("stories")
-        .select("id, author_id, created_at")
-        .gt("expires_at", new Date().toISOString())
-        .order("created_at", { ascending: false })
-        .limit(30),
-      supabase
-        .from("public_fundraiser_feed")
-        .select(
-          "id, slug, title, category_slug, current_amount_minor, target_amount_minor, author_display_name, author_username",
-        )
-        .order("published_at", { ascending: false })
-        .limit(8),
-    ]);
+    const [{ data: rawStories }, { data: rawFundraisers }, { data: rawWishes }] =
+      await Promise.all([
+        supabase
+          .from("stories")
+          .select("id, author_id, created_at")
+          .gt("expires_at", new Date().toISOString())
+          .order("created_at", { ascending: false })
+          .limit(30),
+        supabase
+          .from("public_fundraiser_feed")
+          .select(
+            "id, slug, title, category_slug, current_amount_minor, target_amount_minor, author_display_name, author_username",
+          )
+          .order("published_at", { ascending: false })
+          .limit(8),
+        supabase
+          .from("wishes")
+          .select("id, author_id, title, category_slug, also_wants_count, created_at")
+          .eq("visibility", "public")
+          .eq("is_archived", false)
+          .order("also_wants_count", { ascending: false })
+          .limit(12),
+      ]);
 
     const uniqueStoryAuthors = new Map<string, { id: string; author_id: string }>();
     for (const story of rawStories ?? []) {
@@ -111,14 +160,17 @@ async function getHomeData() {
         uniqueStoryAuthors.set(story.author_id, story);
     }
     const storyRows = [...uniqueStoryAuthors.values()].slice(0, 8);
-    const { data: profiles } = storyRows.length
+    const authorIds = [
+      ...new Set([
+        ...storyRows.map((story) => story.author_id),
+        ...(rawWishes ?? []).map((wish) => wish.author_id),
+      ]),
+    ];
+    const { data: profiles } = authorIds.length
       ? await supabase
           .from("profiles")
           .select("id, username, display_name, avatar_path")
-          .in(
-            "id",
-            storyRows.map((story) => story.author_id),
-          )
+          .in("id", authorIds)
       : { data: [] };
     const profileById = new Map(
       (profiles ?? []).map((profile) => [profile.id, profile]),
@@ -151,9 +203,27 @@ async function getHomeData() {
       authorUsername: String(item.author_username),
     }));
 
-    return { authors, fundraisers, isDemo: false };
+    const wishes: WishPreview[] = (
+      (rawWishes ?? []) as Array<Record<string, unknown>>
+    ).flatMap((item) => {
+      const profile = profileById.get(String(item.author_id));
+      return profile
+        ? [
+            {
+              id: String(item.id),
+              title: String(item.title),
+              categorySlug: item.category_slug ? String(item.category_slug) : null,
+              alsoWantsCount: Number(item.also_wants_count),
+              authorName: profile.display_name,
+              authorUsername: profile.username,
+            },
+          ]
+        : [];
+    });
+
+    return { authors, fundraisers, wishes, isDemo: false };
   } catch {
-    return { authors: [], fundraisers: [], isDemo: false };
+    return { authors: [], fundraisers: [], wishes: [], isDemo: false };
   }
 }
 
@@ -230,7 +300,7 @@ function BottomNav() {
 }
 
 export default async function HomePage() {
-  const { authors, fundraisers, isDemo } = await getHomeData();
+  const { authors, fundraisers, wishes, isDemo } = await getHomeData();
   const storyAuthors = authors.length > 0 ? authors : demoAuthors;
 
   return (
@@ -278,6 +348,40 @@ export default async function HomePage() {
                 <span className="w-16 truncate text-center text-xs text-[#e7e1ee]">
                   {author.displayName}
                 </span>
+              </Link>
+            );
+          })}
+        </div>
+      </section>
+
+      <section className="mt-7">
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="text-base font-bold">Популярные желания</h2>
+          <Link className="text-xs font-medium text-[#b26fff]" href="/discover">
+            Смотреть все ›
+          </Link>
+        </div>
+        <div className="space-y-2.5">
+          {(wishes.length ? wishes : demoWishes).slice(0, 3).map((wish, index) => {
+            const category =
+              CATEGORIES.find((item) => item.slug === wish.categorySlug) ??
+              CATEGORIES.at(-1)!;
+            const href = isDemo ? "/auth/sign-in" : (`/wishes/${wish.id}` as Route);
+            return (
+              <Link
+                className="border-white/8 flex items-center gap-3 rounded-2xl border bg-[#181a24] p-3"
+                href={href}
+                key={wish.id}
+              >
+                <Avatar index={index} name={wish.authorName} />
+                <div className="min-w-0 grow">
+                  <p className="truncate text-sm font-bold">{wish.title}</p>
+                  <p className="truncate text-xs text-[#aaa4b7]">
+                    {category.emoji} {wish.authorName} · {wish.alsoWantsCount} хотят
+                    также
+                  </p>
+                </div>
+                <span className="text-xl">✨</span>
               </Link>
             );
           })}
