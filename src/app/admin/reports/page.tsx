@@ -19,7 +19,9 @@ type Report = {
     | "message"
     | "story"
     | "wish_comment"
-    | "live_room";
+    | "live_room"
+    | "place"
+    | "place_message";
   target_id: string;
   reason: string;
   details: string | null;
@@ -46,6 +48,8 @@ const targetLabels: Record<string, string> = {
   story: "video story",
   wish_comment: "комментарий желания",
   live_room: "эфир",
+  place: "место",
+  place_message: "сообщение места",
 };
 
 function moderationActionFor(type: Report["target_type"]) {
@@ -55,6 +59,9 @@ function moderationActionFor(type: Report["target_type"]) {
   if (type === "wish") return { value: "hide_wish", label: "Скрыть желание" };
   if (type === "story") return { value: "hide_story", label: "Скрыть story" };
   if (type === "live_room") return { value: "end_live_room", label: "Завершить эфир" };
+  if (type === "place") return { value: "hide_place", label: "Скрыть место" };
+  if (type === "place_message")
+    return { value: "hide_place_message", label: "Скрыть сообщение" };
   if (type === "profile")
     return { value: "suspend_profile", label: "Заблокировать профиль" };
   if (type === "fundraiser")
@@ -102,12 +109,14 @@ export default async function AdminReportsPage({
   const fundraisers = new Map<string, string>();
   const stories = new Map<string, string>();
   const liveRooms = new Map<string, string>();
+  const places = new Map<string, string>();
   for (const report of reports) {
     if (report.target_type === "profile") profiles.set(report.target_id, "");
     if (report.target_type === "wish") wishes.set(report.target_id, "");
     if (report.target_type === "fundraiser") fundraisers.set(report.target_id, "");
     if (report.target_type === "story") stories.set(report.target_id, "");
     if (report.target_type === "live_room") liveRooms.set(report.target_id, "");
+    if (report.target_type === "place") places.set(report.target_id, "");
   }
   if (profiles.size > 0) {
     const { data } = await supabase
@@ -144,6 +153,13 @@ export default async function AdminReportsPage({
       .in("id", [...liveRooms.keys()]);
     for (const row of data ?? []) liveRooms.set(row.id, row.title);
   }
+  if (places.size > 0) {
+    const { data } = await supabase
+      .from("places")
+      .select("id, name")
+      .in("id", [...places.keys()]);
+    for (const row of data ?? []) places.set(row.id, row.name);
+  }
 
   function targetContext(report: Report) {
     if (report.target_type === "profile") return profiles.get(report.target_id) ?? null;
@@ -153,6 +169,7 @@ export default async function AdminReportsPage({
     if (report.target_type === "story") return stories.get(report.target_id) ?? null;
     if (report.target_type === "live_room")
       return liveRooms.get(report.target_id) ?? null;
+    if (report.target_type === "place") return places.get(report.target_id) ?? null;
     return null;
   }
 

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
 
+import { ReportForm } from "@/components/report-form";
 import { createClient } from "@/lib/supabase/client";
 
 export type PlaceMessageView = {
@@ -131,14 +132,23 @@ export function LivePlaceChat({
           </p>
         ) : (
           messages.map((message) => (
-            <p className="text-sm" key={message.id}>
-              <b className="mr-2">
-                {message.author_id === currentUserId
-                  ? "Вы"
-                  : (names[message.author_id] ?? message.author_name ?? "Зритель")}
-              </b>
-              {message.body}
-            </p>
+            <div className="flex items-start gap-2" key={message.id}>
+              <p className="min-w-0 grow text-sm">
+                <b className="mr-2">
+                  {message.author_id === currentUserId
+                    ? "Вы"
+                    : (names[message.author_id] ?? message.author_name ?? "Зритель")}
+                </b>
+                {message.body}
+              </p>
+              {message.author_id !== currentUserId && (
+                <ReportForm
+                  returnTo={`/places/${placeId}`}
+                  targetId={message.id}
+                  targetType="place_message"
+                />
+              )}
+            </div>
           ))
         )}
       </div>

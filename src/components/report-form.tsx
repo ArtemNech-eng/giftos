@@ -13,7 +13,9 @@ export function ReportForm({
     | "message"
     | "story"
     | "wish_comment"
-    | "live_room";
+    | "live_room"
+    | "place"
+    | "place_message";
   targetId: string;
   returnTo: string;
 }) {

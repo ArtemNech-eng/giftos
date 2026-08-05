@@ -1,10 +1,11 @@
 import Link from "next/link";
 import type { Route } from "next";
-import { ArrowLeft, MapPin, UsersRound } from "lucide-react";
+import { ArrowLeft, CalendarDays, MapPin, UsersRound } from "lucide-react";
 import { notFound } from "next/navigation";
 
 import { enterPlace, inviteToPlace, joinPlace, leavePlace } from "@/app/places/actions";
 import { LivePlaceChat } from "@/components/live-place-chat";
+import { ReportForm } from "@/components/report-form";
 import { requireUser } from "@/lib/auth";
 
 export const metadata = {
@@ -38,6 +39,8 @@ export default async function PlacePage({
     { count: memberCount },
     { count: messageCount },
     { count: liveCount },
+    { data: activeLive },
+    { data: placeEvents },
   ] = await Promise.all([
     supabase
       .from("place_presence")
@@ -69,8 +72,24 @@ export default async function PlacePage({
     supabase
       .from("live_rooms")
       .select("*", { count: "exact", head: true })
-      .eq("host_id", place.creator_id ?? "")
+      .eq("place_id", id)
       .eq("status", "live"),
+    supabase
+      .from("live_rooms")
+      .select("id, slug, title, host_id")
+      .eq("place_id", id)
+      .eq("status", "live")
+      .order("started_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    supabase
+      .from("events")
+      .select("id, title, starts_at")
+      .eq("place_id", id)
+      .eq("is_cancelled", false)
+      .gte("starts_at", new Date().toISOString())
+      .order("starts_at", { ascending: true })
+      .limit(3),
   ]);
   const online = (presence ?? []).length;
   const onlineIds = (presence ?? []).map((row) => row.profile_id);
@@ -109,7 +128,11 @@ export default async function PlacePage({
         <h1 className="text-lg font-bold">
           {place.emoji} {place.name}
         </h1>
-        <span className="w-9" />
+        <ReportForm
+          returnTo={`/places/${place.id}`}
+          targetId={place.id}
+          targetType="place"
+        />
       </header>
 
       <section className="mt-5 rounded-2xl border border-white/10 bg-[#171923] p-4">
@@ -145,13 +168,15 @@ export default async function PlacePage({
           ) : (
             people.map((person) => (
               <Link
-                className="border-white/8 flex items-center gap-1.5 rounded-full border bg-white/5 px-2.5 py-1 text-xs"
+                className="border-white/8 flex items-center gap-1.5 rounded-full border bg-white/5 px-2.5 py-1 text-xs transition hover:border-[#8df0b4]/60"
                 href={`/u/${person.username}` as Route}
                 key={person.id}
+                title="Подойти и познакомиться"
               >
                 <span className="size-1.5 rounded-full bg-[#8df0b4]" />
                 {person.display_name}
                 {person.is_creator && " 👑"}
+                <span className="text-[10px] text-[#8df0b4]">Подойти</span>
               </Link>
             ))
           )}
@@ -209,6 +234,47 @@ export default async function PlacePage({
           </form>
         )}
       </section>
+
+      {activeLive && (
+        <section className="mt-5 rounded-2xl border border-[#ff2d55]/50 bg-gradient-to-r from-[#2a1222] to-[#1b1528] p-4">
+          <p className="text-xs font-bold text-[#ff7fb5]">🔴 В ЭФИРЕ ВНУТРИ МЕСТА</p>
+          <p className="mt-1 font-bold">{activeLive.title}</p>
+          <Link
+            className="mt-3 inline-flex h-10 items-center rounded-xl bg-[#ff2d55] px-4 text-sm font-bold"
+            href={`/live/${activeLive.slug}` as Route}
+          >
+            Смотреть эфир ›
+          </Link>
+        </section>
+      )}
+
+      {(placeEvents ?? []).length > 0 && (
+        <section className="mt-5 rounded-2xl border border-white/10 bg-[#171923] p-4">
+          <div className="flex items-center gap-2">
+            <CalendarDays className="size-5 text-[#7fd8ff]" />
+            <h2 className="font-bold">События места</h2>
+          </div>
+          <div className="mt-3 space-y-2">
+            {(placeEvents ?? []).map((event) => (
+              <Link
+                className="flex items-center justify-between rounded-xl bg-white/5 p-3 text-sm"
+                href={`/events/${event.id}` as Route}
+                key={event.id}
+              >
+                <span className="truncate font-semibold">{event.title}</span>
+                <span className="ml-2 shrink-0 text-xs text-[#aaa4b7]">
+                  {new Intl.DateTimeFormat("ru-RU", {
+                    day: "numeric",
+                    month: "short",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  }).format(new Date(event.starts_at))}
+                </span>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
 
       <section className="mt-5 rounded-2xl border border-white/10 bg-[#171923] p-4">
         <div className="flex items-center gap-2">

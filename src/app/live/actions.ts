@@ -17,6 +17,7 @@ export async function createLiveRoom(formData: FormData) {
   const description = optionalText(formData.get("description"), 1000);
   const category = optionalText(formData.get("category_slug"), 40);
   const wishId = optionalText(formData.get("wish_id"), 100);
+  const placeId = optionalText(formData.get("place_id"), 100);
   if (!title) throw new Error("Укажите название эфира.");
   const { data: profile } = await supabase
     .from("profiles")
@@ -35,6 +36,7 @@ export async function createLiveRoom(formData: FormData) {
       description,
       category_slug: category,
       wish_id: wishId,
+      place_id: placeId || null,
       status: "live",
     })
     .select("id")

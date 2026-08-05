@@ -23,6 +23,7 @@ export async function createEvent(formData: FormData) {
   const scope = formData.get("scope") === "open" ? "open" : "local";
   const startsAtRaw = String(formData.get("starts_at") ?? "");
   const startsAt = new Date(startsAtRaw);
+  const placeId = optionalText(formData.get("place_id"), 100);
 
   if (!title) throw new Error("Укажите название события.");
   if (!startsAtRaw || Number.isNaN(startsAt.getTime()))
@@ -39,6 +40,7 @@ export async function createEvent(formData: FormData) {
     .insert({
       author_id: user.id,
       city_id: scope === "local" ? (profile?.city_id ?? null) : null,
+      place_id: placeId || null,
       title,
       description,
       event_type: eventType,
