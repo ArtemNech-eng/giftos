@@ -71,6 +71,15 @@ type RecommendedAuthor = {
   followerCount: number;
 };
 
+type CityPerson = {
+  id: string;
+  username: string;
+  displayName: string;
+  city: string | null;
+  isCreator: boolean;
+  followers: number;
+};
+
 const demoAuthors: StoryAuthor[] = [
   { id: "nastya", username: "nastya", displayName: "Настя", avatarPath: null },
   { id: "max", username: "max", displayName: "Макс", avatarPath: null },
@@ -101,6 +110,33 @@ const demoLiveRooms: LiveRoomPreview[] = [
     hostName: "Дима",
     hostUsername: "dima",
     viewers: 21,
+  },
+];
+
+const demoCityPeople: CityPerson[] = [
+  {
+    id: "nastya",
+    username: "nastya",
+    displayName: "Настя",
+    city: "Будённовск",
+    isCreator: true,
+    followers: 1240,
+  },
+  {
+    id: "max",
+    username: "max",
+    displayName: "Макс",
+    city: "Будённовск",
+    isCreator: true,
+    followers: 876,
+  },
+  {
+    id: "dima",
+    username: "dima",
+    displayName: "Дима",
+    city: "Будённовск",
+    isCreator: false,
+    followers: 512,
   },
 ];
 
@@ -250,7 +286,7 @@ async function buildLiveRooms(
   });
 }
 
-async function getHomeData() {
+async function getHomeData(scope: "city" | "global" = "global") {
   if (!hasSupabaseEnvironment()) {
     return {
       authors: demoAuthors,
@@ -263,6 +299,11 @@ async function getHomeData() {
       growingFundraisers: demoFundraisers,
       recommendedAuthors: demoRecommendedAuthors,
       personalAuthors: [],
+      cityName: "Будённовск",
+      cityPeople: scope === "city" ? demoCityPeople : [],
+      cityNewcomers: scope === "city" ? demoCityPeople : [],
+      cityLiveRooms: scope === "city" ? demoLiveRooms : [],
+      cityWishes: scope === "city" ? demoWishes : [],
       isDemo: true,
     };
   }
@@ -493,6 +534,103 @@ async function getHomeData() {
       return mapped ? [mapped] : [];
     });
 
+    // City feed (scope=city): people nearby, newcomers, local streams,
+    // local wishes. Only citizens with show_city and a public profile are
+    // exposed; no city selected -> empty, the UI falls back to global.
+    let cityName: string | null = null;
+    let cityPeople: CityPerson[] = [];
+    let cityNewcomers: CityPerson[] = [];
+    let cityLiveRooms: LiveRoomPreview[] = [];
+    let cityWishes: WishPreview[] = [];
+    if (scope === "city" && user) {
+      const { data: myProfile } = await supabase
+        .from("profiles")
+        .select("city_id, city")
+        .eq("id", user.id)
+        .maybeSingle();
+      if (myProfile?.city_id) {
+        const { data: rawCitizens } = await supabase
+          .from("profiles")
+          .select("id, username, display_name, city, is_creator")
+          .eq("city_id", myProfile.city_id)
+          .eq("show_city", true)
+          .eq("profile_visibility", "public")
+          .eq("is_suspended", false)
+          .order("created_at", { ascending: false })
+          .limit(20);
+        const citizens = (rawCitizens ?? []) as Array<{
+          id: string;
+          username: string;
+          display_name: string;
+          city: string | null;
+          is_creator: boolean;
+        }>;
+        const citizenIds = citizens.map((c) => c.id);
+        const { data: follows } = citizenIds.length
+          ? await supabase
+              .from("user_follows")
+              .select("following_id")
+              .in("following_id", citizenIds)
+          : { data: [] };
+        const followerCount = new Map<string, number>();
+        for (const follow of follows ?? [])
+          followerCount.set(
+            follow.following_id,
+            (followerCount.get(follow.following_id) ?? 0) + 1,
+          );
+        const others = citizens.filter((c) => c.id !== user.id);
+        const toCityPerson = (c: (typeof others)[number]): CityPerson => ({
+          id: c.id,
+          username: c.username,
+          displayName: c.display_name,
+          city: c.city,
+          isCreator: c.is_creator,
+          followers: followerCount.get(c.id) ?? 0,
+        });
+        cityPeople = others.slice(0, 4).map(toCityPerson);
+        cityNewcomers = others.slice(0, 3).map(toCityPerson);
+
+        const { data: rawCityWishes } = citizenIds.length
+          ? await supabase
+              .from("wishes")
+              .select("id, author_id, title, category_slug, also_wants_count")
+              .eq("visibility", "public")
+              .eq("is_archived", false)
+              .in("author_id", citizenIds)
+              .order("also_wants_count", { ascending: false })
+              .limit(6)
+          : { data: [] };
+        cityWishes = ((rawCityWishes ?? []) as Array<Record<string, unknown>>)
+          .flatMap((item) => {
+            const mapped = mapWish(item);
+            return mapped ? [mapped] : [];
+          })
+          .slice(0, 3);
+
+        const { data: rawCityRooms } = citizenIds.length
+          ? await supabase
+              .from("live_rooms")
+              .select("id, slug, title, host_id")
+              .eq("status", "live")
+              .eq("visibility", "public")
+              .in("host_id", citizenIds)
+              .order("started_at", { ascending: false })
+              .limit(6)
+          : { data: [] };
+        cityLiveRooms = (await buildLiveRooms(supabase, rawCityRooms ?? [])).slice(
+          0,
+          3,
+        );
+
+        const { data: cityRow } = await supabase
+          .from("cities")
+          .select("name")
+          .eq("id", myProfile.city_id)
+          .maybeSingle();
+        cityName = cityRow?.name ?? myProfile.city;
+      }
+    }
+
     return {
       authors,
       fundraisers,
@@ -504,6 +642,11 @@ async function getHomeData() {
       growingFundraisers,
       recommendedAuthors,
       personalAuthors,
+      cityName,
+      cityPeople,
+      cityNewcomers,
+      cityLiveRooms,
+      cityWishes,
       isDemo: false,
     };
   } catch {
@@ -518,6 +661,11 @@ async function getHomeData() {
       growingFundraisers: [],
       recommendedAuthors: [],
       personalAuthors: [],
+      cityName: null,
+      cityPeople: [],
+      cityNewcomers: [],
+      cityLiveRooms: [],
+      cityWishes: [],
       isDemo: false,
     };
   }
@@ -654,7 +802,13 @@ function BottomNav() {
   );
 }
 
-export default async function HomePage() {
+export default async function HomePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ scope?: string }>;
+}) {
+  const { scope: rawScope = "" } = await searchParams;
+  const scope = rawScope === "city" ? "city" : "global";
   const {
     authors,
     fundraisers,
@@ -666,8 +820,13 @@ export default async function HomePage() {
     growingFundraisers,
     recommendedAuthors,
     personalAuthors,
+    cityName,
+    cityPeople,
+    cityNewcomers,
+    cityLiveRooms,
+    cityWishes,
     isDemo,
-  } = await getHomeData();
+  } = await getHomeData(scope);
   const storyAuthors = authors.length > 0 ? authors : demoAuthors;
   const liveRoomsToShow = liveRooms.length > 0 ? liveRooms : demoLiveRooms;
   const popularToShow =
@@ -677,9 +836,13 @@ export default async function HomePage() {
   const authorsToShow =
     recommendedAuthors.length > 0 ? recommendedAuthors : demoRecommendedAuthors;
 
+  const cityMode = scope === "city";
+  const cityFallback = cityMode && !cityName;
+  const cityEmpty = cityMode && cityName && cityPeople.length === 0;
+
   return (
     <main className="mx-auto min-h-screen max-w-[430px] bg-[#0c0e14] px-4 pb-24 pt-5 text-white">
-      <header className="mb-7 flex items-center justify-between">
+      <header className="mb-5 flex items-center justify-between">
         <Link
           className="flex items-center gap-2 text-lg font-bold tracking-tight"
           href="/"
@@ -702,300 +865,478 @@ export default async function HomePage() {
         </div>
       </header>
 
-      <section>
-        <div className="mb-3 flex items-center justify-between">
-          <h1 className="text-base font-bold">Новые stories</h1>
-          <span className="text-xs font-medium text-[#b26fff]">Смотреть все ›</span>
-        </div>
-        <div className="flex gap-3 overflow-x-auto pb-2">
-          {storyAuthors.map((author, index) => {
-            const href = author.storyId
-              ? (`/stories/${author.storyId}` as Route)
-              : "/creator/start";
-            return (
-              <Link
-                className="flex w-16 shrink-0 flex-col items-center gap-1.5"
-                href={href}
-                key={author.id}
-              >
-                <Avatar imageUrl={null} index={index} name={author.displayName} />
-                <span className="w-16 truncate text-center text-xs text-[#e7e1ee]">
-                  {author.displayName}
-                </span>
-              </Link>
-            );
-          })}
-        </div>
-      </section>
+      <nav
+        aria-label="Лента"
+        className="mb-5 grid grid-cols-2 gap-1 rounded-2xl border border-white/10 bg-[#14161f] p-1"
+      >
+        <Link
+          className={`flex items-center justify-center gap-1.5 rounded-xl py-2 text-sm font-bold ${
+            cityMode
+              ? "bg-gradient-to-r from-[#ff4b8a] to-[#7d45ff] text-white"
+              : "text-[#aaa4b7]"
+          }`}
+          href="/feed?scope=city"
+        >
+          📍 Мой город{cityName ? ` · ${cityName}` : ""}
+        </Link>
+        <Link
+          className={`flex items-center justify-center gap-1.5 rounded-xl py-2 text-sm font-bold ${
+            !cityMode
+              ? "bg-gradient-to-r from-[#ff4b8a] to-[#7d45ff] text-white"
+              : "text-[#aaa4b7]"
+          }`}
+          href="/feed"
+        >
+          🌎 Вся платформа
+        </Link>
+      </nav>
 
-      <section className="mt-7">
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-base font-bold">Сейчас в эфире</h2>
-          <Link className="text-xs font-medium text-[#b26fff]" href="/live/new">
-            Создать эфир ›
-          </Link>
-        </div>
-        <div className="flex gap-3 overflow-x-auto pb-2">
-          {liveRoomsToShow.map((room, index) => {
-            const href = isDemo ? "/auth/sign-in" : (`/live/${room.slug}` as Route);
-            return (
-              <Link
-                className="w-56 shrink-0 overflow-hidden rounded-2xl border border-white/10 bg-[#181a24]"
-                href={href}
-                key={room.id}
-              >
-                <div
-                  className={`relative flex h-24 items-center justify-center bg-gradient-to-br ${
-                    gradients[index % gradients.length]
-                  }/40`}
-                >
-                  <span className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-[#ff2d55] px-2 py-0.5 text-[10px] font-bold text-white">
-                    <span className="size-1.5 animate-pulse rounded-full bg-white" />
-                    LIVE
-                  </span>
-                  <Radio className="size-8 text-[#ffb7dd]" />
-                </div>
-                <div className="p-3">
-                  <p className="truncate text-sm font-bold">{room.title}</p>
-                  <p className="mt-1 flex items-center justify-between gap-2 text-xs text-[#aaa4b7]">
-                    <span className="truncate">{room.hostName}</span>
-                    <span className="flex shrink-0 items-center gap-1">
-                      <UsersRound className="size-3.5" /> {room.viewers}
-                    </span>
-                  </p>
-                </div>
-              </Link>
-            );
-          })}
-        </div>
-      </section>
-
-      <section className="mt-7">
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-base font-bold">✨ Популярные желания</h2>
-          <Link className="text-xs font-medium text-[#b26fff]" href="/discover">
-            Смотреть все ›
-          </Link>
-        </div>
-        <div className="space-y-2.5">
-          {(wishes.length ? wishes : demoWishes).slice(0, 3).map((wish, index) => (
-            <WishLink
-              href={isDemo ? "/auth/sign-in" : (`/wishes/${wish.id}` as Route)}
-              index={index}
-              key={wish.id}
-              wish={wish}
-            />
-          ))}
-        </div>
-      </section>
-
-      <section className="mt-7">
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-base font-bold">🆕 Новые желания</h2>
-          <Link className="text-xs font-medium text-[#b26fff]" href="/discover">
-            Смотреть все ›
-          </Link>
-        </div>
-        <div className="space-y-2.5">
-          {(newWishes.length ? newWishes : demoWishes)
-            .slice(0, 3)
-            .map((wish, index) => (
-              <WishLink
-                href={isDemo ? "/auth/sign-in" : (`/wishes/${wish.id}` as Route)}
-                index={index}
-                key={wish.id}
-                wish={wish}
-              />
-            ))}
-        </div>
-      </section>
-
-      <section className="mt-7">
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-base font-bold">🚀 Желания растут</h2>
-          <Link className="text-xs font-medium text-[#b26fff]" href="/discover">
-            Смотреть все ›
-          </Link>
-        </div>
-        <div className="space-y-2.5">
-          {(growingWishes.length ? growingWishes : demoWishes)
-            .slice(0, 3)
-            .map((wish, index) => (
-              <WishLink
-                href={isDemo ? "/auth/sign-in" : (`/wishes/${wish.id}` as Route)}
-                index={index}
-                key={wish.id}
-                wish={wish}
-              />
-            ))}
-        </div>
-      </section>
-
-      <section className="mt-7">
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-base font-bold">Можно поддержать</h2>
-          <Link className="text-xs font-medium text-[#b26fff]" href="/discover">
-            Смотреть все ›
-          </Link>
-        </div>
-        <div className="space-y-2.5">
-          {fundraisers.slice(0, 3).map((fundraiser, index) => (
-            <FundraiserLink
-              fundraiser={fundraiser}
-              href={
-                isDemo ? "/auth/sign-in" : (`/fundraisers/${fundraiser.slug}` as Route)
-              }
-              index={index}
-              key={fundraiser.id}
-            />
-          ))}
-        </div>
-      </section>
-
-      <section className="mt-7">
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-base font-bold">🔥 Популярные сборы</h2>
-          <Link className="text-xs font-medium text-[#b26fff]" href="/discover">
-            Смотреть все ›
-          </Link>
-        </div>
-        <div className="space-y-2.5">
-          {popularToShow.slice(0, 3).map((fundraiser, index) => (
-            <FundraiserLink
-              fundraiser={fundraiser}
-              href={
-                isDemo ? "/auth/sign-in" : (`/fundraisers/${fundraiser.slug}` as Route)
-              }
-              index={index}
-              key={fundraiser.id}
-            />
-          ))}
-        </div>
-      </section>
-
-      <section className="mt-7">
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-base font-bold">🚀 Быстро растут</h2>
-          <Link className="text-xs font-medium text-[#b26fff]" href="/discover">
-            Смотреть все ›
-          </Link>
-        </div>
-        <div className="space-y-2.5">
-          {growingToShow.slice(0, 3).map((fundraiser, index) => (
-            <FundraiserLink
-              fundraiser={fundraiser}
-              href={
-                isDemo ? "/auth/sign-in" : (`/fundraisers/${fundraiser.slug}` as Route)
-              }
-              index={index}
-              key={fundraiser.id}
-            />
-          ))}
-        </div>
-      </section>
-
-      {personalAuthors.length > 0 && (
-        <section className="mt-7">
-          <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-base font-bold">💜 Для вас</h2>
-            <Link className="text-xs font-medium text-[#b26fff]" href="/discover">
-              Смотреть все ›
-            </Link>
-          </div>
-          <div className="space-y-2.5">
-            {personalAuthors.slice(0, 3).map((author) => (
-              <Link
-                className="border-white/8 flex items-center gap-3 rounded-2xl border bg-[#181a24] p-3 transition hover:border-[#8f48ff]/60"
-                href={isDemo ? "/auth/sign-in" : (`/u/${author.username}` as Route)}
-                key={author.id}
-              >
-                <span className="grid size-11 shrink-0 place-items-center rounded-full bg-gradient-to-br from-[#ff4b8a] to-[#7d45ff] text-sm font-bold text-white">
-                  {author.displayName.slice(0, 1).toUpperCase()}
-                </span>
-                <div className="min-w-0 grow">
-                  <p className="truncate text-sm font-bold">{author.displayName}</p>
-                  <p className="truncate text-xs text-[#aaa4b7]">
-                    {author.headline ?? "Автор в «Хочу также»"}
-                  </p>
-                </div>
-                <span className="shrink-0 text-xs text-[#aaa4b7]">
-                  {author.followerCount} подписчиков
-                </span>
-              </Link>
-            ))}
-          </div>
+      {cityFallback && (
+        <section className="mb-5 rounded-2xl border border-[#b550ff]/35 bg-[#1b1528] p-4 text-sm leading-6 text-[#d8d0e0]">
+          Укажите город в профиле, чтобы видеть людей рядом и события вашего города.
+          Пока показываем ленту всей платформы.
+        </section>
+      )}
+      {cityEmpty && cityName && (
+        <section className="mb-5 rounded-2xl border border-[#b550ff]/35 bg-[#1b1528] p-4 text-sm leading-6 text-[#d8d0e0]">
+          В {cityName} пока мало людей — пригласите друзей и станьте первыми! А пока
+          показываем ленту всей платформы.
         </section>
       )}
 
-      <section className="mt-7">
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-base font-bold">Рекомендуем авторов</h2>
-          <Link className="text-xs font-medium text-[#b26fff]" href="/discover">
-            Смотреть все ›
-          </Link>
-        </div>
-        <div className="space-y-2.5">
-          {authorsToShow.slice(0, 3).map((author) => (
-            <Link
-              className="border-white/8 flex items-center gap-3 rounded-2xl border bg-[#181a24] p-3 transition hover:border-[#8f48ff]/60"
-              href={isDemo ? "/auth/sign-in" : (`/u/${author.username}` as Route)}
-              key={author.id}
-            >
-              <span className="grid size-11 shrink-0 place-items-center rounded-full bg-gradient-to-br from-[#ff4b8a] to-[#7d45ff] text-sm font-bold text-white">
-                {author.displayName.slice(0, 1).toUpperCase()}
-              </span>
-              <div className="min-w-0 grow">
-                <p className="truncate text-sm font-bold">{author.displayName}</p>
-                <p className="truncate text-xs text-[#aaa4b7]">
-                  {author.headline ?? "Автор в «Хочу также»"}
-                </p>
+      {cityMode && cityName && cityPeople.length > 0 && (
+        <>
+          <section className="mt-1">
+            <div className="mb-3 flex items-center justify-between">
+              <h2 className="text-base font-bold">Люди рядом</h2>
+              <Link className="text-xs font-medium text-[#b26fff]" href="/people">
+                Смотреть все ›
+              </Link>
+            </div>
+            <div className="space-y-2.5">
+              {cityPeople.map((person, index) => (
+                <Link
+                  className="border-white/8 flex items-center gap-3 rounded-2xl border bg-[#181a24] p-3"
+                  href={isDemo ? "/auth/sign-in" : (`/u/${person.username}` as Route)}
+                  key={person.id}
+                >
+                  <Avatar index={index} name={person.displayName} />
+                  <div className="min-w-0 grow">
+                    <p className="truncate text-sm font-bold">
+                      {person.displayName}
+                      {person.isCreator && (
+                        <span className="ml-2 rounded-full bg-gradient-to-r from-[#f94d96] to-[#8953ff] px-1.5 py-0.5 text-[10px] font-semibold">
+                          Автор
+                        </span>
+                      )}
+                    </p>
+                    <p className="truncate text-xs text-[#aaa4b7]">
+                      {person.city ?? cityName} · {person.followers} подписчиков
+                    </p>
+                  </div>
+                  <span className="text-[#e3a3d5]">›</span>
+                </Link>
+              ))}
+            </div>
+          </section>
+
+          {cityLiveRooms.length > 0 && (
+            <section className="mt-7">
+              <div className="mb-3 flex items-center justify-between">
+                <h2 className="text-base font-bold">Сейчас в эфире · город</h2>
+                <Link className="text-xs font-medium text-[#b26fff]" href="/feed">
+                  Все эфиры ›
+                </Link>
               </div>
-              <span className="shrink-0 text-xs text-[#aaa4b7]">
-                {author.followerCount} подписчиков
-              </span>
-            </Link>
-          ))}
-        </div>
-      </section>
+              <div className="flex gap-3 overflow-x-auto pb-2">
+                {cityLiveRooms.map((room, index) => (
+                  <Link
+                    className="w-56 shrink-0 overflow-hidden rounded-2xl border border-white/10 bg-[#181a24]"
+                    href={isDemo ? "/auth/sign-in" : (`/live/${room.slug}` as Route)}
+                    key={room.id}
+                  >
+                    <div
+                      className={`relative flex h-24 items-center justify-center bg-gradient-to-br ${
+                        gradients[index % gradients.length]
+                      }/40`}
+                    >
+                      <span className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-[#ff2d55] px-2 py-0.5 text-[10px] font-bold text-white">
+                        <span className="size-1.5 animate-pulse rounded-full bg-white" />
+                        LIVE
+                      </span>
+                      <Radio className="size-8 text-[#ffb7dd]" />
+                    </div>
+                    <div className="p-3">
+                      <p className="truncate text-sm font-bold">{room.title}</p>
+                      <p className="mt-1 flex items-center justify-between gap-2 text-xs text-[#aaa4b7]">
+                        <span className="truncate">{room.hostName}</span>
+                        <span className="flex shrink-0 items-center gap-1">
+                          <UsersRound className="size-3.5" /> {room.viewers}
+                        </span>
+                      </p>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </section>
+          )}
 
-      <section className="border-white/8 mt-7 rounded-2xl border bg-gradient-to-br from-[#1f1631] to-[#171824] p-4">
-        <p className="text-sm font-bold">Хочешь тоже зарабатывать?</p>
-        <p className="mt-1 text-xs leading-5 text-[#b9b1c5]">
-          Создай страницу автора, публикуй stories и собери свою аудиторию.
-        </p>
-        <Link
-          className="mt-3 inline-flex h-9 items-center rounded-xl bg-white px-3.5 text-xs font-bold text-[#3a1a49]"
-          href="/creator/start"
-        >
-          ✨ Хочу также
-        </Link>
-      </section>
+          {cityNewcomers.length > 0 && (
+            <section className="mt-7">
+              <div className="mb-3 flex items-center justify-between">
+                <h2 className="text-base font-bold">Новые жители</h2>
+                <Link className="text-xs font-medium text-[#b26fff]" href="/people">
+                  Смотреть все ›
+                </Link>
+              </div>
+              <div className="space-y-2.5">
+                {cityNewcomers.map((person, index) => (
+                  <Link
+                    className="border-white/8 flex items-center gap-3 rounded-2xl border bg-[#181a24] p-3"
+                    href={isDemo ? "/auth/sign-in" : (`/u/${person.username}` as Route)}
+                    key={person.id}
+                  >
+                    <Avatar index={index} name={person.displayName} />
+                    <div className="min-w-0 grow">
+                      <p className="truncate text-sm font-bold">{person.displayName}</p>
+                      <p className="truncate text-xs text-[#aaa4b7]">
+                        {person.city ?? cityName} · {person.followers} подписчиков
+                      </p>
+                    </div>
+                    <span className="text-[#e3a3d5]">›</span>
+                  </Link>
+                ))}
+              </div>
+            </section>
+          )}
 
-      <section className="mt-7">
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-base font-bold">Популярные интересы</h2>
-          <Link className="text-xs font-medium text-[#b26fff]" href="/search">
-            Смотреть все ›
-          </Link>
-        </div>
-        <div className="grid grid-cols-4 gap-2">
-          {[
-            { icon: Gamepad2, label: "Игры", color: "text-[#ad79ff]" },
-            { icon: Music2, label: "Музыка", color: "text-[#fd65b6]" },
-            { icon: MessageCircle, label: "Общение", color: "text-[#ffbd65]" },
-            { icon: Plane, label: "Путешествия", color: "text-[#7aa9ff]" },
-          ].map(({ icon: Icon, label, color }) => (
+          {cityWishes.length > 0 && (
+            <section className="mt-7">
+              <div className="mb-3 flex items-center justify-between">
+                <h2 className="text-base font-bold">Желания города</h2>
+                <Link className="text-xs font-medium text-[#b26fff]" href="/discover">
+                  Смотреть все ›
+                </Link>
+              </div>
+              <div className="space-y-2.5">
+                {cityWishes.map((wish, index) => (
+                  <WishLink
+                    href={isDemo ? "/auth/sign-in" : (`/wishes/${wish.id}` as Route)}
+                    index={index}
+                    key={wish.id}
+                    wish={wish}
+                  />
+                ))}
+              </div>
+            </section>
+          )}
+        </>
+      )}
+
+      {!cityMode || cityFallback || cityEmpty ? (
+        <>
+          <section>
+            <div className="mb-3 flex items-center justify-between">
+              <h1 className="text-base font-bold">Новые stories</h1>
+              <span className="text-xs font-medium text-[#b26fff]">Смотреть все ›</span>
+            </div>
+            <div className="flex gap-3 overflow-x-auto pb-2">
+              {storyAuthors.map((author, index) => {
+                const href = author.storyId
+                  ? (`/stories/${author.storyId}` as Route)
+                  : "/creator/start";
+                return (
+                  <Link
+                    className="flex w-16 shrink-0 flex-col items-center gap-1.5"
+                    href={href}
+                    key={author.id}
+                  >
+                    <Avatar imageUrl={null} index={index} name={author.displayName} />
+                    <span className="w-16 truncate text-center text-xs text-[#e7e1ee]">
+                      {author.displayName}
+                    </span>
+                  </Link>
+                );
+              })}
+            </div>
+          </section>
+
+          <section className="mt-7">
+            <div className="mb-3 flex items-center justify-between">
+              <h2 className="text-base font-bold">Сейчас в эфире</h2>
+              <Link className="text-xs font-medium text-[#b26fff]" href="/live/new">
+                Создать эфир ›
+              </Link>
+            </div>
+            <div className="flex gap-3 overflow-x-auto pb-2">
+              {liveRoomsToShow.map((room, index) => {
+                const href = isDemo ? "/auth/sign-in" : (`/live/${room.slug}` as Route);
+                return (
+                  <Link
+                    className="w-56 shrink-0 overflow-hidden rounded-2xl border border-white/10 bg-[#181a24]"
+                    href={href}
+                    key={room.id}
+                  >
+                    <div
+                      className={`relative flex h-24 items-center justify-center bg-gradient-to-br ${
+                        gradients[index % gradients.length]
+                      }/40`}
+                    >
+                      <span className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-[#ff2d55] px-2 py-0.5 text-[10px] font-bold text-white">
+                        <span className="size-1.5 animate-pulse rounded-full bg-white" />
+                        LIVE
+                      </span>
+                      <Radio className="size-8 text-[#ffb7dd]" />
+                    </div>
+                    <div className="p-3">
+                      <p className="truncate text-sm font-bold">{room.title}</p>
+                      <p className="mt-1 flex items-center justify-between gap-2 text-xs text-[#aaa4b7]">
+                        <span className="truncate">{room.hostName}</span>
+                        <span className="flex shrink-0 items-center gap-1">
+                          <UsersRound className="size-3.5" /> {room.viewers}
+                        </span>
+                      </p>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          </section>
+
+          <section className="mt-7">
+            <div className="mb-3 flex items-center justify-between">
+              <h2 className="text-base font-bold">✨ Популярные желания</h2>
+              <Link className="text-xs font-medium text-[#b26fff]" href="/discover">
+                Смотреть все ›
+              </Link>
+            </div>
+            <div className="space-y-2.5">
+              {(wishes.length ? wishes : demoWishes).slice(0, 3).map((wish, index) => (
+                <WishLink
+                  href={isDemo ? "/auth/sign-in" : (`/wishes/${wish.id}` as Route)}
+                  index={index}
+                  key={wish.id}
+                  wish={wish}
+                />
+              ))}
+            </div>
+          </section>
+
+          <section className="mt-7">
+            <div className="mb-3 flex items-center justify-between">
+              <h2 className="text-base font-bold">🆕 Новые желания</h2>
+              <Link className="text-xs font-medium text-[#b26fff]" href="/discover">
+                Смотреть все ›
+              </Link>
+            </div>
+            <div className="space-y-2.5">
+              {(newWishes.length ? newWishes : demoWishes)
+                .slice(0, 3)
+                .map((wish, index) => (
+                  <WishLink
+                    href={isDemo ? "/auth/sign-in" : (`/wishes/${wish.id}` as Route)}
+                    index={index}
+                    key={wish.id}
+                    wish={wish}
+                  />
+                ))}
+            </div>
+          </section>
+
+          <section className="mt-7">
+            <div className="mb-3 flex items-center justify-between">
+              <h2 className="text-base font-bold">🚀 Желания растут</h2>
+              <Link className="text-xs font-medium text-[#b26fff]" href="/discover">
+                Смотреть все ›
+              </Link>
+            </div>
+            <div className="space-y-2.5">
+              {(growingWishes.length ? growingWishes : demoWishes)
+                .slice(0, 3)
+                .map((wish, index) => (
+                  <WishLink
+                    href={isDemo ? "/auth/sign-in" : (`/wishes/${wish.id}` as Route)}
+                    index={index}
+                    key={wish.id}
+                    wish={wish}
+                  />
+                ))}
+            </div>
+          </section>
+
+          <section className="mt-7">
+            <div className="mb-3 flex items-center justify-between">
+              <h2 className="text-base font-bold">Можно поддержать</h2>
+              <Link className="text-xs font-medium text-[#b26fff]" href="/discover">
+                Смотреть все ›
+              </Link>
+            </div>
+            <div className="space-y-2.5">
+              {fundraisers.slice(0, 3).map((fundraiser, index) => (
+                <FundraiserLink
+                  fundraiser={fundraiser}
+                  href={
+                    isDemo
+                      ? "/auth/sign-in"
+                      : (`/fundraisers/${fundraiser.slug}` as Route)
+                  }
+                  index={index}
+                  key={fundraiser.id}
+                />
+              ))}
+            </div>
+          </section>
+
+          <section className="mt-7">
+            <div className="mb-3 flex items-center justify-between">
+              <h2 className="text-base font-bold">🔥 Популярные сборы</h2>
+              <Link className="text-xs font-medium text-[#b26fff]" href="/discover">
+                Смотреть все ›
+              </Link>
+            </div>
+            <div className="space-y-2.5">
+              {popularToShow.slice(0, 3).map((fundraiser, index) => (
+                <FundraiserLink
+                  fundraiser={fundraiser}
+                  href={
+                    isDemo
+                      ? "/auth/sign-in"
+                      : (`/fundraisers/${fundraiser.slug}` as Route)
+                  }
+                  index={index}
+                  key={fundraiser.id}
+                />
+              ))}
+            </div>
+          </section>
+
+          <section className="mt-7">
+            <div className="mb-3 flex items-center justify-between">
+              <h2 className="text-base font-bold">🚀 Быстро растут</h2>
+              <Link className="text-xs font-medium text-[#b26fff]" href="/discover">
+                Смотреть все ›
+              </Link>
+            </div>
+            <div className="space-y-2.5">
+              {growingToShow.slice(0, 3).map((fundraiser, index) => (
+                <FundraiserLink
+                  fundraiser={fundraiser}
+                  href={
+                    isDemo
+                      ? "/auth/sign-in"
+                      : (`/fundraisers/${fundraiser.slug}` as Route)
+                  }
+                  index={index}
+                  key={fundraiser.id}
+                />
+              ))}
+            </div>
+          </section>
+
+          {personalAuthors.length > 0 && (
+            <section className="mt-7">
+              <div className="mb-3 flex items-center justify-between">
+                <h2 className="text-base font-bold">💜 Для вас</h2>
+                <Link className="text-xs font-medium text-[#b26fff]" href="/discover">
+                  Смотреть все ›
+                </Link>
+              </div>
+              <div className="space-y-2.5">
+                {personalAuthors.slice(0, 3).map((author) => (
+                  <Link
+                    className="border-white/8 flex items-center gap-3 rounded-2xl border bg-[#181a24] p-3 transition hover:border-[#8f48ff]/60"
+                    href={isDemo ? "/auth/sign-in" : (`/u/${author.username}` as Route)}
+                    key={author.id}
+                  >
+                    <span className="grid size-11 shrink-0 place-items-center rounded-full bg-gradient-to-br from-[#ff4b8a] to-[#7d45ff] text-sm font-bold text-white">
+                      {author.displayName.slice(0, 1).toUpperCase()}
+                    </span>
+                    <div className="min-w-0 grow">
+                      <p className="truncate text-sm font-bold">{author.displayName}</p>
+                      <p className="truncate text-xs text-[#aaa4b7]">
+                        {author.headline ?? "Автор в «Хочу также»"}
+                      </p>
+                    </div>
+                    <span className="shrink-0 text-xs text-[#aaa4b7]">
+                      {author.followerCount} подписчиков
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            </section>
+          )}
+
+          <section className="mt-7">
+            <div className="mb-3 flex items-center justify-between">
+              <h2 className="text-base font-bold">Рекомендуем авторов</h2>
+              <Link className="text-xs font-medium text-[#b26fff]" href="/discover">
+                Смотреть все ›
+              </Link>
+            </div>
+            <div className="space-y-2.5">
+              {authorsToShow.slice(0, 3).map((author) => (
+                <Link
+                  className="border-white/8 flex items-center gap-3 rounded-2xl border bg-[#181a24] p-3 transition hover:border-[#8f48ff]/60"
+                  href={isDemo ? "/auth/sign-in" : (`/u/${author.username}` as Route)}
+                  key={author.id}
+                >
+                  <span className="grid size-11 shrink-0 place-items-center rounded-full bg-gradient-to-br from-[#ff4b8a] to-[#7d45ff] text-sm font-bold text-white">
+                    {author.displayName.slice(0, 1).toUpperCase()}
+                  </span>
+                  <div className="min-w-0 grow">
+                    <p className="truncate text-sm font-bold">{author.displayName}</p>
+                    <p className="truncate text-xs text-[#aaa4b7]">
+                      {author.headline ?? "Автор в «Хочу также»"}
+                    </p>
+                  </div>
+                  <span className="shrink-0 text-xs text-[#aaa4b7]">
+                    {author.followerCount} подписчиков
+                  </span>
+                </Link>
+              ))}
+            </div>
+          </section>
+
+          <section className="border-white/8 mt-7 rounded-2xl border bg-gradient-to-br from-[#1f1631] to-[#171824] p-4">
+            <p className="text-sm font-bold">Хочешь тоже зарабатывать?</p>
+            <p className="mt-1 text-xs leading-5 text-[#b9b1c5]">
+              Создай страницу автора, публикуй stories и собери свою аудиторию.
+            </p>
             <Link
-              className="border-white/8 rounded-2xl border bg-[#181a24] p-3 text-center"
-              href={`/search?q=${encodeURIComponent(label)}` as Route}
-              key={label}
+              className="mt-3 inline-flex h-9 items-center rounded-xl bg-white px-3.5 text-xs font-bold text-[#3a1a49]"
+              href="/creator/start"
             >
-              <Icon className={`mx-auto size-6 ${color}`} />
-              <span className="mt-2 block text-xs font-medium">{label}</span>
+              ✨ Хочу также
             </Link>
-          ))}
-        </div>
-      </section>
+          </section>
+
+          <section className="mt-7">
+            <div className="mb-3 flex items-center justify-between">
+              <h2 className="text-base font-bold">Популярные интересы</h2>
+              <Link className="text-xs font-medium text-[#b26fff]" href="/search">
+                Смотреть все ›
+              </Link>
+            </div>
+            <div className="grid grid-cols-4 gap-2">
+              {[
+                { icon: Gamepad2, label: "Игры", color: "text-[#ad79ff]" },
+                { icon: Music2, label: "Музыка", color: "text-[#fd65b6]" },
+                { icon: MessageCircle, label: "Общение", color: "text-[#ffbd65]" },
+                { icon: Plane, label: "Путешествия", color: "text-[#7aa9ff]" },
+              ].map(({ icon: Icon, label, color }) => (
+                <Link
+                  className="border-white/8 rounded-2xl border bg-[#181a24] p-3 text-center"
+                  href={`/search?q=${encodeURIComponent(label)}` as Route}
+                  key={label}
+                >
+                  <Icon className={`mx-auto size-6 ${color}`} />
+                  <span className="mt-2 block text-xs font-medium">{label}</span>
+                </Link>
+              ))}
+            </div>
+          </section>
+        </>
+      ) : null}
       <BottomNav />
     </main>
   );
