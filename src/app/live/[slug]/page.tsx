@@ -1,8 +1,9 @@
 import Link from "next/link";
-import { CircleDot, Copy, MessageCircle, UsersRound } from "lucide-react";
+import { Copy, MessageCircle, UsersRound } from "lucide-react";
 import { notFound } from "next/navigation";
 
 import { sendLiveRoomMessage } from "@/app/live/actions";
+import { LiveKitRoom } from "@/components/livekit-room";
 import { requireUser } from "@/lib/auth";
 
 export const metadata = { title: "Эфир", robots: { index: false, follow: false } };
@@ -66,15 +67,7 @@ export default async function LiveRoomPage({
         </button>
       </header>
       <section className="mt-5 overflow-hidden rounded-[2rem] border border-white/10 bg-[#171923]">
-        <div className="grid aspect-video place-items-center bg-gradient-to-br from-[#3b193d] via-[#1f1a38] to-[#151a2c] text-center">
-          <div>
-            <CircleDot className="mx-auto size-10 text-[#ff5b99]" />
-            <p className="mt-3 text-sm font-bold">Live room v1</p>
-            <p className="mt-1 text-xs text-[#b9b1c5]">
-              Видео подключается через следующий media-интеграционный срез
-            </p>
-          </div>
-        </div>
+        <LiveKitRoom isHost={room.host_id === user.id} slug={slug} />
         <div className="p-4">
           <div className="flex items-start justify-between">
             <div>
