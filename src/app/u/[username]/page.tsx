@@ -234,6 +234,14 @@ export default async function ProfilePage({
     vip && vip.status === "active" && new Date(vip.expires_at) > new Date(),
   );
   const followerCount = followers ?? 0;
+  const { data: cityRank } = await supabase.rpc("city_rank", {
+    p_profile_id: profile.id,
+  });
+  const cityRankData = (cityRank ?? null) as {
+    rank: number;
+    city_size: number;
+    followers: number;
+  } | null;
   const level = {
     star: { label: "💎 Звезда", color: "text-[#e17dff] border-[#e17dff]/40" },
     author: { label: "🎤 Автор", color: "text-[#7fd8ff] border-[#7fd8ff]/40" },
@@ -251,6 +259,14 @@ export default async function ProfilePage({
             ? "active"
             : "novice"
   ];
+  // Progress to the next level (pure activity thresholds).
+  const levelThresholds = [5, 50, 500, 5000];
+  const currentLevelIndex = levelThresholds.findIndex((t) => followerCount < t);
+  const nextThreshold =
+    currentLevelIndex >= 0 ? levelThresholds[currentLevelIndex] : null;
+  const levelProgress = nextThreshold
+    ? Math.min(100, Math.round((followerCount / nextThreshold) * 100))
+    : 100;
   const receivedGifts = (rawReceivedGifts ?? []) as Array<{
     sender_id: string;
     gift_code: string;
@@ -461,6 +477,37 @@ export default async function ProfilePage({
             <small className="text-xs text-[#aaa3b5]">Фото</small>
           </span>
         </div>
+        {cityRankData && profile.show_city && (
+          <div className="mt-5 rounded-2xl border border-[#8f48ff]/30 bg-gradient-to-r from-[#1f1631] to-[#171824] p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-bold">#{cityRankData.rank} в городе</p>
+                <p className="mt-0.5 text-xs text-[#aaa4b7]">
+                  {profile.city ?? "Город"} · среди {cityRankData.city_size} жителей
+                </p>
+              </div>
+              <span className="text-xl">🏆</span>
+            </div>
+            {nextThreshold ? (
+              <div className="mt-3">
+                <div className="h-1.5 overflow-hidden rounded-full bg-white/10">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-[#ff4b8a] to-[#7d45ff]"
+                    style={{ width: `${levelProgress}%` }}
+                  />
+                </div>
+                <p className="mt-2 text-xs text-[#aaa4b7]">
+                  До уровня «{level.label.split(" ")[1] ?? "следующий"}»: ещё{" "}
+                  {nextThreshold - followerCount} подписчиков
+                </p>
+              </div>
+            ) : (
+              <p className="mt-2 text-xs text-[#8df0b4]">
+                Максимальный уровень — вы звезда!
+              </p>
+            )}
+          </div>
+        )}
         {receivedGifts.length > 0 && (
           <div className="mt-5 rounded-2xl border border-white/10 bg-[#171923] p-4">
             <p className="text-sm font-bold">🎁 Подарки</p>
