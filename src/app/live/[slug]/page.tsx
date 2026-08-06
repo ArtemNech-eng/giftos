@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 
 import { endLiveRoom, inviteLiveCohost, removeLiveCohost } from "@/app/live/actions";
+import { inviteLiveHostToPlace } from "@/app/places/actions";
 import { promoteTarget } from "@/app/shop/actions";
 import { sendTestLiveDonation } from "@/app/live/donations/actions";
 import { sendTestLiveGift } from "@/app/live/gifts/actions";
@@ -87,6 +88,7 @@ export default async function LiveRoomPage({
     { count: donationCount },
     { data: giftTotal },
     { data: donationTotal },
+    { data: myPlaces },
   ] = await Promise.all([
     supabase
       .from("live_room_gifts")
@@ -98,6 +100,13 @@ export default async function LiveRoomPage({
       .eq("room_id", room.id),
     supabase.from("live_room_gifts").select("price_minor").eq("room_id", room.id),
     supabase.from("live_room_donations").select("amount_minor").eq("room_id", room.id),
+    supabase
+      .from("places")
+      .select("id, name, emoji, kind")
+      .eq("creator_id", user.id)
+      .eq("is_active", true)
+      .neq("kind", "fixed")
+      .limit(20),
   ]);
   const giftTotalMinor = (giftTotal ?? []).reduce(
     (sum, gift) => sum + Number(gift.price_minor),
@@ -429,6 +438,38 @@ export default async function LiveRoomPage({
           </form>
         </section>
       )}
+      {room.status === "live" &&
+        room.host_id !== user.id &&
+        (myPlaces ?? []).length > 0 && (
+          <section className="mt-5 rounded-2xl border border-[#b550ff]/35 bg-[#1b1528] p-4">
+            <p className="text-sm font-bold">Позвать ведущего в тусовку</p>
+            <form action={inviteLiveHostToPlace} className="mt-3 flex gap-2">
+              <input name="host_id" type="hidden" value={room.host_id} />
+              <input name="slug" type="hidden" value={slug} />
+              <select
+                className="grow rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-sm"
+                defaultValue=""
+                name="place_id"
+                required
+              >
+                <option disabled value="">
+                  Выберите тусовку
+                </option>
+                {(myPlaces ?? []).map((place) => (
+                  <option key={place.id} value={place.id}>
+                    {place.emoji} {place.name}
+                  </option>
+                ))}
+              </select>
+              <button
+                className="rounded-xl bg-gradient-to-r from-[#ff4b8a] to-[#7d45ff] px-4 text-sm font-bold"
+                type="submit"
+              >
+                Позвать
+              </button>
+            </form>
+          </section>
+        )}
       {room.status === "live" && room.host_id === user.id && (
         <form
           action={inviteLiveCohost}
