@@ -43,6 +43,7 @@
 - **Living Place v2:** `/places/[id]` — не сухой чат, а комната своей тусовки: soft premium room hero, online avatars (свои сортируются первыми), «я здесь», opt-in последние моменты конкретного места, live/event context и realtime refresh шапки. `LivePlaceChat` остаётся живым разговором внутри этого контекста.
 - **Городской эфир v2:** `/live/[slug]` получает city/place strip («из какой сцены эфир»), компактного ведущего с local creator identity и переходом в профиль; тёмная media-area остаётся фокусом, а gifts/support продолжают использовать фирменные SVG и opt-in City Pulse moments.
 - **Городские Stories v2:** `/stories/[id]` связана с автором и его/её городской сценой: media-first dark viewer, compact avatar/local identity, переход в профиль/City Now/live/event, SVG reactions/gifts и opt-in `story_gift` moment в City Pulse.
+- **Активность v2:** `/notifications` — return-surface с tab «У тебя» (строго персональные события) и tab «В городе» (безопасный City Pulse); push controls, realtime refresh и прямые переходы в конкретную сцену. Личный inbox не смешивается с публичной городской сводкой.
 
 ### Нужно достроить
 
