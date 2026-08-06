@@ -1,11 +1,5 @@
 import Link from "next/link";
-import {
-  ArrowLeft,
-  BarChart3,
-  CircleDollarSign,
-  Download,
-  WalletCards,
-} from "lucide-react";
+import { ArrowLeft, BarChart3, CircleDollarSign, WalletCards } from "lucide-react";
 
 import { requireUser } from "@/lib/auth";
 import { formatRubles } from "@/lib/money";
@@ -135,16 +129,7 @@ export default async function CreatorEarningsPage() {
             </div>
           </section>
           <section className="mt-6">
-            <div className="flex items-center justify-between">
-              <h2 className="font-bold">История</h2>
-              <a
-                className="bg-white/8 inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold text-[#de9aff]"
-                download
-                href="/creator/earnings/export"
-              >
-                <Download className="size-3.5" /> Экспорт CSV
-              </a>
-            </div>
+            <h2 className="font-bold">История</h2>
             {entries.length > 0 ? (
               <div className="mt-3 space-y-2">
                 {entries.map((entry) => (
