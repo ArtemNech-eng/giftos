@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Gift } from "lucide-react";
 
 import { sendProfileGift } from "@/app/shop/actions";
+import { BrandGiftIcon } from "@/components/brand-gift-icon";
 
 /**
  * Telegram-style gift button on a profile: pick a gift, buy it for ⭐
@@ -66,9 +67,11 @@ export function ProfileGiftButton({
                 title={gift.requires_vip && !isVip ? "Нужен VIP" : undefined}
                 type="button"
               >
-                <span className="text-xl">{gift.emoji}</span>
+                <span className="grid size-8 place-items-center rounded-lg bg-gradient-to-br from-[#ff5d9a]/20 to-[#8254ed]/20 text-[#f4aed0]">
+                  <BrandGiftIcon className="size-5" code={gift.code} />
+                </span>
                 <span className="mt-0.5 text-[9px] text-[#ffd35e]">
-                  {gift.requires_vip && !isVip ? "👑 VIP" : `${gift.price_stars} ⭐`}
+                  {gift.requires_vip && !isVip ? "VIP" : `${gift.price_stars} ⭐`}
                 </span>
               </button>
             ))}

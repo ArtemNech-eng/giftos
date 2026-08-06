@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { sendTestStoryGift } from "@/app/stories/gifts/actions";
 import { toggleStoryReaction } from "@/app/stories/reactions/actions";
 import { testUnlockStory } from "@/app/stories/actions";
+import { BrandGiftIcon } from "@/components/brand-gift-icon";
 import { ReportForm } from "@/components/report-form";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { formatRubles } from "@/lib/money";
@@ -244,7 +245,9 @@ export default async function StoryPage({
                     className="flex w-full flex-col items-center rounded-xl border border-white/10 bg-white/5 px-1 py-2 transition hover:border-[#ff77ba] hover:bg-[#2b1933]"
                     type="submit"
                   >
-                    <span className="text-2xl">{gift.emoji}</span>
+                    <span className="grid size-9 place-items-center rounded-xl bg-gradient-to-br from-[#ff5d9a]/20 to-[#8254ed]/20 text-[#ffc0da]">
+                      <BrandGiftIcon className="size-6" code={gift.code} />
+                    </span>
                     <span className="mt-1 text-[10px] text-[#d7cfdf]">
                       {gift.label}
                     </span>

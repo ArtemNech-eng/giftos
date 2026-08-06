@@ -1,10 +1,19 @@
 import Link from "next/link";
+import { BrandGiftIcon } from "@/components/brand-gift-icon";
+
 import {
   ArrowUpRight,
   CirclePlus,
   Compass,
+  Crown,
+  Gamepad2,
+  Gift,
   MapPin,
   MessageCircle,
+  Music2,
+  Plane,
+  Trophy,
+  UsersRound,
   Radio,
   Search,
   Send,
@@ -164,8 +173,8 @@ function FeedScreen() {
               </span>
               <span className="absolute bottom-2 left-2">
                 <b className="block text-[10px] text-white">{item.name}</b>
-                <small className="block text-[8px] text-white/75">
-                  ◉ {item.viewers}
+                <small className="flex items-center gap-1 text-[8px] text-white/75">
+                  <UsersRound className="size-2.5" /> {item.viewers}
                 </small>
               </span>
             </div>
@@ -299,32 +308,35 @@ function CityScreen() {
         <div className="flex gap-2.5 overflow-hidden">
           {[
             {
-              emoji: "🏙",
+              icon: MapPin,
               name: "Центр",
               online: "6 сейчас",
               color: "from-[#f4e7ff] to-[#eaf6ff]",
+              accent: "text-[#8753e6]",
             },
             {
-              emoji: "♪",
+              icon: Music2,
               name: "Музыка",
               online: "4 сейчас",
               color: "from-[#ffe8f1] to-[#fff0dc]",
+              accent: "text-[#d84b81]",
             },
             {
-              emoji: "🎮",
+              icon: Gamepad2,
               name: "Игровая",
               online: "3 сейчас",
               color: "from-[#e7f7f3] to-[#e9efff]",
+              accent: "text-[#238b83]",
             },
-          ].map((place) => (
+          ].map(({ icon: Icon, ...place }) => (
             <div
               className={`w-28 shrink-0 rounded-2xl bg-gradient-to-br ${place.color} p-3`}
               key={place.name}
             >
-              <span className="text-xl">{place.emoji}</span>
+              <Icon className={`size-5 ${place.accent}`} />
               <b className="mt-5 block text-[11px]">{place.name}</b>
-              <small className="mt-0.5 block text-[9px] text-[#756b80]">
-                ● {place.online}
+              <small className="mt-0.5 flex items-center gap-1 text-[9px] text-[#756b80]">
+                <UsersRound className="size-3" /> {place.online}
               </small>
             </div>
           ))}
@@ -332,8 +344,8 @@ function CityScreen() {
       </section>
       <section className="mx-4 mt-6 rounded-2xl border border-[#ffe0aa] bg-[#fff8e9] p-3">
         <div className="flex items-center gap-3">
-          <span className="grid size-10 place-items-center rounded-xl bg-[#ffdf82] text-lg">
-            🏆
+          <span className="grid size-10 place-items-center rounded-xl bg-[#ffdf82] text-[#a87714]">
+            <Trophy className="size-5" />
           </span>
           <span className="grow">
             <b className="block text-[11px]">Кто вырос за неделю</b>
@@ -405,14 +417,14 @@ function ProfileScreen() {
           Тут мы создаём классную атмосферу: музыка, игры и путешествия.
         </p>
         <div className="mt-3 flex gap-1.5">
-          <span className="rounded-full bg-[#f0e7ff] px-2.5 py-1 text-[9px] font-bold text-[#7549d0]">
-            ♪ Музыка
+          <span className="inline-flex items-center gap-1 rounded-full bg-[#f0e7ff] px-2.5 py-1 text-[9px] font-bold text-[#7549d0]">
+            <Music2 className="size-3" /> Музыка
           </span>
-          <span className="rounded-full bg-[#ffeaf3] px-2.5 py-1 text-[9px] font-bold text-[#c44476]">
-            ◉ Игры
+          <span className="inline-flex items-center gap-1 rounded-full bg-[#ffeaf3] px-2.5 py-1 text-[9px] font-bold text-[#c44476]">
+            <Gamepad2 className="size-3" /> Игры
           </span>
-          <span className="rounded-full bg-[#e7f7f4] px-2.5 py-1 text-[9px] font-bold text-[#258b82]">
-            ✈ Путешествия
+          <span className="inline-flex items-center gap-1 rounded-full bg-[#e7f7f4] px-2.5 py-1 text-[9px] font-bold text-[#258b82]">
+            <Plane className="size-3" /> Путешествия
           </span>
         </div>
         <div className="divide-[#2c2036]/8 mt-4 grid grid-cols-3 divide-x overflow-hidden rounded-2xl bg-white shadow-[0_6px_18px_rgba(66,40,92,.06)]">
@@ -469,30 +481,37 @@ function ProfileScreen() {
   );
 }
 
+function IncomeIcon({ kind }: { kind: string }) {
+  if (kind === "gift") return <Gift className="size-4" />;
+  if (kind === "message") return <MessageCircle className="size-4" />;
+  if (kind === "people") return <UsersRound className="size-4" />;
+  return <Crown className="size-4" />;
+}
+
 function EarningsScreen() {
   const income = [
     {
       label: "Донаты",
       value: "58 450 ₽",
-      icon: "✦",
+      icon: "gift",
       color: "bg-[#ffe9f2] text-[#d84b81]",
     },
     {
       label: "Платные сообщения",
       value: "19 400 ₽",
-      icon: "◌",
+      icon: "message",
       color: "bg-[#eee6ff] text-[#8054e7]",
     },
     {
       label: "Платное общение",
       value: "24 600 ₽",
-      icon: "♡",
+      icon: "people",
       color: "bg-[#e6f7f4] text-[#238b83]",
     },
     {
       label: "Подписки",
       value: "17 600 ₽",
-      icon: "♛",
+      icon: "crown",
       color: "bg-[#fff1cd] text-[#a87511]",
     },
   ];
@@ -546,9 +565,9 @@ function EarningsScreen() {
             >
               <span className="flex items-center gap-2.5">
                 <span
-                  className={`grid size-8 place-items-center rounded-xl text-sm font-black ${item.color}`}
+                  className={`grid size-8 place-items-center rounded-xl ${item.color}`}
                 >
-                  {item.icon}
+                  <IncomeIcon kind={item.icon} />
                 </span>
                 <span className="text-[11px] font-bold">{item.label}</span>
               </span>
@@ -586,15 +605,15 @@ function BonusesScreen() {
               Пригласи активного пользователя
             </h2>
           </span>
-          <span className="grid size-12 place-items-center rounded-2xl bg-white text-2xl shadow-[0_6px_16px_rgba(100,54,140,.1)]">
-            🎁
+          <span className="grid size-12 place-items-center rounded-2xl bg-white text-[#8753e6] shadow-[0_6px_16px_rgba(100,54,140,.1)]">
+            <BrandGiftIcon className="size-7" code="party" />
           </span>
         </div>
         <div className="mt-5 flex items-end justify-between">
           <span>
             <small className="text-[10px] text-[#816e8b]">На свой баланс</small>
-            <b className="mt-1 block text-5xl leading-none tracking-[-0.1em] text-[#d84492]">
-              200 ⭐
+            <b className="mt-1 flex items-center gap-2 text-5xl leading-none tracking-[-0.1em] text-[#d84492]">
+              200 <Sparkles className="size-8 stroke-[2.4]" />
             </b>
           </span>
           <span className="rounded-full bg-[#fff0b9] px-2.5 py-1 text-[9px] font-black text-[#846114]">
@@ -630,9 +649,9 @@ function BonusesScreen() {
         </div>
         <div className="mt-3 space-y-2">
           {[
-            { name: "Алина", status: "Стала активной", state: "+200 ⭐" },
+            { name: "Алина", status: "Стала активной", state: "+200" },
             { name: "Максим", status: "Профиль заполнен", state: "1 шаг" },
-            { name: "Кирилл", status: "Первое действие", state: "+200 ⭐" },
+            { name: "Кирилл", status: "Первое действие", state: "+200" },
           ].map((person, index) => (
             <div
               className="flex items-center gap-3 rounded-2xl border border-[#2c2036]/10 bg-white p-3"
@@ -782,19 +801,16 @@ function OnboardingScreen() {
       </p>
       <div className="mt-7 space-y-3">
         {[
-          { icon: "◉", text: "Создай профиль" },
-          { icon: "✎", text: "Расскажи о себе" },
-          { icon: "◌", text: "Начни эфир или общайся" },
-          { icon: "✦", text: "Получай поддержку и донаты" },
-        ].map((item) => (
-          <span
-            className="flex items-center gap-3 text-[11px] font-bold"
-            key={item.text}
-          >
+          { icon: UserRound, text: "Создай профиль" },
+          { icon: MessageCircle, text: "Расскажи о себе" },
+          { icon: Radio, text: "Начни эфир или общайся" },
+          { icon: Sparkles, text: "Получай поддержку и донаты" },
+        ].map(({ icon: Icon, text }) => (
+          <span className="flex items-center gap-3 text-[11px] font-bold" key={text}>
             <span className="grid size-8 place-items-center rounded-lg bg-[#f0e7ff] text-[#8753e6]">
-              {item.icon}
+              <Icon className="size-4" />
             </span>
-            {item.text}
+            {text}
           </span>
         ))}
       </div>

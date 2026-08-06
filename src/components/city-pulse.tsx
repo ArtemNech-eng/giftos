@@ -1,6 +1,13 @@
 import Link from "next/link";
 import type { Route } from "next";
-import { Radio, Sparkles, UsersRound } from "lucide-react";
+import {
+  CalendarDays,
+  MapPin,
+  MessageCircle,
+  Radio,
+  Sparkles,
+  UsersRound,
+} from "lucide-react";
 
 export type CityPulseItem = {
   city_id: string;
@@ -53,6 +60,14 @@ function copyForPulse(item: CityPulseItem) {
   }
 }
 
+function pulseIcon(kind: CityPulseItem["kind"]) {
+  if (kind === "presence") return MapPin;
+  if (kind === "place_message") return MessageCircle;
+  if (kind === "event") return CalendarDays;
+  if (kind === "live") return Radio;
+  return Sparkles;
+}
+
 function relativeTime(value: string) {
   const minutes = Math.max(
     0,
@@ -103,6 +118,7 @@ export function CityPulse({
       <div className="divide-white/8 divide-y">
         {items.slice(0, 6).map((item) => {
           const copy = copyForPulse(item);
+          const PulseIcon = pulseIcon(item.kind);
           return (
             <Link
               className="group flex items-center gap-3 px-4 py-3 transition hover:bg-white/[0.045]"
@@ -129,7 +145,7 @@ export function CityPulse({
                   <span className="text-[#b8afc4]">{copy.action}</span>
                 </span>
                 <span className="mt-0.5 flex items-center gap-2 text-[10px] text-[#9c92a8]">
-                  <span>{item.target_emoji}</span>
+                  <PulseIcon className="size-3.5 shrink-0 text-[#e0a4ff]" />
                   <span className="truncate">{copy.label}</span>
                   <span>· {relativeTime(item.created_at)}</span>
                 </span>

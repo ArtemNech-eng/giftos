@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import {
   ArrowLeft,
   BarChart3,
+  Crown,
   Gift,
   HandCoins,
   MessageCircle,
@@ -15,6 +16,7 @@ import { inviteLiveHostToPlace } from "@/app/places/actions";
 import { promoteTarget } from "@/app/shop/actions";
 import { sendTestLiveDonation } from "@/app/live/donations/actions";
 import { sendTestLiveGift } from "@/app/live/gifts/actions";
+import { BrandGiftIcon } from "@/components/brand-gift-icon";
 import { CopyLiveRoomLinkButton } from "@/components/copy-live-room-link-button";
 import { LiveDonationEvents } from "@/components/live-donation-events";
 import { LiveGiftCounter } from "@/components/live-gift-counter";
@@ -279,8 +281,8 @@ export default async function LiveRoomPage({
           </div>
           <div className="mt-3 space-y-2">
             <div className="flex items-center gap-3 rounded-xl bg-white/5 px-3 py-2">
-              <span className="grid size-9 shrink-0 place-items-center rounded-full bg-gradient-to-br from-[#ffd35e] to-[#ff9b3d] text-sm">
-                👑
+              <span className="grid size-9 shrink-0 place-items-center rounded-full bg-gradient-to-br from-[#ffd35e] to-[#ff9b3d] text-[#5a3410]">
+                <Crown className="size-4" />
               </span>
               <div className="min-w-0">
                 <p className="truncate text-sm font-semibold">
@@ -387,7 +389,9 @@ export default async function LiveRoomPage({
                     className="flex w-full flex-col items-center rounded-xl border border-white/10 bg-white/5 px-1 py-2 hover:border-[#ff77ba]"
                     type="submit"
                   >
-                    <span className="text-2xl">{gift.emoji}</span>
+                    <span className="grid size-9 place-items-center rounded-xl bg-gradient-to-br from-[#ff5d9a]/20 to-[#8254ed]/20 text-[#ffc0da]">
+                      <BrandGiftIcon className="size-6" code={gift.code} />
+                    </span>
                     <span className="mt-1 text-[10px]">{gift.label}</span>
                     <span className="text-[10px] text-[#ffb7dd]">
                       {gift.price_minor / 100} ₽
