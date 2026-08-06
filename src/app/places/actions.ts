@@ -49,6 +49,47 @@ export async function inviteLiveHostToPlace(formData: FormData) {
   redirect(`/live/${slug}?invited=1` as Route);
 }
 
+/** Invite a person (by profile id) into one of my places from their card. */
+export async function inviteProfileToPlace(formData: FormData) {
+  const { supabase, user } = await requireUser();
+  const placeId = requiredText(formData.get("place_id"), 100);
+  const profileId = requiredText(formData.get("profile_id"), 100);
+  const returnTo = requiredText(formData.get("return_to"), 200) || "/places";
+  if (!placeId || !profileId || profileId === user.id)
+    throw new Error("Недостаточно данных.");
+
+  const { data: place } = await supabase
+    .from("places")
+    .select("id, creator_id, name, emoji, kind")
+    .eq("id", placeId)
+    .eq("is_active", true)
+    .maybeSingle();
+  if (!place || place.kind === "fixed") throw new Error("Это место нельзя изменить.");
+  if (place.creator_id !== user.id)
+    throw new Error("Только создатель места может приглашать.");
+
+  const admin = createAdminClient();
+  const { error } = await admin
+    .from("place_members")
+    .upsert(
+      { place_id: place.id, profile_id: profileId, role: "member" },
+      { onConflict: "place_id,profile_id" },
+    );
+  if (error) throw new Error(`Не удалось пригласить: ${error.message}`);
+
+  await admin.from("notifications").insert({
+    recipient_id: profileId,
+    actor_id: user.id,
+    type: "place_invite",
+    entity_type: "place",
+    entity_id: place.id,
+    payload: { place_name: `${place.emoji} ${place.name}` },
+  });
+
+  revalidatePath(`/places/${place.id}`);
+  redirect(`${returnTo}?invited=1` as Route);
+}
+
 /** Invite a user (by username) into a personal/temporary place. */
 export async function inviteToPlace(formData: FormData) {
   const { supabase, user } = await requireUser();

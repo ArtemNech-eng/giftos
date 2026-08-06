@@ -15,6 +15,7 @@ import {
 } from "@/app/places/actions";
 import { LivePlaceChat } from "@/components/live-place-chat";
 import { PlaceGiftButton } from "@/components/place-gift-button";
+import { PlaceInviteButton } from "@/components/place-invite-button";
 import { ReportForm } from "@/components/report-form";
 import { requireUser } from "@/lib/auth";
 
@@ -128,6 +129,13 @@ export default async function PlacePage({
     .eq("is_active", true)
     .order("sort_order", { ascending: true })
     .limit(8);
+  const { data: myInvitePlaces } = await supabase
+    .from("places")
+    .select("id, name, emoji")
+    .eq("creator_id", user.id)
+    .eq("is_active", true)
+    .neq("kind", "fixed")
+    .limit(20);
   const onlineIds = (presence ?? []).map((row) => row.profile_id);
   const { data: onlineProfiles } = onlineIds.length
     ? await supabase
@@ -256,6 +264,17 @@ export default async function PlacePage({
                     }))}
                     placeId={place.id}
                     recipientId={person.id}
+                  />
+                )}
+                {person.id !== user.id && (myInvitePlaces ?? []).length > 0 && (
+                  <PlaceInviteButton
+                    places={(myInvitePlaces ?? []).map((p) => ({
+                      id: p.id,
+                      name: p.name,
+                      emoji: p.emoji,
+                    }))}
+                    profileId={person.id}
+                    returnTo={`/places/${place.id}`}
                   />
                 )}
               </span>

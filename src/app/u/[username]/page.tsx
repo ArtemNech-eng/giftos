@@ -939,6 +939,13 @@ export default async function ProfilePage({
             <span>Настройки</span>
             <span className="text-[#df9cff]">›</span>
           </Link>
+          <Link
+            className="flex items-center justify-between rounded-2xl border border-white/10 bg-[#171923] px-4 py-3 text-sm font-bold"
+            href="/profile/media"
+          >
+            <span>Мои фото</span>
+            <span className="text-[#df9cff]">›</span>
+          </Link>
         </div>
       )}
       {isOwnProfile && !profile.is_creator && (
@@ -948,6 +955,13 @@ export default async function ProfilePage({
             href="/settings"
           >
             <span>Настройки</span>
+            <span className="text-[#df9cff]">›</span>
+          </Link>
+          <Link
+            className="mt-3 flex items-center justify-between rounded-2xl border border-white/10 bg-[#171923] px-4 py-3 text-sm font-bold"
+            href="/profile/media"
+          >
+            <span>Мои фото</span>
             <span className="text-[#df9cff]">›</span>
           </Link>
         </div>
