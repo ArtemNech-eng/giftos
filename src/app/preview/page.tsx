@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { BrandGiftIcon } from "@/components/brand-gift-icon";
+import { LocalRoleIcon } from "@/components/local-role-icon";
 
 import {
   ArrowUpRight,
@@ -30,12 +31,13 @@ export const metadata = {
 const screens = [
   { id: "feed", label: "Главная", number: "01" },
   { id: "city", label: "Город сейчас", number: "02" },
-  { id: "profile", label: "Профиль", number: "03" },
-  { id: "earnings", label: "Доход", number: "04" },
-  { id: "bonuses", label: "Рефералы", number: "05" },
-  { id: "messages", label: "Сообщения", number: "06" },
-  { id: "live", label: "Эфир", number: "07" },
-  { id: "onboarding", label: "Старт", number: "08" },
+  { id: "local", label: "Создают в городе", number: "03" },
+  { id: "profile", label: "Профиль", number: "04" },
+  { id: "earnings", label: "Доход", number: "05" },
+  { id: "bonuses", label: "Рефералы", number: "06" },
+  { id: "messages", label: "Сообщения", number: "07" },
+  { id: "live", label: "Эфир", number: "08" },
+  { id: "onboarding", label: "Старт", number: "09" },
 ] as const;
 
 type ScreenId = (typeof screens)[number]["id"];
@@ -371,6 +373,112 @@ function CityScreen() {
             </small>
           </span>
           <span className="text-[10px] font-black text-[#a87714]">Рейтинг ›</span>
+        </div>
+      </section>
+      <AppNav active="Город" />
+    </div>
+  );
+}
+
+function LocalScreen() {
+  const creators = [
+    {
+      name: "Настя",
+      role: "beauty",
+      headline: "Показываю новые работы и собираю бьюти-встречи",
+      state: "Новая story",
+      index: 0,
+    },
+    {
+      name: "Макс",
+      role: "music",
+      headline: "Играю, пишу музыку и выхожу в эфир",
+      state: "В эфире",
+      index: 1,
+    },
+    {
+      name: "Дима",
+      role: "photo",
+      headline: "Снимаю город и людей, которые его создают",
+      state: "Событие",
+      index: 2,
+    },
+  ];
+  return (
+    <div className="flex min-h-[730px] flex-col bg-[#fbf9fe] text-[#251d31]">
+      <header className="flex items-center justify-between px-4 pb-4 pt-5">
+        <span className="grid size-10 place-items-center rounded-full border border-[#2c2036]/10 bg-white text-[#8753e6]">
+          <MapPin className="size-5" />
+        </span>
+        <span className="text-center">
+          <small className="block text-[9px] font-black uppercase tracking-[0.12em] text-[#8b7e92]">
+            Будённовск
+          </small>
+          <h1 className="text-base font-black">Создают в городе</h1>
+        </span>
+        <span className="w-10" />
+      </header>
+      <section className="mx-4 overflow-hidden rounded-[1.8rem] bg-gradient-to-br from-[#f3e8ff] via-[#fff6fb] to-[#e7f4ff] p-5 shadow-[0_14px_32px_rgba(95,57,130,.12)]">
+        <div className="flex items-start justify-between">
+          <span>
+            <p className="text-[10px] font-black uppercase tracking-[0.12em] text-[#8753e6]">
+              Не реклама на всю страну
+            </p>
+            <h2 className="mt-2 text-2xl font-black leading-[0.95] tracking-[-0.07em]">
+              Будь заметным
+              <br />
+              среди своих.
+            </h2>
+          </span>
+          <span className="grid size-12 place-items-center rounded-2xl bg-white text-[#8753e6] shadow-[0_5px_14px_rgba(92,54,126,.09)]">
+            <Sparkles className="size-6" />
+          </span>
+        </div>
+        <p className="mt-4 max-w-64 text-[11px] leading-5 text-[#6e6178]">
+          Показывай, что делаешь в городе: stories, эфиры, места и события. Без каталога
+          услуг и навязчивой записи.
+        </p>
+      </section>
+      <section className="px-4 pt-6">
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="text-sm font-black">Кого сейчас смотрят</h2>
+          <span className="text-[10px] font-bold text-[#8753e6]">Все ›</span>
+        </div>
+        <div className="space-y-2.5">
+          {creators.map((creator) => (
+            <div
+              className="flex items-center gap-3 rounded-2xl border border-[#2c2036]/10 bg-white p-3 shadow-[0_5px_14px_rgba(65,43,89,.05)]"
+              key={creator.name}
+            >
+              <Avatar index={creator.index} name={creator.name} size="size-11" />
+              <span className="grid size-8 place-items-center rounded-lg bg-[#f1e9ff] text-[#8753e6]">
+                <LocalRoleIcon className="size-4" code={creator.role} />
+              </span>
+              <span className="min-w-0 grow">
+                <b className="block text-[11px]">{creator.name}</b>
+                <small className="block truncate text-[10px] text-[#81748a]">
+                  {creator.headline}
+                </small>
+              </span>
+              <span className="text-[9px] font-black text-[#8753e6]">
+                {creator.state}
+              </span>
+            </div>
+          ))}
+        </div>
+      </section>
+      <section className="mx-4 mt-6 rounded-2xl border border-[#d9c5f3] bg-white p-4">
+        <div className="flex items-center gap-3">
+          <span className="grid size-10 place-items-center rounded-xl bg-[#f0e7ff] text-[#8753e6]">
+            <LocalRoleIcon className="size-5" code="other" />
+          </span>
+          <span className="grow">
+            <b className="block text-[11px]">Твоя локальная витрина</b>
+            <small className="block text-[10px] text-[#81748a]">
+              Чем занимаешься и что сейчас показываешь
+            </small>
+          </span>
+          <span className="text-[#8753e6]">›</span>
         </div>
       </section>
       <AppNav active="Город" />
@@ -871,6 +979,7 @@ export default async function PreviewPage({
   const content: Record<ScreenId, React.ReactNode> = {
     feed: <FeedScreen />,
     city: <CityScreen />,
+    local: <LocalScreen />,
     profile: <ProfileScreen />,
     earnings: <EarningsScreen />,
     bonuses: <BonusesScreen />,

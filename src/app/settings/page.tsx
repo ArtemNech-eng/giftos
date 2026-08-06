@@ -152,6 +152,21 @@ export default async function SettingsPage() {
         </button>
       </form>
 
+      <Link
+        className="mt-6 flex items-center justify-between rounded-2xl border border-[#d9c5f3] bg-gradient-to-r from-[#fffaff] to-[#f3edff] p-4"
+        href="/local"
+      >
+        <span>
+          <span className="block text-sm font-bold text-[#251d31]">
+            Создают в городе
+          </span>
+          <span className="mt-0.5 block text-xs text-[#766b80]">
+            Локальная витрина: чем вы занимаетесь и что сейчас показываете
+          </span>
+        </span>
+        <span className="text-[#8753e6]">›</span>
+      </Link>
+
       <section className="mt-6 rounded-2xl border border-white/10 bg-[#171923] p-4">
         <p className="flex items-center gap-2 text-sm font-bold">
           <KeyRound className="size-4 text-[#8df0b4]" /> Пароль

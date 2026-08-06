@@ -16,6 +16,7 @@ import {
 
 import { CityPulse, type CityPulseItem } from "@/components/city-pulse";
 import { CityPulseRefresh } from "@/components/city-pulse-refresh";
+import { LocalRoleIcon } from "@/components/local-role-icon";
 import { PlaceIcon } from "@/components/place-icon";
 import { requireUser } from "@/lib/auth";
 import { getSignedImageUrl } from "@/lib/media";
@@ -51,6 +52,20 @@ type CityEventPreview = {
   title: string;
   startsAt: string;
   eventType: string;
+};
+
+type LocalCreatorPreview = {
+  id: string;
+  username: string;
+  displayName: string;
+  avatarUrl: string | null;
+  roleCode: string;
+  headline: string | null;
+  liveSlug: string | null;
+  liveTitle: string | null;
+  storyId: string | null;
+  eventId: string | null;
+  eventTitle: string | null;
 };
 
 const avatarGradients = [
@@ -92,6 +107,7 @@ export default async function PlacesPage() {
   let onlinePeopleCount = 0;
   let alivePlacesCount = 0;
   let cityEvents: CityEventPreview[] = [];
+  let localCreators: LocalCreatorPreview[] = [];
   if (profile?.city_id) {
     const { data: cityRow } = await supabase
       .from("cities")
@@ -294,6 +310,47 @@ export default async function PlacesPage() {
       startsAt: event.starts_at,
       eventType: event.event_type,
     }));
+
+    const { data: rawLocalCreators } = await supabase
+      .from("public_local_creators")
+      .select(
+        "id, username, display_name, avatar_path, role_code, headline, live_slug, live_title, story_id, event_id, event_title",
+      )
+      .eq("city_id", profile.city_id)
+      .order("updated_at", { ascending: false })
+      .limit(8);
+    localCreators = await Promise.all(
+      (
+        (rawLocalCreators ?? []) as Array<{
+          id: string;
+          username: string;
+          display_name: string;
+          avatar_path: string | null;
+          role_code: string;
+          headline: string | null;
+          live_slug: string | null;
+          live_title: string | null;
+          story_id: string | null;
+          event_id: string | null;
+          event_title: string | null;
+        }>
+      ).map(async (creator) => ({
+        id: creator.id,
+        username: creator.username,
+        displayName: creator.display_name,
+        avatarUrl: await getSignedImageUrl({
+          bucket: "avatars",
+          path: creator.avatar_path,
+        }),
+        roleCode: creator.role_code,
+        headline: creator.headline,
+        liveSlug: creator.live_slug,
+        liveTitle: creator.live_title,
+        storyId: creator.story_id,
+        eventId: creator.event_id,
+        eventTitle: creator.event_title,
+      })),
+    );
   }
 
   const now = Date.now();
@@ -412,6 +469,68 @@ export default async function PlacesPage() {
                     </span>
                   </Link>
                 ))}
+              </div>
+            </section>
+          )}
+
+          {localCreators.length > 0 && (
+            <section className="mt-6">
+              <div className="mb-3 flex items-center justify-between">
+                <span>
+                  <h2 className="text-sm font-black">Создают в городе</h2>
+                  <p className="mt-0.5 text-[10px] text-[#81748a]">
+                    Люди, которых можно смотреть и поддерживать среди своих
+                  </p>
+                </span>
+                <Link className="text-[10px] font-black text-[#8753e6]" href="/local">
+                  Моя витрина ›
+                </Link>
+              </div>
+              <div className="flex gap-2.5 overflow-x-auto pb-1">
+                {localCreators.slice(0, 6).map((creator, index) => {
+                  const contentHref = creator.liveSlug
+                    ? (`/live/${creator.liveSlug}` as Route)
+                    : creator.storyId
+                      ? (`/stories/${creator.storyId}` as Route)
+                      : creator.eventId
+                        ? (`/events/${creator.eventId}` as Route)
+                        : (`/u/${creator.username}` as Route);
+                  const state = creator.liveSlug
+                    ? "В эфире"
+                    : creator.storyId
+                      ? "Новая story"
+                      : creator.eventId
+                        ? "Событие"
+                        : "В городе";
+                  return (
+                    <Link
+                      className="w-36 shrink-0 rounded-2xl border border-[#2c2036]/10 bg-white p-3 shadow-[0_6px_18px_rgba(69,43,94,.05)]"
+                      href={contentHref}
+                      key={creator.id}
+                    >
+                      <div className="flex items-center gap-2">
+                        <CircleAvatar index={index} person={creator} />
+                        <LocalRoleIcon
+                          className="size-4 text-[#8753e6]"
+                          code={creator.roleCode}
+                        />
+                      </div>
+                      <b className="mt-3 block truncate text-[11px]">
+                        {creator.displayName}
+                      </b>
+                      <span className="mt-1 flex items-center gap-1 text-[9px] font-bold text-[#8753e6]">
+                        {state === "В эфире" && <Radio className="size-2.5" />}
+                        {state}
+                      </span>
+                      <small className="mt-1 line-clamp-2 block min-h-7 text-[9px] leading-3 text-[#81748a]">
+                        {creator.headline ??
+                          creator.eventTitle ??
+                          creator.liveTitle ??
+                          "Показывает себя в городе"}
+                      </small>
+                    </Link>
+                  );
+                })}
               </div>
             </section>
           )}

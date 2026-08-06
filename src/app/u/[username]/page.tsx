@@ -21,6 +21,7 @@ import {
 import { promoteTarget } from "@/app/shop/actions";
 import { createStory } from "@/app/stories/actions";
 import { CreatorShareLink } from "@/components/creator-share-link";
+import { LocalRoleIcon } from "@/components/local-role-icon";
 import { ProfileGiftButton } from "@/components/profile-gift-button";
 import { ProfileQrCode } from "@/components/profile-qr-code";
 import { ReportForm } from "@/components/report-form";
@@ -266,6 +267,13 @@ export default async function ProfilePage({
   const { data: cityAmbassadorCity } = await supabase.rpc("city_ambassador_badge", {
     p_profile_id: profile.id,
   });
+  const { data: localCreator } = await supabase
+    .from("public_local_creators")
+    .select(
+      "role_code, headline, live_slug, live_title, story_id, event_id, event_title",
+    )
+    .eq("id", profile.id)
+    .maybeSingle();
   const level = {
     star: { label: "💎 Звезда", color: "text-[#e17dff] border-[#e17dff]/40" },
     author: { label: "🎤 Автор", color: "text-[#7fd8ff] border-[#7fd8ff]/40" },
@@ -505,6 +513,44 @@ export default async function ProfilePage({
             profile.bio ??
             "Создаю свою страницу в «Хочу также»."}
         </p>
+        {localCreator && (
+          <section className="mt-4 rounded-2xl border border-[#d9c5f3] bg-gradient-to-r from-[#fffaff] to-[#f3edff] p-3.5">
+            <div className="flex items-start gap-3">
+              <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-white text-[#8753e6] shadow-[0_4px_12px_rgba(80,45,110,.08)]">
+                <LocalRoleIcon className="size-5" code={localCreator.role_code} />
+              </span>
+              <span className="min-w-0 grow">
+                <span className="text-[10px] font-black uppercase tracking-[0.11em] text-[#8753e6]">
+                  Создаёт в {profile.city ?? "городе"}
+                </span>
+                <b className="mt-0.5 block text-sm">
+                  {localCreator.headline ?? "Показывает себя и свои идеи среди своих"}
+                </b>
+                {(localCreator.live_slug ||
+                  localCreator.story_id ||
+                  localCreator.event_id) && (
+                  <Link
+                    className="mt-2 inline-flex items-center gap-1 text-[10px] font-bold text-[#7549d0]"
+                    href={
+                      localCreator.live_slug
+                        ? (`/live/${localCreator.live_slug}` as Route)
+                        : localCreator.story_id
+                          ? (`/stories/${localCreator.story_id}` as Route)
+                          : (`/events/${localCreator.event_id}` as Route)
+                    }
+                  >
+                    {localCreator.live_slug
+                      ? "Сейчас в эфире"
+                      : localCreator.story_id
+                        ? "Новая story"
+                        : `Событие: ${localCreator.event_title ?? "открыть"}`}{" "}
+                    ›
+                  </Link>
+                )}
+              </span>
+            </div>
+          </section>
+        )}
         <div className="mt-5 flex gap-7 text-center">
           <span>
             <b className="block text-lg">{followers ?? 0}</b>
