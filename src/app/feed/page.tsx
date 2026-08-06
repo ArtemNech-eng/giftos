@@ -6,10 +6,10 @@ import {
   Compass,
   Gamepad2,
   MessageCircle,
+  MapPin,
   Music2,
   Plane,
   Radio,
-  Search,
   UserRound,
   UsersRound,
   WalletCards,
@@ -794,10 +794,10 @@ function BottomNav() {
       </Link>
       <Link
         className="grid place-items-center gap-1 text-xs hover:text-white"
-        href="/search"
+        href="/places"
       >
-        <Search className="size-5" />
-        Поиск
+        <MapPin className="size-5" />
+        Город
       </Link>
       <Link
         className="-mt-6 grid size-14 place-items-center rounded-full bg-gradient-to-br from-[#ff4b8a] to-[#7d45ff] text-white shadow-[0_8px_28px_rgba(173,67,255,0.55)]"

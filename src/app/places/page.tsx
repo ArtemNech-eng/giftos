@@ -111,9 +111,12 @@ export default async function PlacesPage() {
         </Link>
       </header>
 
-      <p className="mt-5 text-sm leading-6 text-[#b9b1c5]">
-        Пойдём посмотрим, кто сейчас в городе. Выбери место и заходи.
-      </p>
+      <section className="mt-5 rounded-2xl border border-[#8f48ff]/30 bg-gradient-to-r from-[#1f1631] to-[#171824] p-4">
+        <p className="text-lg font-bold">Куда пойдём?</p>
+        <p className="mt-1 text-sm leading-6 text-[#b9b1c5]">
+          Пойдём посмотрим, кто сейчас в городе. Выбери место и заходи.
+        </p>
+      </section>
 
       <section className="mt-5">
         {sorted.length === 0 ? (
