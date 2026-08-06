@@ -415,13 +415,10 @@ function ProfileScreen() {
             ✈ Путешествия
           </span>
         </div>
-        <div className="mt-4 grid grid-cols-3 gap-2">
+        <div className="divide-[#2c2036]/8 mt-4 grid grid-cols-3 divide-x overflow-hidden rounded-2xl bg-white shadow-[0_6px_18px_rgba(66,40,92,.06)]">
           {["Написать\n49 ₽", "Поговорить\n15 мин", "Совместный стрим\n799 ₽"].map(
             (item) => (
-              <button
-                className="rounded-xl border border-[#2c2036]/10 bg-white px-1 py-2.5 text-center shadow-[0_4px_12px_rgba(66,40,92,.05)]"
-                key={item}
-              >
+              <button className="px-1 py-3 text-center" key={item}>
                 <MessageCircle className="mx-auto size-4 text-[#8753e6]" />
                 <span className="mt-1 block whitespace-pre-line text-[8px] font-bold leading-3 text-[#504458]">
                   {item}
@@ -850,9 +847,9 @@ export default async function PreviewPage({
   };
 
   return (
-    <main className="min-h-screen bg-[#dcd7d1] px-4 py-5 text-[#17151a] sm:px-8 lg:py-10">
+    <main className="min-h-screen bg-[radial-gradient(circle_at_8%_5%,#f6d9eb,transparent_26rem),radial-gradient(circle_at_92%_10%,#dfd2ff,transparent_28rem),#f6f4f8] px-4 py-5 text-[#251d31] sm:px-8 lg:py-10">
       <div className="mx-auto grid max-w-6xl gap-6 lg:grid-cols-[230px_430px_minmax(0,1fr)] lg:items-start">
-        <aside className="border border-[#17151a]/15 bg-[#f5f0e8] p-5 shadow-[8px_8px_0_#17151a] lg:sticky lg:top-8">
+        <aside className="rounded-[28px] border border-white/80 bg-white/70 p-5 shadow-[0_18px_50px_rgba(76,48,104,.12)] backdrop-blur lg:sticky lg:top-8">
           <Link
             className="flex items-center gap-2.5 text-lg font-black tracking-[-0.08em]"
             href="/"
@@ -860,20 +857,23 @@ export default async function PreviewPage({
             <Mark />
             ХОЧУ ТАКЖЕ
           </Link>
-          <p className="border-[#17151a]/12 mt-6 border-t pt-4 font-mono text-[9px] leading-5 text-[#716a67]">
-            ДИЗАЙН-ПРОСМОТР / СИНТЕТИЧЕСКИЕ ДАННЫЕ / БЕЗ ДОСТУПА К РЕАЛЬНЫМ АККАУНТАМ
+          <p className="border-[#2c2036]/8 mt-6 border-t pt-4 text-[10px] leading-5 text-[#776c80]">
+            Просмотр дизайна на синтетических данных — без доступа к аккаунтам и личным
+            сообщениям.
           </p>
           <nav
-            className="bg-[#17151a]/12 mt-5 grid grid-cols-2 gap-px lg:grid-cols-1"
+            className="mt-5 grid grid-cols-2 gap-1.5 lg:grid-cols-1"
             aria-label="Экраны preview"
           >
             {screens.map((item) => (
               <a
-                className={`flex items-center gap-3 bg-[#f5f0e8] px-3 py-3 text-xs font-black ${screen === item.id ? "bg-[#17151a] text-[#f5f0e8]" : "hover:bg-[#fb407b]"}`}
+                className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-xs font-black transition ${screen === item.id ? "bg-gradient-to-r from-[#ff5d9a] to-[#8254ed] text-white shadow-[0_6px_14px_rgba(160,75,213,.2)]" : "bg-[#f7f3fa] text-[#5f5369] hover:bg-[#f0e7ff]"}`}
                 href={`/preview?screen=${item.id}`}
                 key={item.id}
               >
-                <span className="font-mono text-[9px] text-[#fb407b]">
+                <span
+                  className={`grid size-5 place-items-center rounded-md text-[9px] ${screen === item.id ? "bg-white/20" : "bg-white text-[#8753e6]"}`}
+                >
                   {item.number}
                 </span>
                 {item.label}
@@ -881,8 +881,8 @@ export default async function PreviewPage({
             ))}
           </nav>
         </aside>
-        <section className="w-full max-w-[430px] justify-self-center overflow-hidden border border-[#17151a]/30 bg-[#f5f0e8] shadow-[12px_12px_0_#8753ed]">
-          <div className="border-[#17151a]/12 flex items-center justify-between border-b px-5 py-2 font-mono text-[8px] font-bold tracking-[0.12em] text-[#716a67]">
+        <section className="w-full max-w-[430px] justify-self-center overflow-hidden rounded-[30px] border border-white/90 bg-[#fbf9fe] shadow-[0_28px_70px_rgba(72,43,104,.2)]">
+          <div className="border-[#2c2036]/8 flex items-center justify-between border-b bg-white/70 px-5 py-2 text-[8px] font-bold tracking-[0.12em] text-[#81748a]">
             <span>PREVIEW / NO AUTH</span>
             <span>
               {screens.find((item) => item.id === screen)?.number} —{" "}
@@ -891,23 +891,25 @@ export default async function PreviewPage({
           </div>
           {content[screen]}
         </section>
-        <section className="hidden border border-[#17151a]/15 bg-[#f5f0e8] p-7 shadow-[8px_8px_0_#fb407b] lg:block">
-          <p className="font-mono text-[9px] font-bold tracking-[0.15em] text-[#fb407b]">
-            НОВОЕ НАПРАВЛЕНИЕ
+        <section className="hidden rounded-[28px] border border-white/80 bg-white/65 p-7 shadow-[0_18px_50px_rgba(76,48,104,.1)] backdrop-blur lg:block">
+          <p className="text-[10px] font-black uppercase tracking-[0.14em] text-[#8753e6]">
+            Premium social direction
           </p>
-          <h1 className="mt-4 text-4xl font-black leading-[0.82] tracking-[-0.1em]">
-            НЕ UI-КИТ.
-            <br />А ХАРАКТЕР.
+          <h1 className="mt-4 text-4xl font-black leading-[0.9] tracking-[-0.08em]">
+            СВОИ ЛЮДИ.
+            <br />
+            СВОЙ ГОРОД.
           </h1>
-          <p className="mt-6 text-sm leading-6 text-[#625b58]">
-            Тёплая бумага, чёрная типографика, жёсткая сетка, один розовый акцент.
-            Меньше «карточек ради карточек», больше редакционного ритма.
+          <p className="mt-6 text-sm leading-6 text-[#6a5e73]">
+            Не игровой интерфейс и не бесконечная лента. Качественная мягкая
+            social-среда: люди, медиа, действия и настоящее ощущение, что здесь тебя
+            ждут.
           </p>
           <Link
-            className="mt-6 inline-flex items-center gap-2 border-b-2 border-[#17151a] pb-1 text-xs font-black"
+            className="mt-6 inline-flex items-center gap-2 text-xs font-black text-[#8753e6]"
             href="/"
           >
-            НА ПУБЛИЧНУЮ ГЛАВНУЮ <ArrowUpRight className="size-4" />
+            На публичную главную <ArrowUpRight className="size-4" />
           </Link>
         </section>
       </div>
