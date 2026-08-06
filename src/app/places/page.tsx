@@ -1,9 +1,21 @@
 import Link from "next/link";
 import type { Route } from "next";
-import { MapPin, Plus, TrendingUp, Trophy, UsersRound } from "lucide-react";
+/* eslint-disable @next/next/no-img-element -- short-lived signed avatar URLs */
+import {
+  Bell,
+  CalendarDays,
+  ChevronRight,
+  MapPin,
+  Pin,
+  Plus,
+  Radio,
+  TrendingUp,
+  Trophy,
+  UsersRound,
+} from "lucide-react";
 
 import { CityPulse, type CityPulseItem } from "@/components/city-pulse";
-import { EmptyState } from "@/components/empty-state";
+import { CityPulseRefresh } from "@/components/city-pulse-refresh";
 import { PlaceIcon } from "@/components/place-icon";
 import { requireUser } from "@/lib/auth";
 import { getSignedImageUrl } from "@/lib/media";
@@ -27,11 +39,48 @@ type PlaceRow = {
   pinned_until: string | null;
 };
 
+type CirclePerson = {
+  id: string;
+  username: string;
+  displayName: string;
+  avatarUrl: string | null;
+};
+
+type CityEventPreview = {
+  id: string;
+  title: string;
+  startsAt: string;
+  eventType: string;
+};
+
+const avatarGradients = [
+  "from-[#ff78ad] to-[#ffc479]",
+  "from-[#8e6cff] to-[#e968df]",
+  "from-[#4bc7c2] to-[#78a5ff]",
+  "from-[#ff9c65] to-[#e65a99]",
+];
+
+function CircleAvatar({ person, index }: { person: CirclePerson; index: number }) {
+  return (
+    <span
+      className={`grid size-12 shrink-0 place-items-center overflow-hidden rounded-full bg-gradient-to-br p-0.5 ${avatarGradients[index % avatarGradients.length]}`}
+    >
+      <span className="grid size-full place-items-center overflow-hidden rounded-full bg-[#f7f1fa] text-xs font-black text-[#33263d]">
+        {person.avatarUrl ? (
+          <img alt="" className="size-full object-cover" src={person.avatarUrl} />
+        ) : (
+          person.displayName.slice(0, 1).toUpperCase()
+        )}
+      </span>
+    </span>
+  );
+}
+
 export default async function PlacesPage() {
   const { supabase, user } = await requireUser();
   const { data: profile } = await supabase
     .from("profiles")
-    .select("city_id, city")
+    .select("city_id, city, display_name")
     .eq("id", user.id)
     .maybeSingle();
 
@@ -39,6 +88,10 @@ export default async function PlacesPage() {
     [];
   let cityName: string | null = null;
   let cityPulse: CityPulseItem[] = [];
+  let cityCircle: CirclePerson[] = [];
+  let onlinePeopleCount = 0;
+  let alivePlacesCount = 0;
+  let cityEvents: CityEventPreview[] = [];
   if (profile?.city_id) {
     const { data: cityRow } = await supabase
       .from("cities")
@@ -160,6 +213,62 @@ export default async function PlacesPage() {
       joined: memberSet.has(`${place.id}:${user.id}`),
       unread: unreadByPlace.get(place.id) ?? 0,
     }));
+
+    const cityPlaceIds = new Set(rows.map((place) => place.id));
+    const cityPresence = (presence ?? []).filter((row) =>
+      cityPlaceIds.has(row.place_id),
+    );
+    const onlineIds = [...new Set(cityPresence.map((row) => row.profile_id))];
+    onlinePeopleCount = onlineIds.length;
+    alivePlacesCount = places.filter((place) => place.online > 0).length;
+
+    // Prefer people the user follows: this makes the city feel like a personal
+    // circle first, then falls back to other public residents who are online.
+    const circleIds = [
+      ...onlineIds.filter((id) => followed.has(id)),
+      ...onlineIds.filter((id) => !followed.has(id)),
+    ].slice(0, 8);
+    if (circleIds.length > 0) {
+      const { data: rawCircle } = await supabase
+        .from("public_city_people")
+        .select("id, username, display_name, avatar_path")
+        .eq("city_id", profile.city_id)
+        .in("id", circleIds);
+      const circleById = new Map(
+        (rawCircle ?? []).map((person) => [person.id, person]),
+      );
+      cityCircle = await Promise.all(
+        circleIds
+          .flatMap((id) => {
+            const person = circleById.get(id);
+            return person ? [person] : [];
+          })
+          .map(async (person) => ({
+            id: person.id,
+            username: person.username,
+            displayName: person.display_name,
+            avatarUrl: await getSignedImageUrl({
+              bucket: "avatars",
+              path: person.avatar_path,
+            }),
+          })),
+      );
+    }
+
+    const { data: rawEvents } = await supabase
+      .from("events")
+      .select("id, title, starts_at, event_type")
+      .eq("city_id", profile.city_id)
+      .eq("is_cancelled", false)
+      .gte("starts_at", new Date().toISOString())
+      .order("starts_at", { ascending: true })
+      .limit(2);
+    cityEvents = (rawEvents ?? []).map((event) => ({
+      id: event.id,
+      title: event.title,
+      startsAt: event.starts_at,
+      eventType: event.event_type,
+    }));
   }
 
   const now = Date.now();
@@ -191,142 +300,258 @@ export default async function PlacesPage() {
   }
 
   return (
-    <main className="mx-auto min-h-screen max-w-[430px] bg-[#0c0e14] px-4 py-5 text-white">
+    <main className="mx-auto min-h-screen max-w-[430px] bg-[#f7f4fb] px-4 pb-24 pt-5 text-[#251d31]">
+      <CityPulseRefresh cityId={profile?.city_id} />
       <header className="flex items-center justify-between">
-        <Link className="text-sm text-[#e3a3d5]" href="/feed">
-          ← Лента
+        <Link
+          className="inline-flex items-center gap-2 text-xs font-bold text-[#756a7d]"
+          href="/feed"
+        >
+          ← Главная
         </Link>
-        <h1 className="flex items-center gap-1.5 text-lg font-bold">
-          <MapPin className="size-4 text-[#d68cff]" /> {cityName ?? "Город"}
-        </h1>
+        <span className="flex items-center gap-1.5 text-sm font-black">
+          <MapPin className="size-4 text-[#8753e6]" /> {cityName ?? "Город"}
+        </span>
         <Link
           aria-label="Создать место"
-          className="grid size-9 place-items-center rounded-full bg-gradient-to-r from-[#ff4b8a] to-[#7d45ff]"
+          className="grid size-10 place-items-center rounded-full bg-gradient-to-br from-[#ff5d9a] to-[#8254ed] text-white shadow-[0_7px_16px_rgba(160,75,213,.24)]"
           href="/places/new"
         >
           <Plus className="size-5" />
         </Link>
       </header>
 
-      <section className="mt-5 rounded-2xl border border-[#8f48ff]/30 bg-gradient-to-r from-[#1f1631] to-[#171824] p-4">
-        <p className="text-lg font-bold">Куда пойдём?</p>
-        <p className="mt-1 text-sm leading-6 text-[#b9b1c5]">
-          Пойдём посмотрим, кто сейчас в городе. Выбери место и заходи.
-        </p>
-      </section>
-
-      {cityName && <CityPulse cityName={cityName} items={cityPulse} />}
-
-      {risingUsers.length > 0 && (
-        <section className="mt-5 rounded-2xl border border-[#8df0b4]/25 bg-gradient-to-r from-[#14221d] to-[#171824] p-4">
-          <div className="flex items-center gap-2">
-            <TrendingUp className="size-5 text-[#8df0b4]" />
-            <p className="text-sm font-bold">Кто поднялся за неделю</p>
-          </div>
-          <div className="mt-3 space-y-1.5">
-            {risingUsers.map((person, index) => (
-              <Link
-                className="flex items-center gap-2 text-sm"
-                href={`/u/${person.username}` as Route}
-                key={person.profile_id}
-              >
-                <span className="w-5 text-center">
-                  {index === 0 ? "🚀" : `${index + 1}`}
-                </span>
-                <span className="min-w-0 grow truncate font-semibold">
-                  {person.display_name}
-                </span>
-                <span className="shrink-0 text-xs text-[#8df0b4]">+{person.score}</span>
-              </Link>
-            ))}
-          </div>
+      {!profile?.city_id ? (
+        <section className="mt-12 rounded-[1.8rem] border border-[#d9c5f3] bg-gradient-to-br from-[#fffaff] to-[#f2ecff] p-6 text-center shadow-[0_12px_30px_rgba(69,43,94,.07)]">
+          <MapPin className="mx-auto size-8 text-[#8753e6]" />
+          <h1 className="mt-4 text-2xl font-black tracking-[-0.06em]">
+            Твой город ещё не выбран
+          </h1>
+          <p className="mt-3 text-sm leading-6 text-[#756a7d]">
+            Выбери город — и здесь появятся свои люди, живые места, разговоры и события.
+          </p>
+          <Link
+            className="mt-5 inline-flex rounded-xl bg-gradient-to-r from-[#ff5d9a] to-[#8254ed] px-4 py-3 text-sm font-black text-white"
+            href="/onboarding"
+          >
+            Выбрать город
+          </Link>
         </section>
-      )}
+      ) : (
+        <>
+          <section className="mt-5 overflow-hidden rounded-[1.8rem] bg-gradient-to-br from-[#2e2250] via-[#4d3572] to-[#7559d5] p-5 text-white shadow-[0_14px_32px_rgba(63,37,98,.22)]">
+            <p className="text-[10px] font-black uppercase tracking-[0.14em] text-[#ffc3da]">
+              Город сейчас
+            </p>
+            <h1 className="mt-2 text-3xl font-black leading-[0.9] tracking-[-0.075em]">
+              {cityName}
+              <br />
+              не спит.
+            </h1>
+            <p className="mt-3 max-w-64 text-[11px] leading-5 text-white/75">
+              Заходи туда, где сейчас твои люди — не листай город со стороны.
+            </p>
+            <div className="mt-5 flex gap-2">
+              <span className="rounded-full bg-white/15 px-2.5 py-1 text-[10px] font-black">
+                {onlinePeopleCount} сейчас здесь
+              </span>
+              <span className="rounded-full bg-white/15 px-2.5 py-1 text-[10px] font-black">
+                {alivePlacesCount} живых мест
+              </span>
+            </div>
+          </section>
 
-      <section className="mt-5">
-        {sorted.length === 0 ? (
-          <EmptyState
-            actionHref={profile?.city_id ? "/places/new" : "/onboarding"}
-            actionLabel={profile?.city_id ? "Создать место" : "Указать город"}
-            description={
-              profile?.city_id
-                ? "Мест пока нет — создайте первое."
-                : "Укажите город в профиле, чтобы видеть места."
-            }
-            title={profile?.city_id ? "Город пуст" : "Город не указан"}
-          />
-        ) : (
-          <div className="space-y-2.5">
-            {sorted.map((place) => (
-              <Link
-                className="border-white/8 flex items-center gap-3 rounded-2xl border bg-[#171923] p-4 transition hover:border-[#8f48ff]/60"
-                href={`/places/${place.id}` as Route}
-                key={place.id}
-              >
-                <span className="grid size-12 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-[#3b193d] to-[#1f1a38] text-[#e5c3ff]">
-                  <PlaceIcon className="size-6" code={place.icon_code} />
+          {cityCircle.length > 0 && (
+            <section className="mt-6">
+              <div className="mb-3 flex items-center justify-between">
+                <span>
+                  <h2 className="text-sm font-black">Свои сейчас здесь</h2>
+                  <p className="mt-0.5 text-[10px] text-[#81748a]">
+                    Люди, за которыми ты следишь, и жители города
+                  </p>
                 </span>
-                <span className="min-w-0 grow">
-                  <span className="flex items-center gap-2">
-                    <span className="truncate font-bold">{place.name}</span>
-                    {place.kind === "personal" && (
-                      <span className="rounded-full bg-[#b550ff]/20 px-1.5 py-0.5 text-[10px] font-semibold text-[#e7c9f5]">
-                        🏠
-                      </span>
-                    )}
-                    {place.kind === "temporary" && (
-                      <span className="rounded-full bg-[#ffd35e]/15 px-1.5 py-0.5 text-[10px] font-semibold text-[#ffd35e]">
-                        🔥
-                      </span>
-                    )}
-                    {place.pinned_until &&
-                      new Date(place.pinned_until).getTime() > Date.now() && (
-                        <span className="rounded-full bg-[#ff4b8a]/20 px-1.5 py-0.5 text-[10px] font-semibold text-[#ff9bc5]">
-                          📌 Закреплено
-                        </span>
-                      )}
-                    {place.promoted_until &&
-                      new Date(place.promoted_until).getTime() > Date.now() && (
-                        <span className="rounded-full bg-[#ffd35e]/25 px-1.5 py-0.5 text-[10px] font-semibold text-[#ffd35e]">
-                          🚀 Поднято
-                        </span>
-                      )}
-                  </span>
-                  <span className="mt-0.5 flex items-center gap-3 text-xs text-[#aaa4b7]">
-                    <span className="inline-flex items-center gap-1">
-                      <UsersRound className="size-3.5" /> {place.online} сейчас
+                <Link className="text-[10px] font-black text-[#8753e6]" href="/people">
+                  Все люди ›
+                </Link>
+              </div>
+              <div className="flex gap-3 overflow-x-auto pb-1">
+                {cityCircle.map((person, index) => (
+                  <Link
+                    className="flex w-14 shrink-0 flex-col items-center gap-1.5"
+                    href={`/u/${person.username}` as Route}
+                    key={person.id}
+                  >
+                    <CircleAvatar index={index} person={person} />
+                    <span className="w-14 truncate text-center text-[10px] font-bold">
+                      {person.displayName}
                     </span>
-                    {place.friends > 0 && (
-                      <span className="text-[#ffd35e]">
-                        Твои друзья: {place.friends}
-                      </span>
-                    )}
-                    {place.unread > 0 && (
-                      <span className="rounded-full bg-[#ff4b8a] px-2 py-0.5 text-[10px] font-bold text-white">
-                        {place.unread} новых
-                      </span>
-                    )}
-                  </span>
-                </span>
-                <span className="shrink-0 text-[#e3a3d5]">›</span>
-              </Link>
-            ))}
-          </div>
-        )}
-      </section>
+                  </Link>
+                ))}
+              </div>
+            </section>
+          )}
 
-      <Link
-        className="mt-7 flex items-center justify-center gap-2 text-sm font-semibold text-[#e8a1d5]"
-        href="/places/new"
-      >
-        <MapPin className="size-4" /> Создать свою тусовку
-      </Link>
-      <Link
-        className="mt-3 flex items-center justify-center gap-2 text-sm font-semibold text-[#ffd35e]"
-        href="/city/rankings"
-      >
-        <Trophy className="size-4" /> Рейтинги города
-      </Link>
+          {cityName && <CityPulse cityName={cityName} items={cityPulse} />}
+
+          {(cityEvents.length > 0 ||
+            cityPulse.some((item) => item.kind === "live")) && (
+            <section className="mt-6">
+              <div className="mb-3 flex items-center justify-between">
+                <h2 className="text-sm font-black">Сегодня в городе</h2>
+                <Link className="text-[10px] font-black text-[#8753e6]" href="/events">
+                  Все события ›
+                </Link>
+              </div>
+              <div className="flex gap-2.5 overflow-x-auto pb-1">
+                {cityPulse
+                  .filter((item) => item.kind === "live")
+                  .slice(0, 2)
+                  .map((item) => (
+                    <Link
+                      className="w-44 shrink-0 overflow-hidden rounded-2xl bg-gradient-to-br from-[#fff0f6] to-[#f0eaff] p-3"
+                      href={
+                        item.target_slug
+                          ? (`/live/${item.target_slug}` as Route)
+                          : "/feed"
+                      }
+                      key={`live-${item.target_id}`}
+                    >
+                      <span className="inline-flex items-center gap-1 rounded-md bg-[#ff3f79] px-1.5 py-0.5 text-[8px] font-black text-white">
+                        <Radio className="size-2.5" /> LIVE
+                      </span>
+                      <b className="mt-6 block truncate text-[11px]">
+                        {item.target_name}
+                      </b>
+                      <small className="mt-1 block truncate text-[10px] text-[#756a7d]">
+                        {item.actor_name}
+                      </small>
+                    </Link>
+                  ))}
+                {cityEvents.map((event) => (
+                  <Link
+                    className="w-44 shrink-0 rounded-2xl bg-gradient-to-br from-[#eef7f6] to-[#ecf0ff] p-3"
+                    href={`/events/${event.id}` as Route}
+                    key={event.id}
+                  >
+                    <CalendarDays className="size-5 text-[#258b82]" />
+                    <b className="mt-5 block truncate text-[11px]">{event.title}</b>
+                    <small className="mt-1 block text-[10px] text-[#6d7a80]">
+                      {new Intl.DateTimeFormat("ru-RU", {
+                        day: "numeric",
+                        month: "short",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      }).format(new Date(event.startsAt))}
+                    </small>
+                  </Link>
+                ))}
+              </div>
+            </section>
+          )}
+
+          <section className="mt-6">
+            <div className="mb-3 flex items-center justify-between">
+              <span>
+                <h2 className="text-sm font-black">Куда зайдём?</h2>
+                <p className="mt-0.5 text-[10px] text-[#81748a]">
+                  Места, где есть разговор или свои люди
+                </p>
+              </span>
+              <Link
+                className="text-[10px] font-black text-[#8753e6]"
+                href="/places/new"
+              >
+                Создать ›
+              </Link>
+            </div>
+            {sorted.length === 0 ? (
+              <Link
+                className="block rounded-[1.6rem] border border-dashed border-[#2c2036]/20 bg-white/70 p-5 text-center"
+                href="/places/new"
+              >
+                <PlaceIcon className="mx-auto size-7 text-[#8753e6]" code="place" />
+                <b className="mt-3 block text-sm">Собери первое место</b>
+                <span className="mt-1 block text-[11px] leading-5 text-[#7b7083]">
+                  Не обязан быть там один — позови своих в городскую тусовку.
+                </span>
+              </Link>
+            ) : (
+              <div className="space-y-2.5">
+                {sorted.slice(0, 8).map((place) => (
+                  <Link
+                    className="flex items-center gap-3 rounded-2xl border border-[#2c2036]/10 bg-white p-3.5 shadow-[0_6px_18px_rgba(69,43,94,.05)] transition hover:-translate-y-0.5 hover:border-[#9c6ce7]/35"
+                    href={`/places/${place.id}` as Route}
+                    key={place.id}
+                  >
+                    <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-[#f3e8ff] to-[#fff1f7] text-[#8753e6]">
+                      <PlaceIcon className="size-5" code={place.icon_code} />
+                    </span>
+                    <span className="min-w-0 grow">
+                      <span className="flex items-center gap-1.5">
+                        <b className="truncate text-[12px]">{place.name}</b>
+                        {place.pinned_until &&
+                          new Date(place.pinned_until).getTime() > now && (
+                            <Pin className="size-3.5 text-[#d84b81]" />
+                          )}
+                        {place.promoted_until &&
+                          new Date(place.promoted_until).getTime() > now && (
+                            <TrendingUp className="size-3.5 text-[#a87511]" />
+                          )}
+                      </span>
+                      <span className="mt-1 flex items-center gap-2.5 text-[10px] text-[#7b7083]">
+                        <span className="inline-flex items-center gap-1">
+                          <UsersRound className="size-3" /> {place.online} сейчас
+                        </span>
+                        {place.friends > 0 && <span>свои: {place.friends}</span>}
+                        {place.unread > 0 && (
+                          <span className="inline-flex items-center gap-1 font-bold text-[#d84b81]">
+                            <Bell className="size-3" /> {place.unread}
+                          </span>
+                        )}
+                      </span>
+                    </span>
+                    <ChevronRight className="size-4 shrink-0 text-[#aa9eaf]" />
+                  </Link>
+                ))}
+              </div>
+            )}
+          </section>
+
+          {risingUsers.length > 0 && (
+            <section className="mt-6 rounded-2xl border border-[#ffe0aa] bg-[#fff8e9] p-4">
+              <div className="flex items-center gap-2">
+                <Trophy className="size-5 text-[#a87511]" />
+                <h2 className="text-sm font-black">Кто вырос за неделю</h2>
+              </div>
+              <div className="mt-3 space-y-2">
+                {risingUsers.map((person, index) => (
+                  <Link
+                    className="flex items-center gap-2"
+                    href={`/u/${person.username}` as Route}
+                    key={person.profile_id}
+                  >
+                    <span className="grid size-6 place-items-center rounded-full bg-white text-[10px] font-black text-[#a87511]">
+                      {index + 1}
+                    </span>
+                    <span className="grow truncate text-[11px] font-bold">
+                      {person.display_name}
+                    </span>
+                    <span className="text-[10px] font-black text-[#a87511]">
+                      +{person.score}
+                    </span>
+                  </Link>
+                ))}
+              </div>
+              <Link
+                className="mt-3 flex items-center justify-end gap-1 text-[10px] font-black text-[#a87511]"
+                href="/city/rankings"
+              >
+                Все рейтинги <ChevronRight className="size-3.5" />
+              </Link>
+            </section>
+          )}
+        </>
+      )}
     </main>
   );
 }

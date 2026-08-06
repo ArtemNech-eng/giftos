@@ -88,12 +88,12 @@ export function CityPulse({
 }) {
   if (items.length === 0) {
     return (
-      <section className="mt-5 rounded-[1.5rem] border border-[#8f48ff]/30 bg-gradient-to-r from-[#20152d] to-[#171923] p-4 text-white">
+      <section className="mt-5 rounded-[1.5rem] border border-[#d9c5f3] bg-gradient-to-r from-[#fffaff] to-[#f3edff] p-4 text-[#251d31] shadow-[0_10px_25px_rgba(85,51,115,.07)]">
         <div className="flex items-center gap-2">
-          <UsersRound className="size-5 text-[#e0a4ff]" />
+          <UsersRound className="size-5 text-[#8753e6]" />
           <p className="font-bold">{cityName} собирается</p>
         </div>
-        <p className="mt-2 text-sm leading-6 text-[#bcb3c7]">
+        <p className="mt-2 text-sm leading-6 text-[#756a7d]">
           Когда люди заходят в места, начинают эфиры или общаются в открытых тусовках,
           здесь появляется живая картина города.
         </p>
@@ -102,31 +102,31 @@ export function CityPulse({
   }
 
   return (
-    <section className="mt-5 overflow-hidden rounded-[1.6rem] border border-[#8f48ff]/35 bg-[#171923] text-white">
-      <div className="flex items-center justify-between border-b border-white/10 px-4 py-3.5">
+    <section className="mt-5 overflow-hidden rounded-[1.6rem] border border-[#2c2036]/10 bg-white text-[#251d31] shadow-[0_12px_30px_rgba(69,43,94,.07)]">
+      <div className="border-[#2c2036]/8 flex items-center justify-between border-b px-4 py-3.5">
         <span>
           <span className="flex items-center gap-2 text-sm font-bold">
             <span className="size-2 rounded-full bg-[#56d7a4] shadow-[0_0_0_4px_rgba(86,215,164,0.12)]" />
             Сейчас в городе
           </span>
-          <span className="mt-0.5 block text-[11px] text-[#a9a0b5]">
+          <span className="mt-0.5 block text-[11px] text-[#81748a]">
             {cityName} · без фейковой активности
           </span>
         </span>
-        <Radio className="size-4 text-[#ff82b2]" />
+        <Radio className="size-4 text-[#e44883]" />
       </div>
-      <div className="divide-white/8 divide-y">
+      <div className="divide-[#2c2036]/8 divide-y">
         {items.slice(0, 6).map((item) => {
           const copy = copyForPulse(item);
           const PulseIcon = pulseIcon(item.kind);
           return (
             <Link
-              className="group flex items-center gap-3 px-4 py-3 transition hover:bg-white/[0.045]"
+              className="group flex items-center gap-3 px-4 py-3 transition hover:bg-[#faf6fd]"
               href={copy.href}
               key={`${item.kind}-${item.actor_id}-${item.target_id}-${item.created_at}`}
             >
-              <span className="relative grid size-10 shrink-0 place-items-center overflow-hidden rounded-full bg-gradient-to-br from-[#ff689d] to-[#7756ef] p-0.5">
-                <span className="grid size-full place-items-center overflow-hidden rounded-full bg-[#2b1d31] text-xs font-bold">
+              <span className="relative grid size-10 shrink-0 place-items-center overflow-hidden rounded-full bg-gradient-to-br from-[#ff689d] to-[#7756ef] p-0.5 shadow-[0_4px_12px_rgba(121,67,173,.14)]">
+                <span className="grid size-full place-items-center overflow-hidden rounded-full bg-[#f7f1fa] text-xs font-bold text-[#33263d]">
                   {item.actor_avatar_url ? (
                     // eslint-disable-next-line @next/next/no-img-element -- short-lived signed Storage URL
                     <img
@@ -142,16 +142,16 @@ export function CityPulse({
               <span className="min-w-0 grow">
                 <span className="block truncate text-sm">
                   <b>{item.actor_name}</b>{" "}
-                  <span className="text-[#b8afc4]">{copy.action}</span>
+                  <span className="text-[#6f6379]">{copy.action}</span>
                 </span>
-                <span className="mt-0.5 flex items-center gap-2 text-[10px] text-[#9c92a8]">
-                  <PulseIcon className="size-3.5 shrink-0 text-[#e0a4ff]" />
+                <span className="mt-0.5 flex items-center gap-2 text-[10px] text-[#8a7d91]">
+                  <PulseIcon className="size-3.5 shrink-0 text-[#8753e6]" />
                   <span className="truncate">{copy.label}</span>
                   <span>· {relativeTime(item.created_at)}</span>
                 </span>
               </span>
               {item.kind === "ambassador" && (
-                <Sparkles className="size-4 text-[#ffd35e]" />
+                <Sparkles className="size-4 text-[#b57b13]" />
               )}
               {item.kind === "live" && (
                 <span className="rounded-full bg-[#ff315c] px-1.5 py-0.5 text-[9px] font-black">
