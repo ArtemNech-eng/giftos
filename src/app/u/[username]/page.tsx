@@ -932,6 +932,24 @@ export default async function ProfilePage({
             <span>Запросы</span>
             <span className="text-[#df9cff]">›</span>
           </Link>
+          <Link
+            className="flex items-center justify-between rounded-2xl border border-white/10 bg-[#171923] px-4 py-3 text-sm font-bold"
+            href="/settings"
+          >
+            <span>Настройки</span>
+            <span className="text-[#df9cff]">›</span>
+          </Link>
+        </div>
+      )}
+      {isOwnProfile && !profile.is_creator && (
+        <div className="mx-4 mt-5">
+          <Link
+            className="flex items-center justify-between rounded-2xl border border-white/10 bg-[#171923] px-4 py-3 text-sm font-bold"
+            href="/settings"
+          >
+            <span>Настройки</span>
+            <span className="text-[#df9cff]">›</span>
+          </Link>
         </div>
       )}
       {isOwnProfile && (
