@@ -9,6 +9,7 @@ import {
   Radio,
   Search,
   Send,
+  Sparkles,
   UserRound,
   WalletCards,
   X,
@@ -217,61 +218,110 @@ function FeedScreen() {
 
 function ProfileScreen() {
   return (
-    <div className="flex min-h-[730px] flex-col bg-[#f5f0e8]">
-      <section className="relative h-48 overflow-hidden bg-[#2e2550]">
-        <div className="absolute -right-8 -top-10 size-52 rounded-full border-[28px] border-[#fb407b]" />
-        <div className="absolute bottom-0 left-0 h-20 w-full bg-[repeating-linear-gradient(-45deg,transparent_0,transparent_10px,rgba(255,255,255,.08)_10px,rgba(255,255,255,.08)_11px)]" />
-        <span className="absolute left-4 top-4 grid size-9 place-items-center rounded-full border border-white/20 bg-black/10 text-white">
+    <div className="flex min-h-[730px] flex-col bg-[#fbf9fe] text-[#251d31]">
+      <section className="relative h-52 overflow-hidden bg-[#422e60]">
+        {/* eslint-disable-next-line @next/next/no-img-element -- generated synthetic preview media */}
+        <img
+          alt="Демо-обложка профиля Насти"
+          className="size-full object-cover object-[center_44%]"
+          src="/preview/nastya-profile.jpg"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/35 via-transparent to-[#2e1d42]/35" />
+        <button className="absolute left-4 top-4 grid size-9 place-items-center rounded-full bg-black/25 text-lg text-white backdrop-blur">
           ‹
-        </span>
-        <span className="absolute right-4 top-4 font-mono text-[9px] font-bold tracking-[0.16em] text-white/70">
-          PROFILE / 014
-        </span>
+        </button>
+        <button className="absolute right-4 top-4 grid size-9 place-items-center rounded-full bg-black/25 text-sm font-black text-white backdrop-blur">
+          •••
+        </button>
       </section>
-      <section className="relative px-5 pb-5">
-        <div className="-mt-10 flex items-end justify-between">
-          <Avatar index={0} name="Настя" size="size-20" />
-          <button className="rounded-[10px] bg-[#17151a] px-4 py-2.5 text-xs font-black text-[#f5f0e8] shadow-[0_4px_0_#fb407b]">
-            ПОДПИСАТЬСЯ
+      <section className="relative px-4">
+        <div className="-mt-11 flex items-end justify-between">
+          <span className="relative grid size-[82px] place-items-center rounded-full border-4 border-[#fbf9fe] bg-white shadow-[0_8px_24px_rgba(47,27,78,.2)]">
+            {/* eslint-disable-next-line @next/next/no-img-element -- generated synthetic preview media */}
+            <img
+              alt="Аватар Насти"
+              className="size-full rounded-full object-cover object-[center_40%]"
+              src="/preview/nastya-profile.jpg"
+            />
+            <span className="absolute -bottom-1 -right-1 size-5 rounded-full border-2 border-white bg-[#8753ed]" />
+          </span>
+          <button className="rounded-xl bg-gradient-to-r from-[#ff5d9a] to-[#8254ed] px-4 py-2.5 text-xs font-black text-white shadow-[0_7px_16px_rgba(160,75,213,.28)]">
+            Подписаться
           </button>
         </div>
-        <div className="mt-4 flex items-center gap-2">
-          <h1 className="text-3xl font-black tracking-[-0.08em]">НАСТЯ</h1>
-          <span className="size-2 rounded-full bg-[#8753ed]" />
-          <span className="font-mono text-[9px] text-[#756d69]">23 / БУДЁННОВСК</span>
+        <div className="mt-3 flex items-center gap-1.5">
+          <h1 className="text-2xl font-black tracking-[-0.06em]">Настя</h1>
+          <span className="grid size-4 place-items-center rounded-full bg-[#8753ed] text-[9px] font-black text-white">
+            ✓
+          </span>
         </div>
-        <p className="mt-3 max-w-sm text-xs leading-5 text-[#5e5755]">
-          Собираю музыку, людей и маленькие причины не сидеть дома.
-        </p>
-        <div className="border-[#17151a]/12 mt-5 grid grid-cols-3 border-y py-3 text-center">
-          {["12,4K", "320", "1,2M"].map((number, index) => (
-            <span key={number}>
-              <b className="block text-base tracking-[-0.06em]">{number}</b>
-              <small className="font-mono text-[8px] text-[#7b7471]">
-                {["ЛЮДИ", "СВЯЗИ", "ОХВАТ"][index]}
-              </small>
-            </span>
-          ))}
+        <p className="mt-0.5 text-[11px] text-[#82758d]">23 года · Будённовск</p>
+        <div className="mt-4 grid grid-cols-3 text-center">
+          <span>
+            <b className="block text-sm">12,4K</b>
+            <small className="text-[9px] text-[#8c8095]">Подписчики</small>
+          </span>
+          <span>
+            <b className="block text-sm">320</b>
+            <small className="text-[9px] text-[#8c8095]">Подписки</small>
+          </span>
+          <span>
+            <b className="block text-sm">1,2M</b>
+            <small className="text-[9px] text-[#8c8095]">Охват</small>
+          </span>
         </div>
-        <p className="mt-5 font-mono text-[9px] font-bold tracking-[0.15em] text-[#fb407b]">
-          МОЖНО СО МНОЙ
+        <p className="mt-4 text-[12px] leading-5 text-[#5f5368]">
+          Тут мы создаём классную атмосферу: музыка, игры и путешествия.
         </p>
-        <div className="mt-2 grid grid-cols-3 gap-px bg-[#17151a]/15">
-          {["НАПИСАТЬ / 49", "ГОВОРИТЬ / 15М", "СО-ЭФИР / 799"].map((item) => (
-            <span
-              className="bg-[#f5f0e8] p-2 text-center text-[9px] font-black"
-              key={item}
-            >
-              {item}
-            </span>
-          ))}
+        <div className="mt-3 flex gap-1.5">
+          <span className="rounded-full bg-[#f0e7ff] px-2.5 py-1 text-[9px] font-bold text-[#7549d0]">
+            ♪ Музыка
+          </span>
+          <span className="rounded-full bg-[#ffeaf3] px-2.5 py-1 text-[9px] font-bold text-[#c44476]">
+            ◉ Игры
+          </span>
+          <span className="rounded-full bg-[#e7f7f4] px-2.5 py-1 text-[9px] font-bold text-[#258b82]">
+            ✈ Путешествия
+          </span>
+        </div>
+        <div className="mt-4 grid grid-cols-3 gap-2">
+          {["Написать\n49 ₽", "Поговорить\n15 мин", "Совместный стрим\n799 ₽"].map(
+            (item) => (
+              <button
+                className="rounded-xl border border-[#2c2036]/10 bg-white px-1 py-2.5 text-center shadow-[0_4px_12px_rgba(66,40,92,.05)]"
+                key={item}
+              >
+                <MessageCircle className="mx-auto size-4 text-[#8753e6]" />
+                <span className="mt-1 block whitespace-pre-line text-[8px] font-bold leading-3 text-[#504458]">
+                  {item}
+                </span>
+              </button>
+            ),
+          )}
+        </div>
+        <button className="mt-2.5 flex w-full items-center justify-center gap-2 rounded-xl bg-[#f3edff] py-2.5 text-[11px] font-black text-[#7549d0]">
+          <Sparkles className="size-4" /> Отправить подарок
+        </button>
+      </section>
+      <div className="mt-5 grid grid-cols-3 border-y border-[#2c2036]/10 text-center text-[10px] font-bold">
+        <span className="border-b-2 border-[#f45293] py-3 text-[#7549d0]">Эфиры</span>
+        <span className="py-3 text-[#887b91]">Посты</span>
+        <span className="py-3 text-[#887b91]">Обо мне</span>
+      </div>
+      <section className="px-4 py-4">
+        <div className="flex items-center gap-3 rounded-2xl bg-gradient-to-r from-[#f4ebff] to-[#fff1f7] p-3">
+          <span className="grid size-11 place-items-center rounded-xl bg-[#ff4f8e] text-white">
+            <Radio className="size-5" />
+          </span>
+          <span className="grow">
+            <b className="block text-xs">Сейчас в эфире</b>
+            <small className="block text-[10px] text-[#7d7085]">
+              Общаемся и собираем идеи
+            </small>
+          </span>
+          <ChevronRight className="size-4 text-[#8753e6]" />
         </div>
       </section>
-      <div className="border-[#17151a]/12 mt-auto grid grid-cols-3 border-t text-center font-mono text-[9px] font-bold">
-        <span className="border-b-2 border-[#fb407b] py-3">ЭФИРЫ</span>
-        <span className="py-3 text-[#817976]">ПОСТЫ</span>
-        <span className="py-3 text-[#817976]">ОБО МНЕ</span>
-      </div>
       <AppNav active="Я" />
     </div>
   );
@@ -595,7 +645,7 @@ export default async function PreviewPage({
             ))}
           </nav>
         </aside>
-        <section className="overflow-hidden border border-[#17151a]/30 bg-[#f5f0e8] shadow-[12px_12px_0_#8753ed]">
+        <section className="w-full max-w-[430px] justify-self-center overflow-hidden border border-[#17151a]/30 bg-[#f5f0e8] shadow-[12px_12px_0_#8753ed]">
           <div className="border-[#17151a]/12 flex items-center justify-between border-b px-5 py-2 font-mono text-[8px] font-bold tracking-[0.12em] text-[#716a67]">
             <span>PREVIEW / NO AUTH</span>
             <span>
