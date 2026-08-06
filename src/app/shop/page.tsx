@@ -54,6 +54,11 @@ export default async function ShopPage() {
     (inventory ?? []).map((row) => [String(row.item_id), Boolean(row.is_equipped)]),
   );
   const balance = wallet?.available_balance ?? 0;
+  const { data: spendState } = await supabase.rpc("star_spend_state");
+  const spendLimit =
+    (spendState as { limit?: number; spent_today?: number } | null) ?? null;
+  const spentToday = spendLimit?.spent_today ?? 0;
+  const dailyLimit = spendLimit?.limit ?? 0;
   const vipActive =
     vip !== null &&
     vip?.status === "active" &&
@@ -91,6 +96,16 @@ export default async function ShopPage() {
           <ShoppingBag className="size-4" /> {balance}
         </span>
       </header>
+
+      {dailyLimit > 0 && (
+        <p className="mt-4 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs text-[#aaa4b7]">
+          Лимит трат сегодня: <b className="text-[#ffd35e]">{spentToday}</b> /{" "}
+          {dailyLimit} ⭐
+          {spentToday >= dailyLimit && (
+            <span className="ml-1 text-[#ff9bc5]">— лимит исчерпан</span>
+          )}
+        </p>
+      )}
 
       <section className="mt-5 rounded-2xl border border-[#ffd35e]/30 bg-gradient-to-r from-[#2b193f] to-[#1c1528] p-4">
         <div className="flex items-center gap-3">
