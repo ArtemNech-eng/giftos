@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ArrowRight, CirclePlay, Gift, Sparkles, UsersRound } from "lucide-react";
+import { redirect } from "next/navigation";
 
 import { APP_NAME } from "@/lib/constants";
 import { hasSupabaseEnvironment } from "@/lib/supabase/env";
@@ -30,6 +31,13 @@ type LiveRoomPreview = {
 export default async function SeoLandingPage() {
   let creators: CreatorPreview[] = [];
   let liveRooms: LiveRoomPreview[] = [];
+  if (hasSupabaseEnvironment()) {
+    const sessionClient = await createClient();
+    const {
+      data: { user },
+    } = await sessionClient.auth.getUser();
+    if (user) redirect("/feed");
+  }
   if (hasSupabaseEnvironment()) {
     try {
       const supabase = await createClient();
