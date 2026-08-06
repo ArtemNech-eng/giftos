@@ -90,32 +90,32 @@ export default async function BonusesPage() {
     : null;
 
   return (
-    <main className="mx-auto min-h-screen max-w-[430px] bg-[#0c0e14] px-4 py-5 text-white">
+    <main className="mx-auto min-h-screen max-w-[430px] bg-[#f7f4fb] px-4 py-5 text-[#241a2c]">
       <header className="flex items-center justify-between">
         <div>
           <p className="text-sm text-[#c7b1ff]">Реферальная программа</p>
           <h1 className="mt-1 text-2xl font-bold">Хочу-бонусы</h1>
         </div>
-        <Sparkles className="size-7 text-[#ffd35e]" />
+        <Sparkles className="size-7 text-[#a57513]" />
       </header>
-      <section className="mt-6 rounded-[2rem] bg-gradient-to-br from-[#2b193f] to-[#181a2b] p-6">
-        <p className="text-sm text-[#c6bfd0]">Доступно</p>
+      <section className="mt-6 rounded-[2rem] bg-gradient-to-br from-[#fffaff] to-[#f0e8ff] p-6">
+        <p className="text-sm text-[#766b80]">Доступно</p>
         <p className="mt-2 text-4xl font-bold">{wallet?.available_balance ?? 0} ⭐</p>
-        <p className="mt-3 text-xs leading-5 text-[#b8b0c3]">
+        <p className="mt-3 text-xs leading-5 text-[#766b80]">
           Бонусы не являются деньгами и используются только внутри платформы.
         </p>
       </section>
       <section className="mt-5 grid grid-cols-2 gap-3">
-        <div className="border-white/8 rounded-2xl border bg-[#171923] p-4">
-          <p className="text-xs text-[#aaa2b4]">Приглашено</p>
+        <div className="rounded-2xl border border-[#2c2036]/10 bg-white p-4">
+          <p className="text-xs text-[#7b7083]">Приглашено</p>
           <b className="mt-1 block text-xl">{referrals?.length ?? 0}</b>
         </div>
-        <div className="border-white/8 rounded-2xl border bg-[#171923] p-4">
-          <p className="text-xs text-[#aaa2b4]">Получено</p>
+        <div className="rounded-2xl border border-[#2c2036]/10 bg-white p-4">
+          <p className="text-xs text-[#7b7083]">Получено</p>
           <b className="mt-1 block text-xl">{wallet?.total_earned ?? 0} ⭐</b>
         </div>
       </section>
-      <section className="mt-6 overflow-hidden rounded-[1.7rem] border border-[#d68cff]/35 bg-gradient-to-br from-[#281638] via-[#1d1730] to-[#171b2d] p-5">
+      <section className="mt-6 overflow-hidden rounded-[1.7rem] border border-[#c9a6ee]/55 bg-gradient-to-br from-[#fffaff] via-[#f6efff] to-[#f0f7ff] p-5">
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-3">
             <span className="grid size-11 place-items-center rounded-2xl bg-[#e89aff]/15 text-[#eda7ff]">
@@ -134,23 +134,27 @@ export default async function BonusesPage() {
             +{reward} ⭐
           </span>
         </div>
-        <p className="mt-4 text-sm leading-6 text-[#c8c0d2]">
+        <p className="mt-4 text-sm leading-6 text-[#665a72]">
           Отправь ссылку или QR. Друг увидит, что его приглашают
           {cityName ? ` в ${cityName}` : " в твой город"}, а тебе начислят бонус после
           его активного первого действия.
         </p>
         {cityName && (
-          <div className="mt-4 flex items-center gap-2 rounded-xl border border-[#ffd35e]/25 bg-[#ffd35e]/10 px-3 py-2.5 text-xs font-semibold text-[#ffdf82]">
+          <div className="mt-4 flex items-center gap-2 rounded-xl border border-[#ffd35e]/25 bg-[#fff2bf] px-3 py-2.5 text-xs font-semibold text-[#8e6714]">
             <MapPin className="size-4 shrink-0" />
             Приглашение закрепляет город «{cityName}» в onboarding и даёт городу баллы.
           </div>
         )}
-        <div className="border-white/8 mt-4 break-all rounded-xl border bg-black/20 p-3 text-xs text-[#d9d1e2]">
+        <div className="mt-4 break-all rounded-xl border border-[#2c2036]/10 bg-[#f7f2fa] p-3 text-xs text-[#665a72]">
           {link || "Ссылка появится после настройки профиля"}
         </div>
         {referralPath && (
           <div className="mt-3">
-            <CreatorShareLink label="Скопировать приглашение" path={referralPath} />
+            <CreatorShareLink
+              light
+              label="Скопировать приглашение"
+              path={referralPath}
+            />
           </div>
         )}
         {link && (
@@ -168,7 +172,7 @@ export default async function BonusesPage() {
             </p>
             <h2 className="mt-1 font-bold">Путь до +{reward} ⭐</h2>
           </div>
-          <span className="text-right text-xs leading-5 text-[#aaa2b4]">
+          <span className="text-right text-xs leading-5 text-[#7b7083]">
             Только реальные этапы
           </span>
         </div>
@@ -181,13 +185,13 @@ export default async function BonusesPage() {
               const firstActionDone = referral.first_action_completed;
               return (
                 <article
-                  className="border-white/8 rounded-2xl border bg-[#171923] p-4"
+                  className="rounded-2xl border border-[#2c2036]/10 bg-white p-4"
                   key={referral.referral_id}
                 >
                   <div className="flex items-start justify-between gap-3">
                     <span>
                       <b className="block text-sm">Приглашение #{index + 1}</b>
-                      <small className="mt-0.5 block text-xs text-[#aaa2b4]">
+                      <small className="mt-0.5 block text-xs text-[#7b7083]">
                         {bonusReady
                           ? `+${reward} ⭐ начислены`
                           : bonusHeld
@@ -198,10 +202,10 @@ export default async function BonusesPage() {
                     <span
                       className={`rounded-full px-2.5 py-1 text-[10px] font-bold ${
                         bonusReady
-                          ? "bg-[#173023] text-[#8df0b4]"
+                          ? "bg-[#e4f7ed] text-[#19885e]"
                           : bonusHeld
-                            ? "bg-[#2d2917] text-[#ffd35e]"
-                            : "bg-[#251b33] text-[#d7b2ff]"
+                            ? "bg-[#fff4d6] text-[#a57513]"
+                            : "bg-[#f0e7fb] text-[#8750d1]"
                       }`}
                     >
                       {bonusReady ? "ГОТОВО" : bonusHeld ? "ПРОВЕРКА" : "В ПУТИ"}
@@ -218,7 +222,7 @@ export default async function BonusesPage() {
                           className={`grid size-6 place-items-center rounded-full text-xs ${
                             step.done
                               ? "bg-[#6bdbab] text-[#10231a]"
-                              : "bg-white/10 text-[#8e8797]"
+                              : "bg-[#f0eaf5] text-[#8e8797]"
                           }`}
                         >
                           {step.done ? (
@@ -229,7 +233,7 @@ export default async function BonusesPage() {
                         </span>
                         <span
                           className={`mt-1.5 block text-[10px] leading-4 ${
-                            step.done ? "text-[#e4ddea]" : "text-[#89828f]"
+                            step.done ? "text-[#4e4258]" : "text-[#89828f]"
                           }`}
                         >
                           {step.label}
@@ -238,7 +242,7 @@ export default async function BonusesPage() {
                     ))}
                   </div>
                   {bonusHeld && referral.hold_until && (
-                    <p className="mt-3 flex items-center gap-1.5 text-xs text-[#ffd35e]">
+                    <p className="mt-3 flex items-center gap-1.5 text-xs text-[#a57513]">
                       <Clock3 className="size-3.5" /> Бонус станет доступен после
                       проверки.
                     </p>
@@ -248,7 +252,7 @@ export default async function BonusesPage() {
             })}
           </div>
         ) : (
-          <div className="mt-3 rounded-2xl border border-dashed border-white/15 bg-white/[0.03] p-4 text-sm leading-6 text-[#aaa2b4]">
+          <div className="mt-3 rounded-2xl border border-dashed border-[#2c2036]/15 bg-white p-4 text-sm leading-6 text-[#7b7083]">
             Первый приглашённый появится здесь. Когда он заполнит профиль и сделает
             первое действие, этапы загорятся по-настоящему.
           </div>
@@ -258,16 +262,16 @@ export default async function BonusesPage() {
       <section className="mt-6">
         <h2 className="font-bold">Как получить ⭐</h2>
         <div className="mt-3 space-y-2">
-          <div className="flex items-center gap-3 rounded-xl bg-white/5 p-3 text-sm">
+          <div className="flex items-center gap-3 rounded-xl bg-[#f7f2fa] p-3 text-sm">
             <span>1</span>
             <span>Друг регистрируется по вашей ссылке</span>
           </div>
-          <div className="flex items-center gap-3 rounded-xl bg-white/5 p-3 text-sm">
+          <div className="flex items-center gap-3 rounded-xl bg-[#f7f2fa] p-3 text-sm">
             <span>2</span>
             <span>Заполняет профиль и выполняет первое действие</span>
           </div>
-          <div className="flex items-center gap-3 rounded-xl bg-white/5 p-3 text-sm">
-            <Gift className="size-4 text-[#ffd35e]" />
+          <div className="flex items-center gap-3 rounded-xl bg-[#f7f2fa] p-3 text-sm">
+            <Gift className="size-4 text-[#a57513]" />
             <span>Вам начисляется {reward} ⭐</span>
           </div>
         </div>
@@ -278,7 +282,7 @@ export default async function BonusesPage() {
           <div className="mt-3 space-y-2">
             {entries.map((entry) => (
               <div
-                className="border-white/8 flex items-center justify-between rounded-xl border bg-[#171923] p-3"
+                className="flex items-center justify-between rounded-xl border border-[#2c2036]/10 bg-white p-3"
                 key={entry.id}
               >
                 <span>
@@ -287,22 +291,22 @@ export default async function BonusesPage() {
                       ? "Активный приглашённый"
                       : entry.type}
                   </b>
-                  <small className="text-xs text-[#a9a1b4]">
+                  <small className="text-xs text-[#7b7083]">
                     {entry.status === "available" ? "Доступно" : "В обработке"}
                   </small>
                 </span>
-                <b className="text-[#ffd35e]">+{entry.amount} ⭐</b>
+                <b className="text-[#a57513]">+{entry.amount} ⭐</b>
               </div>
             ))}
           </div>
         ) : (
-          <div className="mt-3 rounded-2xl border border-dashed border-white/15 p-5 text-sm text-[#aaa2b4]">
+          <div className="mt-3 rounded-2xl border border-dashed border-[#2c2036]/15 p-5 text-sm text-[#7b7083]">
             Бонусы появятся после первого активного приглашённого.
           </div>
         )}
       </section>
       <Link
-        className="mt-5 flex items-center justify-center gap-2 text-sm font-semibold text-[#ffd35e]"
+        className="mt-5 flex items-center justify-center gap-2 text-sm font-semibold text-[#a57513]"
         href="/shop"
       >
         <ShoppingBag className="size-4" /> Магазин: товары, VIP, подарки

@@ -271,7 +271,7 @@ export default async function ProfilePage({
     author: { label: "🎤 Автор", color: "text-[#7fd8ff] border-[#7fd8ff]/40" },
     popular: { label: "🔥 Популярный", color: "text-[#ff9bc5] border-[#ff9bc5]/40" },
     active: { label: "⭐ Активный", color: "text-[#8df0b4] border-[#8df0b4]/40" },
-    novice: { label: "🌱 Новичок", color: "text-[#aaa4b7] border-white/15" },
+    novice: { label: "🌱 Новичок", color: "text-[#766b80] border-[#2c2036]/15" },
   }[
     followerCount >= 5000
       ? "star"
@@ -323,7 +323,7 @@ export default async function ProfilePage({
   const equippedBadges = equipped.filter((item) => item.itemType === "badge");
 
   return (
-    <main className="mx-auto min-h-screen max-w-[430px] bg-[#0c0e14] pb-24 text-white">
+    <main className="mx-auto min-h-screen max-w-[430px] bg-[#f7f4fb] pb-24 text-[#241a2c]">
       <header className="absolute z-10 flex w-full max-w-[430px] items-center justify-between p-4">
         <Link
           className="grid size-9 place-items-center rounded-full bg-black/35 backdrop-blur"
@@ -403,7 +403,7 @@ export default async function ProfilePage({
                 <input name="profile_id" type="hidden" value={profile.id} />
                 <input name="username" type="hidden" value={profile.username} />
                 <button
-                  className={`h-10 rounded-xl px-4 text-sm font-bold ${existingFollow ? "border border-white/20 bg-white/5" : "bg-gradient-to-r from-[#ff4b8a] to-[#7d45ff]"}`}
+                  className={`h-10 rounded-xl px-4 text-sm font-bold ${existingFollow ? "border border-[#2c2036]/20 bg-[#f7f2fa]" : "bg-gradient-to-r from-[#ff4b8a] to-[#7d45ff] text-white"}`}
                   type="submit"
                 >
                   {existingFollow ? "Вы подписаны" : "Подписаться"}
@@ -417,7 +417,7 @@ export default async function ProfilePage({
                   value={`/u/${profile.username}`}
                 />
                 <button
-                  className="h-10 rounded-xl border border-white/10 px-3 text-xs text-[#c9c1d2]"
+                  className="h-10 rounded-xl border border-[#2c2036]/10 px-3 text-xs text-[#665a72]"
                   type="submit"
                 >
                   {existingBlock ? "Разблокировать" : "Блок"}
@@ -426,7 +426,7 @@ export default async function ProfilePage({
             </div>
           ) : isOwnProfile && !profile.is_creator ? (
             <Link
-              className="h-10 rounded-xl bg-gradient-to-r from-[#ff4b8a] to-[#7d45ff] px-4 py-2 text-sm font-bold"
+              className="h-10 rounded-xl bg-gradient-to-r from-[#ff4b8a] to-[#7d45ff] px-4 py-2 text-sm font-bold text-white"
               href="/creator/start"
             >
               Хочу также
@@ -436,12 +436,12 @@ export default async function ProfilePage({
         <div className="mt-4 flex flex-wrap items-center gap-2">
           <h1 className="text-2xl font-bold">{profile.display_name}</h1>
           {profile.is_creator && (
-            <span className="rounded-full bg-gradient-to-r from-[#f94d96] to-[#8953ff] px-2 py-1 text-xs font-semibold">
+            <span className="rounded-full bg-gradient-to-r from-[#f94d96] to-[#8953ff] px-2 py-1 text-xs font-semibold text-white">
               Автор
             </span>
           )}
           {vipActive && (
-            <span className="rounded-full border border-[#ffd35e]/50 bg-[#2a2215] px-2 py-1 text-xs font-bold text-[#ffd35e]">
+            <span className="rounded-full border border-[#ffd35e]/50 bg-[#fff6df] px-2 py-1 text-xs font-bold text-[#ffd35e]">
               👑 VIP
             </span>
           )}
@@ -452,7 +452,7 @@ export default async function ProfilePage({
           </span>
           {isCityChampion && (
             <span
-              className="rounded-full border border-[#ffd35e]/50 bg-[#2a2215] px-2 py-1 text-xs font-bold text-[#ffd35e]"
+              className="rounded-full border border-[#ffd35e]/50 bg-[#fff6df] px-2 py-1 text-xs font-bold text-[#ffd35e]"
               title="Город выиграл сезон битвы городов"
             >
               🏆 Чемпион города
@@ -468,7 +468,7 @@ export default async function ProfilePage({
           )}
           {equippedBadges.map((badge) => (
             <span
-              className="rounded-full border border-white/15 bg-white/5 px-2 py-1 text-xs"
+              className="rounded-full border border-[#2c2036]/15 bg-[#f7f2fa] px-2 py-1 text-xs"
               key={badge.emoji}
               title="Значок из магазина"
             >
@@ -484,7 +484,7 @@ export default async function ProfilePage({
             </Link>
           )}
         </div>
-        <p className="mt-1 text-sm text-[#b9b1c5]">
+        <p className="mt-1 text-sm text-[#766b80]">
           @{profile.username}
           {profile.show_city && profile.city ? ` · ${profile.city}` : ""}
         </p>
@@ -492,7 +492,7 @@ export default async function ProfilePage({
           <div className="mt-3 flex flex-wrap gap-2">
             {interests.map((item) => (
               <span
-                className="bg-white/7 rounded-full px-2.5 py-1 text-xs text-[#e3dce9]"
+                className="rounded-full bg-[#f5eff8] px-2.5 py-1 text-xs text-[#54475e]"
                 key={item.slug}
               >
                 {item.emoji} {item.label}
@@ -500,7 +500,7 @@ export default async function ProfilePage({
             ))}
           </div>
         )}
-        <p className="mt-4 text-sm leading-6 text-[#ddd6e4]">
+        <p className="mt-4 text-sm leading-6 text-[#54475e]">
           {profile.creator_headline ??
             profile.bio ??
             "Создаю свою страницу в «Хочу также»."}
@@ -508,23 +508,23 @@ export default async function ProfilePage({
         <div className="mt-5 flex gap-7 text-center">
           <span>
             <b className="block text-lg">{followers ?? 0}</b>
-            <small className="text-xs text-[#aaa3b5]">Подписчики</small>
+            <small className="text-xs text-[#766b80]">Подписчики</small>
           </span>
           <span>
             <b className="block text-lg">{rawWishes?.length ?? 0}</b>
-            <small className="text-xs text-[#aaa3b5]">Желания</small>
+            <small className="text-xs text-[#766b80]">Желания</small>
           </span>
           <span>
             <b className="block text-lg">{media.length}</b>
-            <small className="text-xs text-[#aaa3b5]">Фото</small>
+            <small className="text-xs text-[#766b80]">Фото</small>
           </span>
         </div>
         {cityRankData && profile.show_city && (
-          <div className="mt-5 rounded-2xl border border-[#8f48ff]/30 bg-gradient-to-r from-[#1f1631] to-[#171824] p-4">
+          <div className="mt-5 rounded-2xl border border-[#8f48ff]/30 bg-gradient-to-r from-[#f4ecff] to-[#fff6fb] p-4">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-bold">#{cityRankData.rank} в городе</p>
-                <p className="mt-0.5 text-xs text-[#aaa4b7]">
+                <p className="mt-0.5 text-xs text-[#766b80]">
                   {profile.city ?? "Город"} · среди {cityRankData.city_size} жителей
                 </p>
               </div>
@@ -532,13 +532,13 @@ export default async function ProfilePage({
             </div>
             {nextThreshold ? (
               <div className="mt-3">
-                <div className="h-1.5 overflow-hidden rounded-full bg-white/10">
+                <div className="h-1.5 overflow-hidden rounded-full bg-[#eee7f4]">
                   <div
-                    className="h-full rounded-full bg-gradient-to-r from-[#ff4b8a] to-[#7d45ff]"
+                    className="h-full rounded-full bg-gradient-to-r from-[#ff4b8a] to-[#7d45ff] text-white"
                     style={{ width: `${levelProgress}%` }}
                   />
                 </div>
-                <p className="mt-2 text-xs text-[#aaa4b7]">
+                <p className="mt-2 text-xs text-[#766b80]">
                   До уровня «{level.label.split(" ")[1] ?? "следующий"}»: ещё{" "}
                   {nextThreshold - followerCount} подписчиков
                 </p>
@@ -552,7 +552,7 @@ export default async function ProfilePage({
               <div className="mt-3 flex flex-wrap gap-1.5">
                 {reputationRoles.map((role) => (
                   <span
-                    className="rounded-full border border-[#ffd35e]/40 bg-[#2a2215] px-2 py-0.5 text-[10px] font-bold text-[#ffd35e]"
+                    className="rounded-full border border-[#ffd35e]/40 bg-[#fff6df] px-2 py-0.5 text-[10px] font-bold text-[#ffd35e]"
                     key={role}
                   >
                     {role}
@@ -563,12 +563,12 @@ export default async function ProfilePage({
           </div>
         )}
         {receivedGifts.length > 0 && (
-          <div className="mt-5 rounded-2xl border border-white/10 bg-[#171923] p-4">
+          <div className="mt-5 rounded-2xl border border-[#2c2036]/10 bg-white p-4">
             <p className="text-sm font-bold">🎁 Подарки</p>
             <div className="mt-2 flex flex-wrap gap-2">
               {receivedGifts.slice(0, 10).map((gift, index) => (
                 <span
-                  className="grid size-10 place-items-center rounded-xl border border-white/10 bg-white/5 text-xl"
+                  className="grid size-10 place-items-center rounded-xl border border-[#2c2036]/10 bg-[#f7f2fa] text-xl"
                   key={`${gift.gift_code}-${index}`}
                   title={`${gift.gift_code} · ${gift.price_stars} ⭐`}
                 >
@@ -576,7 +576,7 @@ export default async function ProfilePage({
                 </span>
               ))}
               {receivedGifts.length > 10 && (
-                <span className="grid size-10 place-items-center rounded-xl border border-white/10 bg-white/5 text-xs text-[#aaa4b7]">
+                <span className="grid size-10 place-items-center rounded-xl border border-[#2c2036]/10 bg-[#f7f2fa] text-xs text-[#766b80]">
                   +{receivedGifts.length - 10}
                 </span>
               )}
@@ -589,11 +589,11 @@ export default async function ProfilePage({
         !isOwnProfile &&
         profile.subscriptions_enabled &&
         profile.subscription_price_minor && (
-          <div className="mx-4 mb-3 rounded-2xl border border-[#ff9ed0]/35 bg-gradient-to-r from-[#30182f] to-[#191827] p-4">
+          <div className="mx-4 mb-3 rounded-2xl border border-[#ff9ed0]/35 bg-gradient-to-r from-[#fff0f6] to-[#f3edff] p-4">
             <div className="flex items-center justify-between">
               <span>
                 <b className="block">Подписка на автора</b>
-                <small className="text-xs text-[#b9b1c5]">
+                <small className="text-xs text-[#766b80]">
                   Закрытые публикации и будущие бонусы
                 </small>
               </span>
@@ -603,7 +603,7 @@ export default async function ProfilePage({
             </div>
             {existingSubscription ? (
               <div className="mt-3 flex items-center justify-between gap-3">
-                <span className="text-xs text-[#b9b1c5]">
+                <span className="text-xs text-[#766b80]">
                   Активна до{" "}
                   {new Intl.DateTimeFormat("ru-RU", {
                     day: "numeric",
@@ -627,7 +627,7 @@ export default async function ProfilePage({
                 <input name="creator_id" type="hidden" value={profile.id} />
                 <input name="username" type="hidden" value={profile.username} />
                 <button
-                  className="rounded-xl bg-gradient-to-r from-[#ff4b8a] to-[#7d45ff] px-4 py-2 text-sm font-bold"
+                  className="rounded-xl bg-gradient-to-r from-[#ff4b8a] to-[#7d45ff] px-4 py-2 text-sm font-bold text-white"
                   type="submit"
                 >
                   Подписаться в тестовом режиме
@@ -643,14 +643,14 @@ export default async function ProfilePage({
         profile.paid_message_price_minor && (
           <form
             action={createPaidMessageRequest}
-            className="mx-4 mb-5 rounded-2xl border border-[#b550ff]/35 bg-gradient-to-r from-[#25152f] to-[#181927] p-4"
+            className="mx-4 mb-5 rounded-2xl border border-[#b550ff]/35 bg-gradient-to-r from-[#f4edff] to-[#fff7fb] p-4"
           >
             <input name="creator_id" type="hidden" value={profile.id} />
             <input name="username" type="hidden" value={profile.username} />
             <div className="flex items-center justify-between">
               <span>
                 <b className="block">Написать сообщение</b>
-                <small className="text-xs text-[#b9b1c5]">
+                <small className="text-xs text-[#766b80]">
                   Автор примет или отклонит запрос
                 </small>
               </span>
@@ -659,14 +659,14 @@ export default async function ProfilePage({
               </b>
             </div>
             <textarea
-              className="mt-3 min-h-20 w-full rounded-xl border border-white/10 bg-black/20 p-3 text-sm"
+              className="mt-3 min-h-20 w-full rounded-xl border border-[#2c2036]/10 bg-[#f8f4fb] p-3 text-sm"
               maxLength={2000}
               name="body"
               placeholder="Напишите первое сообщение"
               required
             />
             <button
-              className="mt-3 rounded-xl bg-gradient-to-r from-[#ff4b8a] to-[#7d45ff] px-4 py-2 text-sm font-bold"
+              className="mt-3 rounded-xl bg-gradient-to-r from-[#ff4b8a] to-[#7d45ff] px-4 py-2 text-sm font-bold text-white"
               type="submit"
             >
               Отправить запрос
@@ -674,14 +674,14 @@ export default async function ProfilePage({
           </form>
         )}
 
-      <nav className="flex border-y border-white/10 text-sm font-semibold">
+      <nav className="flex border-y border-[#2c2036]/10 text-sm font-semibold">
         {[
           ["about", "Обо мне"],
           ["stories", "Stories"],
           ["posts", "Посты"],
         ].map(([value, label]) => (
           <Link
-            className={`flex-1 py-3 text-center ${tab === value ? "border-b-2 border-[#ee4f9d] text-white" : "text-[#aaa3b5]"}`}
+            className={`flex-1 py-3 text-center ${tab === value ? "border-b-2 border-[#ee4f9d] text-[#7549d0]" : "text-[#766b80]"}`}
             href={
               `/u/${profile.username}${value === "about" ? "" : `?tab=${value}`}` as Route
             }
@@ -696,7 +696,7 @@ export default async function ProfilePage({
         <section className="space-y-3 p-4">
           {activeLive && (
             <Link
-              className="flex items-center gap-3 rounded-2xl border border-[#ff2d55]/50 bg-gradient-to-r from-[#2a1222] to-[#1b1528] p-3"
+              className="flex items-center gap-3 rounded-2xl border border-[#ff2d55]/50 bg-gradient-to-r from-[#fff0f6] to-[#f7efff] p-3"
               href={`/live/${activeLive.slug}` as Route}
             >
               <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#ff2d55]">
@@ -718,21 +718,21 @@ export default async function ProfilePage({
           )}
           {activeStory && (
             <Link
-              className="flex items-center gap-3 rounded-2xl border border-[#b550ff]/40 bg-gradient-to-r from-[#23142e] to-[#191827] p-3"
+              className="flex items-center gap-3 rounded-2xl border border-[#b550ff]/40 bg-gradient-to-r from-[#f4edff] to-[#fff8fc] p-3"
               href={`/stories/${activeStory.id}` as Route}
             >
-              <span className="grid size-10 place-items-center rounded-xl bg-gradient-to-br from-[#ff4b8a] to-[#7d45ff]">
+              <span className="grid size-10 place-items-center rounded-xl bg-gradient-to-br from-[#ff4b8a] to-[#7d45ff] text-white">
                 <Play className="size-5 fill-white" />
               </span>
               <span className="grow">
                 <b className="block text-sm">Новая video story</b>
-                <small className="text-xs text-[#b9b1c5]">Доступна сейчас</small>
+                <small className="text-xs text-[#766b80]">Доступна сейчас</small>
               </span>
               <span className="text-sm text-[#d8a1ff]">Смотреть ›</span>
             </Link>
           )}
           {rawOffers && rawOffers.length > 0 && (
-            <section className="border-white/8 rounded-2xl border bg-[#171923] p-4">
+            <section className="rounded-2xl border border-[#2c2036]/10 bg-white p-4">
               <h2 className="font-bold">Со мной можно</h2>
               <div className="divide-white/8 mt-3 divide-y">
                 {rawOffers.map((offer) => {
@@ -755,7 +755,7 @@ export default async function ProfilePage({
                         <span>
                           <b className="block text-sm">{offer.title}</b>
                           {offer.description && (
-                            <small className="block text-xs text-[#a9a1b4]">
+                            <small className="block text-xs text-[#766b80]">
                               {offer.description}
                             </small>
                           )}
@@ -770,7 +770,7 @@ export default async function ProfilePage({
                             value={profile.username}
                           />
                           <button
-                            className="rounded-lg bg-gradient-to-r from-[#ff4b8a] to-[#7d45ff] px-2.5 py-1.5 text-xs font-bold"
+                            className="rounded-lg bg-gradient-to-r from-[#ff4b8a] to-[#7d45ff] px-2.5 py-1.5 text-xs font-bold text-white"
                             type="submit"
                           >
                             {formatRubles(offer.price_minor)}
@@ -798,19 +798,19 @@ export default async function ProfilePage({
             );
             return (
               <Link
-                className="border-white/8 block rounded-2xl border bg-[#181a24] p-4"
+                className="block rounded-2xl border border-[#2c2036]/10 bg-white p-4"
                 href={`/fundraisers/${fundraiser.slug}` as Route}
                 key={fundraiser.id}
               >
-                <p className="text-xs text-[#aaa3b5]">Активная цель</p>
+                <p className="text-xs text-[#766b80]">Активная цель</p>
                 <b className="mt-1 block">{fundraiser.title}</b>
-                <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-white/10">
+                <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-[#eee7f4]">
                   <div
-                    className="h-full rounded-full bg-gradient-to-r from-[#ff4b8a] to-[#7d45ff]"
+                    className="h-full rounded-full bg-gradient-to-r from-[#ff4b8a] to-[#7d45ff] text-white"
                     style={{ width: `${progress}%` }}
                   />
                 </div>
-                <p className="mt-2 text-xs text-[#d8d0e0]">
+                <p className="mt-2 text-xs text-[#665a72]">
                   {formatRubles(fundraiser.current_amount_minor)} из{" "}
                   {formatRubles(fundraiser.target_amount_minor)}
                 </p>
@@ -841,20 +841,20 @@ export default async function ProfilePage({
         <section className="space-y-3 p-4">
           {activeStory ? (
             <Link
-              className="flex items-center gap-3 rounded-2xl border border-[#b550ff]/40 bg-gradient-to-r from-[#23142e] to-[#191827] p-4"
+              className="flex items-center gap-3 rounded-2xl border border-[#b550ff]/40 bg-gradient-to-r from-[#f4edff] to-[#fff8fc] p-4"
               href={`/stories/${activeStory.id}` as Route}
             >
-              <span className="grid size-12 place-items-center rounded-xl bg-gradient-to-br from-[#ff4b8a] to-[#7d45ff]">
+              <span className="grid size-12 place-items-center rounded-xl bg-gradient-to-br from-[#ff4b8a] to-[#7d45ff] text-white">
                 <Play className="size-6 fill-white" />
               </span>
               <span className="grow">
                 <b className="block">Новая video story</b>
-                <small className="text-xs text-[#b9b1c5]">Доступна сейчас</small>
+                <small className="text-xs text-[#766b80]">Доступна сейчас</small>
               </span>
               <span className="text-[#d8a1ff]">Смотреть ›</span>
             </Link>
           ) : (
-            <div className="rounded-2xl border border-dashed border-white/15 p-6 text-center text-sm text-[#aaa2b4]">
+            <div className="rounded-2xl border border-dashed border-[#2c2036]/15 p-6 text-center text-sm text-[#aaa2b4]">
               Активных stories пока нет.
             </div>
           )}
@@ -863,15 +863,15 @@ export default async function ProfilePage({
 
       {tab === "posts" && rawPosts && rawPosts.length > 0 && (
         <section className="mx-4 mt-5 space-y-2">
-          <p className="text-sm font-bold text-[#e5ddea]">Посты автора</p>
+          <p className="text-sm font-bold text-[#54475e]">Посты автора</p>
           {rawPosts.map((post) => (
             <Link
-              className="border-white/8 block rounded-2xl border bg-[#171923] p-4"
+              className="block rounded-2xl border border-[#2c2036]/10 bg-white p-4"
               href={`/posts/${post.slug}` as Route}
               key={post.id}
             >
               <h2 className="font-bold">{post.title}</h2>
-              <p className="mt-2 line-clamp-2 text-sm leading-6 text-[#b9b1c5]">
+              <p className="mt-2 line-clamp-2 text-sm leading-6 text-[#766b80]">
                 {post.body}
               </p>
             </Link>
@@ -886,7 +886,7 @@ export default async function ProfilePage({
             <input name="target_id" type="hidden" value={profile.id} />
             <input name="return_to" type="hidden" value={`/u/${profile.username}`} />
             <button
-              className="flex w-full items-center justify-center gap-2 rounded-2xl border border-[#ffd35e]/40 bg-[#2a2215] py-3 text-sm font-bold text-[#ffd35e]"
+              className="flex w-full items-center justify-center gap-2 rounded-2xl border border-[#ffd35e]/40 bg-[#fff6df] py-3 text-sm font-bold text-[#ffd35e]"
               type="submit"
             >
               🚀 Продвинуть профиль за 300 ⭐ (24 часа)
@@ -908,7 +908,7 @@ export default async function ProfilePage({
       )}
 
       {isOwnProfile && profile.is_creator && (
-        <details className="mx-4 rounded-2xl border border-white/10 bg-[#171923] p-4">
+        <details className="mx-4 rounded-2xl border border-[#2c2036]/10 bg-white p-4">
           <summary className="cursor-pointer text-sm font-bold">
             Создать video story
           </summary>
@@ -916,20 +916,20 @@ export default async function ProfilePage({
             <input name="username" type="hidden" value={profile.username} />
             <input
               accept="video/mp4,video/webm"
-              className="block w-full text-sm text-[#c5bdce] file:mr-3 file:rounded-lg file:border-0 file:bg-[#f24d98] file:px-3 file:py-2 file:text-sm file:font-semibold file:text-white"
+              className="block w-full text-sm text-[#766b80] file:mr-3 file:rounded-lg file:border-0 file:bg-[#f24d98] file:px-3 file:py-2 file:text-sm file:font-semibold file:text-white"
               name="video"
               required
               type="file"
             />
             <textarea
-              className="mt-3 min-h-16 w-full rounded-xl border border-white/10 bg-black/20 p-3 text-sm"
+              className="mt-3 min-h-16 w-full rounded-xl border border-[#2c2036]/10 bg-[#f8f4fb] p-3 text-sm"
               maxLength={500}
               name="caption"
               placeholder="Подпись"
             />
             <div className="mt-3 flex gap-2">
               <select
-                className="rounded-xl bg-black/20 px-3 text-sm"
+                className="rounded-xl bg-[#f8f4fb] px-3 text-sm"
                 defaultValue="free"
                 name="access_type"
               >
@@ -937,13 +937,13 @@ export default async function ProfilePage({
                 <option value="paid">Платно</option>
               </select>
               <input
-                className="w-24 rounded-xl bg-black/20 px-3 text-sm"
+                className="w-24 rounded-xl bg-[#f8f4fb] px-3 text-sm"
                 name="unlock_price"
                 placeholder="49 ₽"
                 type="number"
               />
               <button
-                className="rounded-xl bg-gradient-to-r from-[#ff4b8a] to-[#7d45ff] px-4 text-sm font-bold"
+                className="rounded-xl bg-gradient-to-r from-[#ff4b8a] to-[#7d45ff] px-4 text-sm font-bold text-white"
                 type="submit"
               >
                 Опубликовать
@@ -955,28 +955,28 @@ export default async function ProfilePage({
       {isOwnProfile && profile.is_creator && (
         <div className="mx-4 mt-5 grid grid-cols-2 gap-3">
           <Link
-            className="flex items-center justify-between rounded-2xl border border-white/10 bg-[#171923] px-4 py-3 text-sm font-bold"
+            className="flex items-center justify-between rounded-2xl border border-[#2c2036]/10 bg-white px-4 py-3 text-sm font-bold"
             href="/creator/earnings"
           >
             <span>Мой доход</span>
             <span className="text-[#df9cff]">›</span>
           </Link>
           <Link
-            className="flex items-center justify-between rounded-2xl border border-white/10 bg-[#171923] px-4 py-3 text-sm font-bold"
+            className="flex items-center justify-between rounded-2xl border border-[#2c2036]/10 bg-white px-4 py-3 text-sm font-bold"
             href="/creator/offer-requests"
           >
             <span>Запросы</span>
             <span className="text-[#df9cff]">›</span>
           </Link>
           <Link
-            className="flex items-center justify-between rounded-2xl border border-white/10 bg-[#171923] px-4 py-3 text-sm font-bold"
+            className="flex items-center justify-between rounded-2xl border border-[#2c2036]/10 bg-white px-4 py-3 text-sm font-bold"
             href="/settings"
           >
             <span>Настройки</span>
             <span className="text-[#df9cff]">›</span>
           </Link>
           <Link
-            className="flex items-center justify-between rounded-2xl border border-white/10 bg-[#171923] px-4 py-3 text-sm font-bold"
+            className="flex items-center justify-between rounded-2xl border border-[#2c2036]/10 bg-white px-4 py-3 text-sm font-bold"
             href="/profile/media"
           >
             <span>Мои фото</span>
@@ -987,14 +987,14 @@ export default async function ProfilePage({
       {isOwnProfile && !profile.is_creator && (
         <div className="mx-4 mt-5">
           <Link
-            className="flex items-center justify-between rounded-2xl border border-white/10 bg-[#171923] px-4 py-3 text-sm font-bold"
+            className="flex items-center justify-between rounded-2xl border border-[#2c2036]/10 bg-white px-4 py-3 text-sm font-bold"
             href="/settings"
           >
             <span>Настройки</span>
             <span className="text-[#df9cff]">›</span>
           </Link>
           <Link
-            className="mt-3 flex items-center justify-between rounded-2xl border border-white/10 bg-[#171923] px-4 py-3 text-sm font-bold"
+            className="mt-3 flex items-center justify-between rounded-2xl border border-[#2c2036]/10 bg-white px-4 py-3 text-sm font-bold"
             href="/profile/media"
           >
             <span>Мои фото</span>
@@ -1003,12 +1003,12 @@ export default async function ProfilePage({
         </div>
       )}
       {isOwnProfile && (
-        <details className="mx-4 mt-3 rounded-2xl border border-white/10 bg-[#171923] p-4">
+        <details className="mx-4 mt-3 rounded-2xl border border-[#2c2036]/10 bg-white p-4">
           <summary className="cursor-pointer text-sm font-bold">
             Поделиться профилем
           </summary>
           <div className="mt-4 flex flex-col items-center gap-3">
-            <CreatorShareLink username={profile.username} />
+            <CreatorShareLink light username={profile.username} />
             <ProfileQrCode
               name={profile.display_name}
               url={`${process.env.NEXT_PUBLIC_APP_URL ?? "https://hochutakzhe.ru"}/u/${profile.username}`}
@@ -1017,7 +1017,7 @@ export default async function ProfilePage({
         </details>
       )}
       {isOwnProfile && profile.is_creator && (
-        <details className="mx-4 mt-3 rounded-2xl border border-white/10 bg-[#171923] p-4">
+        <details className="mx-4 mt-3 rounded-2xl border border-[#2c2036]/10 bg-white p-4">
           <summary className="cursor-pointer text-sm font-bold">
             Настроить запросы на сообщения
           </summary>
@@ -1031,10 +1031,10 @@ export default async function ProfilePage({
               />{" "}
               Принимать платные запросы
             </label>
-            <label className="mt-3 block text-sm text-[#c9c1d2]">
+            <label className="mt-3 block text-sm text-[#665a72]">
               Тестовая цена, ₽
               <input
-                className="mt-2 block w-28 rounded-xl border border-white/10 bg-black/20 p-2 text-sm"
+                className="mt-2 block w-28 rounded-xl border border-[#2c2036]/10 bg-[#f8f4fb] p-2 text-sm"
                 defaultValue={
                   profile.paid_message_price_minor
                     ? Number(profile.paid_message_price_minor) / 100
@@ -1046,7 +1046,7 @@ export default async function ProfilePage({
               />
             </label>
             <button
-              className="mt-3 rounded-xl bg-gradient-to-r from-[#ff4b8a] to-[#7d45ff] px-4 py-2 text-sm font-bold"
+              className="mt-3 rounded-xl bg-gradient-to-r from-[#ff4b8a] to-[#7d45ff] px-4 py-2 text-sm font-bold text-white"
               type="submit"
             >
               Сохранить
@@ -1055,7 +1055,7 @@ export default async function ProfilePage({
         </details>
       )}
       {isOwnProfile && profile.is_creator && (
-        <details className="mx-4 mt-3 rounded-2xl border border-white/10 bg-[#171923] p-4">
+        <details className="mx-4 mt-3 rounded-2xl border border-[#2c2036]/10 bg-white p-4">
           <summary className="cursor-pointer text-sm font-bold">
             Настроить подписку автора
           </summary>
@@ -1069,10 +1069,10 @@ export default async function ProfilePage({
               />{" "}
               Включить тестовую подписку
             </label>
-            <label className="mt-3 block text-sm text-[#c9c1d2]">
+            <label className="mt-3 block text-sm text-[#665a72]">
               Цена в месяц, ₽
               <input
-                className="mt-2 block w-28 rounded-xl border border-white/10 bg-black/20 p-2 text-sm"
+                className="mt-2 block w-28 rounded-xl border border-[#2c2036]/10 bg-[#f8f4fb] p-2 text-sm"
                 defaultValue={
                   profile.subscription_price_minor
                     ? Number(profile.subscription_price_minor) / 100
@@ -1084,7 +1084,7 @@ export default async function ProfilePage({
               />
             </label>
             <button
-              className="mt-3 rounded-xl bg-gradient-to-r from-[#ff4b8a] to-[#7d45ff] px-4 py-2 text-sm font-bold"
+              className="mt-3 rounded-xl bg-gradient-to-r from-[#ff4b8a] to-[#7d45ff] px-4 py-2 text-sm font-bold text-white"
               type="submit"
             >
               Сохранить
@@ -1093,14 +1093,14 @@ export default async function ProfilePage({
         </details>
       )}
       {isOwnProfile && profile.is_creator && (
-        <details className="mx-4 mt-3 rounded-2xl border border-white/10 bg-[#171923] p-4">
+        <details className="mx-4 mt-3 rounded-2xl border border-[#2c2036]/10 bg-white p-4">
           <summary className="cursor-pointer text-sm font-bold">
             Добавить действие
           </summary>
           <form action={createCreatorOffer} className="mt-4">
             <input name="username" type="hidden" value={profile.username} />
             <select
-              className="w-full rounded-xl border border-white/10 bg-black/20 p-3 text-sm"
+              className="w-full rounded-xl border border-[#2c2036]/10 bg-[#f8f4fb] p-3 text-sm"
               defaultValue="message"
               name="kind"
             >
@@ -1113,21 +1113,21 @@ export default async function ProfilePage({
               <option value="custom">Другое</option>
             </select>
             <input
-              className="mt-3 w-full rounded-xl border border-white/10 bg-black/20 p-3 text-sm"
+              className="mt-3 w-full rounded-xl border border-[#2c2036]/10 bg-[#f8f4fb] p-3 text-sm"
               maxLength={80}
               name="title"
               placeholder="Например: Поговорить 15 минут"
               required
             />
             <textarea
-              className="mt-3 min-h-16 w-full rounded-xl border border-white/10 bg-black/20 p-3 text-sm"
+              className="mt-3 min-h-16 w-full rounded-xl border border-[#2c2036]/10 bg-[#f8f4fb] p-3 text-sm"
               maxLength={300}
               name="description"
               placeholder="Коротко опишите формат"
             />
             <div className="mt-3 flex gap-2">
               <input
-                className="w-28 rounded-xl border border-white/10 bg-black/20 p-3 text-sm"
+                className="w-28 rounded-xl border border-[#2c2036]/10 bg-[#f8f4fb] p-3 text-sm"
                 min="1"
                 name="price"
                 placeholder="299 ₽"
@@ -1135,7 +1135,7 @@ export default async function ProfilePage({
                 type="number"
               />
               <button
-                className="rounded-xl bg-gradient-to-r from-[#ff4b8a] to-[#7d45ff] px-4 text-sm font-bold"
+                className="rounded-xl bg-gradient-to-r from-[#ff4b8a] to-[#7d45ff] px-4 text-sm font-bold text-white"
                 type="submit"
               >
                 Добавить
@@ -1145,19 +1145,19 @@ export default async function ProfilePage({
         </details>
       )}
       {isOwnProfile && profile.is_creator && (
-        <details className="mx-4 mt-3 rounded-2xl border border-white/10 bg-[#171923] p-4">
+        <details className="mx-4 mt-3 rounded-2xl border border-[#2c2036]/10 bg-white p-4">
           <summary className="cursor-pointer text-sm font-bold">Создать пост</summary>
           <form action={createCreatorPost} className="mt-4">
             <input name="username" type="hidden" value={profile.username} />
             <input
-              className="w-full rounded-xl border border-white/10 bg-black/20 p-3 text-sm"
+              className="w-full rounded-xl border border-[#2c2036]/10 bg-[#f8f4fb] p-3 text-sm"
               maxLength={160}
               name="title"
               placeholder="Заголовок поста"
               required
             />
             <textarea
-              className="mt-3 min-h-32 w-full rounded-xl border border-white/10 bg-black/20 p-3 text-sm"
+              className="mt-3 min-h-32 w-full rounded-xl border border-[#2c2036]/10 bg-[#f8f4fb] p-3 text-sm"
               maxLength={10000}
               name="body"
               placeholder="Расскажите что-нибудь своей аудитории"
@@ -1165,7 +1165,7 @@ export default async function ProfilePage({
             />
             <div className="mt-3 flex gap-2">
               <select
-                className="rounded-xl bg-black/20 px-3 text-sm"
+                className="rounded-xl bg-[#f8f4fb] px-3 text-sm"
                 defaultValue="public"
                 name="visibility"
               >
@@ -1173,7 +1173,7 @@ export default async function ProfilePage({
                 <option value="private">Только я</option>
               </select>
               <button
-                className="rounded-xl bg-gradient-to-r from-[#ff4b8a] to-[#7d45ff] px-4 text-sm font-bold"
+                className="rounded-xl bg-gradient-to-r from-[#ff4b8a] to-[#7d45ff] px-4 text-sm font-bold text-white"
                 type="submit"
               >
                 Опубликовать

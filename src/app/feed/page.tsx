@@ -728,12 +728,12 @@ function WishLink({
   const category =
     CATEGORIES.find((item) => item.slug === wish.categorySlug) ?? CATEGORIES.at(-1)!;
   return (
-    <div className="border-white/8 flex items-center gap-3 rounded-2xl border bg-[#181a24] p-3">
+    <div className="flex items-center gap-3 rounded-2xl border border-[#2c2036]/10 bg-white p-3">
       <Link className="flex min-w-0 grow items-center gap-3" href={href}>
         <Avatar index={index} name={wish.authorName} />
         <div className="min-w-0 grow">
           <p className="truncate text-sm font-bold">{wish.title}</p>
-          <p className="truncate text-xs text-[#aaa4b7]">
+          <p className="truncate text-xs text-[#756b80]">
             {category.emoji} {wish.authorName}
           </p>
         </div>
@@ -761,13 +761,13 @@ function FundraiserLink({
     CATEGORIES.at(-1)!;
   return (
     <Link
-      className="border-white/8 flex items-center gap-3 rounded-2xl border bg-[#181a24] p-3 transition hover:border-[#8f48ff]/60"
+      className="flex items-center gap-3 rounded-2xl border border-[#2c2036]/10 bg-white p-3 transition hover:border-[#8f48ff]/60"
       href={href}
     >
       <Avatar index={index} name={fundraiser.authorName} />
       <div className="min-w-0 grow">
         <p className="truncate text-sm font-bold">{fundraiser.authorName}</p>
-        <p className="truncate text-xs text-[#aaa4b7]">
+        <p className="truncate text-xs text-[#756b80]">
           {category.emoji} {fundraiser.title}
         </p>
       </div>
@@ -791,7 +791,7 @@ function Avatar({
     <span
       className={`grid size-14 place-items-center overflow-hidden rounded-full bg-gradient-to-br p-0.5 ${gradients[index % gradients.length]}`}
     >
-      <span className="grid size-full place-items-center overflow-hidden rounded-full bg-[#2b1b30] text-lg font-bold text-white">
+      <span className="grid size-full place-items-center overflow-hidden rounded-full bg-white text-lg font-bold text-[#2b2036] shadow-[0_4px_12px_rgba(57,35,82,0.13)]">
         {imageUrl ? (
           // eslint-disable-next-line @next/next/no-img-element -- signed Storage URL has no stable image host
           <img alt="" className="size-full object-cover" src={imageUrl} />
@@ -806,15 +806,18 @@ function Avatar({
 function BottomNav() {
   return (
     <nav
-      className="fixed inset-x-0 bottom-0 z-30 mx-auto flex max-w-[430px] items-center justify-around border-t border-white/10 bg-[#10121b]/95 px-3 py-2 text-[#aaa4b7] backdrop-blur"
+      className="fixed inset-x-0 bottom-0 z-30 mx-auto flex max-w-[430px] items-center justify-around border-t border-[#2c2036]/10 bg-white/95 px-3 py-2 text-[#756b80] backdrop-blur"
       aria-label="Нижняя навигация"
     >
-      <Link className="grid place-items-center gap-1 text-xs text-white" href="/feed">
+      <Link
+        className="grid place-items-center gap-1 text-xs font-bold text-[#7549d0]"
+        href="/feed"
+      >
         <Compass className="size-5 fill-current" />
         Главная
       </Link>
       <Link
-        className="grid place-items-center gap-1 text-xs hover:text-white"
+        className="grid place-items-center gap-1 text-xs transition hover:text-[#241a2c]"
         href="/places"
       >
         <MapPin className="size-5" />
@@ -827,15 +830,15 @@ function BottomNav() {
         <CirclePlus className="size-7" />
       </Link>
       <Link
-        className="grid place-items-center gap-1 text-xs hover:text-white"
+        className="grid place-items-center gap-1 text-xs transition hover:text-[#241a2c]"
         href="/notifications"
       >
         <MessageCircle className="size-5" />
         Активность
       </Link>
       <Link
-        className="grid place-items-center gap-1 text-xs hover:text-white"
-        href="/auth/sign-in"
+        className="grid place-items-center gap-1 text-xs transition hover:text-[#241a2c]"
+        href="/creator/dashboard"
       >
         <UserRound className="size-5" />
         Профиль
@@ -870,21 +873,34 @@ export default async function HomePage({
     cityChampion,
     isDemo,
   } = await getHomeData(scope);
-  const storyAuthors = authors.length > 0 ? authors : demoAuthors;
-  const liveRoomsToShow = liveRooms.length > 0 ? liveRooms : demoLiveRooms;
+  // Demo data is visible only without a configured data service. Once Supabase
+  // is connected, an empty city/feed must look honestly empty rather than
+  // pretending there are people, streams or fundraisers.
+  const storyAuthors = authors.length > 0 ? authors : isDemo ? demoAuthors : [];
+  const liveRoomsToShow =
+    liveRooms.length > 0 ? liveRooms : isDemo ? demoLiveRooms : [];
   const popularToShow =
-    popularFundraisers.length > 0 ? popularFundraisers : demoFundraisers;
+    popularFundraisers.length > 0 ? popularFundraisers : isDemo ? demoFundraisers : [];
   const growingToShow =
-    growingFundraisers.length > 0 ? growingFundraisers : demoFundraisers;
+    growingFundraisers.length > 0 ? growingFundraisers : isDemo ? demoFundraisers : [];
   const authorsToShow =
-    recommendedAuthors.length > 0 ? recommendedAuthors : demoRecommendedAuthors;
+    recommendedAuthors.length > 0
+      ? recommendedAuthors
+      : isDemo
+        ? demoRecommendedAuthors
+        : [];
+  const wishesToShow = wishes.length > 0 ? wishes : isDemo ? demoWishes : [];
+  const newWishesToShow =
+    newWishes.length > 0 ? newWishes : isDemo ? demoNewWishes : [];
+  const growingWishesToShow =
+    growingWishes.length > 0 ? growingWishes : isDemo ? demoWishes : [];
 
   const cityMode = scope === "city";
   const cityFallback = cityMode && !cityName;
   const cityEmpty = cityMode && cityName && cityPeople.length === 0;
 
   return (
-    <main className="mx-auto min-h-screen max-w-[430px] bg-[#0c0e14] px-4 pb-24 pt-5 text-white">
+    <main className="mx-auto min-h-screen max-w-[430px] bg-[#f7f4fb] px-4 pb-24 pt-5 text-[#241a2c]">
       <header className="mb-5 flex items-center justify-between">
         <Link
           className="flex items-center gap-2 text-lg font-bold tracking-tight"
@@ -896,11 +912,14 @@ export default async function HomePage({
           {APP_NAME}
         </Link>
         <div className="flex items-center gap-3">
-          <span className="inline-flex items-center gap-1 text-xs font-semibold text-[#ffd260]">
-            <WalletCards className="size-4" /> 2 450
-          </span>
           <Link
-            className="grid size-8 place-items-center rounded-full border border-white/15 text-[#c5becf]"
+            className="inline-flex items-center gap-1 rounded-full bg-[#fff3c9] px-2.5 py-1 text-xs font-bold text-[#8d6611]"
+            href="/bonuses"
+          >
+            <WalletCards className="size-3.5" /> Бонусы
+          </Link>
+          <Link
+            className="grid size-8 place-items-center rounded-full border border-[#2c2036]/15 text-[#756b80]"
             href="/notifications"
           >
             <Bell className="size-4" />
@@ -910,13 +929,13 @@ export default async function HomePage({
 
       <nav
         aria-label="Лента"
-        className="mb-5 grid grid-cols-2 gap-1 rounded-2xl border border-white/10 bg-[#14161f] p-1"
+        className="mb-5 grid grid-cols-2 gap-1 rounded-2xl border border-[#2c2036]/10 bg-white p-1"
       >
         <Link
           className={`flex items-center justify-center gap-1.5 rounded-xl py-2 text-sm font-bold ${
             cityMode
               ? "bg-gradient-to-r from-[#ff4b8a] to-[#7d45ff] text-white"
-              : "text-[#aaa4b7]"
+              : "text-[#756b80]"
           }`}
           href="/feed?scope=city"
         >
@@ -926,7 +945,7 @@ export default async function HomePage({
           className={`flex items-center justify-center gap-1.5 rounded-xl py-2 text-sm font-bold ${
             !cityMode
               ? "bg-gradient-to-r from-[#ff4b8a] to-[#7d45ff] text-white"
-              : "text-[#aaa4b7]"
+              : "text-[#756b80]"
           }`}
           href="/feed"
         >
@@ -935,13 +954,13 @@ export default async function HomePage({
       </nav>
 
       {cityFallback && (
-        <section className="mb-5 rounded-2xl border border-[#b550ff]/35 bg-[#1b1528] p-4 text-sm leading-6 text-[#d8d0e0]">
+        <section className="mb-5 rounded-2xl border border-[#b550ff]/35 bg-[#f0e7fb] p-4 text-sm leading-6 text-[#d8d0e0]">
           Укажите город в профиле, чтобы видеть людей рядом и события вашего города.
           Пока показываем ленту всей платформы.
         </section>
       )}
       {cityEmpty && cityName && (
-        <section className="mb-5 rounded-2xl border border-[#b550ff]/35 bg-[#1b1528] p-4 text-sm leading-6 text-[#d8d0e0]">
+        <section className="mb-5 rounded-2xl border border-[#b550ff]/35 bg-[#f0e7fb] p-4 text-sm leading-6 text-[#d8d0e0]">
           В {cityName} пока мало людей — пригласите друзей и станьте первыми! А пока
           показываем ленту всей платформы.
         </section>
@@ -949,7 +968,7 @@ export default async function HomePage({
 
       {cityMode && cityName && (
         <Link
-          className="mb-5 flex items-center gap-3 rounded-2xl border border-[#7fd8ff]/25 bg-gradient-to-r from-[#14222b] to-[#181a2b] p-4"
+          className="mb-5 flex items-center gap-3 rounded-2xl border border-[#7fd8ff]/50 bg-gradient-to-r from-[#e7f8f8] to-[#f2efff] p-4 shadow-[0_10px_26px_rgba(71,132,154,0.08)]"
           href="/places"
         >
           <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-[#7fd8ff]/15 text-2xl">
@@ -957,7 +976,7 @@ export default async function HomePage({
           </span>
           <span className="min-w-0 grow">
             <span className="block text-sm font-bold">Цифровой город {cityName}</span>
-            <span className="mt-0.5 block text-xs text-[#b8b0c3]">
+            <span className="mt-0.5 block text-xs text-[#756b80]">
               Посмотри, кто сейчас здесь — и заходи в место
             </span>
           </span>
@@ -967,7 +986,7 @@ export default async function HomePage({
 
       {cityMode && cityName && (
         <Link
-          className="mb-5 flex items-center gap-3 rounded-2xl border border-[#ffd35e]/30 bg-gradient-to-r from-[#2b193f] to-[#1c1528] p-4"
+          className="mb-5 flex items-center gap-3 rounded-2xl border border-[#ffd35e]/45 bg-gradient-to-r from-[#fff7d9] to-[#f7ebff] p-4 shadow-[0_10px_26px_rgba(161,122,55,0.08)]"
           href="/cities/battle"
         >
           <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-[#ffd35e]/15 text-2xl">
@@ -975,7 +994,7 @@ export default async function HomePage({
           </span>
           <span className="min-w-0 grow">
             <span className="block text-sm font-bold">Битва городов</span>
-            <span className="mt-0.5 block text-xs text-[#b8b0c3]">
+            <span className="mt-0.5 block text-xs text-[#756b80]">
               {cityChampion
                 ? `🏆 ${cityChampion.cityName} — чемпион сезона «${cityChampion.seasonName}»! Поможем защитить кубок`
                 : `Помоги ${cityName} стать первым — приглашай друзей и зарабатывай баллы`}
@@ -997,7 +1016,7 @@ export default async function HomePage({
             <div className="space-y-2.5">
               {cityPeople.map((person, index) => (
                 <Link
-                  className="border-white/8 flex items-center gap-3 rounded-2xl border bg-[#181a24] p-3"
+                  className="flex items-center gap-3 rounded-2xl border border-[#2c2036]/10 bg-white p-3"
                   href={isDemo ? "/auth/sign-in" : (`/u/${person.username}` as Route)}
                   key={person.id}
                 >
@@ -1016,7 +1035,7 @@ export default async function HomePage({
                         </span>
                       )}
                     </p>
-                    <p className="truncate text-xs text-[#aaa4b7]">
+                    <p className="truncate text-xs text-[#756b80]">
                       {person.city ?? cityName} · {person.followers} подписчиков
                     </p>
                   </div>
@@ -1037,7 +1056,7 @@ export default async function HomePage({
               <div className="flex gap-3 overflow-x-auto pb-2">
                 {cityLiveRooms.map((room, index) => (
                   <Link
-                    className="w-56 shrink-0 overflow-hidden rounded-2xl border border-white/10 bg-[#181a24]"
+                    className="w-56 shrink-0 overflow-hidden rounded-2xl border border-[#2c2036]/10 bg-white"
                     href={isDemo ? "/auth/sign-in" : (`/live/${room.slug}` as Route)}
                     key={room.id}
                   >
@@ -1054,7 +1073,7 @@ export default async function HomePage({
                     </div>
                     <div className="p-3">
                       <p className="truncate text-sm font-bold">{room.title}</p>
-                      <p className="mt-1 flex items-center justify-between gap-2 text-xs text-[#aaa4b7]">
+                      <p className="mt-1 flex items-center justify-between gap-2 text-xs text-[#756b80]">
                         <span className="truncate">{room.hostName}</span>
                         <span className="flex shrink-0 items-center gap-1">
                           <UsersRound className="size-3.5" /> {room.viewers}
@@ -1078,14 +1097,14 @@ export default async function HomePage({
               <div className="space-y-2.5">
                 {cityNewcomers.map((person, index) => (
                   <Link
-                    className="border-white/8 flex items-center gap-3 rounded-2xl border bg-[#181a24] p-3"
+                    className="flex items-center gap-3 rounded-2xl border border-[#2c2036]/10 bg-white p-3"
                     href={isDemo ? "/auth/sign-in" : (`/u/${person.username}` as Route)}
                     key={person.id}
                   >
                     <Avatar index={index} name={person.displayName} />
                     <div className="min-w-0 grow">
                       <p className="truncate text-sm font-bold">{person.displayName}</p>
-                      <p className="truncate text-xs text-[#aaa4b7]">
+                      <p className="truncate text-xs text-[#756b80]">
                         {person.city ?? cityName} · {person.followers} подписчиков
                       </p>
                     </div>
@@ -1126,7 +1145,7 @@ export default async function HomePage({
             </span>
             <span className="min-w-0 grow">
               <span className="block text-sm font-bold">События города</span>
-              <span className="mt-0.5 block text-xs text-[#b8b0c3]">
+              <span className="mt-0.5 block text-xs text-[#756b80]">
                 Встречи, прогулки и турниры — создайте или присоединяйтесь
               </span>
             </span>
@@ -1143,23 +1162,35 @@ export default async function HomePage({
               <span className="text-xs font-medium text-[#b26fff]">Смотреть все ›</span>
             </div>
             <div className="flex gap-3 overflow-x-auto pb-2">
-              {storyAuthors.map((author, index) => {
-                const href = author.storyId
-                  ? (`/stories/${author.storyId}` as Route)
-                  : "/creator/start";
-                return (
-                  <Link
-                    className="flex w-16 shrink-0 flex-col items-center gap-1.5"
-                    href={href}
-                    key={author.id}
-                  >
-                    <Avatar imageUrl={null} index={index} name={author.displayName} />
-                    <span className="w-16 truncate text-center text-xs text-[#e7e1ee]">
-                      {author.displayName}
-                    </span>
-                  </Link>
-                );
-              })}
+              {storyAuthors.length > 0 ? (
+                storyAuthors.map((author, index) => {
+                  const href = author.storyId
+                    ? (`/stories/${author.storyId}` as Route)
+                    : "/creator/start";
+                  return (
+                    <Link
+                      className="flex w-16 shrink-0 flex-col items-center gap-1.5"
+                      href={href}
+                      key={author.id}
+                    >
+                      <Avatar imageUrl={null} index={index} name={author.displayName} />
+                      <span className="w-16 truncate text-center text-xs text-[#2c2036]">
+                        {author.displayName}
+                      </span>
+                    </Link>
+                  );
+                })
+              ) : (
+                <Link
+                  className="flex min-h-16 items-center gap-3 rounded-2xl border border-dashed border-[#2c2036]/15 bg-white/70 px-4 text-sm font-semibold text-[#74687c]"
+                  href="/creator/start"
+                >
+                  <span className="grid size-10 place-items-center rounded-full bg-[#f0e4ff] text-lg text-[#8b50df]">
+                    +
+                  </span>
+                  Твоя story может стать первой
+                </Link>
+              )}
             </div>
           </section>
 
@@ -1171,37 +1202,52 @@ export default async function HomePage({
               </Link>
             </div>
             <div className="flex gap-3 overflow-x-auto pb-2">
-              {liveRoomsToShow.map((room, index) => {
-                const href = isDemo ? "/auth/sign-in" : (`/live/${room.slug}` as Route);
-                return (
-                  <Link
-                    className="w-56 shrink-0 overflow-hidden rounded-2xl border border-white/10 bg-[#181a24]"
-                    href={href}
-                    key={room.id}
-                  >
-                    <div
-                      className={`relative flex h-24 items-center justify-center bg-gradient-to-br ${
-                        gradients[index % gradients.length]
-                      }/40`}
+              {liveRoomsToShow.length > 0 ? (
+                liveRoomsToShow.map((room, index) => {
+                  const href = isDemo
+                    ? "/auth/sign-in"
+                    : (`/live/${room.slug}` as Route);
+                  return (
+                    <Link
+                      className="w-56 shrink-0 overflow-hidden rounded-2xl border border-[#2c2036]/10 bg-white shadow-[0_8px_22px_rgba(69,43,94,0.06)]"
+                      href={href}
+                      key={room.id}
                     >
-                      <span className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-[#ff2d55] px-2 py-0.5 text-[10px] font-bold text-white">
-                        <span className="size-1.5 animate-pulse rounded-full bg-white" />
-                        LIVE
-                      </span>
-                      <Radio className="size-8 text-[#ffb7dd]" />
-                    </div>
-                    <div className="p-3">
-                      <p className="truncate text-sm font-bold">{room.title}</p>
-                      <p className="mt-1 flex items-center justify-between gap-2 text-xs text-[#aaa4b7]">
-                        <span className="truncate">{room.hostName}</span>
-                        <span className="flex shrink-0 items-center gap-1">
-                          <UsersRound className="size-3.5" /> {room.viewers}
+                      <div
+                        className={`relative flex h-24 items-center justify-center bg-gradient-to-br ${
+                          gradients[index % gradients.length]
+                        }/40`}
+                      >
+                        <span className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-[#ff2d55] px-2 py-0.5 text-[10px] font-bold text-white">
+                          <span className="size-1.5 animate-pulse rounded-full bg-white" />
+                          LIVE
                         </span>
-                      </p>
-                    </div>
-                  </Link>
-                );
-              })}
+                        <Radio className="size-8 text-[#ffb7dd]" />
+                      </div>
+                      <div className="p-3">
+                        <p className="truncate text-sm font-bold">{room.title}</p>
+                        <p className="mt-1 flex items-center justify-between gap-2 text-xs text-[#756b80]">
+                          <span className="truncate">{room.hostName}</span>
+                          <span className="flex shrink-0 items-center gap-1">
+                            <UsersRound className="size-3.5" /> {room.viewers}
+                          </span>
+                        </p>
+                      </div>
+                    </Link>
+                  );
+                })
+              ) : (
+                <Link
+                  className="flex h-28 min-w-64 shrink-0 flex-col justify-between rounded-2xl border border-dashed border-[#2c2036]/15 bg-white/70 p-4"
+                  href="/live/new"
+                >
+                  <Radio className="size-6 text-[#9b59e9]" />
+                  <span>
+                    <b className="block text-sm">Первый эфир ждёт тебя</b>
+                    <small className="text-xs text-[#7a6e83]">Создать комнату ›</small>
+                  </span>
+                </Link>
+              )}
             </div>
           </section>
 
@@ -1213,7 +1259,7 @@ export default async function HomePage({
               </Link>
             </div>
             <div className="space-y-2.5">
-              {(wishes.length ? wishes : demoWishes).slice(0, 3).map((wish, index) => (
+              {wishesToShow.slice(0, 3).map((wish, index) => (
                 <WishLink
                   href={isDemo ? "/auth/sign-in" : (`/wishes/${wish.id}` as Route)}
                   index={index}
@@ -1232,16 +1278,14 @@ export default async function HomePage({
               </Link>
             </div>
             <div className="space-y-2.5">
-              {(newWishes.length ? newWishes : demoWishes)
-                .slice(0, 3)
-                .map((wish, index) => (
-                  <WishLink
-                    href={isDemo ? "/auth/sign-in" : (`/wishes/${wish.id}` as Route)}
-                    index={index}
-                    key={wish.id}
-                    wish={wish}
-                  />
-                ))}
+              {newWishesToShow.slice(0, 3).map((wish, index) => (
+                <WishLink
+                  href={isDemo ? "/auth/sign-in" : (`/wishes/${wish.id}` as Route)}
+                  index={index}
+                  key={wish.id}
+                  wish={wish}
+                />
+              ))}
             </div>
           </section>
 
@@ -1253,16 +1297,14 @@ export default async function HomePage({
               </Link>
             </div>
             <div className="space-y-2.5">
-              {(growingWishes.length ? growingWishes : demoWishes)
-                .slice(0, 3)
-                .map((wish, index) => (
-                  <WishLink
-                    href={isDemo ? "/auth/sign-in" : (`/wishes/${wish.id}` as Route)}
-                    index={index}
-                    key={wish.id}
-                    wish={wish}
-                  />
-                ))}
+              {growingWishesToShow.slice(0, 3).map((wish, index) => (
+                <WishLink
+                  href={isDemo ? "/auth/sign-in" : (`/wishes/${wish.id}` as Route)}
+                  index={index}
+                  key={wish.id}
+                  wish={wish}
+                />
+              ))}
             </div>
           </section>
 
@@ -1346,7 +1388,7 @@ export default async function HomePage({
               <div className="space-y-2.5">
                 {personalAuthors.slice(0, 3).map((author) => (
                   <Link
-                    className="border-white/8 flex items-center gap-3 rounded-2xl border bg-[#181a24] p-3 transition hover:border-[#8f48ff]/60"
+                    className="flex items-center gap-3 rounded-2xl border border-[#2c2036]/10 bg-white p-3 transition hover:border-[#8f48ff]/60"
                     href={isDemo ? "/auth/sign-in" : (`/u/${author.username}` as Route)}
                     key={author.id}
                   >
@@ -1355,11 +1397,11 @@ export default async function HomePage({
                     </span>
                     <div className="min-w-0 grow">
                       <p className="truncate text-sm font-bold">{author.displayName}</p>
-                      <p className="truncate text-xs text-[#aaa4b7]">
+                      <p className="truncate text-xs text-[#756b80]">
                         {author.headline ?? "Автор в «Хочу также»"}
                       </p>
                     </div>
-                    <span className="shrink-0 text-xs text-[#aaa4b7]">
+                    <span className="shrink-0 text-xs text-[#756b80]">
                       {author.followerCount} подписчиков
                     </span>
                   </Link>
@@ -1378,7 +1420,7 @@ export default async function HomePage({
             <div className="space-y-2.5">
               {authorsToShow.slice(0, 3).map((author) => (
                 <Link
-                  className="border-white/8 flex items-center gap-3 rounded-2xl border bg-[#181a24] p-3 transition hover:border-[#8f48ff]/60"
+                  className="flex items-center gap-3 rounded-2xl border border-[#2c2036]/10 bg-white p-3 transition hover:border-[#8f48ff]/60"
                   href={isDemo ? "/auth/sign-in" : (`/u/${author.username}` as Route)}
                   key={author.id}
                 >
@@ -1387,11 +1429,11 @@ export default async function HomePage({
                   </span>
                   <div className="min-w-0 grow">
                     <p className="truncate text-sm font-bold">{author.displayName}</p>
-                    <p className="truncate text-xs text-[#aaa4b7]">
+                    <p className="truncate text-xs text-[#756b80]">
                       {author.headline ?? "Автор в «Хочу также»"}
                     </p>
                   </div>
-                  <span className="shrink-0 text-xs text-[#aaa4b7]">
+                  <span className="shrink-0 text-xs text-[#756b80]">
                     {author.followerCount} подписчиков
                   </span>
                 </Link>
@@ -1399,9 +1441,9 @@ export default async function HomePage({
             </div>
           </section>
 
-          <section className="border-white/8 mt-7 rounded-2xl border bg-gradient-to-br from-[#1f1631] to-[#171824] p-4">
+          <section className="mt-7 rounded-2xl border border-[#2c2036]/10 bg-gradient-to-br from-[#1f1631] to-[#171824] p-4">
             <p className="text-sm font-bold">Хочешь тоже зарабатывать?</p>
-            <p className="mt-1 text-xs leading-5 text-[#b9b1c5]">
+            <p className="mt-1 text-xs leading-5 text-[#756b80]">
               Создай страницу автора, публикуй stories и собери свою аудиторию.
             </p>
             <Link
@@ -1427,7 +1469,7 @@ export default async function HomePage({
                 { icon: Plane, label: "Путешествия", color: "text-[#7aa9ff]" },
               ].map(({ icon: Icon, label, color }) => (
                 <Link
-                  className="border-white/8 rounded-2xl border bg-[#181a24] p-3 text-center"
+                  className="rounded-2xl border border-[#2c2036]/10 bg-white p-3 text-center"
                   href={`/search?q=${encodeURIComponent(label)}` as Route}
                   key={label}
                 >
