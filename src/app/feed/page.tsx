@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Route } from "next";
 import {
   Bell,
+  ChevronRight,
   CirclePlus,
   Compass,
   Gamepad2,
@@ -16,6 +17,7 @@ import {
 } from "lucide-react";
 
 import { FeedWishToggle } from "@/components/feed-wish-toggle";
+import { PlaceIcon } from "@/components/place-icon";
 import { APP_NAME, CATEGORIES } from "@/lib/constants";
 import { formatRubles } from "@/lib/money";
 import { hasSupabaseEnvironment } from "@/lib/supabase/env";
@@ -81,6 +83,14 @@ type CityPerson = {
   isCreator: boolean;
   followers: number;
   isVip?: boolean;
+};
+
+type CirclePlace = {
+  id: string;
+  name: string;
+  iconCode: string;
+  online: number;
+  unread: number;
 };
 
 const demoAuthors: StoryAuthor[] = [
@@ -294,7 +304,7 @@ async function buildLiveRooms(
   });
 }
 
-async function getHomeData(scope: "city" | "global" = "global") {
+async function getHomeData(scope: "circle" | "city" | "global" = "circle") {
   if (!hasSupabaseEnvironment()) {
     return {
       authors: demoAuthors,
@@ -312,6 +322,15 @@ async function getHomeData(scope: "city" | "global" = "global") {
       cityNewcomers: scope === "city" ? demoCityPeople : [],
       cityLiveRooms: scope === "city" ? demoLiveRooms : [],
       cityWishes: scope === "city" ? demoWishes : [],
+      circlePeople: scope === "circle" ? demoCityPeople : [],
+      circlePlaces:
+        scope === "circle"
+          ? [
+              { id: "center", name: "Центр", iconCode: "center", online: 3, unread: 2 },
+              { id: "music", name: "Музыка", iconCode: "music", online: 2, unread: 0 },
+            ]
+          : [],
+      circleLiveRooms: scope === "circle" ? demoLiveRooms.slice(0, 2) : [],
       cityChampion: null,
       isDemo: true,
     };
@@ -563,8 +582,11 @@ async function getHomeData(scope: "city" | "global" = "global") {
     let cityNewcomers: CityPerson[] = [];
     let cityLiveRooms: LiveRoomPreview[] = [];
     let cityWishes: WishPreview[] = [];
+    let circlePeople: CityPerson[] = [];
+    let circlePlaces: CirclePlace[] = [];
+    let circleLiveRooms: LiveRoomPreview[] = [];
     let cityChampion: { seasonName: string; cityName: string } | null = null;
-    if (scope === "city" && user) {
+    if (scope !== "global" && user) {
       const { data: myProfile } = await supabase
         .from("profiles")
         .select("city_id, city")
@@ -585,12 +607,19 @@ async function getHomeData(scope: "city" | "global" = "global") {
           is_vip: boolean;
         }>;
         const citizenIds = citizens.map((c) => c.id);
-        const { data: follows } = citizenIds.length
-          ? await supabase
-              .from("user_follows")
-              .select("following_id")
-              .in("following_id", citizenIds)
-          : { data: [] };
+        const [{ data: follows }, { data: myFollows }] = await Promise.all([
+          citizenIds.length
+            ? supabase
+                .from("user_follows")
+                .select("following_id")
+                .in("following_id", citizenIds)
+            : Promise.resolve({ data: [] }),
+          supabase
+            .from("user_follows")
+            .select("following_id")
+            .eq("follower_id", user.id),
+        ]);
+        const followingSet = new Set((myFollows ?? []).map((row) => row.following_id));
         const followerCount = new Map<string, number>();
         for (const follow of follows ?? [])
           followerCount.set(
@@ -607,8 +636,16 @@ async function getHomeData(scope: "city" | "global" = "global") {
           followers: followerCount.get(c.id) ?? 0,
           isVip: Boolean(c.is_vip),
         });
-        cityPeople = others.slice(0, 4).map(toCityPerson);
-        cityNewcomers = others.slice(0, 3).map(toCityPerson);
+        if (scope === "city") {
+          cityPeople = others.slice(0, 4).map(toCityPerson);
+          cityNewcomers = others.slice(0, 3).map(toCityPerson);
+        }
+        if (scope === "circle") {
+          const following = others.filter((person) => followingSet.has(person.id));
+          circlePeople = (following.length > 0 ? following : others.slice(0, 4))
+            .slice(0, 6)
+            .map(toCityPerson);
+        }
 
         const { data: rawCityWishes } = citizenIds.length
           ? await supabase
@@ -637,10 +674,19 @@ async function getHomeData(scope: "city" | "global" = "global") {
               .order("started_at", { ascending: false })
               .limit(6)
           : { data: [] };
-        cityLiveRooms = (await buildLiveRooms(supabase, rawCityRooms ?? [])).slice(
-          0,
-          3,
-        );
+        const localLiveRooms = await buildLiveRooms(supabase, rawCityRooms ?? []);
+        if (scope === "city") cityLiveRooms = localLiveRooms.slice(0, 3);
+        if (scope === "circle") {
+          const circleUsernames = new Set(
+            circlePeople.map((person) => person.username),
+          );
+          circleLiveRooms = localLiveRooms
+            .filter(
+              (room) =>
+                circleUsernames.has(room.hostUsername) || followingSet.size === 0,
+            )
+            .slice(0, 3);
+        }
 
         const { data: cityRow } = await supabase
           .from("cities")
@@ -648,6 +694,68 @@ async function getHomeData(scope: "city" | "global" = "global") {
           .eq("id", myProfile.city_id)
           .maybeSingle();
         cityName = cityRow?.name ?? myProfile.city;
+
+        if (scope === "circle") {
+          const { data: memberships } = await supabase
+            .from("place_members")
+            .select("place_id")
+            .eq("profile_id", user.id)
+            .limit(20);
+          const myPlaceIds = (memberships ?? []).map((item) => item.place_id);
+          if (myPlaceIds.length > 0) {
+            const [{ data: myPlaces }, { data: placePresence }, { data: myReads }] =
+              await Promise.all([
+                supabase
+                  .from("places")
+                  .select("id, name, icon_code")
+                  .in("id", myPlaceIds)
+                  .eq("is_active", true),
+                supabase
+                  .from("place_presence")
+                  .select("place_id, profile_id")
+                  .in("place_id", myPlaceIds)
+                  .gte(
+                    "last_seen_at",
+                    new Date(Date.now() - 15 * 60 * 1000).toISOString(),
+                  ),
+                supabase
+                  .from("place_presence")
+                  .select("place_id, last_read_at")
+                  .eq("profile_id", user.id)
+                  .in("place_id", myPlaceIds),
+              ]);
+            const onlineByPlace = new Map<string, number>();
+            for (const row of placePresence ?? [])
+              onlineByPlace.set(
+                row.place_id,
+                (onlineByPlace.get(row.place_id) ?? 0) + 1,
+              );
+            const reads = new Map(
+              (myReads ?? []).map((row) => [row.place_id, row.last_read_at]),
+            );
+            const { data: messages } = await supabase
+              .from("place_messages")
+              .select("place_id, created_at")
+              .in("place_id", myPlaceIds)
+              .limit(200);
+            const unreadByPlace = new Map<string, number>();
+            for (const message of messages ?? []) {
+              const readAt = reads.get(message.place_id);
+              if (readAt && new Date(message.created_at) > new Date(readAt))
+                unreadByPlace.set(
+                  message.place_id,
+                  (unreadByPlace.get(message.place_id) ?? 0) + 1,
+                );
+            }
+            circlePlaces = (myPlaces ?? []).map((place) => ({
+              id: place.id,
+              name: place.name,
+              iconCode: place.icon_code,
+              online: onlineByPlace.get(place.id) ?? 0,
+              unread: unreadByPlace.get(place.id) ?? 0,
+            }));
+          }
+        }
 
         // City Cup: if my city won the last finished season, show it in the
         // battle card («мы выиграли вместе» — коллективная награда).
@@ -684,6 +792,9 @@ async function getHomeData(scope: "city" | "global" = "global") {
       cityNewcomers,
       cityLiveRooms,
       cityWishes,
+      circlePeople,
+      circlePlaces,
+      circleLiveRooms,
       cityChampion,
       isDemo: false,
     };
@@ -704,6 +815,9 @@ async function getHomeData(scope: "city" | "global" = "global") {
       cityNewcomers: [],
       cityLiveRooms: [],
       cityWishes: [],
+      circlePeople: [],
+      circlePlaces: [],
+      circleLiveRooms: [],
       cityChampion: null,
       isDemo: false,
     };
@@ -853,9 +967,10 @@ export default async function HomePage({
   searchParams: Promise<{ scope?: string }>;
 }) {
   const { scope: rawScope = "" } = await searchParams;
-  // City is the default home for someone who has chosen a city. The global
-  // platform remains one tap away, but should not erase the feeling of "our".
-  const scope = rawScope === "global" ? "global" : "city";
+  // The personal circle is the default home. The whole public city and the
+  // global platform remain explicit scopes, never hidden algorithms.
+  const scope =
+    rawScope === "global" ? "global" : rawScope === "city" ? "city" : "circle";
   const {
     authors,
     fundraisers,
@@ -872,6 +987,9 @@ export default async function HomePage({
     cityNewcomers,
     cityLiveRooms,
     cityWishes,
+    circlePeople,
+    circlePlaces,
+    circleLiveRooms,
     cityChampion,
     isDemo,
   } = await getHomeData(scope);
@@ -897,8 +1015,10 @@ export default async function HomePage({
   const growingWishesToShow =
     growingWishes.length > 0 ? growingWishes : isDemo ? demoWishes : [];
 
+  const circleMode = scope === "circle";
   const cityMode = scope === "city";
-  const cityFallback = cityMode && !cityName;
+  const cityScope = circleMode || cityMode;
+  const cityFallback = cityScope && !cityName;
   const cityEmpty = cityMode && cityName && cityPeople.length === 0;
 
   return (
@@ -930,30 +1050,38 @@ export default async function HomePage({
       </header>
 
       <nav
-        aria-label="Лента"
-        className="mb-5 grid grid-cols-2 gap-1 rounded-2xl border border-[#2c2036]/10 bg-white p-1"
+        aria-label="Лента города"
+        className="grid grid-cols-2 gap-1 rounded-2xl border border-[#2c2036]/10 bg-white p-1"
       >
+        <Link
+          className={`flex items-center justify-center gap-1.5 rounded-xl py-2 text-sm font-bold ${
+            circleMode
+              ? "bg-gradient-to-r from-[#ff4b8a] to-[#7d45ff] text-white"
+              : "text-[#756b80]"
+          }`}
+          href="/feed"
+        >
+          <UsersRound className="size-4" /> Свои
+        </Link>
         <Link
           className={`flex items-center justify-center gap-1.5 rounded-xl py-2 text-sm font-bold ${
             cityMode
               ? "bg-gradient-to-r from-[#ff4b8a] to-[#7d45ff] text-white"
               : "text-[#756b80]"
           }`}
-          href="/feed"
+          href="/feed?scope=city"
         >
-          📍 Мой город{cityName ? ` · ${cityName}` : ""}
-        </Link>
-        <Link
-          className={`flex items-center justify-center gap-1.5 rounded-xl py-2 text-sm font-bold ${
-            !cityMode
-              ? "bg-gradient-to-r from-[#ff4b8a] to-[#7d45ff] text-white"
-              : "text-[#756b80]"
-          }`}
-          href="/feed?scope=global"
-        >
-          🌎 Вся платформа
+          <MapPin className="size-4" /> {cityName ? `Весь ${cityName}` : "Весь город"}
         </Link>
       </nav>
+      <Link
+        className={`mt-2 inline-flex items-center gap-1 text-[10px] font-bold ${
+          scope === "global" ? "text-[#7549d0]" : "text-[#8a7d91]"
+        }`}
+        href="/feed?scope=global"
+      >
+        <Compass className="size-3.5" /> Вся платформа
+      </Link>
 
       {cityFallback && (
         <section className="mb-5 rounded-2xl border border-[#b550ff]/35 bg-[#f0e7fb] p-4 text-sm leading-6 text-[#d8d0e0]">
@@ -962,10 +1090,159 @@ export default async function HomePage({
         </section>
       )}
       {cityEmpty && cityName && (
-        <section className="mb-5 rounded-2xl border border-[#b550ff]/35 bg-[#f0e7fb] p-4 text-sm leading-6 text-[#d8d0e0]">
-          В {cityName} пока мало людей — пригласите друзей и станьте первыми! А пока
-          показываем ленту всей платформы.
+        <section className="mb-5 rounded-2xl border border-[#b550ff]/35 bg-[#f0e7fb] p-4 text-sm leading-6 text-[#756a7d]">
+          В {cityName} пока мало публичной жизни. Позови своих — так город становится
+          живым.
         </section>
+      )}
+
+      {circleMode && cityName && (
+        <>
+          <Link
+            className="mt-5 flex items-center gap-3 overflow-hidden rounded-[1.6rem] bg-gradient-to-br from-[#2e2250] via-[#4d3572] to-[#7559d5] p-4 text-white shadow-[0_12px_28px_rgba(63,37,98,.2)]"
+            href="/places"
+          >
+            <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-white/15">
+              <MapPin className="size-5" />
+            </span>
+            <span className="min-w-0 grow">
+              <span className="block text-xs font-black uppercase tracking-[0.12em] text-[#ffc3da]">
+                {cityName} сейчас
+              </span>
+              <span className="mt-1 block text-sm font-bold">
+                Посмотри, что происходит у наших
+              </span>
+              <span className="text-white/72 mt-0.5 block text-[10px]">
+                Люди, места, эфиры и новые моменты города
+              </span>
+            </span>
+            <ChevronRight className="size-5 shrink-0" />
+          </Link>
+
+          <section className="mt-6">
+            <div className="mb-3 flex items-center justify-between">
+              <span>
+                <h1 className="text-sm font-black">Свои сейчас здесь</h1>
+                <p className="mt-0.5 text-[10px] text-[#81748a]">
+                  Люди, за которыми ты следишь
+                </p>
+              </span>
+              <Link className="text-[10px] font-black text-[#8753e6]" href="/people">
+                Все люди ›
+              </Link>
+            </div>
+            {circlePeople.length > 0 ? (
+              <div className="flex gap-3 overflow-x-auto pb-1">
+                {circlePeople.map((person, index) => (
+                  <Link
+                    className="flex w-14 shrink-0 flex-col items-center gap-1.5"
+                    href={isDemo ? "/auth/sign-in" : (`/u/${person.username}` as Route)}
+                    key={person.id}
+                  >
+                    <Avatar index={index} name={person.displayName} />
+                    <span className="w-14 truncate text-center text-[10px] font-bold">
+                      {person.displayName}
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            ) : (
+              <Link
+                className="flex items-center gap-3 rounded-2xl border border-dashed border-[#2c2036]/20 bg-white/70 p-4"
+                href="/people"
+              >
+                <span className="grid size-10 place-items-center rounded-full bg-[#f0e4ff] text-[#8753e6]">
+                  <UsersRound className="size-5" />
+                </span>
+                <span>
+                  <b className="block text-xs">Собери свой круг</b>
+                  <small className="mt-0.5 block text-[10px] text-[#81748a]">
+                    Подписывайся на людей города — здесь появится их жизнь.
+                  </small>
+                </span>
+              </Link>
+            )}
+          </section>
+
+          <section className="mt-6">
+            <div className="mb-3 flex items-center justify-between">
+              <span>
+                <h2 className="text-sm font-black">Мои места</h2>
+                <p className="mt-0.5 text-[10px] text-[#81748a]">
+                  Где тебя ждут или есть новые сообщения
+                </p>
+              </span>
+              <Link className="text-[10px] font-black text-[#8753e6]" href="/places">
+                Все места ›
+              </Link>
+            </div>
+            {circlePlaces.length > 0 ? (
+              <div className="flex gap-2.5 overflow-x-auto pb-1">
+                {circlePlaces.map((place) => (
+                  <Link
+                    className="w-36 shrink-0 rounded-2xl border border-[#2c2036]/10 bg-white p-3 shadow-[0_5px_14px_rgba(65,43,89,.05)]"
+                    href={`/places/${place.id}` as Route}
+                    key={place.id}
+                  >
+                    <PlaceIcon
+                      className="size-5 text-[#8753e6]"
+                      code={place.iconCode}
+                    />
+                    <b className="mt-5 block truncate text-[11px]">{place.name}</b>
+                    <span className="mt-1 flex items-center gap-2 text-[10px] text-[#81748a]">
+                      <span className="inline-flex items-center gap-1">
+                        <UsersRound className="size-3" /> {place.online}
+                      </span>
+                      {place.unread > 0 && (
+                        <span className="font-bold text-[#d84b81]">
+                          +{place.unread}
+                        </span>
+                      )}
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            ) : (
+              <Link
+                className="flex items-center gap-3 rounded-2xl border border-dashed border-[#2c2036]/20 bg-white/70 p-4"
+                href="/places"
+              >
+                <PlaceIcon className="size-5 text-[#8753e6]" code="place" />
+                <span className="text-[11px] text-[#756a7d]">
+                  Зайди в место или создай своё — оно появится здесь.
+                </span>
+              </Link>
+            )}
+          </section>
+
+          {circleLiveRooms.length > 0 && (
+            <section className="mt-6">
+              <div className="mb-3 flex items-center justify-between">
+                <h2 className="text-sm font-black">Сегодня у своих</h2>
+                <Link className="text-[10px] font-black text-[#8753e6]" href="/places">
+                  Весь город ›
+                </Link>
+              </div>
+              <div className="flex gap-2.5 overflow-x-auto pb-1">
+                {circleLiveRooms.map((room) => (
+                  <Link
+                    className="w-44 shrink-0 overflow-hidden rounded-2xl bg-gradient-to-br from-[#f4ebff] to-[#fff1f7] p-3"
+                    href={isDemo ? "/auth/sign-in" : (`/live/${room.slug}` as Route)}
+                    key={room.id}
+                  >
+                    <span className="inline-flex items-center gap-1 rounded-md bg-[#ff3f79] px-1.5 py-0.5 text-[8px] font-black text-white">
+                      <Radio className="size-2.5" /> LIVE
+                    </span>
+                    <b className="mt-6 block truncate text-[11px]">{room.title}</b>
+                    <small className="mt-1 block text-[10px] text-[#756a7d]">
+                      {room.hostName} · {room.viewers}
+                    </small>
+                  </Link>
+                ))}
+              </div>
+            </section>
+          )}
+        </>
       )}
 
       {cityMode && cityName && (
@@ -1156,7 +1433,7 @@ export default async function HomePage({
         </>
       )}
 
-      {!cityMode || cityFallback || cityEmpty ? (
+      {scope === "global" || cityFallback || cityEmpty ? (
         <>
           <section>
             <div className="mb-3 flex items-center justify-between">

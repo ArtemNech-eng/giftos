@@ -24,7 +24,7 @@ export default async function OnboardingPage() {
     .eq("id", user.id)
     .maybeSingle();
 
-  if (profile?.onboarding_completed_at) redirect("/feed?scope=city");
+  if (profile?.onboarding_completed_at) redirect("/feed");
 
   // Prefill the city from the visitor's IP (best-effort, Dadata).
   let detectedCity: string | null = null;

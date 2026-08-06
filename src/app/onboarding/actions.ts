@@ -95,5 +95,5 @@ export async function completeOnboarding(formData: FormData) {
 
   revalidatePath("/");
   revalidatePath(`/u/${username}`);
-  redirect("/feed?scope=city");
+  redirect("/feed");
 }
