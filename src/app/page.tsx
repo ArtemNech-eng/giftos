@@ -164,7 +164,7 @@ export default async function SeoLandingPage({
     const {
       data: { user },
     } = await sessionClient.auth.getUser();
-    if (user) redirect("/feed");
+    if (user) redirect("/feed?scope=city");
   }
 
   if (hasSupabaseEnvironment()) {

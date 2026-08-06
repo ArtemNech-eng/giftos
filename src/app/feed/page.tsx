@@ -853,7 +853,9 @@ export default async function HomePage({
   searchParams: Promise<{ scope?: string }>;
 }) {
   const { scope: rawScope = "" } = await searchParams;
-  const scope = rawScope === "city" ? "city" : "global";
+  // City is the default home for someone who has chosen a city. The global
+  // platform remains one tap away, but should not erase the feeling of "our".
+  const scope = rawScope === "global" ? "global" : "city";
   const {
     authors,
     fundraisers,
@@ -937,7 +939,7 @@ export default async function HomePage({
               ? "bg-gradient-to-r from-[#ff4b8a] to-[#7d45ff] text-white"
               : "text-[#756b80]"
           }`}
-          href="/feed?scope=city"
+          href="/feed"
         >
           📍 Мой город{cityName ? ` · ${cityName}` : ""}
         </Link>
@@ -947,7 +949,7 @@ export default async function HomePage({
               ? "bg-gradient-to-r from-[#ff4b8a] to-[#7d45ff] text-white"
               : "text-[#756b80]"
           }`}
-          href="/feed"
+          href="/feed?scope=global"
         >
           🌎 Вся платформа
         </Link>
