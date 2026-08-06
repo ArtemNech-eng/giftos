@@ -149,6 +149,15 @@ export default async function PlacePage({
   const names = new Map(
     (authorProfiles ?? []).map((profile) => [profile.id, profile.display_name]),
   );
+  // Reputation roles for chat authors (server-rendered badges).
+  const authorRoles = new Map<string, string[]>();
+  for (const authorId of authorIds) {
+    const { data: roles } = await supabase.rpc("reputation_roles", {
+      p_profile_id: authorId,
+    });
+    if (roles && (roles as string[]).length > 0)
+      authorRoles.set(authorId, roles as string[]);
+  }
 
   const isMember = Boolean(member);
 
@@ -427,6 +436,7 @@ export default async function PlacePage({
         </div>
         <LivePlaceChat
           currentUserId={user.id}
+          initialAuthorRoles={Object.fromEntries(authorRoles)}
           initialMessages={(messages ?? []).map((message) => ({
             id: message.id,
             author_id: message.author_id,

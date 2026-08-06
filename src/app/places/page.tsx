@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { Route } from "next";
-import { MapPin, Plus, Trophy, UsersRound } from "lucide-react";
+import { MapPin, Plus, TrendingUp, Trophy, UsersRound } from "lucide-react";
 
 import { requireUser } from "@/lib/auth";
 import { EmptyState } from "@/components/empty-state";
@@ -128,6 +128,23 @@ export default async function PlacesPage() {
     return b.online - a.online;
   });
 
+  // «Who rose this week» — top rising users of the city.
+  let risingUsers: Array<{
+    profile_id: string;
+    display_name: string;
+    username: string;
+    score: number;
+  }> = [];
+  if (profile?.city_id) {
+    const { data: rawRising } = await supabase
+      .from("public_city_rankings")
+      .select("profile_id, display_name, username, score")
+      .eq("city_id", profile.city_id)
+      .eq("category", "rising")
+      .limit(3);
+    risingUsers = (rawRising ?? []) as typeof risingUsers;
+  }
+
   return (
     <main className="mx-auto min-h-screen max-w-[430px] bg-[#0c0e14] px-4 py-5 text-white">
       <header className="flex items-center justify-between">
@@ -150,6 +167,32 @@ export default async function PlacesPage() {
           Пойдём посмотрим, кто сейчас в городе. Выбери место и заходи.
         </p>
       </section>
+
+      {risingUsers.length > 0 && (
+        <section className="mt-5 rounded-2xl border border-[#8df0b4]/25 bg-gradient-to-r from-[#14221d] to-[#171824] p-4">
+          <div className="flex items-center gap-2">
+            <TrendingUp className="size-5 text-[#8df0b4]" />
+            <p className="text-sm font-bold">Кто поднялся за неделю</p>
+          </div>
+          <div className="mt-3 space-y-1.5">
+            {risingUsers.map((person, index) => (
+              <Link
+                className="flex items-center gap-2 text-sm"
+                href={`/u/${person.username}` as Route}
+                key={person.profile_id}
+              >
+                <span className="w-5 text-center">
+                  {index === 0 ? "🚀" : `${index + 1}`}
+                </span>
+                <span className="min-w-0 grow truncate font-semibold">
+                  {person.display_name}
+                </span>
+                <span className="shrink-0 text-xs text-[#8df0b4]">+{person.score}</span>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
 
       <section className="mt-5">
         {sorted.length === 0 ? (

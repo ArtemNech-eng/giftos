@@ -21,10 +21,12 @@ export function LivePlaceChat({
   placeId,
   currentUserId,
   initialMessages,
+  initialAuthorRoles,
 }: {
   placeId: string;
   currentUserId: string;
   initialMessages: PlaceMessageView[];
+  initialAuthorRoles?: Record<string, string[]>;
 }) {
   const [messages, setMessages] = useState<PlaceMessageView[]>(initialMessages);
   const [names, setNames] = useState<Record<string, string>>(() =>
@@ -32,6 +34,7 @@ export function LivePlaceChat({
       initialMessages.map((message) => [message.author_id, message.author_name]),
     ),
   );
+  const [authorRoles] = useState<Record<string, string[]>>(initialAuthorRoles ?? {});
   const [body, setBody] = useState("");
   const [sending, setSending] = useState(false);
   const namesRef = useRef(names);
@@ -139,6 +142,14 @@ export function LivePlaceChat({
                     ? "Вы"
                     : (names[message.author_id] ?? message.author_name ?? "Зритель")}
                 </b>
+                {(authorRoles[message.author_id] ?? []).slice(0, 1).map((role) => (
+                  <span
+                    className="mr-1 rounded-full border border-[#ffd35e]/40 bg-[#2a2215] px-1.5 py-0.5 text-[9px] font-bold text-[#ffd35e]"
+                    key={role}
+                  >
+                    {role}
+                  </span>
+                ))}
                 {message.body}
               </p>
               {message.author_id !== currentUserId && (
