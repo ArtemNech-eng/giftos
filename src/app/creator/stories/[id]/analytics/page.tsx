@@ -11,7 +11,11 @@ export const metadata = {
 };
 export const dynamic = "force-dynamic";
 
-type Ledger = { creator_net_minor: number; source_type: string };
+type Ledger = {
+  creator_net_minor: number;
+  source_type: string;
+  source_id: string;
+};
 
 export default async function StoryAnalyticsPage({
   params,
@@ -35,6 +39,7 @@ export default async function StoryAnalyticsPage({
     { data: unlocks },
     { data: rawViewers },
     { data: rawUnlockers },
+    { data: unlockTimeline },
   ] = await Promise.all([
     supabase
       .from("story_views")
@@ -59,6 +64,12 @@ export default async function StoryAnalyticsPage({
       .eq("status", "unlocked")
       .order("unlocked_at", { ascending: false })
       .limit(10),
+    supabase
+      .from("story_unlocks")
+      .select("id, unlocked_at")
+      .eq("story_id", story.id)
+      .eq("status", "unlocked")
+      .order("unlocked_at", { ascending: true }),
   ]);
   const viewerIds = [
     ...new Set([
@@ -79,7 +90,7 @@ export default async function StoryAnalyticsPage({
   const { data: rawLedger } = sourceIds.length
     ? await supabase
         .from("creator_ledger_entries")
-        .select("creator_net_minor, source_type")
+        .select("creator_net_minor, source_type, source_id")
         .eq("creator_id", user.id)
         .in("source_id", sourceIds)
     : { data: [] };
@@ -95,6 +106,46 @@ export default async function StoryAnalyticsPage({
   const totalReactions = reactions?.length ?? 0;
   const unlockedCount =
     unlocks?.filter((item) => item.status === "unlocked").length ?? 0;
+
+  // Unlock timeline: group paid unlocks by Moscow day, join ledger income.
+  const ledgerBySource = new Map(
+    (rawLedger ?? []).map((item) => [String(item.source_id), item]),
+  );
+  const unlockDay = (iso: string) =>
+    new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Europe/Moscow",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).format(new Date(iso));
+  const timeline = new Map<string, { count: number; income: number }>();
+  for (const unlock of unlockTimeline ?? []) {
+    if (!unlock.unlocked_at) continue;
+    const key = unlockDay(unlock.unlocked_at);
+    const entry = ledgerBySource.get(unlock.id);
+    const bucket = timeline.get(key) ?? { count: 0, income: 0 };
+    bucket.count += 1;
+    if (entry) bucket.income += Number(entry.creator_net_minor ?? 0);
+    timeline.set(key, bucket);
+  }
+  const last14Days: { key: string; label: string; count: number; income: number }[] =
+    [];
+  for (let offset = 13; offset >= 0; offset -= 1) {
+    const key = unlockDay(new Date(Date.now() - offset * 86_400_000).toISOString());
+    const bucket = timeline.get(key);
+    last14Days.push({
+      key,
+      label: new Intl.DateTimeFormat("ru-RU", {
+        timeZone: "Europe/Moscow",
+        day: "numeric",
+        month: "short",
+      }).format(new Date(Date.now() - offset * 86_400_000)),
+      count: bucket?.count ?? 0,
+      income: bucket?.income ?? 0,
+    });
+  }
+  const maxDaily = Math.max(1, ...last14Days.map((day) => day.count));
+  const sortedDays = [...timeline.entries()].sort((a, b) => (a[0] < b[0] ? 1 : -1));
 
   return (
     <main className="mx-auto min-h-screen max-w-[430px] bg-[#0c0e14] px-4 py-5 text-white">
@@ -204,6 +255,55 @@ export default async function StoryAnalyticsPage({
                         minute: "2-digit",
                       }).format(new Date(unlocker.unlocked_at))
                     : "—"}
+                </span>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+      {unlockedCount > 0 && (
+        <section className="mt-6">
+          <h2 className="font-bold">Открытия по дням</h2>
+          <p className="mt-1 text-xs text-[#9991a3]">
+            Последние 14 дней, время — Москва
+          </p>
+          <div className="mt-3 flex h-28 items-end gap-1.5 rounded-2xl bg-white/5 p-3">
+            {last14Days.map((day) => (
+              <div
+                className="flex h-full flex-1 flex-col items-center justify-end gap-1"
+                key={day.key}
+              >
+                <span className="text-[10px] font-semibold text-[#d6cede]">
+                  {day.count > 0 ? day.count : ""}
+                </span>
+                <div
+                  className="w-full rounded-md bg-gradient-to-t from-[#7d45ff] to-[#ff4b8a]"
+                  style={{
+                    height: `${Math.max(4, (day.count / maxDaily) * 100)}%`,
+                    opacity: day.count > 0 ? 1 : 0.15,
+                  }}
+                  title={`${day.label}: ${day.count} открытий`}
+                />
+              </div>
+            ))}
+          </div>
+          <div className="mt-3 space-y-2">
+            {sortedDays.map(([key, bucket]) => (
+              <div
+                className="border-white/8 flex items-center justify-between rounded-xl border bg-[#171923] px-4 py-3"
+                key={key}
+              >
+                <span className="text-sm text-[#d6cede]">
+                  {new Intl.DateTimeFormat("ru-RU", {
+                    timeZone: "Europe/Moscow",
+                    day: "numeric",
+                    month: "long",
+                    year: "numeric",
+                  }).format(new Date(`${key}T12:00:00`))}
+                </span>
+                <span className="flex items-center gap-3 text-sm">
+                  <span className="text-[#9991a3]">{bucket.count} откр.</span>
+                  <b>{formatRubles(bucket.income)}</b>
                 </span>
               </div>
             ))}
