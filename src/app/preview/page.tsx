@@ -1,14 +1,17 @@
 import Link from "next/link";
 import {
-  Bell,
+  ArrowUpRight,
   ChevronRight,
   CirclePlus,
-  Gift,
+  Compass,
   MessageCircle,
+  Play,
+  Radio,
   Search,
   Send,
   UserRound,
-  Video,
+  WalletCards,
+  X,
 } from "lucide-react";
 
 export const metadata = {
@@ -17,25 +20,34 @@ export const metadata = {
 };
 
 const screens = [
-  { id: "feed", label: "Главная", icon: "⌂" },
-  { id: "profile", label: "Профиль", icon: "◉" },
-  { id: "earnings", label: "Доход", icon: "₽" },
-  { id: "bonuses", label: "Рефералы", icon: "✦" },
-  { id: "messages", label: "Сообщения", icon: "◌" },
-  { id: "live", label: "Эфир", icon: "▣" },
-  { id: "onboarding", label: "Старт", icon: "+" },
+  { id: "feed", label: "Главная", number: "01" },
+  { id: "profile", label: "Профиль", number: "02" },
+  { id: "earnings", label: "Доход", number: "03" },
+  { id: "bonuses", label: "Рефералы", number: "04" },
+  { id: "messages", label: "Сообщения", number: "05" },
+  { id: "live", label: "Эфир", number: "06" },
+  { id: "onboarding", label: "Старт", number: "07" },
 ] as const;
 
 type ScreenId = (typeof screens)[number]["id"];
 
-const avatarGradients = [
-  "from-[#ff78ad] to-[#ffc479]",
-  "from-[#8e6cff] to-[#e968df]",
-  "from-[#4bc7c2] to-[#78a5ff]",
-  "from-[#ff9c65] to-[#e65a99]",
+const people = [
+  { name: "Настя", tone: "bg-[#f87d9c]" },
+  { name: "Дима", tone: "bg-[#784ee9]" },
+  { name: "Ксюша", tone: "bg-[#2eaaa5]" },
+  { name: "Влад", tone: "bg-[#e38c45]" },
 ];
 
-function DemoAvatar({
+function Mark() {
+  return (
+    <span className="relative grid size-10 place-items-center overflow-hidden rounded-full bg-[#17151a] text-lg font-black text-[#f5f0e8]">
+      Х
+      <span className="absolute -bottom-2 -right-1 size-5 rounded-full bg-[#fb407b]" />
+    </span>
+  );
+}
+
+function Avatar({
   name,
   index,
   size = "size-12",
@@ -44,47 +56,50 @@ function DemoAvatar({
   index: number;
   size?: string;
 }) {
+  const person = people[index % people.length];
   return (
     <span
-      className={`grid ${size} shrink-0 place-items-center rounded-full bg-gradient-to-br p-0.5 ${avatarGradients[index % avatarGradients.length]}`}
+      className={`relative grid ${size} shrink-0 place-items-center rounded-full ${person.tone} p-[2px]`}
     >
-      <span className="grid size-full place-items-center rounded-full bg-white text-sm font-black text-[#2d2138] shadow-[0_4px_12px_rgba(65,42,86,0.12)]">
+      <span className="grid size-full place-items-center rounded-full bg-[#f5f0e8] text-xs font-black text-[#17151a]">
         {name.slice(0, 1)}
       </span>
+      <span className="absolute bottom-0 right-0 size-2.5 rounded-full border-2 border-[#f5f0e8] bg-[#41ad7e]" />
     </span>
   );
 }
 
-function DemoBottomNav({ active = "Главная" }: { active?: string }) {
-  const items = [
-    { label: "Главная", icon: Search },
+function Rule() {
+  return <div className="bg-[#17151a]/12 h-px" />;
+}
+
+function AppNav({ active }: { active: string }) {
+  const entries = [
+    { label: "Главная", icon: Compass },
     { label: "Поиск", icon: Search },
-    { label: "Активность", icon: Bell },
-    { label: "Профиль", icon: UserRound },
+    { label: "Чаты", icon: MessageCircle },
+    { label: "Я", icon: UserRound },
   ];
   return (
-    <nav
-      className="mt-7 flex items-end justify-around border-t border-[#2c2036]/10 bg-white px-2 pb-2 pt-2 text-[#7c7084]"
-      aria-label="Демо навигация"
-    >
-      {items.slice(0, 2).map(({ label, icon: Icon }) => (
+    <nav className="border-[#17151a]/12 mt-auto flex h-[70px] items-end justify-around border-t bg-[#f5f0e8] px-2 pb-2 pt-2">
+      {entries.slice(0, 2).map(({ label, icon: Icon }) => (
         <span
-          className={`grid place-items-center gap-0.5 text-[10px] ${active === label ? "font-black text-[#7549d0]" : ""}`}
+          className={`grid place-items-center gap-1 text-[9px] font-bold ${active === label ? "text-[#17151a]" : "text-[#8d8784]"}`}
           key={label}
         >
-          <Icon className="size-4" />
+          <Icon className="size-4" strokeWidth={active === label ? 2.6 : 1.8} />
           {label}
         </span>
       ))}
-      <span className="-mt-5 grid size-12 place-items-center rounded-full bg-gradient-to-br from-[#ff4d8d] to-[#8753ed] text-white shadow-[0_8px_22px_rgba(174,74,201,0.3)]">
+      <span className="-mt-6 grid size-12 place-items-center rounded-full bg-[#17151a] text-[#f5f0e8] shadow-[0_8px_0_#fb407b]">
         <CirclePlus className="size-6" />
       </span>
-      {items.slice(2).map(({ label, icon: Icon }) => (
+      {entries.slice(2).map(({ label, icon: Icon }) => (
         <span
-          className={`grid place-items-center gap-0.5 text-[10px] ${active === label ? "font-black text-[#7549d0]" : ""}`}
+          className={`grid place-items-center gap-1 text-[9px] font-bold ${active === label ? "text-[#17151a]" : "text-[#8d8784]"}`}
           key={label}
         >
-          <Icon className="size-4" />
+          <Icon className="size-4" strokeWidth={active === label ? 2.6 : 1.8} />
           {label}
         </span>
       ))}
@@ -92,403 +107,440 @@ function DemoBottomNav({ active = "Главная" }: { active?: string }) {
   );
 }
 
-function PreviewFeed() {
+function FeedScreen() {
   return (
-    <>
-      <header className="flex items-center justify-between px-5 pb-4 pt-5">
-        <span className="flex items-center gap-2 text-lg font-black tracking-[-0.055em]">
-          <span className="grid size-8 place-items-center rounded-xl bg-gradient-to-br from-[#ff4d8d] to-[#8753ed] text-white">
-            ♡
-          </span>
-          Хочу также
-        </span>
-        <span className="grid size-8 place-items-center rounded-full border border-[#2c2036]/10 bg-white text-[#715f80]">
+    <div className="flex min-h-[730px] flex-col bg-[#f5f0e8]">
+      <header className="flex items-center justify-between px-5 pb-5 pt-5">
+        <div className="flex items-center gap-2.5">
+          <Mark />
+          <span className="text-[17px] font-black tracking-[-0.08em]">ХОЧУ ТАКЖЕ</span>
+        </div>
+        <span className="grid size-9 place-items-center rounded-full border border-[#17151a]/15 bg-[#fbf8f1]">
           <Search className="size-4" />
         </span>
       </header>
-      <div className="mx-4 grid grid-cols-3 gap-1 rounded-2xl bg-[#f0e9f5] p-1 text-center text-[10px] font-bold">
-        <span className="rounded-xl bg-white px-1 py-2 text-[#7549d0] shadow-sm">
-          Для тебя
-        </span>
-        <span className="px-1 py-2 text-[#7e7187]">В эфире</span>
-        <span className="px-1 py-2 text-[#7e7187]">Популярное</span>
+      <div className="px-5">
+        <div className="flex items-end justify-between">
+          <div>
+            <p className="font-mono text-[9px] font-bold tracking-[0.16em] text-[#77706e]">
+              БУДЁННОВСК / 01
+            </p>
+            <h1 className="mt-1 text-[32px] font-black leading-[0.84] tracking-[-0.09em]">
+              ЛЮДИ
+              <br />
+              СЕЙЧАС.
+            </h1>
+          </div>
+          <span className="mb-1 max-w-24 text-right text-[10px] leading-4 text-[#6b6462]">
+            Не лента ради ленты. Повод встретиться.
+          </span>
+        </div>
+        <div className="mt-5">
+          <Rule />
+        </div>
       </div>
-      <section className="px-4 pt-5">
+      <section className="px-5 py-5">
         <div className="mb-3 flex items-center justify-between">
-          <h1 className="text-sm font-black">Сейчас в эфире</h1>
-          <span className="text-[10px] font-bold text-[#8753e6]">Смотреть все ›</span>
+          <p className="text-[11px] font-black tracking-[-0.02em]">В ГОРОДЕ</p>
+          <span className="font-mono text-[9px] font-bold text-[#fb407b]">
+            СМОТРЕТЬ ВСЕХ →
+          </span>
         </div>
-        <div className="flex gap-3 overflow-hidden">
-          {["Настя", "Макс", "Алина"].map((name, index) => (
-            <div
-              className="relative h-28 w-24 shrink-0 overflow-hidden rounded-2xl bg-gradient-to-br from-[#d44d8e] via-[#a661d9] to-[#5e52ba] p-2 text-white shadow-[0_8px_20px_rgba(77,43,111,0.18)]"
-              key={name}
-            >
-              <span className="rounded-md bg-[#ff315c] px-1.5 py-0.5 text-[8px] font-black">
-                LIVE
-              </span>
-              <span className="absolute inset-x-2 bottom-2">
-                <b className="block text-xs">{name}</b>
-                <small className="block text-[8px] text-white/80">
-                  ● {index === 0 ? "2,4K" : "1,2K"}
-                </small>
-              </span>
+        <div className="flex justify-between gap-2">
+          {people.map((person, index) => (
+            <span className="flex w-14 flex-col items-center gap-1.5" key={person.name}>
+              <Avatar index={index} name={person.name} />
+              <b className="w-full truncate text-center text-[10px]">{person.name}</b>
+            </span>
+          ))}
+          <span className="grid size-12 place-items-center self-start rounded-full border border-dashed border-[#17151a]/30 text-sm font-black text-[#77706e]">
+            +?
+          </span>
+        </div>
+      </section>
+      <section className="mx-5 overflow-hidden rounded-[18px] bg-[#17151a] text-[#f5f0e8] shadow-[0_12px_0_#fb407b]">
+        <div className="flex min-h-40 flex-col justify-between p-4">
+          <div className="flex items-start justify-between">
+            <span className="rounded bg-[#fb407b] px-2 py-1 font-mono text-[9px] font-black tracking-[0.12em]">
+              LIVE / 21:04
+            </span>
+            <span className="font-mono text-[9px] text-white/55">В ЭФИРЕ</span>
+          </div>
+          <div className="flex items-end justify-between">
+            <div>
+              <p className="text-[11px] font-bold text-[#ff9bbd]">НАСТЯ / МУЗЫКА</p>
+              <h2 className="mt-1 text-3xl font-black leading-[0.85] tracking-[-0.08em]">
+                СОБИРАЕМ
+                <br />
+                СВОИХ.
+              </h2>
             </div>
-          ))}
-        </div>
-      </section>
-      <section className="px-4 pt-6">
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-sm font-black">Популярные авторы</h2>
-          <span className="text-[10px] font-bold text-[#8753e6]">Все ›</span>
-        </div>
-        <div className="flex justify-between">
-          {["Настя", "Дима", "Ксюша", "Влад"].map((name, index) => (
-            <span className="flex w-16 flex-col items-center gap-1.5" key={name}>
-              <DemoAvatar index={index} name={name} />
-              <b className="w-full truncate text-center text-[10px]">{name}</b>
-              <small className="text-[9px] text-[#83758b]">
-                {["124K", "87K", "64K", "52K"][index]}
-              </small>
-            </span>
-          ))}
-        </div>
-      </section>
-      <section className="px-4 pt-6">
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-sm font-black">Новые авторы</h2>
-          <span className="text-[10px] font-bold text-[#8753e6]">Все ›</span>
-        </div>
-        {["Саша", "Лера"].map((name, index) => (
-          <div
-            className="mb-2 flex items-center gap-3 rounded-2xl border border-[#2c2036]/10 bg-white p-2.5 shadow-[0_6px_18px_rgba(68,42,90,0.05)]"
-            key={name}
-          >
-            <DemoAvatar index={index + 2} name={name} size="size-10" />
-            <span className="min-w-0 grow">
-              <b className="block text-xs">{name}</b>
-              <small className="block truncate text-[10px] text-[#81748a]">
-                Только пришёл(а) в город
-              </small>
-            </span>
-            <span className="rounded-xl bg-gradient-to-r from-[#ff6b9f] to-[#8753ed] px-2.5 py-1.5 text-[10px] font-black text-white">
-              Подписаться
+            <span className="grid size-11 place-items-center rounded-full border border-white/20">
+              <Play className="ml-0.5 size-5 fill-current" />
             </span>
           </div>
-        ))}
+        </div>
       </section>
-      <DemoBottomNav />
-    </>
+      <section className="px-5 pb-6 pt-8">
+        <div className="mb-3 flex items-center justify-between">
+          <p className="text-[11px] font-black">НОВЫЕ ЛИЦА</p>
+          <span className="font-mono text-[9px] font-bold text-[#fb407b]">ЗАЙТИ →</span>
+        </div>
+        <div className="border-[#17151a]/12 border-y">
+          {["Саша — пришёл сегодня", "Лера — хочет собрать свою тусовку"].map(
+            (label, index) => (
+              <div
+                className="border-[#17151a]/12 flex items-center gap-3 border-b py-3 last:border-0"
+                key={label}
+              >
+                <span
+                  className={`grid size-9 place-items-center rounded-full text-xs font-black text-white ${people[index + 2].tone}`}
+                >
+                  {label[0]}
+                </span>
+                <span className="min-w-0 grow">
+                  <b className="block truncate text-xs">{label.split(" — ")[0]}</b>
+                  <small className="block truncate text-[10px] text-[#756d69]">
+                    {label.split(" — ")[1]}
+                  </small>
+                </span>
+                <ArrowUpRight className="size-4" />
+              </div>
+            ),
+          )}
+        </div>
+      </section>
+      <AppNav active="Главная" />
+    </div>
   );
 }
 
-function PreviewProfile() {
+function ProfileScreen() {
   return (
-    <>
-      <section className="relative h-44 overflow-hidden bg-gradient-to-br from-[#f8a0bc] via-[#a66be1] to-[#595bc4]">
-        <span className="absolute left-4 top-4 grid size-9 place-items-center rounded-full bg-white/30 text-white">
+    <div className="flex min-h-[730px] flex-col bg-[#f5f0e8]">
+      <section className="relative h-48 overflow-hidden bg-[#2e2550]">
+        <div className="absolute -right-8 -top-10 size-52 rounded-full border-[28px] border-[#fb407b]" />
+        <div className="absolute bottom-0 left-0 h-20 w-full bg-[repeating-linear-gradient(-45deg,transparent_0,transparent_10px,rgba(255,255,255,.08)_10px,rgba(255,255,255,.08)_11px)]" />
+        <span className="absolute left-4 top-4 grid size-9 place-items-center rounded-full border border-white/20 bg-black/10 text-white">
           ‹
         </span>
-        <span className="absolute right-4 top-4 grid size-9 place-items-center rounded-full bg-white/30 text-white">
-          •••
+        <span className="absolute right-4 top-4 font-mono text-[9px] font-bold tracking-[0.16em] text-white/70">
+          PROFILE / 014
         </span>
       </section>
-      <section className="relative px-4 pb-4">
+      <section className="relative px-5 pb-5">
         <div className="-mt-10 flex items-end justify-between">
-          <DemoAvatar index={0} name="Настя" size="size-20" />
-          <span className="rounded-xl bg-gradient-to-r from-[#ff6e9f] to-[#8753ed] px-4 py-2 text-xs font-black text-white">
-            Подписаться
-          </span>
+          <Avatar index={0} name="Настя" size="size-20" />
+          <button className="rounded-[10px] bg-[#17151a] px-4 py-2.5 text-xs font-black text-[#f5f0e8] shadow-[0_4px_0_#fb407b]">
+            ПОДПИСАТЬСЯ
+          </button>
         </div>
-        <div className="mt-3 flex flex-wrap items-center gap-1.5">
-          <h1 className="text-2xl font-black tracking-[-0.055em]">Настя</h1>
-          <span className="text-sm text-[#8753ed]">●</span>
-          <span className="rounded-full bg-[#f0e6ff] px-2 py-1 text-[9px] font-black text-[#7549d0]">
-            Автор
-          </span>
+        <div className="mt-4 flex items-center gap-2">
+          <h1 className="text-3xl font-black tracking-[-0.08em]">НАСТЯ</h1>
+          <span className="size-2 rounded-full bg-[#8753ed]" />
+          <span className="font-mono text-[9px] text-[#756d69]">23 / БУДЁННОВСК</span>
         </div>
-        <p className="mt-1 text-xs text-[#81748a]">23 года · Будённовск</p>
-        <div className="mt-4 grid grid-cols-3 text-center">
-          {["12,4K", "320", "1,2M"].map((value, index) => (
-            <span key={value}>
-              <b className="block text-base">{value}</b>
-              <small className="text-[9px] text-[#84778d]">
-                {["Подписчики", "Подписки", "Охват"][index]}
-              </small>
-            </span>
-          ))}
-        </div>
-        <p className="mt-4 text-xs leading-5 text-[#61546b]">
-          Тут мы создаём классную атмосферу: музыка, эфиры и путешествия.
+        <p className="mt-3 max-w-sm text-xs leading-5 text-[#5e5755]">
+          Собираю музыку, людей и маленькие причины не сидеть дома.
         </p>
-        <div className="mt-4 grid grid-cols-3 gap-2">
-          {["Написать", "Поговорить", "Совместный стрим"].map((label, index) => (
-            <span
-              className="rounded-xl border border-[#2c2036]/10 bg-white p-2 text-center shadow-[0_5px_14px_rgba(68,42,90,0.05)]"
-              key={label}
-            >
-              <MessageCircle className="mx-auto size-4 text-[#8753e6]" />
-              <small className="mt-1 block text-[8px] font-bold">{label}</small>
-              <small className="block text-[8px] text-[#9a8fa1]">
-                {["49 ₽", "15 мин", "799 ₽"][index]}
+        <div className="border-[#17151a]/12 mt-5 grid grid-cols-3 border-y py-3 text-center">
+          {["12,4K", "320", "1,2M"].map((number, index) => (
+            <span key={number}>
+              <b className="block text-base tracking-[-0.06em]">{number}</b>
+              <small className="font-mono text-[8px] text-[#7b7471]">
+                {["ЛЮДИ", "СВЯЗИ", "ОХВАТ"][index]}
               </small>
             </span>
           ))}
         </div>
-        <span className="mt-3 flex items-center justify-center gap-2 rounded-xl bg-[#f4edff] py-2 text-xs font-black text-[#7549d0]">
-          <Gift className="size-4" /> Отправить подарок
-        </span>
+        <p className="mt-5 font-mono text-[9px] font-bold tracking-[0.15em] text-[#fb407b]">
+          МОЖНО СО МНОЙ
+        </p>
+        <div className="mt-2 grid grid-cols-3 gap-px bg-[#17151a]/15">
+          {["НАПИСАТЬ / 49", "ГОВОРИТЬ / 15М", "СО-ЭФИР / 799"].map((item) => (
+            <span
+              className="bg-[#f5f0e8] p-2 text-center text-[9px] font-black"
+              key={item}
+            >
+              {item}
+            </span>
+          ))}
+        </div>
       </section>
-      <div className="grid grid-cols-3 border-y border-[#2c2036]/10 text-center text-[10px] font-bold">
-        <span className="border-b-2 border-[#ef5793] py-3 text-[#7549d0]">Эфиры</span>
-        <span className="py-3 text-[#877b90]">Посты</span>
-        <span className="py-3 text-[#877b90]">Обо мне</span>
+      <div className="border-[#17151a]/12 mt-auto grid grid-cols-3 border-t text-center font-mono text-[9px] font-bold">
+        <span className="border-b-2 border-[#fb407b] py-3">ЭФИРЫ</span>
+        <span className="py-3 text-[#817976]">ПОСТЫ</span>
+        <span className="py-3 text-[#817976]">ОБО МНЕ</span>
       </div>
-      <DemoBottomNav active="Профиль" />
-    </>
+      <AppNav active="Я" />
+    </div>
   );
 }
 
-function PreviewEarnings() {
-  const rows = [
-    ["Донаты", "58 450 ₽", "✦"],
-    ["Платные сообщения", "19 400 ₽", "◌"],
-    ["Платное общение", "24 600 ₽", "♡"],
-    ["Подписки", "17 600 ₽", "♛"],
+function EarningsScreen() {
+  const income = [
+    ["ДОНАТЫ", "58 450", "#fb407b"],
+    ["СООБЩЕНИЯ", "19 400", "#8753ed"],
+    ["ПОДПИСКИ", "17 600", "#2eaaa5"],
+    ["ЭФИРЫ", "8 000", "#e38c45"],
   ];
   return (
-    <>
-      <header className="flex items-center justify-between px-5 pb-3 pt-5">
-        <span>‹</span>
-        <h1 className="text-sm font-black">Мой заработок</h1>
-        <span>⚙</span>
+    <div className="min-h-[730px] bg-[#f5f0e8] p-5">
+      <header className="flex items-center justify-between">
+        <span className="grid size-9 place-items-center rounded-full border border-[#17151a]/15">
+          ‹
+        </span>
+        <span className="font-mono text-[10px] font-black tracking-[0.14em]">
+          МОЙ ДОХОД
+        </span>
+        <span className="grid size-9 place-items-center rounded-full border border-[#17151a]/15">
+          <WalletCards className="size-4" />
+        </span>
       </header>
-      <section className="mx-4 rounded-[1.7rem] border border-[#2c2036]/10 bg-white p-5 shadow-[0_12px_30px_rgba(68,42,90,0.07)]">
-        <div className="flex items-start justify-between">
-          <span>
-            <small className="text-[#81748a]">Баланс</small>
-            <b className="mt-1 block text-3xl tracking-[-0.06em]">24 560 ₽</b>
-          </span>
-          <span className="rounded-xl bg-gradient-to-r from-[#ff6c9f] to-[#8753ed] px-3 py-2 text-xs font-black text-white">
-            Вывести
-          </span>
+      <p className="mt-9 font-mono text-[9px] font-bold tracking-[0.16em] text-[#fb407b]">
+        ТЕСТОВЫЙ БАЛАНС / НЕ ВЫВОДИТСЯ
+      </p>
+      <p className="mt-2 text-5xl font-black tracking-[-0.1em]">24 560 ₽</p>
+      <div className="mt-5 flex items-end gap-2">
+        <span className="text-2xl font-black tracking-[-0.06em]">+23%</span>
+        <span className="mb-1 text-xs text-[#756d69]">к прошлому периоду</span>
+        <span className="ml-auto h-10 w-28 bg-[linear-gradient(135deg,transparent_20%,#8753ed_20%,#8753ed_27%,transparent_27%,transparent_45%,#fb407b_45%,#fb407b_52%,transparent_52%,transparent_70%,#2eaaa5_70%,#2eaaa5_78%,transparent_78%)]" />
+      </div>
+      <div className="mt-6">
+        <Rule />
+      </div>
+      <section className="pt-5">
+        <div className="flex items-end justify-between">
+          <h1 className="text-[26px] font-black tracking-[-0.07em]">
+            ИЗ ЧЕГО
+            <br />
+            СОБРАЛОСЬ
+          </h1>
+          <span className="font-mono text-[9px] text-[#756d69]">ВСЁ ВРЕМЯ</span>
         </div>
-        <div className="mt-5 flex items-end justify-between rounded-2xl bg-[#f6effb] p-3">
-          <span>
-            <small className="text-[#81748a]">Доход за месяц</small>
-            <b className="mt-1 block text-xl">128 450 ₽</b>
-          </span>
-          <span className="text-xs font-black text-[#219768]">+23% ↗</span>
-        </div>
-      </section>
-      <section className="px-4 pt-6">
-        <h2 className="text-sm font-black">Источники дохода</h2>
-        <div className="mt-3 overflow-hidden rounded-2xl border border-[#2c2036]/10 bg-white">
-          {rows.map(([name, value, icon]) => (
-            <div
-              className="border-[#2c2036]/8 flex items-center justify-between border-b px-4 py-3 last:border-0"
-              key={name}
-            >
-              <span className="flex items-center gap-2.5 text-xs font-bold">
-                <span className="grid size-7 place-items-center rounded-lg bg-[#f2e7ff] text-[#8753e6]">
-                  {icon}
-                </span>
-                {name}
+        <div className="mt-5 space-y-3">
+          {income.map(([label, value, color], index) => (
+            <div className="flex items-center gap-3" key={label}>
+              <span className="grid size-7 place-items-center rounded-full bg-[#17151a] text-[9px] font-black text-white">
+                0{index + 1}
               </span>
-              <b className="text-xs">{value}</b>
+              <span className="border-[#17151a]/12 grow border-b pb-2 text-xs font-black">
+                {label}
+              </span>
+              <b className="pb-2 text-xs">{value} ₽</b>
+              <span
+                className="mb-2 size-2 rounded-full"
+                style={{ backgroundColor: color }}
+              />
             </div>
           ))}
         </div>
       </section>
-      <DemoBottomNav />
-    </>
-  );
-}
-
-function PreviewBonuses() {
-  return (
-    <>
-      <header className="flex items-center justify-between px-5 pb-3 pt-5">
-        <span>‹</span>
-        <h1 className="text-sm font-black">Приглашай друзей</h1>
-        <span className="w-4" />
-      </header>
-      <section className="mx-4 overflow-hidden rounded-[1.8rem] bg-gradient-to-br from-[#f9edff] via-[#fff7fb] to-[#eaf5ff] p-5 text-center shadow-[0_14px_34px_rgba(84,49,112,0.1)]">
-        <p className="text-sm font-black text-[#6944a5]">
-          Пригласи активного пользователя
-          <br />в Будённовск — получи
+      <div className="mt-8 rounded-[16px] bg-[#17151a] p-4 text-[#f5f0e8]">
+        <p className="font-mono text-[9px] tracking-[0.15em] text-[#fb9fbd]">ВАЖНО</p>
+        <p className="mt-2 text-xs leading-5 text-white/70">
+          Реальные выплаты появятся только после KYC и подключения платёжного партнёра.
         </p>
-        <p className="mt-2 text-5xl font-black tracking-[-0.08em] text-[#d64595]">
-          200 ⭐
-        </p>
-        <span className="mt-3 inline-flex rounded-full bg-[#fff0b9] px-3 py-1 text-[10px] font-black text-[#846114]">
-          за активное приглашение
-        </span>
-      </section>
-      <section className="mx-4 mt-5 rounded-2xl border border-[#2c2036]/10 bg-white p-4">
-        <p className="text-[10px] font-black uppercase tracking-[0.12em] text-[#8753e6]">
-          Твоя ссылка
-        </p>
-        <p className="mt-2 truncate rounded-xl bg-[#f7f2fa] p-2.5 text-[10px] text-[#74687d]">
-          hochutakzhe.ru/r/first-wave?city=budennovsk
-        </p>
-        <span className="mt-3 flex items-center justify-center rounded-xl bg-gradient-to-r from-[#ff5d9a] to-[#8753ed] py-2.5 text-xs font-black text-white">
-          Пригласить друзей
-        </span>
-      </section>
-      <section className="px-4 pt-6">
-        <h2 className="text-sm font-black">Кто по твоей ссылке</h2>
-        {["Алина", "Максим", "Кирилл"].map((name, index) => (
-          <div
-            className="mt-2 flex items-center gap-3 rounded-2xl border border-[#2c2036]/10 bg-white p-3"
-            key={name}
-          >
-            <DemoAvatar index={index} name={name} size="size-10" />
-            <span className="grow">
-              <b className="block text-xs">{name}</b>
-              <small className="text-[10px] text-[#81748a]">
-                {index === 0 ? "Профиль заполнен" : "Стал активной"}
-              </small>
-            </span>
-            <b className="text-xs text-[#9b59e9]">+200 ⭐</b>
-          </div>
-        ))}
-      </section>
-      <DemoBottomNav />
-    </>
-  );
-}
-
-function PreviewMessages() {
-  return (
-    <>
-      <header className="flex items-center justify-between px-5 pb-3 pt-5">
-        <span>
-          <small className="block text-[9px] font-black uppercase tracking-[0.12em] text-[#8b5fbd]">
-            Общение
-          </small>
-          <h1 className="text-2xl font-black tracking-[-0.06em]">Сообщения</h1>
-        </span>
-        <Pen />
-      </header>
-      <div className="mx-4 grid grid-cols-3 gap-1 rounded-2xl bg-[#f0e9f5] p-1 text-center text-[10px] font-black">
-        <span className="rounded-xl bg-white py-2 text-[#7549d0]">Все</span>
-        <span className="py-2 text-[#877b90]">Непрочитанные</span>
-        <span className="py-2 text-[#877b90]">Платные</span>
       </div>
-      <section className="px-4 pt-5">
+      <AppNav active="Я" />
+    </div>
+  );
+}
+
+function BonusesScreen() {
+  return (
+    <div className="min-h-[730px] bg-[#f5f0e8] p-5">
+      <header className="flex items-center justify-between">
+        <span className="grid size-9 place-items-center rounded-full border border-[#17151a]/15">
+          ‹
+        </span>
+        <span className="font-mono text-[10px] font-black tracking-[0.14em]">
+          ПРИГЛАШЕНИЕ
+        </span>
+        <span className="w-9" />
+      </header>
+      <section className="mt-8 overflow-hidden rounded-[18px] border-2 border-[#17151a] bg-[#fb407b] p-5 text-[#17151a] shadow-[7px_7px_0_#8753ed]">
+        <p className="font-mono text-[9px] font-black tracking-[0.16em]">
+          БУДЁННОВСК / ПЕРВАЯ ВОЛНА
+        </p>
+        <h1 className="mt-5 text-5xl font-black leading-[0.76] tracking-[-0.12em]">
+          +200
+          <br />⭐
+        </h1>
+        <p className="mt-5 max-w-48 text-xs font-bold leading-5">
+          За активного человека, которого ты привёл в город.
+        </p>
+        <div className="mt-5 border-t border-[#17151a]/30 pt-3 font-mono text-[9px] font-bold">
+          РЕГИСТРАЦИЯ → ПРОФИЛЬ → ПЕРВОЕ ДЕЙСТВИЕ
+        </div>
+      </section>
+      <section className="mt-9">
+        <p className="font-mono text-[9px] font-black tracking-[0.15em] text-[#756d69]">
+          ТВОЯ ССЫЛКА
+        </p>
+        <div className="mt-2 border-b-2 border-[#17151a] pb-3 text-xs font-bold">
+          hochutakzhe.ru/r/first-wave
+        </div>
+        <button className="mt-4 flex w-full items-center justify-between bg-[#17151a] px-4 py-3 text-xs font-black text-[#f5f0e8]">
+          СКОПИРОВАТЬ ПРИГЛАШЕНИЕ <Send className="size-4" />
+        </button>
+      </section>
+      <section className="mt-9">
+        <div className="flex justify-between">
+          <h2 className="text-lg font-black tracking-[-0.06em]">КРУГ ГОРОДА</h2>
+          <span className="font-mono text-[9px] text-[#fb407b]">+200 ЗА КАЖДОГО</span>
+        </div>
+        <div className="border-[#17151a]/12 mt-3 border-y">
+          {["Алина / профиль", "Максим / первое действие", "Кирилл / бонус готов"].map(
+            (item, index) => (
+              <div
+                className="border-[#17151a]/12 flex items-center gap-3 border-b py-3 last:border-0"
+                key={item}
+              >
+                <Avatar index={index} name={item} size="size-9" />
+                <span className="grow text-xs font-bold">{item}</span>
+                <span className="text-[10px] font-black text-[#8753ed]">+200</span>
+              </div>
+            ),
+          )}
+        </div>
+      </section>
+      <AppNav active="Я" />
+    </div>
+  );
+}
+
+function MessagesScreen() {
+  return (
+    <div className="flex min-h-[730px] flex-col bg-[#f5f0e8]">
+      <header className="flex items-end justify-between px-5 pb-5 pt-5">
+        <div>
+          <p className="font-mono text-[9px] font-black tracking-[0.15em] text-[#fb407b]">
+            ЛИЧНОЕ
+          </p>
+          <h1 className="mt-1 text-4xl font-black tracking-[-0.1em]">ЧАТЫ</h1>
+        </div>
+        <span className="grid size-9 place-items-center rounded-full bg-[#17151a] text-white">
+          <Send className="size-4" />
+        </span>
+      </header>
+      <div className="border-[#17151a]/12 mx-5 flex gap-5 border-y py-3 font-mono text-[9px] font-bold">
+        <span className="text-[#17151a]">ВСЕ / 04</span>
+        <span className="text-[#817976]">НЕПРОЧИТАННЫЕ / 02</span>
+      </div>
+      <section className="px-5">
         {["Настя", "Алина", "Макс", "Дима"].map((name, index) => (
           <div
-            className="mb-2 flex items-center gap-3 rounded-2xl border border-[#2c2036]/10 bg-white p-3 shadow-[0_6px_16px_rgba(68,42,90,0.05)]"
+            className="border-[#17151a]/12 flex items-center gap-3 border-b py-4"
             key={name}
           >
-            <DemoAvatar index={index} name={name} />
-            <span className="grow">
-              <b className="block text-xs">{name}</b>
-              <small className="block text-[10px] text-[#81748a]">
-                Привет! Спасибо за поддержку 💗
+            <Avatar index={index} name={name} />
+            <span className="min-w-0 grow">
+              <b className="block text-sm">{name}</b>
+              <small className="block truncate text-[10px] text-[#756d69]">
+                Спасибо за поддержку. Пойдём в эфир?
               </small>
             </span>
-            {index < 2 && (
-              <span className="grid size-5 place-items-center rounded-full bg-gradient-to-r from-[#ff5d9a] to-[#8753ed] text-[9px] font-black text-white">
+            {index < 2 ? (
+              <span className="grid size-5 place-items-center rounded-full bg-[#fb407b] text-[9px] font-black">
                 {index + 1}
               </span>
+            ) : (
+              <ChevronRight className="size-4" />
             )}
           </div>
         ))}
       </section>
-      <DemoBottomNav active="Активность" />
-    </>
+      <div className="mt-auto px-5 pb-6">
+        <p className="text-center text-[10px] leading-5 text-[#7c7472]">
+          Диалог открывается только после принятого запроса. Здесь нельзя купить чужое
+          согласие.
+        </p>
+      </div>
+      <AppNav active="Чаты" />
+    </div>
   );
 }
 
-function Pen() {
+function LiveScreen() {
   return (
-    <span className="grid size-10 place-items-center rounded-full border border-[#2c2036]/10 bg-white text-[#8753e6]">
-      <Send className="size-4" />
-    </span>
-  );
-}
-
-function PreviewLive() {
-  return (
-    <>
-      <header className="flex items-center justify-between px-5 pb-3 pt-5">
-        <span>×</span>
-        <h1 className="text-sm font-black">Создание эфира</h1>
-        <span className="w-4" />
-      </header>
-      <section className="mx-4 mt-4 rounded-[1.8rem] border border-[#2c2036]/10 bg-white p-5 shadow-[0_12px_30px_rgba(68,42,90,0.08)]">
-        <span className="mx-auto grid size-16 place-items-center rounded-[1.5rem] bg-[#f0e4ff] text-[#8753e6]">
-          <VideoIcon />
+    <div className="min-h-[730px] bg-[#f5f0e8] p-5">
+      <header className="flex items-center justify-between">
+        <X className="size-5" />
+        <span className="font-mono text-[10px] font-black tracking-[0.14em]">
+          НОВЫЙ ЭФИР
         </span>
-        <p className="mt-4 text-center text-xs font-black text-[#8753e6]">LIVE ROOM</p>
-        <h1 className="mt-1 text-center text-2xl font-black">Выйди в эфир</h1>
-        <Field label="Название эфира" value="Например: Болтаем и играем 💜" />
-        <Field label="Кто может смотреть" value="Все ›" />
-        <div className="mt-3 flex items-center justify-between text-xs font-bold">
-          <span>Разрешить чат</span>
-          <span className="h-5 w-9 rounded-full bg-[#8753ed] p-0.5">
-            <span className="block size-4 translate-x-4 rounded-full bg-white" />
+        <span className="w-5" />
+      </header>
+      <section className="mt-8 bg-[#17151a] p-5 text-[#f5f0e8] shadow-[7px_7px_0_#fb407b]">
+        <Radio className="size-8 text-[#fb407b]" />
+        <h1 className="mt-12 text-4xl font-black leading-[0.82] tracking-[-0.1em]">
+          НАЖМИ
+          <br />
+          «НАЧАТЬ».
+        </h1>
+        <p className="mt-4 max-w-52 text-xs leading-5 text-white/65">
+          Комната, ссылка и чат — чтобы собрать своих без лишней техники.
+        </p>
+      </section>
+      <section className="mt-8 space-y-5">
+        <Field label="НАЗВАНИЕ" value="Болтаем и играем" />
+        <Field label="КТО МОЖЕТ СМОТРЕТЬ" value="Все / ›" />
+        <div className="border-[#17151a]/12 flex justify-between border-y py-4 text-xs font-bold">
+          <span>РАЗРЕШИТЬ ЧАТ</span>
+          <span className="rounded-full bg-[#17151a] px-2 py-0.5 text-[9px] text-white">
+            ВКЛ
           </span>
         </div>
-        <span className="mt-5 flex items-center justify-center rounded-2xl bg-gradient-to-r from-[#ff5d9a] to-[#8753ed] py-3 text-sm font-black text-white">
-          Начать эфир
-        </span>
+        <button className="flex w-full items-center justify-between bg-[#fb407b] px-4 py-4 text-sm font-black text-[#17151a]">
+          НАЧАТЬ ЭФИР <ArrowUpRight className="size-5" />
+        </button>
       </section>
-    </>
+    </div>
   );
 }
 
-function VideoIcon() {
-  return <Video className="size-7" />;
-}
 function Field({ label, value }: { label: string; value: string }) {
   return (
-    <label className="mt-4 block">
-      <b className="text-xs">{label}</b>
-      <span className="mt-1.5 flex h-11 items-center justify-between rounded-xl border border-[#2c2036]/10 bg-[#faf7fc] px-3 text-[10px] text-[#9a8fa1]">
+    <label className="block">
+      <span className="font-mono text-[9px] font-black tracking-[0.14em] text-[#756d69]">
+        {label}
+      </span>
+      <span className="mt-2 flex h-12 items-center border-b-2 border-[#17151a] text-sm font-bold">
         {value}
       </span>
     </label>
   );
 }
 
-function PreviewOnboarding() {
+function OnboardingScreen() {
   return (
-    <section className="min-h-[680px] p-5">
-      <span className="grid size-11 place-items-center rounded-2xl bg-gradient-to-br from-[#ff5d9a] to-[#8753ed] text-xl text-white">
-        ♡
-      </span>
-      <h1 className="mt-7 text-3xl font-black leading-[0.92] tracking-[-0.07em]">
-        Добро пожаловать
-        <br />в Хочу также!
-      </h1>
-      <p className="mt-4 max-w-xs text-sm leading-6 text-[#74677d]">
-        Ты можешь не только смотреть, но и зарабатывать здесь.
+    <div className="min-h-[730px] bg-[#17151a] p-6 text-[#f5f0e8]">
+      <Mark />
+      <p className="mt-16 font-mono text-[10px] font-bold tracking-[0.17em] text-[#fb9fbd]">
+        ПЕРВЫЙ ШАГ / 01
       </p>
-      <div className="mt-8 space-y-4">
-        {[
-          "Создай профиль",
-          "Расскажи о себе",
-          "Начни эфир или общайся",
-          "Получай поддержку и донаты",
-        ].map((item, index) => (
-          <span className="flex items-center gap-3 text-sm font-bold" key={item}>
-            <span className="grid size-7 place-items-center rounded-lg bg-[#f0e4ff] text-xs text-[#8753e6]">
-              {index + 1}
-            </span>
-            {item}
-          </span>
+      <h1 className="mt-4 text-5xl font-black leading-[0.8] tracking-[-0.12em]">
+        НЕ СМОТРИ.
+        <br />
+        УЧАСТВУЙ.
+      </h1>
+      <p className="mt-7 max-w-56 text-sm leading-6 text-white/65">
+        Создай профиль, скажи, что тебе важно, и найди людей, которым это тоже не всё
+        равно.
+      </p>
+      <div className="mt-10 border-t border-white/15 pt-5">
+        {["Профиль", "Интересы", "Город", "Первое желание"].map((item, index) => (
+          <div className="flex items-center gap-3 py-2" key={item}>
+            <span className="font-mono text-[10px] text-[#fb407b]">0{index + 1}</span>
+            <span className="text-xs font-bold">{item}</span>
+          </div>
         ))}
       </div>
-      <span className="mt-10 flex items-center justify-center rounded-2xl bg-gradient-to-r from-[#ff5d9a] to-[#8753ed] py-3.5 text-sm font-black text-white">
-        Создать профиль
-      </span>
-      <span className="mt-3 block text-center text-xs font-bold text-[#8753e6]">
-        Сделаю позже
-      </span>
-    </section>
+      <button className="mt-10 flex w-full items-center justify-between bg-[#f5f0e8] px-4 py-4 text-sm font-black text-[#17151a]">
+        СОЗДАТЬ ПРОФИЛЬ <ArrowUpRight className="size-5" />
+      </button>
+    </div>
   );
 }
 
@@ -502,74 +554,74 @@ export default async function PreviewPage({
     ? (rawScreen as ScreenId)
     : "feed";
   const content: Record<ScreenId, React.ReactNode> = {
-    feed: <PreviewFeed />,
-    profile: <PreviewProfile />,
-    earnings: <PreviewEarnings />,
-    bonuses: <PreviewBonuses />,
-    messages: <PreviewMessages />,
-    live: <PreviewLive />,
-    onboarding: <PreviewOnboarding />,
+    feed: <FeedScreen />,
+    profile: <ProfileScreen />,
+    earnings: <EarningsScreen />,
+    bonuses: <BonusesScreen />,
+    messages: <MessagesScreen />,
+    live: <LiveScreen />,
+    onboarding: <OnboardingScreen />,
   };
 
   return (
-    <main className="min-h-screen bg-[#ede8f2] px-4 py-5 text-[#241a2c] sm:px-8 lg:py-10">
-      <div className="mx-auto grid max-w-6xl gap-6 lg:grid-cols-[240px_minmax(0,430px)_1fr] lg:items-start">
-        <aside className="rounded-[2rem] border border-white/80 bg-white/80 p-5 shadow-[0_18px_50px_rgba(68,42,90,0.1)] backdrop-blur lg:sticky lg:top-8">
+    <main className="min-h-screen bg-[#dcd7d1] px-4 py-5 text-[#17151a] sm:px-8 lg:py-10">
+      <div className="mx-auto grid max-w-6xl gap-6 lg:grid-cols-[230px_430px_minmax(0,1fr)] lg:items-start">
+        <aside className="border border-[#17151a]/15 bg-[#f5f0e8] p-5 shadow-[8px_8px_0_#17151a] lg:sticky lg:top-8">
           <Link
-            className="flex items-center gap-2 text-lg font-black tracking-[-0.06em]"
+            className="flex items-center gap-2.5 text-lg font-black tracking-[-0.08em]"
             href="/"
           >
-            <span className="grid size-9 place-items-center rounded-xl bg-gradient-to-br from-[#ff4d8d] to-[#8753ed] text-white">
-              ♡
-            </span>
-            Хочу также
+            <Mark />
+            ХОЧУ ТАКЖЕ
           </Link>
-          <p className="mt-5 text-xs leading-5 text-[#776b80]">
-            Preview флагманского кабинета. Все имена, суммы и статусы на этом экране —
-            синтетическая демонстрация UI.
+          <p className="border-[#17151a]/12 mt-6 border-t pt-4 font-mono text-[9px] leading-5 text-[#716a67]">
+            ДИЗАЙН-ПРОСМОТР / СИНТЕТИЧЕСКИЕ ДАННЫЕ / БЕЗ ДОСТУПА К РЕАЛЬНЫМ АККАУНТАМ
           </p>
           <nav
-            className="mt-5 grid grid-cols-2 gap-2 lg:grid-cols-1"
+            className="bg-[#17151a]/12 mt-5 grid grid-cols-2 gap-px lg:grid-cols-1"
             aria-label="Экраны preview"
           >
             {screens.map((item) => (
               <a
-                className={`flex items-center gap-2 rounded-xl px-3 py-2.5 text-xs font-black transition ${screen === item.id ? "bg-[#f0e5ff] text-[#7549d0]" : "text-[#6e6277] hover:bg-[#f7f2fa]"}`}
+                className={`flex items-center gap-3 bg-[#f5f0e8] px-3 py-3 text-xs font-black ${screen === item.id ? "bg-[#17151a] text-[#f5f0e8]" : "hover:bg-[#fb407b]"}`}
                 href={`/preview?screen=${item.id}`}
                 key={item.id}
               >
-                <span className="grid size-6 place-items-center rounded-lg bg-white text-xs shadow-sm">
-                  {item.icon}
+                <span className="font-mono text-[9px] text-[#fb407b]">
+                  {item.number}
                 </span>
                 {item.label}
               </a>
             ))}
           </nav>
         </aside>
-        <section className="overflow-hidden rounded-[2.2rem] border border-white/90 bg-[#f7f4fb] shadow-[0_26px_80px_rgba(58,34,82,0.2)]">
-          <div className="border-[#2c2036]/8 flex items-center justify-between border-b bg-white/70 px-5 py-2 text-[10px] font-bold text-[#82758b]">
-            <span>ДЕМО UI · БЕЗ АВТОРИЗАЦИИ</span>
-            <span>{screens.find((item) => item.id === screen)?.label}</span>
+        <section className="overflow-hidden border border-[#17151a]/30 bg-[#f5f0e8] shadow-[12px_12px_0_#8753ed]">
+          <div className="border-[#17151a]/12 flex items-center justify-between border-b px-5 py-2 font-mono text-[8px] font-bold tracking-[0.12em] text-[#716a67]">
+            <span>PREVIEW / NO AUTH</span>
+            <span>
+              {screens.find((item) => item.id === screen)?.number} —{" "}
+              {screens.find((item) => item.id === screen)?.label}
+            </span>
           </div>
           {content[screen]}
         </section>
-        <section className="hidden rounded-[2rem] border border-white/80 bg-white/60 p-7 shadow-[0_12px_35px_rgba(68,42,90,0.07)] lg:block">
-          <p className="text-xs font-black uppercase tracking-[0.15em] text-[#8b5fbd]">
-            Без доступа к аккаунту
+        <section className="hidden border border-[#17151a]/15 bg-[#f5f0e8] p-7 shadow-[8px_8px_0_#fb407b] lg:block">
+          <p className="font-mono text-[9px] font-bold tracking-[0.15em] text-[#fb407b]">
+            НОВОЕ НАПРАВЛЕНИЕ
           </p>
-          <h1 className="mt-3 text-3xl font-black leading-[0.9] tracking-[-0.065em]">
-            Смотри дизайн. Не трогай данные.
+          <h1 className="mt-4 text-4xl font-black leading-[0.82] tracking-[-0.1em]">
+            НЕ UI-КИТ.
+            <br />А ХАРАКТЕР.
           </h1>
-          <p className="mt-5 text-sm leading-6 text-[#74677d]">
-            Эта витрина существует только для просмотра нового visual-направления.
-            Реальные кабинеты, сообщения, доход и городские данные по-прежнему защищены
-            авторизацией и RLS.
+          <p className="mt-6 text-sm leading-6 text-[#625b58]">
+            Тёплая бумага, чёрная типографика, жёсткая сетка, один розовый акцент.
+            Меньше «карточек ради карточек», больше редакционного ритма.
           </p>
           <Link
-            className="mt-6 inline-flex items-center gap-2 text-sm font-black text-[#8753e6]"
+            className="mt-6 inline-flex items-center gap-2 border-b-2 border-[#17151a] pb-1 text-xs font-black"
             href="/"
           >
-            На публичную главную <ChevronRight className="size-4" />
+            НА ПУБЛИЧНУЮ ГЛАВНУЮ <ArrowUpRight className="size-4" />
           </Link>
         </section>
       </div>
