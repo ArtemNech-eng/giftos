@@ -11,6 +11,7 @@ import {
   Music2,
   Plane,
   Radio,
+  Sparkles,
   UserRound,
   UsersRound,
   WalletCards,
@@ -1034,6 +1035,12 @@ export default async function HomePage({
           {APP_NAME}
         </Link>
         <div className="flex items-center gap-3">
+          <Link
+            className="inline-flex items-center gap-1 rounded-full bg-[#f0e9ff] px-2.5 py-1 text-xs font-bold text-[#7549d0]"
+            href="/wishes"
+          >
+            <Sparkles className="size-3.5" /> Желания
+          </Link>
           <Link
             className="inline-flex items-center gap-1 rounded-full bg-[#fff3c9] px-2.5 py-1 text-xs font-bold text-[#8d6611]"
             href="/bonuses"

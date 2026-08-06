@@ -78,6 +78,9 @@ export async function createWish(formData: FormData) {
   }
 
   revalidatePath("/");
+  revalidatePath("/feed");
+  revalidatePath("/wishes");
+  revalidatePath("/places");
   redirect(`/wishes/${data.id}/edit`);
 }
 
@@ -107,6 +110,8 @@ export async function updateWish(formData: FormData) {
   if (error) throw new Error(`Не удалось обновить желание: ${error.message}`);
 
   revalidatePath("/");
+  revalidatePath("/feed");
+  revalidatePath("/wishes");
   revalidatePath(`/wishes/${wishId}`);
   redirect(`/wishes/${wishId}/edit?saved=1`);
 }
@@ -123,7 +128,9 @@ export async function archiveWish(formData: FormData) {
   if (error) throw new Error(`Не удалось архивировать желание: ${error.message}`);
 
   revalidatePath("/");
-  redirect("/");
+  revalidatePath("/feed");
+  revalidatePath("/wishes");
+  redirect("/wishes");
 }
 
 export async function toggleAlsoWantWish(formData: FormData) {
@@ -171,6 +178,7 @@ export async function toggleAlsoWantWish(formData: FormData) {
   }
 
   revalidatePath(`/wishes/${wishId}`);
+  revalidatePath("/wishes");
   redirect(`/wishes/${wishId}` as Route);
 }
 
@@ -208,6 +216,7 @@ export async function toggleAlsoWantWishFromFeed(formData: FormData) {
   if (error) throw new Error(`Не удалось обновить «Хочу также»: ${error.message}`);
 
   revalidatePath("/feed");
+  revalidatePath("/wishes");
   revalidatePath(`/wishes/${wishId}`);
 }
 
@@ -272,5 +281,7 @@ export async function cloneWish(formData: FormData) {
       { onConflict: "wish_id,profile_id" },
     );
 
+  revalidatePath("/feed");
+  revalidatePath("/wishes");
   redirect(`/wishes/${created.id}/edit`);
 }

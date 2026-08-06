@@ -48,8 +48,8 @@ export function FeedWishToggle({
       aria-pressed={active}
       className={`inline-flex shrink-0 items-center gap-1 rounded-full border px-2.5 py-1.5 text-xs font-bold transition ${
         active
-          ? "border-[#ff77ba]/50 bg-[#3a1a35] text-[#ffb7dd]"
-          : "border-white/15 bg-white/5 text-[#d8d0e0] hover:border-[#ff77ba]"
+          ? "border-[#f2bfd4] bg-[#fff0f6] text-[#c34e79]"
+          : "border-[#e1d6e7] bg-white text-[#756a7d] hover:border-[#c89be9]"
       }`}
       onClick={() => void toggle()}
       type="button"

@@ -49,6 +49,7 @@ const screens = [
   { id: "rankings", label: "Рейтинги", number: "12" },
   { id: "people", label: "Люди", number: "13" },
   { id: "settings", label: "Приватность", number: "14" },
+  { id: "wishes", label: "Желания", number: "15" },
 ] as const;
 
 type ScreenId = (typeof screens)[number]["id"];
@@ -928,6 +929,140 @@ function SettingsScreen() {
   );
 }
 
+function WishesScreen() {
+  const wishes = [
+    {
+      title: "Камера для первых съёмок",
+      category: "Фото и видео",
+      tone: "bg-[#f3e8ff] text-[#8753e6]",
+      count: "18",
+    },
+    {
+      title: "Поехать к морю весной",
+      category: "Путешествия",
+      tone: "bg-[#eaf7f5] text-[#258b82]",
+      count: "7",
+    },
+    {
+      title: "Собрать домашнюю студию",
+      category: "Музыка",
+      tone: "bg-[#fff0f6] text-[#d84b81]",
+      count: "",
+    },
+  ];
+  return (
+    <div className="flex min-h-[730px] flex-col bg-[#fbf9fe] text-[#251d31]">
+      <header className="flex items-center justify-between px-4 pb-4 pt-5">
+        <span className="grid size-10 place-items-center rounded-full border border-[#2c2036]/10 bg-white text-[#5f5369]">
+          <ArrowUpRight className="size-4 rotate-[-135deg]" />
+        </span>
+        <span className="text-center">
+          <small className="block text-[9px] font-black uppercase tracking-[0.13em] text-[#8c7e94]">
+            Хочу также
+          </small>
+          <b className="block text-sm">Желания</b>
+        </span>
+        <span className="grid size-10 place-items-center rounded-full bg-gradient-to-br from-[#ff5d9a] to-[#8254ed] text-white">
+          <CirclePlus className="size-5" />
+        </span>
+      </header>
+      <section className="mx-4 rounded-[1.7rem] bg-gradient-to-br from-[#fff0f7] via-[#f6edff] to-[#eaf5ff] p-5 shadow-[0_14px_30px_rgba(69,43,94,.1)]">
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-white/75 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.08em] text-[#8753e6]">
+          <Heart className="size-3.5" /> Не список покупок
+        </span>
+        <h1 className="mt-3 text-3xl font-black leading-[0.88] tracking-[-0.075em]">
+          ТВОИ
+          <br />
+          ЖЕЛАНИЯ.
+        </h1>
+        <p className="mt-3 max-w-64 text-[10px] leading-5 text-[#756a7d]">
+          То, к чему хочется прийти и чем можно поделиться со своими.
+        </p>
+        <span className="mt-4 inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-[#ff5d9a] to-[#8254ed] px-3 py-2 text-[9px] font-black text-white">
+          <CirclePlus className="size-3.5" /> Добавить желание
+        </span>
+      </section>
+      <div className="mx-4 mt-4 grid grid-cols-3 gap-1 rounded-2xl bg-[#ebe5f1] p-1 text-center text-[10px] font-black">
+        <span className="rounded-xl bg-white py-2.5 text-[#7549d0] shadow-[0_3px_10px_rgba(65,43,89,.08)]">
+          Мои
+        </span>
+        <span className="py-2.5 text-[#82758a]">
+          <MapPin className="mr-1 inline size-3" />
+          Город
+        </span>
+        <span className="py-2.5 text-[#82758a]">Платформа</span>
+      </div>
+      <section className="px-4 pt-5">
+        <div className="mb-3 flex items-end justify-between">
+          <span>
+            <h2 className="text-sm font-black">Твой список</h2>
+            <p className="mt-0.5 text-[10px] text-[#82758a]">
+              Публичные и личные истории
+            </p>
+          </span>
+          <span className="rounded-full bg-[#efe9f6] px-2 py-1 text-[9px] font-black text-[#7a6688]">
+            3
+          </span>
+        </div>
+        <div className="space-y-2.5">
+          {wishes.map((wish, index) => (
+            <div
+              className="border-[#2c2036]/9 rounded-[1.4rem] border bg-white p-3 shadow-[0_8px_22px_rgba(69,43,94,.05)]"
+              key={wish.title}
+            >
+              <div className="flex items-center gap-3">
+                <span
+                  className={`grid size-14 place-items-center rounded-2xl ${wish.tone}`}
+                >
+                  {index === 0 ? (
+                    <CameraPreview />
+                  ) : index === 1 ? (
+                    <MapPin className="size-5" />
+                  ) : (
+                    <Music2 className="size-5" />
+                  )}
+                </span>
+                <span className="min-w-0 grow">
+                  <b className="block truncate text-[11px]">{wish.title}</b>
+                  <small className="mt-1 flex items-center gap-1.5 text-[9px] text-[#796d80]">
+                    <Sparkles className="size-3 text-[#8753e6]" /> {wish.category}
+                  </small>
+                </span>
+                <ChevronRightPreview />
+              </div>
+              <div className="border-[#2c2036]/7 mt-3 flex items-center justify-between border-t pt-2">
+                <span className="text-[9px] font-black text-[#8753e6]">
+                  Редактировать
+                </span>
+                {wish.count ? (
+                  <span className="rounded-full border border-[#e1d6e7] bg-white px-2 py-1 text-[9px] font-bold text-[#756a7d]">
+                    <Sparkles className="mr-1 inline size-3" />
+                    {wish.count}
+                  </span>
+                ) : (
+                  <span className="text-[9px] text-[#8d8094]">Твоя история</span>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+      <section className="mx-4 mt-5 flex gap-2.5 rounded-2xl bg-[#f0faf5] p-3.5 text-[#4c7169]">
+        <Check className="mt-0.5 size-4 shrink-0 text-[#258b82]" />
+        <p className="text-[10px] leading-4">
+          Личное желание видишь только ты. Публичное можно показать в профиле или
+          обсудить.
+        </p>
+      </section>
+      <AppNav active="Главная" />
+    </div>
+  );
+}
+
+function CameraPreview() {
+  return <Sparkles className="size-5" />;
+}
+
 function LocalScreen() {
   const creators = [
     {
@@ -1653,6 +1788,7 @@ export default async function PreviewPage({
     rankings: <RankingsScreen />,
     people: <PeopleScreen />,
     settings: <SettingsScreen />,
+    wishes: <WishesScreen />,
   };
 
   return (

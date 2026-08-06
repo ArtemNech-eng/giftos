@@ -37,6 +37,7 @@ import { BrandGiftIcon } from "@/components/brand-gift-icon";
 import { CreatorShareLink } from "@/components/creator-share-link";
 import { LocalRoleIcon } from "@/components/local-role-icon";
 import { ProfileGiftButton } from "@/components/profile-gift-button";
+import { WishCategoryIcon } from "@/components/wish-category-icon";
 import { ProfileQrCode } from "@/components/profile-qr-code";
 import { ReportForm } from "@/components/report-form";
 import { CATEGORIES } from "@/lib/constants";
@@ -157,14 +158,22 @@ export default async function ProfilePage({
       .select("id, storage_path, visibility, sort_order")
       .eq("profile_id", profile.id)
       .order("sort_order", { ascending: true }),
-    supabase
-      .from("wishes")
-      .select("id, title, category_slug")
-      .eq("author_id", profile.id)
-      .eq("visibility", "public")
-      .eq("is_archived", false)
-      .order("created_at", { ascending: false })
-      .limit(4),
+    isOwnProfile
+      ? supabase
+          .from("wishes")
+          .select("id, title, category_slug, visibility")
+          .eq("author_id", profile.id)
+          .eq("is_archived", false)
+          .order("created_at", { ascending: false })
+          .limit(4)
+      : supabase
+          .from("wishes")
+          .select("id, title, category_slug, visibility")
+          .eq("author_id", profile.id)
+          .eq("visibility", "public")
+          .eq("is_archived", false)
+          .order("created_at", { ascending: false })
+          .limit(4),
     supabase
       .from("fundraisers")
       .select(
@@ -659,6 +668,55 @@ export default async function ProfilePage({
                 +{receivedGifts.length - 10}
               </span>
             )}
+          </div>
+        </section>
+      )}
+
+      {rawWishes && rawWishes.length > 0 && (
+        <section className="border-[#2c2036]/9 mx-4 mt-4 rounded-[1.55rem] border bg-white p-4 shadow-[0_8px_22px_rgba(69,43,94,.05)]">
+          <div className="flex items-center justify-between">
+            <span>
+              <h2 className="text-sm font-black">Желания</h2>
+              <p className="mt-0.5 text-[10px] text-[#81748a]">
+                {isOwnProfile
+                  ? "Твои публичные и личные истории"
+                  : "То, что сейчас важно человеку"}
+              </p>
+            </span>
+            {isOwnProfile && (
+              <Link className="text-[10px] font-black text-[#8753e6]" href="/wishes">
+                Все ›
+              </Link>
+            )}
+          </div>
+          <div className="mt-3 space-y-2">
+            {rawWishes.slice(0, 3).map((wish) => (
+              <Link
+                className="flex items-center gap-3 rounded-2xl bg-[#fbf9fe] p-2.5 transition hover:bg-[#f5effa]"
+                href={
+                  isOwnProfile && wish.visibility === "private"
+                    ? (`/wishes/${wish.id}/edit` as Route)
+                    : (`/wishes/${wish.id}` as Route)
+                }
+                key={wish.id}
+              >
+                <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-[#f3e8ff] to-[#fff0f6] text-[#8753e6]">
+                  <WishCategoryIcon
+                    category={wish.category_slug}
+                    className="size-4.5"
+                  />
+                </span>
+                <span className="min-w-0 grow">
+                  <b className="block truncate text-[11px]">{wish.title}</b>
+                  {isOwnProfile && wish.visibility === "private" && (
+                    <small className="mt-0.5 block text-[9px] font-bold text-[#8a7d91]">
+                      Только ты
+                    </small>
+                  )}
+                </span>
+                <ChevronRight className="size-3.5 shrink-0 text-[#a295a8]" />
+              </Link>
+            ))}
           </div>
         </section>
       )}
