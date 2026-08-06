@@ -1475,12 +1475,38 @@ function CollectionScreen() {
           ))}
         </div>
       </section>
-      <section className="mt-5 rounded-[1.45rem] border border-dashed border-[#cdbbe7] bg-[#fffcff] p-4 text-center">
-        <Sparkles className="mx-auto size-5 text-[#8753e6]" />
-        <b className="mt-2 block text-[11px]">Твоя полка пока свободна</b>
-        <small className="mt-1 block text-[9px] leading-4 text-[#81748a]">
-          Получи артефакт в подарок — здесь появится его serial.
-        </small>
+      <section className="border-[#2c2036]/9 mt-5 rounded-[1.45rem] border bg-white p-3.5 shadow-[0_8px_22px_rgba(69,43,94,.05)]">
+        <div className="flex items-end justify-between">
+          <span>
+            <h2 className="text-sm font-black">Твоя полка</h2>
+            <p className="mt-0.5 text-[9px] text-[#82758a]">
+              Даритель остаётся приватным
+            </p>
+          </span>
+          <span className="rounded-full bg-[#efe9f6] px-2 py-1 text-[9px] font-black text-[#7a6688]">
+            1
+          </span>
+        </div>
+        <div className="mt-3 flex gap-3 rounded-2xl bg-[#fbf9fe] p-2.5">
+          {/* eslint-disable-next-line @next/next/no-img-element -- generated static artifact art */}
+          <img
+            alt="Фонарь"
+            className="h-24 w-[72px] rounded-xl object-cover"
+            src="/collectibles/artifacts/lantern.jpg"
+          />
+          <span className="grow">
+            <b className="block text-[11px]">Фонарь</b>
+            <small className="mt-1 block text-[9px] font-black text-[#8753e6]">
+              #047 / 150
+            </small>
+            <small className="mt-1 block text-[8px] text-[#82758a]">
+              Получен 7 авг.
+            </small>
+            <span className="mt-3 flex w-full items-center justify-center gap-1 rounded-lg bg-[#f0e9ff] py-1.5 text-[8px] font-black text-[#7549d0]">
+              <Check className="size-2.5" /> В профиле
+            </span>
+          </span>
+        </div>
       </section>
       <section className="mt-5 flex gap-2.5 rounded-2xl bg-[#f0faf5] p-3.5 text-[#4c7169]">
         <Check className="mt-0.5 size-4 shrink-0 text-[#258b82]" />

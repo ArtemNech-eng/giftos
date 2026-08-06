@@ -76,3 +76,36 @@ export async function markCollectibleArtifactUnboxed(formData: FormData) {
   revalidatePath("/collection");
   revalidatePath(`/collection/unbox/${instanceId}`);
 }
+
+/** Recipient-only control for the public collection shelf. Sender identity stays private. */
+export async function setCollectibleArtifactProfileDisplay(formData: FormData) {
+  const { supabase, user } = await requireUser();
+  const instanceId = requiredText(formData.get("instance_id"), 100);
+  const shouldDisplay = formData.get("display_on_profile") === "true";
+  if (!instanceId) throw new Error("Артефакт не найден.");
+
+  const { data: instance, error: instanceError } = await supabase
+    .from("collectible_artifact_instances")
+    .select("id, recipient_id, unboxed_at")
+    .eq("id", instanceId)
+    .eq("recipient_id", user.id)
+    .maybeSingle();
+  if (instanceError || !instance || !instance.unboxed_at)
+    throw new Error("Открытый артефакт недоступен.");
+
+  const { error } = await supabase
+    .from("collectible_artifact_instances")
+    .update({ display_on_profile: shouldDisplay })
+    .eq("id", instance.id)
+    .eq("recipient_id", user.id);
+  if (error) throw new Error(`Не удалось обновить полку: ${error.message}`);
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("username")
+    .eq("id", user.id)
+    .maybeSingle();
+  revalidatePath("/collection");
+  if (profile?.username) revalidatePath(`/u/${profile.username}`);
+  redirect("/collection");
+}

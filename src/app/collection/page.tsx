@@ -4,11 +4,14 @@ import {
   ArrowLeft,
   Check,
   ChevronRight,
+  Eye,
+  EyeOff,
   Gem,
   LockKeyhole,
   Sparkles,
 } from "lucide-react";
 
+import { setCollectibleArtifactProfileDisplay } from "@/app/collection/actions";
 import { requireUser } from "@/lib/auth";
 
 export const metadata = {
@@ -34,6 +37,7 @@ type ArtifactInstance = {
   serial_number: number;
   issued_at: string;
   unboxed_at: string | null;
+  display_on_profile: boolean;
 };
 
 const rarityLabel = {
@@ -60,7 +64,9 @@ export default async function CollectionPage() {
         .order("sort_order", { ascending: true }),
       supabase
         .from("collectible_artifact_instances")
-        .select("id, series_id, serial_number, issued_at, unboxed_at")
+        .select(
+          "id, series_id, serial_number, issued_at, unboxed_at, display_on_profile",
+        )
         .eq("recipient_id", user.id)
         .order("issued_at", { ascending: false }),
     ]);
@@ -117,7 +123,7 @@ export default async function CollectionPage() {
             <span>
               <h2 className="text-sm font-black">Твоя полка</h2>
               <p className="mt-0.5 text-[10px] text-[#82758a]">
-                Экземпляры, которые подарили тебе
+                Полученные экземпляры · даритель остаётся приватным
               </p>
             </span>
             <span className="rounded-full bg-[#efe9f6] px-2 py-1 text-[9px] font-black text-[#7a6688]">
@@ -143,6 +149,42 @@ export default async function CollectionPage() {
                         <small className="mt-0.5 block text-[8px] font-black text-[#8753e6]">
                           #{instance.serial_number} / {artifact.total_edition}
                         </small>
+                        <small className="mt-1 block text-[8px] text-[#82758a]">
+                          Получен{" "}
+                          {new Intl.DateTimeFormat("ru-RU", {
+                            day: "numeric",
+                            month: "short",
+                          }).format(new Date(instance.issued_at))}
+                        </small>
+                        <form
+                          action={setCollectibleArtifactProfileDisplay}
+                          className="mt-2"
+                        >
+                          <input name="instance_id" type="hidden" value={instance.id} />
+                          <input
+                            name="display_on_profile"
+                            type="hidden"
+                            value={instance.display_on_profile ? "false" : "true"}
+                          />
+                          <button
+                            className={`flex w-full items-center justify-center gap-1 rounded-lg py-1 text-[8px] font-black ${
+                              instance.display_on_profile
+                                ? "bg-[#f0e9ff] text-[#7549d0]"
+                                : "bg-[#f3eef7] text-[#756a7d]"
+                            }`}
+                            type="submit"
+                          >
+                            {instance.display_on_profile ? (
+                              <>
+                                <Eye className="size-2.5" /> В профиле
+                              </>
+                            ) : (
+                              <>
+                                <EyeOff className="size-2.5" /> Скрыт
+                              </>
+                            )}
+                          </button>
+                        </form>
                       </span>
                     </article>,
                   ]
