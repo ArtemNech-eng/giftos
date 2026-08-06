@@ -4,7 +4,10 @@ import { LocalRoleIcon } from "@/components/local-role-icon";
 
 import {
   ArrowUpRight,
+  CalendarDays,
+  Check,
   CirclePlus,
+  Clock3,
   Compass,
   Crown,
   Flame,
@@ -33,14 +36,15 @@ export const metadata = {
 const screens = [
   { id: "feed", label: "Главная", number: "01" },
   { id: "city", label: "Город сейчас", number: "02" },
-  { id: "local", label: "Создают в городе", number: "03" },
-  { id: "profile", label: "Профиль", number: "04" },
-  { id: "earnings", label: "Доход", number: "05" },
-  { id: "bonuses", label: "Рефералы", number: "06" },
-  { id: "messages", label: "Сообщения", number: "07" },
-  { id: "live", label: "Эфир", number: "08" },
-  { id: "story", label: "Story", number: "09" },
-  { id: "onboarding", label: "Старт", number: "10" },
+  { id: "events", label: "События", number: "03" },
+  { id: "local", label: "Создают в городе", number: "04" },
+  { id: "profile", label: "Профиль", number: "05" },
+  { id: "earnings", label: "Доход", number: "06" },
+  { id: "bonuses", label: "Рефералы", number: "07" },
+  { id: "messages", label: "Сообщения", number: "08" },
+  { id: "live", label: "Эфир", number: "09" },
+  { id: "story", label: "Story", number: "10" },
+  { id: "onboarding", label: "Старт", number: "11" },
 ] as const;
 
 type ScreenId = (typeof screens)[number]["id"];
@@ -381,6 +385,144 @@ function CityScreen() {
       <AppNav active="Город" />
     </div>
   );
+}
+
+function EventsScreen() {
+  const today = [
+    {
+      title: "Музыка во дворе",
+      time: "Сегодня · 19:30",
+      place: "Музыка",
+      author: "Макс",
+      people: "12 идут",
+      icon: Music2,
+      tone: "bg-[#efe9ff] text-[#7650d2]",
+    },
+    {
+      title: "Прогулка к озеру",
+      time: "Сегодня · 20:00",
+      place: "Будённовск",
+      author: "Лера",
+      people: "Ты идёшь",
+      icon: UsersRound,
+      tone: "bg-[#eaf7f5] text-[#258b82]",
+    },
+  ];
+  return (
+    <div className="flex min-h-[730px] flex-col bg-[#fbf9fe] text-[#251d31]">
+      <header className="flex items-center justify-between px-4 pb-4 pt-5">
+        <span className="grid size-10 place-items-center rounded-full border border-[#2c2036]/10 bg-white text-[#5f5369]">
+          <ArrowUpRight className="size-4 rotate-[-135deg]" />
+        </span>
+        <span className="text-center">
+          <small className="block text-[9px] font-black uppercase tracking-[0.13em] text-[#8c7e94]">
+            Программа города
+          </small>
+          <b className="block text-sm">События</b>
+        </span>
+        <span className="grid size-10 place-items-center rounded-full bg-gradient-to-br from-[#ff5d9a] to-[#8254ed] text-white">
+          <CirclePlus className="size-5" />
+        </span>
+      </header>
+      <section className="mx-4 rounded-[1.7rem] bg-gradient-to-br from-[#332357] via-[#59407f] to-[#8470dd] p-5 text-white shadow-[0_14px_30px_rgba(63,37,98,.2)]">
+        <span className="bg-white/14 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.08em] text-[#fbd7e7]">
+          <CalendarDays className="size-3.5" /> Городская сцена
+        </span>
+        <h1 className="mt-3 text-3xl font-black leading-[0.88] tracking-[-0.075em]">
+          ПЛАНЫ
+          <br />
+          БУДЁННОВСКА.
+        </h1>
+        <p className="max-w-62 mt-3 text-[10px] leading-5 text-white/75">
+          Встречи и идеи, которые люди открыли для своих. Никакой выдуманной активности.
+        </p>
+        <span className="text-white/82 mt-4 flex items-center gap-2 text-[9px] font-bold">
+          <span className="size-2 rounded-full bg-[#63d9ad]" /> Только реальные
+          публичные планы
+        </span>
+      </section>
+      <div className="mx-4 mt-4 grid grid-cols-2 gap-1 rounded-2xl bg-[#eee8f4] p-1 text-center text-[10px] font-black">
+        <span className="rounded-xl bg-white py-2.5 text-[#7549d0] shadow-[0_3px_10px_rgba(65,43,89,.08)]">
+          Будённовск
+        </span>
+        <span className="py-2.5 text-[#82758a]">Вся платформа</span>
+      </div>
+      <section className="px-4 pt-5">
+        <div className="mb-3 flex items-end justify-between">
+          <span>
+            <h2 className="text-sm font-black">Сегодня</h2>
+            <p className="mt-0.5 text-[10px] text-[#82758a]">
+              То, ради чего стоит выйти
+            </p>
+          </span>
+          <span className="rounded-full bg-[#efe9f6] px-2 py-1 text-[9px] font-black text-[#7a6688]">
+            2
+          </span>
+        </div>
+        <div className="space-y-2.5">
+          {today.map(
+            ({ title, time, place, author, people, icon: Icon, tone }, index) => (
+              <div
+                className="border-[#2c2036]/9 rounded-[1.5rem] border bg-white p-3.5 shadow-[0_8px_22px_rgba(69,43,94,.06)]"
+                key={title}
+              >
+                <div className="flex gap-3">
+                  <span className="flex h-14 w-12 shrink-0 flex-col items-center justify-center rounded-2xl bg-[#f0e9ff] text-[#6e49cf]">
+                    <b className="text-base leading-none">0{6 + index}</b>
+                    <small className="mt-1 text-[9px] font-black uppercase">авг</small>
+                  </span>
+                  <span className="min-w-0 grow">
+                    <span className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-[0.08em] text-[#876f96]">
+                      <span
+                        className={`grid size-5 place-items-center rounded-lg ${tone}`}
+                      >
+                        <Icon className="size-3" />
+                      </span>
+                      {index === 0 ? "Музыка и сцена" : "Прогулка"}
+                    </span>
+                    <b className="mt-1.5 block text-sm">{title}</b>
+                    <small className="mt-2 flex items-center gap-2 text-[10px] font-semibold text-[#766a7d]">
+                      <span className="inline-flex items-center gap-1">
+                        <Clock3 className="size-3.5 text-[#8753e6]" /> {time}
+                      </span>
+                      <span className="inline-flex items-center gap-1">
+                        <MapPin className="size-3.5 text-[#258b82]" /> {place}
+                      </span>
+                    </small>
+                  </span>
+                </div>
+                <div className="border-[#2c2036]/7 mt-3 flex items-center justify-between border-t pt-2.5">
+                  <span className="flex items-center gap-2">
+                    <Avatar index={index + 1} name={author} size="size-7" />
+                    <b className="text-[10px] text-[#685c70]">{author}</b>
+                  </span>
+                  <span className="flex items-center gap-1.5 text-[10px] font-bold text-[#756a7d]">
+                    {index === 1 ? (
+                      <Check className="size-3.5 text-[#258b82]" />
+                    ) : (
+                      <UsersRound className="size-3.5 text-[#8753e6]" />
+                    )}
+                    {people}
+                  </span>
+                </div>
+              </div>
+            ),
+          )}
+        </div>
+      </section>
+      <section className="mx-4 mt-5 rounded-2xl bg-[#f0faf5] p-3.5 text-[#4d7169]">
+        <span className="flex items-start gap-2 text-[10px] leading-4">
+          <CheckCirclePreview /> Участие добровольное: личные чаты и точная геолокация
+          не попадают в городскую сцену.
+        </span>
+      </section>
+      <AppNav active="Город" />
+    </div>
+  );
+}
+
+function CheckCirclePreview() {
+  return <Check className="mt-0.5 size-4 shrink-0 text-[#258b82]" />;
 }
 
 function LocalScreen() {
@@ -1077,6 +1219,7 @@ export default async function PreviewPage({
   const content: Record<ScreenId, React.ReactNode> = {
     feed: <FeedScreen />,
     city: <CityScreen />,
+    events: <EventsScreen />,
     local: <LocalScreen />,
     profile: <ProfileScreen />,
     earnings: <EarningsScreen />,
