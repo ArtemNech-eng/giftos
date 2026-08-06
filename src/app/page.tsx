@@ -1,4 +1,6 @@
 import Link from "next/link";
+import type { Route } from "next";
+/* eslint-disable @next/next/no-img-element -- city avatars use short-lived signed Storage URLs */
 import {
   ArrowDownRight,
   ArrowRight,
@@ -12,6 +14,7 @@ import {
 import { redirect } from "next/navigation";
 
 import { APP_NAME } from "@/lib/constants";
+import { getSignedImageUrl } from "@/lib/media";
 import { hasSupabaseEnvironment } from "@/lib/supabase/env";
 import { createClient } from "@/lib/supabase/server";
 
@@ -37,6 +40,31 @@ type LiveRoomPreview = {
   viewers: number;
 };
 
+type CityMemberPreview = {
+  id: string;
+  username: string;
+  displayName: string;
+  avatarUrl: string | null;
+  isCreator: boolean;
+};
+
+function normalizeCitySlug(value: string | undefined) {
+  return (value ?? "")
+    .trim()
+    .toLocaleLowerCase("ru-RU")
+    .replace(/-/g, " ")
+    .replace(/ё/g, "е");
+}
+
+function peopleLabel(count: number) {
+  const remainder = count % 100;
+  if (remainder >= 11 && remainder <= 14) return "человек";
+  const last = count % 10;
+  if (last === 1) return "человек";
+  if (last >= 2 && last <= 4) return "человека";
+  return "человек";
+}
+
 const creatorColors = [
   "from-[#ff4f87] via-[#ff7b5c] to-[#ffd36a]",
   "from-[#7d55ff] via-[#d65dff] to-[#ff88bf]",
@@ -44,9 +72,29 @@ const creatorColors = [
   "from-[#ffc14f] via-[#ff7277] to-[#da55ff]",
 ];
 
-export default async function SeoLandingPage() {
+export default async function SeoLandingPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ city?: string; invite?: string }>;
+}) {
+  const { city: rawCity, invite: rawInvite } = await searchParams;
+  const requestedCity = normalizeCitySlug(rawCity);
+  const inviteCode = /^[a-z0-9_-]{3,40}$/i.test(rawInvite ?? "")
+    ? rawInvite!.toLowerCase()
+    : null;
+  const inviteCityParam = rawCity?.trim() || "";
+  const signInHref: Route = (
+    inviteCode
+      ? `/auth/sign-in?ref=${encodeURIComponent(inviteCode)}${
+          inviteCityParam ? `&city=${encodeURIComponent(inviteCityParam)}` : ""
+        }`
+      : "/auth/sign-in"
+  ) as Route;
   let creators: CreatorPreview[] = [];
   let liveRooms: LiveRoomPreview[] = [];
+  let launchCityName = "Будённовск";
+  let launchCityMembers: CityMemberPreview[] = [];
+  let launchCityPeopleCount = 0;
 
   if (hasSupabaseEnvironment()) {
     const sessionClient = await createClient();
@@ -59,24 +107,59 @@ export default async function SeoLandingPage() {
   if (hasSupabaseEnvironment()) {
     try {
       const supabase = await createClient();
-      const [{ data: creatorData }, { data: roomData }] = await Promise.all([
-        supabase
-          .from("profiles")
-          .select("username, display_name, creator_headline")
-          .eq("is_creator", true)
-          .eq("profile_visibility", "public")
-          .eq("is_suspended", false)
-          .order("created_at", { ascending: false })
-          .limit(6),
-        supabase
-          .from("live_rooms")
-          .select("id, slug, title, host_id")
-          .eq("status", "live")
-          .eq("visibility", "public")
-          .order("started_at", { ascending: false })
-          .limit(3),
-      ]);
+      const [{ data: creatorData }, { data: roomData }, { data: launchCity }] =
+        await Promise.all([
+          supabase
+            .from("profiles")
+            .select("username, display_name, creator_headline")
+            .eq("is_creator", true)
+            .eq("profile_visibility", "public")
+            .eq("is_suspended", false)
+            .order("created_at", { ascending: false })
+            .limit(6),
+          supabase
+            .from("live_rooms")
+            .select("id, slug, title, host_id")
+            .eq("status", "live")
+            .eq("visibility", "public")
+            .order("started_at", { ascending: false })
+            .limit(3),
+          supabase
+            .from("cities")
+            .select("id, name")
+            .eq("normalized_name", requestedCity || "буденновск")
+            .eq("is_active", true)
+            .maybeSingle(),
+        ]);
       creators = (creatorData ?? []) as CreatorPreview[];
+      if (launchCity) {
+        launchCityName = launchCity.name;
+        const [{ data: rawCityMembers }, { count: cityPeopleCount }] =
+          await Promise.all([
+            supabase
+              .from("public_city_people")
+              .select("id, username, display_name, avatar_path, is_creator")
+              .eq("city_id", launchCity.id)
+              .limit(12),
+            supabase
+              .from("public_city_people")
+              .select("id", { count: "exact", head: true })
+              .eq("city_id", launchCity.id),
+          ]);
+        launchCityPeopleCount = cityPeopleCount ?? 0;
+        launchCityMembers = await Promise.all(
+          (rawCityMembers ?? []).map(async (member) => ({
+            id: member.id,
+            username: member.username,
+            displayName: member.display_name,
+            avatarUrl: await getSignedImageUrl({
+              bucket: "avatars",
+              path: member.avatar_path,
+            }),
+            isCreator: Boolean(member.is_creator),
+          })),
+        );
+      }
       const rooms = (roomData ?? []) as Array<{
         id: string;
         slug: string;
@@ -186,7 +269,7 @@ export default async function SeoLandingPage() {
 
         <Link
           className="rounded-full border border-[#201827]/15 bg-white/55 px-4 py-2 text-sm font-black text-[#201827] shadow-sm transition hover:-translate-y-0.5 hover:border-[#201827]/30 hover:bg-[#201827] hover:text-white sm:px-5"
-          href="/auth/sign-in"
+          href={signInHref}
         >
           Войти
         </Link>
@@ -196,7 +279,9 @@ export default async function SeoLandingPage() {
         <div className="relative z-10 max-w-4xl">
           <p className="inline-flex items-center gap-2 rounded-full border border-[#7e53d8]/20 bg-white/65 px-3.5 py-2 text-[11px] font-black uppercase tracking-[0.16em] text-[#7442d3] shadow-[0_8px_30px_rgba(115,71,205,0.08)]">
             <span className="size-1.5 rounded-full bg-[#fc4e91] shadow-[0_0_12px_#fc4e91]" />
-            Будённовск · первая волна
+            {inviteCode
+              ? `Тебя приглашают в ${launchCityName}`
+              : `${launchCityName} · первая волна`}
           </p>
           <h1 className="mt-7 max-w-4xl text-balance text-[clamp(3.5rem,8.2vw,8.4rem)] font-black leading-[0.83] tracking-[-0.084em]">
             Не листай
@@ -221,7 +306,7 @@ export default async function SeoLandingPage() {
           <div className="mt-10 flex flex-wrap items-center gap-3">
             <Link
               className="group inline-flex h-14 items-center gap-3 rounded-full bg-[#201827] px-6 text-sm font-black text-white shadow-[0_15px_32px_rgba(45,25,63,0.2)] transition hover:-translate-y-0.5 hover:bg-[#4b2d66] sm:px-7"
-              href="/auth/sign-in"
+              href={signInHref}
             >
               Войти в первую волну
               <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
@@ -380,7 +465,7 @@ export default async function SeoLandingPage() {
               </p>
               <Link
                 className="mt-auto inline-flex w-fit items-center gap-2 pt-10 text-sm font-black transition group-hover:gap-3"
-                href="/auth/sign-in"
+                href={signInHref}
               >
                 Рассказать о своём <ArrowRight className="size-4" />
               </Link>
@@ -401,8 +486,8 @@ export default async function SeoLandingPage() {
                 Город — это «куда пойдём?»
               </h3>
               <p className="text-white/62 mt-5 max-w-sm text-base leading-7">
-                Свои места, люди, разговоры и поводы встретиться. Начинаем с Будённовска
-                — честно, с нуля и вместе.
+                Свои места, люди, разговоры и поводы встретиться. Начинаем с{" "}
+                {launchCityName}— честно, с нуля и вместе.
               </p>
               <a
                 className="mt-auto inline-flex w-fit items-center gap-2 pt-10 text-sm font-black text-[#f5dff0] transition hover:gap-3"
@@ -462,19 +547,19 @@ export default async function SeoLandingPage() {
         <div className="relative mx-auto grid max-w-[1440px] gap-10 px-5 py-20 sm:px-8 lg:grid-cols-[1.06fr_0.94fr] lg:px-12 lg:py-28">
           <div>
             <p className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-[0.18em] text-[#8b43d1]">
-              <MapPin className="size-4" /> Город 01 · Будённовск
+              <MapPin className="size-4" /> Город 01 · {launchCityName}
             </p>
             <h2 className="mt-6 max-w-3xl text-balance text-5xl font-black leading-[0.87] tracking-[-0.075em] sm:text-7xl">
               Открываем город, а не изображаем толпу.
             </h2>
             <p className="mt-8 max-w-xl text-lg leading-8 text-[#564a61] sm:text-xl">
-              Первый город ещё не наполнен. Поэтому мы не рисуем чужие сторис, не ставим
+              Город ещё не наполнен. Поэтому мы не рисуем чужие сторис, не ставим
               липовые счётчики и не зовём тебя быть «первым в пустоте». Мы собираем
-              стартовый круг людей, которым важно сделать Будённовск живым.
+              стартовый круг людей, которым важно сделать {launchCityName} живым.
             </p>
             <Link
               className="group mt-9 inline-flex items-center gap-3 rounded-full bg-[#201827] px-6 py-3.5 text-sm font-black text-white shadow-[0_16px_34px_rgba(48,27,70,0.2)] transition hover:-translate-y-0.5 hover:bg-[#4b2d66]"
-              href="/auth/sign-in"
+              href={signInHref}
             >
               Стать частью первой волны
               <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
@@ -517,6 +602,86 @@ export default async function SeoLandingPage() {
           </div>
         </div>
       </section>
+
+      {launchCityMembers.length > 0 && (
+        <section className="relative overflow-hidden border-y border-[#2e203a]/10 bg-white/70">
+          <div
+            aria-hidden="true"
+            className="absolute -right-36 top-[-16rem] size-[34rem] rounded-full bg-[#ffc3dc]/65 blur-[120px]"
+          />
+          <div className="relative mx-auto grid max-w-[1440px] gap-9 px-5 py-20 sm:px-8 lg:grid-cols-[0.85fr_1.15fr] lg:px-12 lg:py-24">
+            <div>
+              <p className="text-xs font-black uppercase tracking-[0.18em] text-[#cb3f78]">
+                Уже в круге {launchCityName}
+              </p>
+              <h2 className="mt-4 max-w-xl text-balance text-4xl font-black leading-[0.88] tracking-[-0.07em] sm:text-5xl">
+                Здесь уже есть с кем начать.
+              </h2>
+              <p className="mt-5 max-w-md text-lg leading-7 text-[#685c71]">
+                {launchCityPeopleCount} {peopleLabel(launchCityPeopleCount)} с публичным
+                профилем уже в {launchCityName}. Это не витрина — это люди, которых
+                можно увидеть и узнать.
+              </p>
+              <Link
+                className="group mt-8 inline-flex items-center gap-3 rounded-full bg-[#201827] px-5 py-3 text-sm font-black text-white transition hover:-translate-y-0.5 hover:bg-[#4b2d66]"
+                href={signInHref}
+              >
+                Присоединиться к своим
+                <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
+              </Link>
+            </div>
+
+            <div className="rounded-[2rem] border border-[#2b2035]/10 bg-[#fffdfd]/90 p-4 shadow-[0_22px_60px_rgba(74,44,102,0.11)] sm:p-6">
+              <div className="flex items-center justify-between gap-4 border-b border-[#2d2039]/10 pb-4">
+                <span className="inline-flex items-center gap-2 text-sm font-black">
+                  <span className="size-2.5 rounded-full bg-[#45c69d] shadow-[0_0_0_4px_rgba(69,198,157,0.15)]" />
+                  Люди города
+                </span>
+                <span className="rounded-full bg-[#f3eaff] px-3 py-1.5 text-xs font-black text-[#7442d3]">
+                  {launchCityPeopleCount} в круге
+                </span>
+              </div>
+              <div className="mt-6 grid grid-cols-3 gap-x-3 gap-y-6 sm:grid-cols-4 md:grid-cols-6">
+                {launchCityMembers.map((member, index) => (
+                  <Link
+                    className="group flex min-w-0 flex-col items-center text-center"
+                    href={`/u/${member.username}`}
+                    key={member.id}
+                  >
+                    <span
+                      className={`relative grid size-16 place-items-center overflow-hidden rounded-full bg-gradient-to-br p-0.5 text-lg font-black text-white shadow-[0_10px_22px_rgba(86,52,111,0.16)] transition duration-300 group-hover:-translate-y-1 ${creatorColors[index % creatorColors.length]}`}
+                    >
+                      <span className="grid size-full place-items-center overflow-hidden rounded-full bg-[#ede5f4] text-[#36293f]">
+                        {member.avatarUrl ? (
+                          <img
+                            alt={`Аватар ${member.displayName}`}
+                            className="size-full object-cover"
+                            src={member.avatarUrl}
+                          />
+                        ) : (
+                          member.displayName.slice(0, 1).toUpperCase()
+                        )}
+                      </span>
+                      {member.isCreator && (
+                        <span className="absolute -bottom-1 -right-1 grid size-5 place-items-center rounded-full border-2 border-white bg-[#201827] text-[9px] text-white">
+                          ✦
+                        </span>
+                      )}
+                    </span>
+                    <span className="mt-2 w-full truncate text-xs font-black text-[#382d41]">
+                      {member.displayName}
+                    </span>
+                  </Link>
+                ))}
+              </div>
+              <p className="mt-6 rounded-xl bg-[#f7f1fa] px-4 py-3 text-center text-xs leading-5 text-[#73677c]">
+                Круглые аватары — публичные жители {launchCityName}. Новые жители
+                появляются здесь сразу после создания открытого профиля.
+              </p>
+            </div>
+          </div>
+        </section>
+      )}
 
       <section
         className="relative mx-auto max-w-[1440px] px-5 py-24 sm:px-8 lg:px-12 lg:py-32"
@@ -587,7 +752,7 @@ export default async function SeoLandingPage() {
           </p>
           <Link
             className="group inline-flex shrink-0 items-center justify-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-black text-[#201827] transition hover:bg-[#ffdce9]"
-            href="/auth/sign-in"
+            href={signInHref}
           >
             Войти в круг
             <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
@@ -703,7 +868,7 @@ export default async function SeoLandingPage() {
           </p>
           <Link
             className="group mt-10 inline-flex h-14 items-center gap-3 rounded-full bg-white px-7 text-sm font-black text-[#201827] transition hover:-translate-y-0.5 hover:bg-[#ffdce9]"
-            href="/auth/sign-in"
+            href={signInHref}
           >
             Присоединиться к первой волне
             <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
@@ -723,7 +888,7 @@ export default async function SeoLandingPage() {
             <a className="transition hover:text-white" href="#budennovsk">
               Первый город
             </a>
-            <Link className="transition hover:text-white" href="/auth/sign-in">
+            <Link className="transition hover:text-white" href={signInHref}>
               Войти
             </Link>
           </div>

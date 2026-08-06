@@ -6,9 +6,11 @@ import { Check, Copy } from "lucide-react";
 export function CreatorShareLink({
   username,
   path,
+  label,
 }: {
   username?: string;
   path?: string;
+  label?: string;
 }) {
   const [copied, setCopied] = useState(false);
   const targetPath = path ?? (username ? `/u/${username}` : "/");
@@ -30,7 +32,7 @@ export function CreatorShareLink({
       ) : (
         <Copy className="size-4" />
       )}
-      {copied ? "Ссылка скопирована" : "Скопировать ссылку"}
+      {copied ? "Ссылка скопирована" : (label ?? "Скопировать ссылку")}
     </button>
   );
 }

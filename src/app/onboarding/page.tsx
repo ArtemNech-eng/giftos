@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { headers } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { CheckCircle2 } from "lucide-react";
 
 import { completeOnboarding } from "@/app/onboarding/actions";
@@ -39,14 +39,24 @@ export default async function OnboardingPage() {
     }
   }
 
+  const cookieStore = await cookies();
+  const referralCitySlug = (cookieStore.get("ht_city")?.value ?? "")
+    .trim()
+    .toLocaleLowerCase("ru-RU")
+    .replace(/-/g, " ")
+    .replace(/ё/g, "е");
   const { data: cities } = await supabase
     .from("cities")
-    .select("name")
+    .select("name, normalized_name")
     .eq("is_active", true)
     .order("sort_order", { ascending: true })
     .order("name", { ascending: true })
     .limit(50);
   const cityNames = (cities ?? []).map((city) => city.name);
+  const referralCity = (cities ?? []).find(
+    (city) => city.normalized_name === referralCitySlug,
+  )?.name;
+  const cityPrefill = profile?.city ?? referralCity ?? detectedCity ?? "";
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-10 sm:px-6 sm:py-14">
@@ -126,17 +136,24 @@ export default async function OnboardingPage() {
             </FieldLabel>
             <input
               className={inputClassName}
-              defaultValue={profile?.city ?? detectedCity ?? ""}
+              defaultValue={cityPrefill}
               id="city"
               list="city-options"
               maxLength={100}
               name="city"
               placeholder="Будённовск"
             />
-            {detectedCity && !profile?.city && (
-              <p className="mt-1.5 text-xs text-[#8a7d95]">
-                📍 Определили город по IP: {detectedCity}. Можно изменить.
+            {referralCity && !profile?.city ? (
+              <p className="mt-1.5 text-xs text-[#7c4cbc]">
+                📍 Вас пригласили в {referralCity}. Город можно изменить.
               </p>
+            ) : (
+              detectedCity &&
+              !profile?.city && (
+                <p className="mt-1.5 text-xs text-[#8a7d95]">
+                  📍 Определили город по IP: {detectedCity}. Можно изменить.
+                </p>
+              )
             )}
             <datalist id="city-options">
               {cityNames.map((name) => (

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Copy, Gift, ShoppingBag, Sparkles, UsersRound } from "lucide-react";
+import { Copy, Gift, MapPin, ShoppingBag, Sparkles, UsersRound } from "lucide-react";
 
 import { CreatorShareLink } from "@/components/creator-share-link";
 import { ReferralQrCode } from "@/components/referral-qr-code";
@@ -61,6 +61,9 @@ export default async function BonusesPage() {
   const cityTag = referralPath.includes("?city=")
     ? decodeURIComponent(referralPath.split("?city=")[1]).replace(/-/g, " ")
     : null;
+  const cityName = cityTag
+    ? cityTag.replace(/^./, (letter) => letter.toUpperCase())
+    : null;
 
   return (
     <main className="mx-auto min-h-screen max-w-[430px] bg-[#0c0e14] px-4 py-5 text-white">
@@ -88,32 +91,47 @@ export default async function BonusesPage() {
           <b className="mt-1 block text-xl">{wallet?.total_earned ?? 0} ⭐</b>
         </div>
       </section>
-      <section className="mt-6 rounded-2xl border border-[#d68cff]/30 bg-[#1c1528] p-5">
-        <div className="flex items-center gap-3">
-          <UsersRound className="size-6 text-[#e89aff]" />
-          <div>
-            <b>Приглашай друзей</b>
-            <p className="mt-1 text-xs text-[#b9b1c5]">
-              Получи {reward} ⭐ за каждого активного пользователя.
-            </p>
+      <section className="mt-6 overflow-hidden rounded-[1.7rem] border border-[#d68cff]/35 bg-gradient-to-br from-[#281638] via-[#1d1730] to-[#171b2d] p-5">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <span className="grid size-11 place-items-center rounded-2xl bg-[#e89aff]/15 text-[#eda7ff]">
+              <UsersRound className="size-6" />
+            </span>
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.12em] text-[#cda6ff]">
+                Приглашение в город
+              </p>
+              <h2 className="mt-0.5 text-lg font-bold">
+                {cityName ? `Зови в ${cityName}` : "Приглашай друзей"}
+              </h2>
+            </div>
           </div>
+          <span className="rounded-full bg-gradient-to-r from-[#ff5c99] to-[#8c58ff] px-3 py-1.5 text-sm font-black shadow-[0_8px_22px_rgba(205,82,231,0.28)]">
+            +{reward} ⭐
+          </span>
         </div>
-        <div className="mt-4 break-all rounded-xl bg-black/20 p-3 text-xs text-[#d9d1e2]">
+        <p className="mt-4 text-sm leading-6 text-[#c8c0d2]">
+          Отправь ссылку или QR. Друг увидит, что его приглашают
+          {cityName ? ` в ${cityName}` : " в твой город"}, а тебе начислят бонус после
+          его активного первого действия.
+        </p>
+        {cityName && (
+          <div className="mt-4 flex items-center gap-2 rounded-xl border border-[#ffd35e]/25 bg-[#ffd35e]/10 px-3 py-2.5 text-xs font-semibold text-[#ffdf82]">
+            <MapPin className="size-4 shrink-0" />
+            Приглашение закрепляет город «{cityName}» в onboarding и даёт городу баллы.
+          </div>
+        )}
+        <div className="border-white/8 mt-4 break-all rounded-xl border bg-black/20 p-3 text-xs text-[#d9d1e2]">
           {link || "Ссылка появится после настройки профиля"}
         </div>
-        {cityTag && (
-          <p className="mt-2 text-xs font-semibold text-[#ffd35e]">
-            📍 Приведи друга в {cityTag} — и город получит баллы в битве!
-          </p>
-        )}
         {referralPath && (
           <div className="mt-3">
-            <CreatorShareLink path={referralPath} />
+            <CreatorShareLink label="Скопировать приглашение" path={referralPath} />
           </div>
         )}
         {link && (
           <div className="mt-5 flex justify-center">
-            <ReferralQrCode url={link} />
+            <ReferralQrCode cityName={cityName} reward={reward} url={link} />
           </div>
         )}
       </section>
