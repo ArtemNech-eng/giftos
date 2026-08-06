@@ -66,6 +66,6 @@
 
 ## Следующая UI-работа
 
-1. Светлая пересборка viewer платного unlock и деталей диалога `/messages/[id]` по той же системе.
+1. Диалог `/messages/[id]` пересобран: partner avatar/local identity/city, soft message bubbles, realtime и явная приватность; дальнейшая работа — полировка paid-message request states.
 2. Точная mobile-полировка tabs «Обо мне / Stories / Посты», creator offers и live room controls.
 3. Добавить визуальную тему / дизайн-токены в компоненты, чтобы новые рабочие экраны не возвращались к старому dark-MVP стилю.
