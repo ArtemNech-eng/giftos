@@ -28,7 +28,7 @@ export async function updateProfileSettings(formData: FormData) {
     cityId = resolved ?? null;
   }
 
-  const { error } = await supabase
+  const { data: updatedProfile, error } = await supabase
     .from("profiles")
     .update({
       display_name: displayName,
@@ -41,11 +41,24 @@ export async function updateProfileSettings(formData: FormData) {
       profile_visibility: profileVisibility,
       updated_at: new Date().toISOString(),
     })
-    .eq("id", user.id);
+    .eq("id", user.id)
+    .select("username")
+    .maybeSingle();
   if (error) throw new Error(`Не удалось сохранить: ${error.message}`);
 
-  revalidatePath("/settings");
-  revalidatePath("/feed");
+  // City visibility changes affect all safe city surfaces; revalidate them
+  // together so a profile never lingers in the city after consent is revoked.
+  for (const path of [
+    "/settings",
+    "/feed",
+    "/places",
+    "/people",
+    "/city/rankings",
+    "/local",
+    "/notifications",
+  ])
+    revalidatePath(path);
+  if (updatedProfile?.username) revalidatePath(`/u/${updatedProfile.username}`);
   redirect("/settings?saved=1");
 }
 

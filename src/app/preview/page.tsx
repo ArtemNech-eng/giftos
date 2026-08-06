@@ -49,6 +49,7 @@ const screens = [
   { id: "onboarding", label: "Старт", number: "11" },
   { id: "rankings", label: "Рейтинги", number: "12" },
   { id: "people", label: "Люди", number: "13" },
+  { id: "settings", label: "Приватность", number: "14" },
 ] as const;
 
 type ScreenId = (typeof screens)[number]["id"];
@@ -805,6 +806,129 @@ function PeopleScreen() {
   );
 }
 
+function SettingsScreen() {
+  return (
+    <div className="flex min-h-[730px] flex-col bg-[#fbf9fe] text-[#251d31]">
+      <header className="flex items-center justify-between px-4 pb-4 pt-5">
+        <span className="grid size-10 place-items-center rounded-full border border-[#2c2036]/10 bg-white text-[#5f5369]">
+          <ArrowUpRight className="size-4 rotate-[-135deg]" />
+        </span>
+        <span className="text-center">
+          <small className="block text-[9px] font-black uppercase tracking-[0.13em] text-[#8c7e94]">
+            Твой контроль
+          </small>
+          <b className="block text-sm">Настройки</b>
+        </span>
+        <span className="grid size-10 place-items-center rounded-full bg-[#f0e9ff] text-[#8753e6]">
+          <Check className="size-4.5" />
+        </span>
+      </header>
+      <section className="mx-4 rounded-[1.7rem] bg-gradient-to-br from-[#332452] via-[#58407f] to-[#8069d9] p-5 text-white shadow-[0_14px_30px_rgba(63,37,98,.2)]">
+        <span className="bg-white/14 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.08em] text-[#fbd7e7]">
+          <Check className="size-3.5" /> Приватность по умолчанию
+        </span>
+        <h1 className="mt-3 text-3xl font-black leading-[0.88] tracking-[-0.075em]">
+          ТЫ РЕШАЕШЬ,
+          <br />
+          ЧТО ВИДИТ ГОРОД.
+        </h1>
+        <p className="mt-3 max-w-64 text-[10px] leading-5 text-white/75">
+          Городская сцена строится только из добровольно открытых действий.
+        </p>
+        <div className="mt-4 flex gap-2">
+          <span className="bg-white/14 rounded-full px-2 py-1 text-[8px] font-black">
+            Профиль открыт
+          </span>
+          <span className="bg-white/14 rounded-full px-2 py-1 text-[8px] font-black">
+            Город виден
+          </span>
+          <span className="bg-white/14 rounded-full px-2 py-1 text-[8px] font-black">
+            Моменты выключены
+          </span>
+        </div>
+      </section>
+      <section className="border-[#2c2036]/9 mx-4 mt-5 rounded-[1.5rem] border bg-white p-3.5 shadow-[0_8px_22px_rgba(69,43,94,.05)]">
+        <div className="flex items-center gap-2">
+          <span className="grid size-8 place-items-center rounded-xl bg-[#eaf7f5] text-[#258b82]">
+            <MapPin className="size-4" />
+          </span>
+          <span>
+            <b className="block text-xs">Твой город</b>
+            <small className="block text-[9px] text-[#81748a]">
+              Для людей, мест и программы
+            </small>
+          </span>
+        </div>
+        <div className="mt-3 flex items-center gap-3 rounded-2xl bg-[#fbf9fe] p-3">
+          <span className="grid size-9 place-items-center rounded-xl bg-[#f0e9ff] text-[#8753e6]">
+            <MapPin className="size-4" />
+          </span>
+          <span className="grow">
+            <b className="block text-[10px]">Показывать город в профиле</b>
+            <small className="block text-[9px] leading-4 text-[#81748a]">
+              Точный адрес и геолокация не показываются.
+            </small>
+          </span>
+          <span className="flex h-5 w-9 rounded-full bg-[#7c55dc] p-0.5">
+            <span className="block size-4 translate-x-4 rounded-full bg-white" />
+          </span>
+        </div>
+      </section>
+      <section className="border-[#2c2036]/9 mx-4 mt-3 rounded-[1.5rem] border bg-white p-3.5 shadow-[0_8px_22px_rgba(69,43,94,.05)]">
+        <div className="flex items-center gap-2">
+          <span className="grid size-8 place-items-center rounded-xl bg-[#fff0f6] text-[#d84b81]">
+            <Sparkles className="size-4" />
+          </span>
+          <span>
+            <b className="block text-xs">Публичные моменты</b>
+            <small className="block text-[9px] text-[#81748a]">
+              Только то, чем ты хочешь делиться
+            </small>
+          </span>
+        </div>
+        <div className="mt-3 flex items-center gap-3 rounded-2xl bg-[#fbf9fe] p-3">
+          <span className="grid size-9 place-items-center rounded-xl bg-[#f0e9ff] text-[#8753e6]">
+            <Sparkles className="size-4" />
+          </span>
+          <span className="grow">
+            <b className="block text-[10px]">Показывать мои моменты</b>
+            <small className="block text-[9px] leading-4 text-[#81748a]">
+              Только если все участники согласились.
+            </small>
+          </span>
+          <span className="flex h-5 w-9 rounded-full bg-[#d7cedf] p-0.5">
+            <span className="block size-4 rounded-full bg-white" />
+          </span>
+        </div>
+        <p className="mt-3 flex gap-2 rounded-xl bg-[#f8f5fb] p-2.5 text-[9px] leading-4 text-[#756a7d]">
+          <Check className="mt-0.5 size-3.5 shrink-0 text-[#8753e6]" /> Личные сообщения
+          и платные запросы никогда не становятся моментами города.
+        </p>
+      </section>
+      <section className="border-[#2c2036]/9 mx-4 mt-3 rounded-[1.5rem] border bg-white p-3.5 shadow-[0_8px_22px_rgba(69,43,94,.05)]">
+        <div className="flex items-center gap-3 rounded-2xl bg-[#fbf9fe] p-3">
+          <span className="grid size-9 place-items-center rounded-xl bg-[#eef2ff] text-[#536cb8]">
+            <UserRound className="size-4" />
+          </span>
+          <span className="grow">
+            <b className="block text-[10px]">Личные сообщения</b>
+            <small className="block text-[9px] text-[#81748a]">
+              Разрешить обычный приватный диалог
+            </small>
+          </span>
+          <span className="flex h-5 w-9 rounded-full bg-[#7c55dc] p-0.5">
+            <span className="block size-4 translate-x-4 rounded-full bg-white" />
+          </span>
+        </div>
+      </section>
+      <button className="mx-4 mt-5 rounded-2xl bg-gradient-to-r from-[#ff5d9a] to-[#8254ed] py-3.5 text-sm font-black text-white shadow-[0_10px_22px_rgba(160,75,213,.24)]">
+        Сохранить настройки
+      </button>
+      <AppNav active="Я" />
+    </div>
+  );
+}
+
 function LocalScreen() {
   const creators = [
     {
@@ -1510,6 +1634,7 @@ export default async function PreviewPage({
     onboarding: <OnboardingScreen />,
     rankings: <RankingsScreen />,
     people: <PeopleScreen />,
+    settings: <SettingsScreen />,
   };
 
   return (
