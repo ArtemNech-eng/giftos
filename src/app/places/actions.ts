@@ -166,6 +166,25 @@ export async function promotePlaceWithBonus(formData: FormData) {
   redirect(`/places/${placeId}?promoted=1` as Route);
 }
 
+/** Use the earned one-time city ambassador credit: no ⭐ are spent. */
+export async function useCityAmbassadorPromotion(formData: FormData) {
+  const { supabase } = await requireUser();
+  const placeId = requiredText(formData.get("place_id"), 100);
+  if (!placeId) throw new Error("Место не найдено.");
+  const { error } = await supabase.rpc("use_city_ambassador_promotion", {
+    p_place_id: placeId,
+  });
+  if (error) {
+    if (error.message.includes("credit is unavailable"))
+      throw new Error("Нет доступного продвижения амбассадора.");
+    throw new Error(`Не удалось продвинуть тусовку: ${error.message}`);
+  }
+  revalidatePath("/places");
+  revalidatePath(`/places/${placeId}`);
+  revalidatePath("/creator/dashboard");
+  redirect(`/places/${placeId}?ambassador_promoted=1` as Route);
+}
+
 /** Pin the hangout: creator spends ⭐ to keep the place at the very top. */
 export async function pinPlaceWithBonus(formData: FormData) {
   const { supabase } = await requireUser();

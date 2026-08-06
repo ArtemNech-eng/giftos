@@ -5,13 +5,16 @@ import {
   CirclePlus,
   FileText,
   Gift,
+  MapPin,
   MessageCircle,
   Play,
   Radio,
+  Sparkles,
   UsersRound,
   WalletCards,
 } from "lucide-react";
 
+import { claimCityAmbassadorReward } from "@/app/creator/dashboard/actions";
 import { CreatorShareLink } from "@/components/creator-share-link";
 import { requireUser } from "@/lib/auth";
 import { formatRubles } from "@/lib/money";
@@ -26,7 +29,7 @@ export default async function CreatorDashboardPage() {
   const { supabase, user } = await requireUser();
   const { data: profile } = await supabase
     .from("profiles")
-    .select("is_creator, username, display_name")
+    .select("is_creator, username, display_name, city")
     .eq("id", user.id)
     .maybeSingle();
   const [
@@ -36,6 +39,8 @@ export default async function CreatorDashboardPage() {
     { count: requests },
     { data: ledger },
     { data: liveRooms },
+    { data: rawAmbassadorProgress },
+    { data: cityReferralPath },
   ] = await Promise.all([
     supabase
       .from("user_follows")
@@ -65,12 +70,31 @@ export default async function CreatorDashboardPage() {
       .eq("host_id", user.id)
       .order("started_at", { ascending: false })
       .limit(5),
+    supabase.rpc("city_ambassador_progress"),
+    supabase.rpc("create_referral_link", { p_user_id: user.id }),
   ]);
   const income = (ledger ?? []).reduce(
     (sum, item) => sum + Number(item.creator_net_minor),
     0,
   );
   const activeLive = (liveRooms ?? []).find((room) => room.status === "live");
+  const ambassadorProgress = (
+    (rawAmbassadorProgress ?? []) as Array<{
+      city_id: string | null;
+      city_name: string | null;
+      active_referrals: number;
+      required_referrals: number;
+      is_ambassador: boolean;
+      promotion_credits: number;
+    }>
+  )[0];
+  const ambassadorCity = ambassadorProgress?.city_name ?? profile?.city ?? null;
+  const ambassadorGoal = ambassadorProgress?.required_referrals ?? 3;
+  const ambassadorReferrals = ambassadorProgress?.active_referrals ?? 0;
+  const ambassadorPercent = Math.min(
+    100,
+    Math.round((ambassadorReferrals / ambassadorGoal) * 100),
+  );
 
   return (
     <main className="mx-auto min-h-screen max-w-[430px] bg-[#0c0e14] px-4 py-5 text-white">
@@ -103,6 +127,82 @@ export default async function CreatorDashboardPage() {
               <Bell className="size-5" />
             </Link>
           </header>
+          {ambassadorProgress && ambassadorCity && (
+            <section className="mt-5 overflow-hidden rounded-[1.7rem] border border-[#ffbf6b]/35 bg-gradient-to-br from-[#32231d] via-[#251c2d] to-[#181a2b] p-5">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.12em] text-[#ffd579]">
+                    <Sparkles className="size-3.5" /> Первая волна · {ambassadorCity}
+                  </p>
+                  <h2 className="mt-2 text-xl font-bold">
+                    {ambassadorProgress.is_ambassador
+                      ? "Амбассадор города"
+                      : "Собери свой город"}
+                  </h2>
+                </div>
+                <span className="grid size-11 place-items-center rounded-2xl bg-[#ffd35e]/15 text-xl">
+                  🌆
+                </span>
+              </div>
+
+              {ambassadorProgress.is_ambassador ? (
+                <>
+                  <p className="mt-3 text-sm leading-6 text-[#d7cfdf]">
+                    Статус «Первая волна» уже виден в твоём профиле. У тебя есть
+                    {ambassadorProgress.promotion_credits > 0
+                      ? " бесплатное продвижение своей тусовки на 24 часа."
+                      : " использованное продвижение своей тусовки."}
+                  </p>
+                  <Link
+                    className="mt-4 inline-flex items-center gap-2 rounded-xl bg-[#ffd35e] px-3.5 py-2 text-sm font-bold text-[#38240e]"
+                    href="/places"
+                  >
+                    <MapPin className="size-4" /> Открыть мои места
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <p className="mt-3 text-sm leading-6 text-[#d7cfdf]">
+                    Приведи {ambassadorGoal} активных жителей в {ambassadorCity} —
+                    откроешь статус, оформление профиля и одно бесплатное продвижение
+                    места.
+                  </p>
+                  <div className="mt-4">
+                    <div className="flex items-center justify-between text-xs font-semibold text-[#e7dce9]">
+                      <span>Активные приглашения</span>
+                      <span>
+                        {ambassadorReferrals} / {ambassadorGoal}
+                      </span>
+                    </div>
+                    <div className="mt-2 h-2 overflow-hidden rounded-full bg-white/10">
+                      <div
+                        className="h-full rounded-full bg-gradient-to-r from-[#ffbf5e] to-[#ff6f9d]"
+                        style={{ width: `${ambassadorPercent}%` }}
+                      />
+                    </div>
+                  </div>
+                  {cityReferralPath && (
+                    <div className="mt-4">
+                      <CreatorShareLink
+                        label={`Пригласить в ${ambassadorCity}`}
+                        path={cityReferralPath}
+                      />
+                    </div>
+                  )}
+                  {ambassadorReferrals >= ambassadorGoal && (
+                    <form action={claimCityAmbassadorReward} className="mt-4">
+                      <button
+                        className="w-full rounded-xl bg-gradient-to-r from-[#ffd15c] to-[#ff8d78] px-4 py-3 text-sm font-black text-[#3b2514]"
+                        type="submit"
+                      >
+                        Активировать статус амбассадора
+                      </button>
+                    </form>
+                  )}
+                </>
+              )}
+            </section>
+          )}
           <section className="mt-5 rounded-2xl border border-white/10 bg-[#171923] p-4">
             <p className="text-sm font-semibold">Приводите аудиторию</p>
             <p className="mt-1 text-xs leading-5 text-[#aaa2b4]">

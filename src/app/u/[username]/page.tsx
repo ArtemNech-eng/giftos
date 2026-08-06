@@ -263,6 +263,9 @@ export default async function ProfilePage({
     p_profile_id: profile.id,
   });
   const reputationRoles = (repRoles ?? []) as string[];
+  const { data: cityAmbassadorCity } = await supabase.rpc("city_ambassador_badge", {
+    p_profile_id: profile.id,
+  });
   const level = {
     star: { label: "💎 Звезда", color: "text-[#e17dff] border-[#e17dff]/40" },
     author: { label: "🎤 Автор", color: "text-[#7fd8ff] border-[#7fd8ff]/40" },
@@ -430,7 +433,7 @@ export default async function ProfilePage({
             </Link>
           ) : null}
         </div>
-        <div className="mt-4 flex items-center gap-2">
+        <div className="mt-4 flex flex-wrap items-center gap-2">
           <h1 className="text-2xl font-bold">{profile.display_name}</h1>
           {profile.is_creator && (
             <span className="rounded-full bg-gradient-to-r from-[#f94d96] to-[#8953ff] px-2 py-1 text-xs font-semibold">
@@ -453,6 +456,14 @@ export default async function ProfilePage({
               title="Город выиграл сезон битвы городов"
             >
               🏆 Чемпион города
+            </span>
+          )}
+          {cityAmbassadorCity && (
+            <span
+              className="rounded-full border border-[#ffbd5e]/50 bg-[#332516] px-2 py-1 text-xs font-bold text-[#ffd887]"
+              title={`Привёл(а) трёх активных жителей в ${cityAmbassadorCity}`}
+            >
+              🌆 Первая волна
             </span>
           )}
           {equippedBadges.map((badge) => (

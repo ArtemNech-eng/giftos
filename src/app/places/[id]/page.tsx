@@ -12,6 +12,7 @@ import {
   leavePlace,
   pinPlaceWithBonus,
   promotePlaceWithBonus,
+  useCityAmbassadorPromotion,
 } from "@/app/places/actions";
 import { LivePlaceChat } from "@/components/live-place-chat";
 import { PlaceGiftButton } from "@/components/place-gift-button";
@@ -168,6 +169,23 @@ export default async function PlacePage({
   }
 
   const isMember = Boolean(member);
+  const { data: rawAmbassadorProgress } = await supabase.rpc(
+    "city_ambassador_progress",
+  );
+  const ambassadorProgress = (
+    (rawAmbassadorProgress ?? []) as Array<{
+      city_id: string | null;
+      is_ambassador: boolean;
+      promotion_credits: number;
+    }>
+  )[0];
+  const canUseAmbassadorPromotion = Boolean(
+    place.creator_id === user.id &&
+    place.kind !== "fixed" &&
+    ambassadorProgress?.is_ambassador &&
+    ambassadorProgress.city_id === place.city_id &&
+    ambassadorProgress.promotion_credits > 0,
+  );
 
   return (
     <main className="mx-auto min-h-screen max-w-[430px] bg-[#0c0e14] px-4 py-5 text-white">
@@ -314,6 +332,17 @@ export default async function PlacePage({
         </div>
         {place.creator_id === user.id && place.kind !== "fixed" && (
           <div className="mt-4 border-t border-white/10 pt-3">
+            {canUseAmbassadorPromotion && (
+              <form action={useCityAmbassadorPromotion}>
+                <input name="place_id" type="hidden" value={place.id} />
+                <button
+                  className="mb-2 flex w-full items-center justify-center gap-2 rounded-xl border border-[#ffbd5e]/50 bg-gradient-to-r from-[#3b2a16] to-[#2a1d2a] py-2.5 text-sm font-bold text-[#ffdc8a]"
+                  type="submit"
+                >
+                  🌆 Продвинуть как амбассадор — бесплатно
+                </button>
+              </form>
+            )}
             <form action={promotePlaceWithBonus}>
               <input name="place_id" type="hidden" value={place.id} />
               <button
