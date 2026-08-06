@@ -7,8 +7,10 @@ import {
   CirclePlus,
   Compass,
   Crown,
+  Flame,
   Gamepad2,
   Gift,
+  Heart,
   MapPin,
   MessageCircle,
   Music2,
@@ -37,7 +39,8 @@ const screens = [
   { id: "bonuses", label: "Рефералы", number: "06" },
   { id: "messages", label: "Сообщения", number: "07" },
   { id: "live", label: "Эфир", number: "08" },
-  { id: "onboarding", label: "Старт", number: "09" },
+  { id: "story", label: "Story", number: "09" },
+  { id: "onboarding", label: "Старт", number: "10" },
 ] as const;
 
 type ScreenId = (typeof screens)[number]["id"];
@@ -913,6 +916,101 @@ function Field({ label, value }: { label: string; value: string }) {
   );
 }
 
+function StoryScreen() {
+  return (
+    <div className="flex min-h-[730px] flex-col bg-[#0d0b12] text-white">
+      <section className="relative flex min-h-[560px] flex-col overflow-hidden bg-[#30213f]">
+        {/* eslint-disable-next-line @next/next/no-img-element -- generated synthetic preview media */}
+        <img
+          alt="Демо story Насти"
+          className="absolute inset-0 size-full object-cover object-[center_42%]"
+          src="/preview/nastya-profile.jpg"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-black/75" />
+        <div className="relative px-4 pt-4">
+          <div className="h-1 overflow-hidden rounded-full bg-white/35">
+            <div className="h-full w-2/3 rounded-full bg-white" />
+          </div>
+          <div className="mt-3 flex items-start justify-between">
+            <div className="flex items-center gap-2">
+              <span className="grid size-9 place-items-center overflow-hidden rounded-full border border-white/40">
+                {/* eslint-disable-next-line @next/next/no-img-element -- generated synthetic preview media */}
+                <img
+                  alt=""
+                  className="size-full object-cover"
+                  src="/preview/nastya-profile.jpg"
+                />
+              </span>
+              <span>
+                <b className="block text-[11px]">Настя</b>
+                <small className="flex items-center gap-1 text-[9px] text-white/75">
+                  <MapPin className="size-3" /> Будённовск · Музыка
+                </small>
+              </span>
+            </div>
+            <span className="rounded-full bg-white/15 px-2 py-1 text-[9px] font-black">
+              •••
+            </span>
+          </div>
+        </div>
+        <div className="relative mt-auto px-4 pb-5">
+          <span className="inline-flex items-center gap-1 rounded-md bg-[#ff3f79] px-1.5 py-0.5 text-[8px] font-black">
+            НОВАЯ STORY
+          </span>
+          <h1 className="mt-3 text-2xl font-black leading-[0.9] tracking-[-0.07em]">
+            ВЕЧЕР В ГОРОДЕ
+            <br />
+            НАЧИНАЕТСЯ.
+          </h1>
+          <p className="text-white/82 mt-3 max-w-64 text-[11px] leading-5">
+            Показываю новую работу и собираю идеи для бьюти-встречи.
+          </p>
+        </div>
+      </section>
+      <section className="p-4">
+        <div className="flex items-center gap-2 rounded-xl bg-white/5 p-3">
+          <span className="grid size-8 place-items-center rounded-lg bg-[#f0e4ff]/15 text-[#d9b7ff]">
+            <LocalRoleIcon className="size-4" code="beauty" />
+          </span>
+          <span className="grow">
+            <b className="block text-[10px]">Создаёт в Будённовске</b>
+            <small className="block text-[9px] text-white/60">
+              Мастер маникюра у ДК · открыть профиль
+            </small>
+          </span>
+          <span className="text-[#d9b7ff]">›</span>
+        </div>
+        <div className="mt-3 flex gap-2">
+          <button className="inline-flex items-center gap-1.5 rounded-full border border-[#ff77ba]/40 bg-[#3a1a35] px-3 py-1.5 text-[10px] font-bold text-[#ffc0da]">
+            <Heart className="size-4" /> Нравится 18
+          </button>
+          <button className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[10px] font-bold text-[#ded6e5]">
+            <Flame className="size-4" /> Огонь 7
+          </button>
+          <button className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[10px] font-bold text-[#ded6e5]">
+            <Sparkles className="size-4" /> Вау
+          </button>
+        </div>
+        <div className="mt-4 grid grid-cols-4 gap-2">
+          {["heart", "fire", "party", "diamond"].map((code) => (
+            <button
+              className="flex flex-col items-center rounded-xl border border-white/10 bg-white/5 p-2"
+              key={code}
+            >
+              <BrandGiftIcon className="size-6 text-[#ffc0da]" code={code} />
+              <span className="mt-1 text-[8px] text-white/65">Подарок</span>
+            </button>
+          ))}
+        </div>
+        <div className="mt-4 flex items-center justify-between text-[10px] font-bold text-[#ff9bc5]">
+          <span>В Будённовске сейчас</span>
+          <span>Смотреть город ›</span>
+        </div>
+      </section>
+    </div>
+  );
+}
+
 function OnboardingScreen() {
   return (
     <div className="min-h-[730px] bg-[#fbf9fe] p-5 text-[#251d31]">
@@ -985,6 +1083,7 @@ export default async function PreviewPage({
     bonuses: <BonusesScreen />,
     messages: <MessagesScreen />,
     live: <LiveScreen />,
+    story: <StoryScreen />,
     onboarding: <OnboardingScreen />,
   };
 

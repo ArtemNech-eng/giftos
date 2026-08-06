@@ -1,11 +1,14 @@
+/* eslint-disable @next/next/no-img-element -- media and avatars use short-lived signed Storage URLs */
 import Link from "next/link";
-import { LockKeyhole, Play, Sparkles } from "lucide-react";
+import type { Route } from "next";
+import { Flame, Heart, LockKeyhole, MapPin, Play, Radio, Sparkles } from "lucide-react";
 import { notFound } from "next/navigation";
 
 import { sendTestStoryGift } from "@/app/stories/gifts/actions";
 import { toggleStoryReaction } from "@/app/stories/reactions/actions";
 import { testUnlockStory } from "@/app/stories/actions";
 import { BrandGiftIcon } from "@/components/brand-gift-icon";
+import { LocalRoleIcon } from "@/components/local-role-icon";
 import { ReportForm } from "@/components/report-form";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { formatRubles } from "@/lib/money";
@@ -64,7 +67,7 @@ export default async function StoryPage({
     await Promise.all([
       supabase
         .from("profiles")
-        .select("username, display_name")
+        .select("username, display_name, avatar_path, city, city_id, show_city")
         .eq("id", story.author_id)
         .maybeSingle(),
       supabase
@@ -81,6 +84,15 @@ export default async function StoryPage({
         .select("reaction, sender_id")
         .eq("story_id", story.id),
     ]);
+  const { data: localCreator } = await supabase
+    .from("public_local_creators")
+    .select("role_code, city_label, headline, live_slug, event_id")
+    .eq("id", story.author_id)
+    .maybeSingle();
+  const authorAvatarUrl = await getSignedImageUrl({
+    bucket: "avatars",
+    path: author?.avatar_path,
+  });
   const videoUrl = canWatch
     ? await getSignedImageUrl({ bucket: "story-media", path: story.media_path })
     : null;
@@ -91,10 +103,15 @@ export default async function StoryPage({
     month: "short",
   }).format(new Date(story.expires_at));
   const reactionConfig = [
-    { code: "heart", emoji: "❤️" },
-    { code: "fire", emoji: "🔥" },
-    { code: "wow", emoji: "😮" },
+    { code: "heart", label: "Нравится" },
+    { code: "fire", label: "Огонь" },
+    { code: "wow", label: "Вау" },
   ];
+  const reactionIcon = (code: string) => {
+    if (code === "heart") return <Heart className="size-4" />;
+    if (code === "fire") return <Flame className="size-4" />;
+    return <Sparkles className="size-4" />;
+  };
   const reactionCount = (code: string) =>
     reactions?.filter((item) => item.reaction === code).length ?? 0;
   const hasReaction = (code: string) =>
@@ -104,56 +121,9 @@ export default async function StoryPage({
     );
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-xl items-center bg-[#0c0e14] px-4 py-8 text-white">
-      <section className="w-full overflow-hidden rounded-[2rem] border border-white/10 bg-[#171923] shadow-[0_18px_60px_rgba(0,0,0,0.4)]">
-        <div className="flex items-center justify-between p-4">
-          <div>
-            <p className="font-bold">{author?.display_name ?? "Автор"}</p>
-            <p className="text-xs text-[#b9b2c7]">Story до {expiry}</p>
-          </div>
-          <div className="flex items-center gap-3">
-            {isAuthor && (
-              <Link
-                className="text-sm font-semibold text-[#d8a1ff]"
-                href={`/creator/stories/${story.id}/analytics`}
-              >
-                Аналитика
-              </Link>
-            )}
-            {user && !isAuthor && (
-              <Link
-                className="text-sm font-semibold text-[#b9b2c7]"
-                href="/stories/viewed"
-              >
-                Мои просмотры
-              </Link>
-            )}
-            {user && !isAuthor && (
-              <Link
-                className="text-sm font-semibold text-[#b9b2c7]"
-                href="/stories/opens"
-              >
-                Мои открытия
-              </Link>
-            )}
-            {user && !isAuthor && (
-              <ReportForm
-                returnTo={`/stories/${story.id}`}
-                targetId={story.id}
-                targetType="story"
-              />
-            )}
-            {author?.username && (
-              <Link
-                className="text-sm font-semibold text-[#a13d5e]"
-                href={`/u/${author.username}`}
-              >
-                Профиль
-              </Link>
-            )}
-          </div>
-        </div>
-        <div className="relative aspect-[9/16] max-h-[70vh] bg-[#2e2025]">
+    <main className="mx-auto flex min-h-screen max-w-[430px] items-center bg-[#0d0b12] px-3 py-4 text-white">
+      <section className="w-full overflow-hidden rounded-[1.8rem] border border-white/10 bg-[#17131d] shadow-[0_20px_65px_rgba(0,0,0,.45)]">
+        <div className="relative aspect-[9/16] max-h-[72vh] bg-[#241a2a]">
           {canWatch && videoUrl ? (
             <video
               autoPlay
@@ -163,15 +133,15 @@ export default async function StoryPage({
               src={videoUrl}
             />
           ) : (
-            <div className="grid size-full place-items-center p-6 text-center text-white">
+            <div className="grid size-full place-items-center bg-[radial-gradient(circle_at_50%_20%,rgba(176,103,240,.45),transparent_32%),linear-gradient(180deg,#2d1937,#15121d)] p-6 text-center text-white">
               <div>
-                <LockKeyhole className="mx-auto size-10" />
-                <h1 className="mt-4 text-xl font-bold">Закрытая story</h1>
+                <LockKeyhole className="mx-auto size-10 text-[#f5c2dd]" />
+                <h1 className="mt-4 text-xl font-black">Закрытая story</h1>
                 <p className="mt-2 text-sm leading-6 text-white/75">
-                  Откройте короткое видео автора и поддержите его первые публикации.
+                  Открой короткое видео автора и поддержи его первые публикации.
                 </p>
                 {story.unlock_price_minor && (
-                  <p className="mt-4 text-2xl font-bold">
+                  <p className="mt-4 text-2xl font-black">
                     {formatRubles(story.unlock_price_minor)}
                   </p>
                 )}
@@ -179,7 +149,7 @@ export default async function StoryPage({
                   <form action={testUnlockStory} className="mt-5">
                     <input name="story_id" type="hidden" value={story.id} />
                     <button
-                      className="inline-flex h-11 items-center gap-2 rounded-xl bg-[#df4f7d] px-5 text-sm font-semibold text-white"
+                      className="inline-flex h-11 items-center gap-2 rounded-xl bg-gradient-to-r from-[#ff5d9a] to-[#8254ed] px-5 text-sm font-black text-white"
                       type="submit"
                     >
                       <Sparkles className="size-4" /> Открыть в тестовом режиме
@@ -187,7 +157,7 @@ export default async function StoryPage({
                   </form>
                 ) : (
                   <Link
-                    className="mt-5 inline-flex h-11 items-center gap-2 rounded-xl bg-[#df4f7d] px-5 text-sm font-semibold text-white"
+                    className="mt-5 inline-flex h-11 items-center gap-2 rounded-xl bg-gradient-to-r from-[#ff5d9a] to-[#8254ed] px-5 text-sm font-black text-white"
                     href="/auth/sign-in"
                   >
                     <Play className="size-4" /> Войти и открыть
@@ -196,12 +166,109 @@ export default async function StoryPage({
               </div>
             </div>
           )}
+
+          <div className="absolute inset-x-0 top-0 bg-gradient-to-b from-black/65 to-transparent px-4 pb-10 pt-4">
+            <div className="mb-3 h-1 overflow-hidden rounded-full bg-white/30">
+              <div className="h-full w-2/3 rounded-full bg-white" />
+            </div>
+            <div className="flex items-start justify-between gap-3">
+              <Link
+                className="flex min-w-0 items-center gap-2"
+                href={author?.username ? `/u/${author.username}` : "/feed"}
+              >
+                <span className="grid size-9 shrink-0 place-items-center overflow-hidden rounded-full border border-white/45 bg-[#2b1d31] text-xs font-black">
+                  {authorAvatarUrl ? (
+                    <img
+                      alt=""
+                      className="size-full object-cover"
+                      src={authorAvatarUrl}
+                    />
+                  ) : (
+                    (author?.display_name ?? "А").slice(0, 1).toUpperCase()
+                  )}
+                </span>
+                <span className="min-w-0">
+                  <b className="block truncate text-xs">
+                    {author?.display_name ?? "Автор"}
+                  </b>
+                  <span className="mt-0.5 flex items-center gap-1 text-[9px] text-white/75">
+                    {localCreator && (
+                      <LocalRoleIcon className="size-3" code={localCreator.role_code} />
+                    )}
+                    {localCreator?.city_label ??
+                      (author?.show_city ? author.city : "Story автора")}
+                  </span>
+                </span>
+              </Link>
+              <div className="flex items-center gap-2">
+                {isAuthor && (
+                  <Link
+                    className="rounded-full bg-white/15 px-2.5 py-1 text-[9px] font-black"
+                    href={`/creator/stories/${story.id}/analytics`}
+                  >
+                    Аналитика
+                  </Link>
+                )}
+                {user && !isAuthor && (
+                  <ReportForm
+                    returnTo={`/stories/${story.id}`}
+                    targetId={story.id}
+                    targetType="story"
+                  />
+                )}
+              </div>
+            </div>
+          </div>
         </div>
-        {story.caption && (
-          <p className="p-4 text-sm leading-6 text-[#ddd5e6]">{story.caption}</p>
-        )}
+
+        <section className="p-4">
+          <div className="flex items-center justify-between gap-3">
+            <span className="flex items-center gap-1.5 text-[10px] font-black text-[#d9b7ff]">
+              <Radio className="size-3.5" /> Story до {expiry}
+            </span>
+            {author?.show_city && author.city && (
+              <Link
+                className="flex items-center gap-1 text-[10px] font-bold text-[#ff9bc5]"
+                href="/places"
+              >
+                <MapPin className="size-3.5" /> {author.city} сейчас
+              </Link>
+            )}
+          </div>
+          {story.caption && (
+            <p className="mt-3 text-sm leading-6 text-[#e1d9e7]">{story.caption}</p>
+          )}
+          {localCreator && (
+            <Link
+              className="mt-4 flex items-center gap-2 rounded-xl bg-white/5 p-3"
+              href={
+                localCreator.live_slug
+                  ? (`/live/${localCreator.live_slug}` as Route)
+                  : localCreator.event_id
+                    ? (`/events/${localCreator.event_id}` as Route)
+                    : author?.username
+                      ? (`/u/${author.username}` as Route)
+                      : "/feed"
+              }
+            >
+              <span className="grid size-8 place-items-center rounded-lg bg-[#f0e4ff]/15 text-[#d9b7ff]">
+                <LocalRoleIcon className="size-4" code={localCreator.role_code} />
+              </span>
+              <span className="min-w-0 grow">
+                <b className="block text-[11px]">
+                  Создаёт в {author?.city ?? "городе"}
+                </b>
+                <small className="block truncate text-[10px] text-[#aaa0b3]">
+                  {localCreator.headline ?? "Открыть автора"}
+                </small>
+              </span>
+              <span className="text-[#d9b7ff]">›</span>
+            </Link>
+          )}
+        </section>
+
         {canWatch && (
-          <section className="border-t border-white/10 px-4 pt-4">
+          <section className="border-t border-white/10 px-4 py-3">
             <div className="flex gap-2">
               {reactionConfig.map((reaction) =>
                 user ? (
@@ -209,29 +276,36 @@ export default async function StoryPage({
                     <input name="story_id" type="hidden" value={story.id} />
                     <input name="reaction" type="hidden" value={reaction.code} />
                     <button
-                      className={`rounded-full border px-3 py-1.5 text-sm transition ${hasReaction(reaction.code) ? "border-[#ff77ba] bg-[#3a1a35]" : "border-white/10 bg-white/5"}`}
+                      className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[10px] font-bold transition ${
+                        hasReaction(reaction.code)
+                          ? "border-[#ff77ba] bg-[#3a1a35] text-[#ffc0da]"
+                          : "border-white/10 bg-white/5 text-[#ded6e5]"
+                      }`}
                       type="submit"
                     >
-                      {reaction.emoji} {reactionCount(reaction.code) || ""}
+                      {reactionIcon(reaction.code)} {reaction.label}
+                      {reactionCount(reaction.code) > 0 && reactionCount(reaction.code)}
                     </button>
                   </form>
                 ) : (
                   <Link
-                    className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-sm"
+                    className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[10px] font-bold text-[#ded6e5]"
                     href="/auth/sign-in"
                     key={reaction.code}
                   >
-                    {reaction.emoji} {reactionCount(reaction.code) || ""}
+                    {reactionIcon(reaction.code)} {reaction.label}
+                    {reactionCount(reaction.code) > 0 && reactionCount(reaction.code)}
                   </Link>
                 ),
               )}
             </div>
           </section>
         )}
+
         {canWatch && user && !isAuthor && gifts && gifts.length > 0 && (
           <section className="border-t border-white/10 p-4">
             <div className="mb-3 flex items-center justify-between">
-              <p className="font-semibold">Отправить подарок</p>
+              <p className="text-sm font-black">Поддержать story</p>
               <span className="text-xs text-[#b9b2c7]">
                 {storyGifts?.length ?? 0} подарков
               </span>
@@ -258,8 +332,9 @@ export default async function StoryPage({
                 </form>
               ))}
             </div>
-            <p className="mt-3 text-xs text-[#9f97aa]">
-              Подарки работают в тестовом режиме и формируют тестовый доход автора.
+            <p className="mt-3 text-[10px] leading-5 text-[#9f97aa]">
+              Подарки работают в тестовом режиме. Публичный городской момент появится
+              только при opt-in участников.
             </p>
           </section>
         )}

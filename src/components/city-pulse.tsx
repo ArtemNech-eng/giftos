@@ -22,7 +22,8 @@ export type CityPulseItem = {
     | "place_gift"
     | "profile_gift"
     | "live_gift"
-    | "live_donation";
+    | "live_donation"
+    | "story_gift";
   actor_id: string;
   actor_name: string;
   actor_username: string;
@@ -86,6 +87,12 @@ function copyForPulse(item: CityPulseItem) {
         href: `/u/${item.actor_username}` as Route,
         label: "публичный подарок",
       };
+    case "story_gift":
+      return {
+        action: `поддержал(а) story «${item.target_name}»`,
+        href: `/stories/${item.target_id}` as Route,
+        label: "поддержка story",
+      };
     case "live_gift":
     case "live_donation":
       return {
@@ -103,7 +110,8 @@ function pulseIcon(kind: CityPulseItem["kind"]) {
   if (kind === "place_message") return MessageCircle;
   if (kind === "event") return CalendarDays;
   if (kind === "live" || kind === "live_gift" || kind === "live_donation") return Radio;
-  if (kind === "place_gift" || kind === "profile_gift") return Gift;
+  if (kind === "place_gift" || kind === "profile_gift" || kind === "story_gift")
+    return Gift;
   return Sparkles;
 }
 

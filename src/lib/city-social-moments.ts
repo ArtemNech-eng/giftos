@@ -1,11 +1,18 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 
 type CitySocialMoment = {
-  kind: "place_join" | "place_gift" | "profile_gift" | "live_gift" | "live_donation";
+  kind:
+    | "place_join"
+    | "place_gift"
+    | "profile_gift"
+    | "live_gift"
+    | "live_donation"
+    | "story_gift";
   actorId: string;
   subjectId?: string | null;
   placeId?: string | null;
   liveRoomId?: string | null;
+  storyId?: string | null;
   giftCode?: string | null;
 };
 
@@ -50,6 +57,7 @@ export async function recordCitySocialMoment(moment: CitySocialMoment) {
       subject_id: moment.subjectId ?? null,
       place_id: moment.placeId ?? null,
       live_room_id: moment.liveRoomId ?? null,
+      story_id: moment.storyId ?? null,
       gift_code: moment.giftCode ?? null,
     });
   } catch {
