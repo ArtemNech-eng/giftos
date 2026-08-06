@@ -312,6 +312,7 @@ async function getHomeData(scope: "city" | "global" = "global") {
       cityNewcomers: scope === "city" ? demoCityPeople : [],
       cityLiveRooms: scope === "city" ? demoLiveRooms : [],
       cityWishes: scope === "city" ? demoWishes : [],
+      cityChampion: null,
       isDemo: true,
     };
   }
@@ -562,6 +563,7 @@ async function getHomeData(scope: "city" | "global" = "global") {
     let cityNewcomers: CityPerson[] = [];
     let cityLiveRooms: LiveRoomPreview[] = [];
     let cityWishes: WishPreview[] = [];
+    let cityChampion: { seasonName: string; cityName: string } | null = null;
     if (scope === "city" && user) {
       const { data: myProfile } = await supabase
         .from("profiles")
@@ -646,6 +648,23 @@ async function getHomeData(scope: "city" | "global" = "global") {
           .eq("id", myProfile.city_id)
           .maybeSingle();
         cityName = cityRow?.name ?? myProfile.city;
+
+        // City Cup: if my city won the last finished season, show it in the
+        // battle card («мы выиграли вместе» — коллективная награда).
+        const { data: lastSeason } = await supabase
+          .from("city_seasons")
+          .select("name, winner_city_id, winner_city_name")
+          .not("winner_city_id", "is", null)
+          .order("finished_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        cityChampion =
+          lastSeason && lastSeason.winner_city_id === myProfile.city_id
+            ? {
+                seasonName: lastSeason.name,
+                cityName: lastSeason.winner_city_name ?? cityName ?? "",
+              }
+            : null;
       }
     }
 
@@ -665,6 +684,7 @@ async function getHomeData(scope: "city" | "global" = "global") {
       cityNewcomers,
       cityLiveRooms,
       cityWishes,
+      cityChampion,
       isDemo: false,
     };
   } catch {
@@ -684,6 +704,7 @@ async function getHomeData(scope: "city" | "global" = "global") {
       cityNewcomers: [],
       cityLiveRooms: [],
       cityWishes: [],
+      cityChampion: null,
       isDemo: false,
     };
   }
@@ -846,6 +867,7 @@ export default async function HomePage({
     cityNewcomers,
     cityLiveRooms,
     cityWishes,
+    cityChampion,
     isDemo,
   } = await getHomeData(scope);
   const storyAuthors = authors.length > 0 ? authors : demoAuthors;
@@ -954,7 +976,9 @@ export default async function HomePage({
           <span className="min-w-0 grow">
             <span className="block text-sm font-bold">Битва городов</span>
             <span className="mt-0.5 block text-xs text-[#b8b0c3]">
-              Помоги {cityName} стать первым — приглашай друзей и зарабатывай баллы
+              {cityChampion
+                ? `🏆 ${cityChampion.cityName} — чемпион сезона «${cityChampion.seasonName}»! Поможем защитить кубок`
+                : `Помоги ${cityName} стать первым — приглашай друзей и зарабатывай баллы`}
             </span>
           </span>
           <span className="shrink-0 text-[#ffd35e]">›</span>

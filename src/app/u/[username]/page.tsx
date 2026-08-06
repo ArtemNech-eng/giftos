@@ -77,7 +77,7 @@ export default async function ProfilePage({
   const { data: profile } = await supabase
     .from("profiles")
     .select(
-      "id, username, display_name, bio, city, show_city, avatar_path, is_creator, creator_headline, message_requests_enabled, paid_message_price_minor, subscriptions_enabled, subscription_price_minor, promoted_until",
+      "id, username, display_name, bio, city, city_id, show_city, avatar_path, is_creator, creator_headline, message_requests_enabled, paid_message_price_minor, subscriptions_enabled, subscription_price_minor, promoted_until",
     )
     .eq("username", username.toLowerCase())
     .maybeSingle();
@@ -234,6 +234,16 @@ export default async function ProfilePage({
     vip && vip.status === "active" && new Date(vip.expires_at) > new Date(),
   );
   const followerCount = followers ?? 0;
+  const { data: lastCitySeason } = await supabase
+    .from("city_seasons")
+    .select("winner_city_id")
+    .not("winner_city_id", "is", null)
+    .order("finished_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const isCityChampion = Boolean(
+    profile.city_id && lastCitySeason?.winner_city_id === profile.city_id,
+  );
   const { data: cityRank } = await supabase.rpc("city_rank", {
     p_profile_id: profile.id,
   });
@@ -430,6 +440,14 @@ export default async function ProfilePage({
           >
             {level.label}
           </span>
+          {isCityChampion && (
+            <span
+              className="rounded-full border border-[#ffd35e]/50 bg-[#2a2215] px-2 py-1 text-xs font-bold text-[#ffd35e]"
+              title="Город выиграл сезон битвы городов"
+            >
+              🏆 Чемпион города
+            </span>
+          )}
           {equippedBadges.map((badge) => (
             <span
               className="rounded-full border border-white/15 bg-white/5 px-2 py-1 text-xs"

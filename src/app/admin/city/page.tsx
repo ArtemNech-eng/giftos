@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { Activity, Coins, MapPin, ShieldAlert } from "lucide-react";
+import { Activity, Coins, MapPin, ShieldAlert, Trophy } from "lucide-react";
 
+import { finishSeason, startSeason } from "@/app/admin/city/actions";
 import { requireModerator } from "@/lib/auth";
 
 export const metadata = {
@@ -50,6 +51,29 @@ export default async function AdminCityPage() {
       gifts: 0,
     },
   );
+
+  const { data: activeSeason } = await supabase
+    .from("city_seasons")
+    .select("id, name, started_at")
+    .eq("is_active", true)
+    .maybeSingle();
+  const { data: seasonLeader } = activeSeason
+    ? await supabase
+        .from("city_battle_entries")
+        .select("points, cities!inner(name)")
+        .eq("season_id", activeSeason.id)
+        .order("points", { ascending: false })
+        .limit(1)
+        .maybeSingle()
+    : { data: null };
+  const { data: finishedSeasons } = await supabase
+    .from("city_seasons")
+    .select("name, winner_city_name, winner_points, finished_at")
+    .not("winner_city_id", "is", null)
+    .order("finished_at", { ascending: false })
+    .limit(10);
+  const leaderName = (seasonLeader as { cities: Array<{ name: string }> } | null)
+    ?.cities?.[0]?.name;
 
   return (
     <main className="mx-auto max-w-5xl px-4 py-10 sm:px-6">
@@ -147,6 +171,89 @@ export default async function AdminCityPage() {
             ))}
           </div>
         )}
+      </section>
+
+      <section className="mt-8">
+        <h2 className="flex items-center gap-2 text-xl font-bold">
+          <Trophy className="size-5 text-[#d34872]" /> Сезоны битвы городов
+        </h2>
+        <div className="surface mt-4 rounded-2xl p-5">
+          {activeSeason ? (
+            <>
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <p className="text-xs text-[#8e747c]">Активный сезон</p>
+                  <b className="mt-1 block text-lg">{activeSeason.name}</b>
+                  <p className="mt-1 text-sm text-[#8e747c]">
+                    {leaderName
+                      ? `Сейчас лидирует: ${leaderName} · ${Number((seasonLeader as { points: number } | null)?.points ?? 0).toLocaleString("ru-RU")} баллов`
+                      : "Баллов пока нет"}
+                  </p>
+                </div>
+                <form action={finishSeason}>
+                  <button
+                    className="h-9 rounded-lg bg-[#df4f7d] px-3 text-sm font-semibold text-white"
+                    type="submit"
+                  >
+                    Завершить сезон и наградить победителя
+                  </button>
+                </form>
+              </div>
+              <p className="mt-3 text-xs leading-5 text-[#9b858c]">
+                Город с наибольшим числом баллов получает «Кубок города» — жители
+                получают статус «🏆 Чемпион города».
+              </p>
+            </>
+          ) : (
+            <p className="text-sm text-[#8e747c]">
+              Активного сезона нет — начните новый, чтобы жители снова зарабатывали
+              баллы.
+            </p>
+          )}
+          <form action={startSeason} className="mt-4 flex flex-wrap items-center gap-2">
+            <input
+              className="h-9 min-w-52 rounded-lg border border-[#e7d8dc] bg-white px-3 text-sm"
+              maxLength={120}
+              name="name"
+              placeholder="Название нового сезона (например, Сезон 2)"
+              required
+            />
+            <button
+              className="h-9 rounded-lg border border-[#ead9df] bg-white px-3 text-sm font-semibold text-[#765f66]"
+              type="submit"
+            >
+              Начать новый сезон
+            </button>
+          </form>
+        </div>
+
+        <div className="mt-4 space-y-2">
+          {(finishedSeasons ?? []).map((season) => (
+            <div
+              className="surface flex flex-wrap items-center justify-between gap-2 rounded-2xl px-4 py-3"
+              key={season.name + (season.finished_at ?? "")}
+            >
+              <span className="text-sm font-semibold">
+                🏆 {season.name} — {season.winner_city_name}
+              </span>
+              <span className="text-xs text-[#8e747c]">
+                {Number(season.winner_points ?? 0).toLocaleString("ru-RU")} баллов ·{" "}
+                {season.finished_at
+                  ? new Intl.DateTimeFormat("ru-RU", {
+                      day: "numeric",
+                      month: "long",
+                      year: "numeric",
+                    }).format(new Date(season.finished_at))
+                  : ""}
+              </span>
+            </div>
+          ))}
+          {(finishedSeasons ?? []).length === 0 && (
+            <p className="rounded-2xl border border-dashed border-[#e7d8dc] p-4 text-sm text-[#9b858c]">
+              Завершённых сезонов пока нет — первым станет текущий.
+            </p>
+          )}
+        </div>
       </section>
 
       <p className="mt-7 text-xs leading-5 text-[#9b858c]">

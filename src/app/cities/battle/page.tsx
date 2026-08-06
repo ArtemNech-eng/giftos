@@ -17,14 +17,32 @@ type Entry = {
   name: string;
 };
 
+type FinishedSeason = {
+  name: string;
+  winner_city_name: string | null;
+  winner_city_id: string | null;
+  winner_points: number | null;
+  finished_at: string | null;
+};
+
 export default async function CityBattlePage() {
   const { supabase, user } = await requireUser();
 
-  const { data: season } = await supabase
-    .from("city_seasons")
-    .select("id, name, started_at, ended_at")
-    .eq("is_active", true)
-    .maybeSingle();
+  const [{ data: season }, { data: rawFinished }] = await Promise.all([
+    supabase
+      .from("city_seasons")
+      .select("id, name, started_at, ended_at")
+      .eq("is_active", true)
+      .maybeSingle(),
+    supabase
+      .from("city_seasons")
+      .select("name, winner_city_name, winner_city_id, winner_points, finished_at")
+      .not("winner_city_id", "is", null)
+      .order("finished_at", { ascending: false })
+      .limit(10),
+  ]);
+  const finishedSeasons = (rawFinished ?? []) as FinishedSeason[];
+  const lastFinished = finishedSeasons[0] ?? null;
 
   let entries: Entry[] = [];
   let myCityId: string | null = null;
@@ -102,6 +120,25 @@ export default async function CityBattlePage() {
         <span className="w-9" />
       </header>
 
+      {lastFinished && (
+        <section
+          className={`mt-6 rounded-2xl border p-4 ${
+            myCityId && lastFinished.winner_city_id === myCityId
+              ? "border-[#ffd35e]/40 bg-gradient-to-r from-[#2b2413] to-[#221a10]"
+              : "border-white/10 bg-[#171923]"
+          }`}
+        >
+          <p className="text-sm font-bold">
+            🏆 {lastFinished.winner_city_name} — победитель сезона «{lastFinished.name}»
+          </p>
+          <p className="mt-1 text-xs leading-5 text-[#b8b0c3]">
+            {myCityId && lastFinished.winner_city_id === myCityId
+              ? "Это наша общая победа — кубок остаётся в городе. Защитим его в новом сезоне!"
+              : "Награда общая — «мы выиграли вместе». В новом сезоне можем обойти!"}
+          </p>
+        </section>
+      )}
+
       <section className="mt-6 rounded-[2rem] bg-gradient-to-br from-[#2b193f] to-[#181a2b] p-6 text-center">
         <Trophy className="mx-auto size-9 text-[#ffd35e]" />
         <p className="mt-3 text-sm text-[#c6bfd0]">{season?.name ?? "Сезон"}</p>
@@ -162,8 +199,12 @@ export default async function CityBattlePage() {
             <EmptyState
               actionHref="/feed"
               actionLabel="К ленте"
-              description="Баллы появятся, когда жители городов начнут действовать."
-              title="Сезон только начался"
+              description={
+                season
+                  ? "Баллы появятся, когда жители городов начнут действовать."
+                  : "Новый сезон скоро начнётся — и ваш город сможет побороться за кубок."
+              }
+              title={season ? "Сезон только начался" : "Между сезонами"}
             />
           </div>
         ) : (
@@ -189,6 +230,48 @@ export default async function CityBattlePage() {
                 <b className="shrink-0 text-sm text-[#ffd35e]">
                   {entry.points.toLocaleString("ru-RU")}
                 </b>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
+      <section className="mt-6">
+        <h2 className="font-bold">Кубок города</h2>
+        <p className="mt-1 text-xs text-[#9991a3]">
+          Победители завершённых сезонов — награда общая, «мы выиграли вместе»
+        </p>
+        {finishedSeasons.length === 0 ? (
+          <div className="mt-3 rounded-2xl border border-dashed border-white/15 p-5 text-sm text-[#aaa2b4]">
+            Первый сезон ещё не завершён — именно ваш город может забрать кубок!
+          </div>
+        ) : (
+          <div className="mt-3 space-y-2">
+            {finishedSeasons.map((finished) => (
+              <div
+                className="border-white/8 flex items-center gap-3 rounded-xl border bg-[#171923] p-3"
+                key={finished.name + (finished.finished_at ?? "")}
+              >
+                <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#ffd35e]/15 text-xl">
+                  🏆
+                </span>
+                <span className="min-w-0 grow">
+                  <b className="block truncate text-sm">
+                    {finished.winner_city_name ?? "Город"}
+                  </b>
+                  <small className="text-xs text-[#9991a3]">
+                    {finished.name} ·{" "}
+                    {Number(finished.winner_points ?? 0).toLocaleString("ru-RU")} баллов
+                  </small>
+                </span>
+                {finished.finished_at && (
+                  <span className="shrink-0 text-xs text-[#9991a3]">
+                    {new Intl.DateTimeFormat("ru-RU", {
+                      day: "numeric",
+                      month: "short",
+                    }).format(new Date(finished.finished_at))}
+                  </span>
+                )}
               </div>
             ))}
           </div>
