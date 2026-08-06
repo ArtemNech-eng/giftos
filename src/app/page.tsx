@@ -224,6 +224,37 @@ export default async function SeoLandingPage() {
         </div>
       </section>
 
+      <section className="mx-auto max-w-6xl px-5 pb-14 sm:px-8">
+        <div className="overflow-hidden rounded-[2rem] border border-[#a85dff]/30 bg-gradient-to-br from-[#211537] via-[#181a2b] to-[#151923] p-7 sm:p-9">
+          <p className="text-sm font-semibold text-[#d99cff]">
+            📍 Первый цифровой город
+          </p>
+          <div className="mt-3 flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <h2 className="text-3xl font-bold">Будённовск уже в городе</h2>
+              <p className="mt-3 max-w-xl text-[#c5bdcf]">
+                Люди рядом, места, события, желания, эфиры и свои тусовки. Зайди
+                посмотреть, что происходит прямо сейчас.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-3">
+              <Link
+                className="rounded-xl bg-white px-4 py-2.5 text-sm font-bold text-[#2c1742]"
+                href="/places"
+              >
+                Куда пойдём?
+              </Link>
+              <Link
+                className="rounded-xl border border-white/15 px-4 py-2.5 text-sm font-semibold"
+                href="/cities/battle"
+              >
+                Битва городов
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section className="border-white/8 border-y bg-[#11131c]">
         <div className="mx-auto max-w-6xl px-5 py-14 sm:px-8">
           <h2 className="text-2xl font-bold">Здесь можно не только смотреть</h2>
