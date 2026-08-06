@@ -43,7 +43,18 @@ export async function generateMetadata({
     title: `${wish.title} — желание в «Хочу также»`,
     description,
     alternates: { canonical: `/wishes/${id}` },
-    openGraph: { title: `${wish.title} — «Хочу также»`, description, type: "article" },
+    openGraph: {
+      title: `${wish.title} — «Хочу также»`,
+      description,
+      type: "article",
+      images: [
+        {
+          url: `/og?type=wish&title=${encodeURIComponent(wish.title)}&subtitle=${encodeURIComponent(description.slice(0, 160))}`,
+          width: 1200,
+          height: 630,
+        },
+      ],
+    },
   };
 }
 

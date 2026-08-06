@@ -47,6 +47,13 @@ export async function generateMetadata({
       title: `${fundraiser.title} — «Хочу также»`,
       description,
       type: "article",
+      images: [
+        {
+          url: `/og?type=fundraiser&title=${encodeURIComponent(fundraiser.title)}&subtitle=${encodeURIComponent(description.slice(0, 160))}`,
+          width: 1200,
+          height: 630,
+        },
+      ],
     },
   };
 }

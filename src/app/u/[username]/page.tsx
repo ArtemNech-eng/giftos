@@ -60,6 +60,13 @@ export async function generateMetadata({
       title: `${profile.display_name} — «Хочу также»`,
       description,
       type: "profile",
+      images: [
+        {
+          url: `/og?type=profile&title=${encodeURIComponent(profile.display_name)}&subtitle=${encodeURIComponent(description.slice(0, 160))}`,
+          width: 1200,
+          height: 630,
+        },
+      ],
     },
   };
 }
