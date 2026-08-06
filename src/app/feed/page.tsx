@@ -80,6 +80,7 @@ type CityPerson = {
   city: string | null;
   isCreator: boolean;
   followers: number;
+  isVip?: boolean;
 };
 
 const demoAuthors: StoryAuthor[] = [
@@ -569,13 +570,9 @@ async function getHomeData(scope: "city" | "global" = "global") {
         .maybeSingle();
       if (myProfile?.city_id) {
         const { data: rawCitizens } = await supabase
-          .from("profiles")
-          .select("id, username, display_name, city, is_creator")
+          .from("public_city_people")
+          .select("id, username, display_name, city, is_creator, is_vip")
           .eq("city_id", myProfile.city_id)
-          .eq("show_city", true)
-          .eq("profile_visibility", "public")
-          .eq("is_suspended", false)
-          .order("created_at", { ascending: false })
           .limit(20);
         const citizens = (rawCitizens ?? []) as Array<{
           id: string;
@@ -583,6 +580,7 @@ async function getHomeData(scope: "city" | "global" = "global") {
           display_name: string;
           city: string | null;
           is_creator: boolean;
+          is_vip: boolean;
         }>;
         const citizenIds = citizens.map((c) => c.id);
         const { data: follows } = citizenIds.length
@@ -605,6 +603,7 @@ async function getHomeData(scope: "city" | "global" = "global") {
           city: c.city,
           isCreator: c.is_creator,
           followers: followerCount.get(c.id) ?? 0,
+          isVip: Boolean(c.is_vip),
         });
         cityPeople = others.slice(0, 4).map(toCityPerson);
         cityNewcomers = others.slice(0, 3).map(toCityPerson);
@@ -985,6 +984,11 @@ export default async function HomePage({
                       {person.isCreator && (
                         <span className="ml-2 rounded-full bg-gradient-to-r from-[#f94d96] to-[#8953ff] px-1.5 py-0.5 text-[10px] font-semibold">
                           Автор
+                        </span>
+                      )}
+                      {"isVip" in person && person.isVip && (
+                        <span className="ml-1 rounded-full border border-[#ffd35e]/50 bg-[#2a2215] px-1.5 py-0.5 text-[10px] font-bold text-[#ffd35e]">
+                          👑 VIP
                         </span>
                       )}
                     </p>

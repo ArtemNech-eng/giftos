@@ -20,6 +20,7 @@ type ItemRow = {
   is_limited: boolean;
   remaining_edition: number | null;
   total_edition: number | null;
+  requires_vip: boolean;
 };
 
 export default async function ShopPage() {
@@ -34,7 +35,7 @@ export default async function ShopPage() {
       supabase
         .from("virtual_items")
         .select(
-          "id, item_type, name, description, emoji, price_stars, is_limited, remaining_edition, total_edition",
+          "id, item_type, name, description, emoji, price_stars, is_limited, remaining_edition, total_edition, requires_vip",
         )
         .eq("is_active", true)
         .order("sort_order", { ascending: true }),
@@ -177,11 +178,22 @@ export default async function ShopPage() {
                       <form action={buyItem}>
                         <input name="item_id" type="hidden" value={item.id} />
                         <button
-                          className="rounded-xl bg-gradient-to-r from-[#e17dff] to-[#7d45ff] px-3 py-2 text-xs font-bold disabled:opacity-40"
-                          disabled={balance < item.price_stars || remaining <= 0}
+                          className="rounded-xl bg-gradient-to-r from-[#e17dff] to-[#7d45ff] px-3 py-2 text-xs font-bold disabled:cursor-not-allowed disabled:opacity-40"
+                          disabled={
+                            balance < item.price_stars ||
+                            remaining <= 0 ||
+                            (!vipActive && item.requires_vip)
+                          }
+                          title={
+                            item.requires_vip && !vipActive ? "Нужен VIP" : undefined
+                          }
                           type="submit"
                         >
-                          {remaining <= 0 ? "Раскуплено" : `${item.price_stars} ⭐`}
+                          {remaining <= 0
+                            ? "Раскуплено"
+                            : item.requires_vip && !vipActive
+                              ? "👑 VIP"
+                              : `${item.price_stars} ⭐`}
                         </button>
                       </form>
                     )}
@@ -236,11 +248,19 @@ export default async function ShopPage() {
                       <form action={buyItem}>
                         <input name="item_id" type="hidden" value={item.id} />
                         <button
-                          className="rounded-xl bg-gradient-to-r from-[#ff4b8a] to-[#7d45ff] px-3 py-2 text-xs font-bold disabled:opacity-40"
-                          disabled={balance < item.price_stars}
+                          className="rounded-xl bg-gradient-to-r from-[#ff4b8a] to-[#7d45ff] px-3 py-2 text-xs font-bold disabled:cursor-not-allowed disabled:opacity-40"
+                          disabled={
+                            balance < item.price_stars ||
+                            (!vipActive && item.requires_vip)
+                          }
+                          title={
+                            item.requires_vip && !vipActive ? "Нужен VIP" : undefined
+                          }
                           type="submit"
                         >
-                          {item.price_stars} ⭐
+                          {item.requires_vip && !vipActive
+                            ? "👑 VIP"
+                            : `${item.price_stars} ⭐`}
                         </button>
                       </form>
                     )}

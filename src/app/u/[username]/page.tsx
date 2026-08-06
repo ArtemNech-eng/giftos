@@ -200,7 +200,7 @@ export default async function ProfilePage({
       .limit(20),
     supabase
       .from("virtual_gifts")
-      .select("code, label, emoji, price_stars")
+      .select("code, label, emoji, price_stars, requires_vip")
       .eq("is_active", true)
       .eq("economy", "platform")
       .order("sort_order", { ascending: true }),
@@ -368,7 +368,9 @@ export default async function ProfilePage({
                     label: gift.label,
                     emoji: gift.emoji,
                     price_stars: gift.price_stars ?? 0,
+                    requires_vip: Boolean(gift.requires_vip),
                   }))}
+                  isVip={vipActive}
                   recipientId={profile.id}
                   username={profile.username}
                 />

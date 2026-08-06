@@ -13,10 +13,18 @@ export function ProfileGiftButton({
   recipientId,
   username,
   gifts,
+  isVip,
 }: {
   recipientId: string;
   username: string;
-  gifts: Array<{ code: string; label: string; emoji: string; price_stars: number }>;
+  gifts: Array<{
+    code: string;
+    label: string;
+    emoji: string;
+    price_stars: number;
+    requires_vip: boolean;
+  }>;
+  isVip: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -52,14 +60,15 @@ export function ProfileGiftButton({
             {gifts.map((gift) => (
               <button
                 className="flex flex-col items-center rounded-xl border border-white/10 bg-white/5 px-1 py-1.5 transition hover:border-[#ff77ba] disabled:opacity-50"
-                disabled={busy}
+                disabled={busy || (gift.requires_vip && !isVip)}
                 key={gift.code}
                 onClick={() => void submit(gift.code)}
+                title={gift.requires_vip && !isVip ? "Нужен VIP" : undefined}
                 type="button"
               >
                 <span className="text-xl">{gift.emoji}</span>
                 <span className="mt-0.5 text-[9px] text-[#ffd35e]">
-                  {gift.price_stars} ⭐
+                  {gift.requires_vip && !isVip ? "👑 VIP" : `${gift.price_stars} ⭐`}
                 </span>
               </button>
             ))}
