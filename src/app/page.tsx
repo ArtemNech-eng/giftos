@@ -29,7 +29,7 @@ export async function generateMetadata({
   const fallback: Metadata = {
     title: "Хочу также — желания ведут к людям",
     description:
-      "Социальная платформа желаний, людей, мест и эфиров. Открываем Будённовск вместе.",
+      "Живое медиапространство города: люди, места, stories, эфиры, желания и аудитория. Открываем Будённовск вместе.",
   };
   if (!isInvite) return fallback;
 
@@ -328,7 +328,7 @@ export default async function SeoLandingPage({
             "@type": "WebSite",
             name: APP_NAME,
             description:
-              "Социальная платформа желаний, людей, мест и авторских историй.",
+              "Живое медиапространство города: люди, места, stories, эфиры и авторские истории.",
             url: process.env.NEXT_PUBLIC_APP_URL ?? "https://hochutakzhe.ru",
           }),
         }}
@@ -408,13 +408,13 @@ export default async function SeoLandingPage({
           </h1>
           <div className="mt-8 grid max-w-2xl gap-5 sm:grid-cols-[1.1fr_0.9fr] sm:items-end">
             <p className="text-pretty text-lg leading-7 text-[#4f4558] sm:text-xl sm:leading-8">
-              <b className="font-black text-[#201827]">Хочу также</b> — место, где
-              желание становится поводом встретиться, рассказать о себе, найти своих и
-              сделать что-то вместе.
+              <b className="font-black text-[#201827]">Хочу также</b> — живое
+              медиапространство своего города. Здесь смотрят, кто сейчас рядом, выходят
+              в эфир, создают истории и становятся частью общего сюжета.
             </p>
             <p className="border-l border-[#fc4e91] pl-4 text-sm leading-6 text-[#72677c]">
-              Не ещё одна витрина. Социальная среда, которую создают люди, а не
-              рекламные кабинеты.
+              Не ещё одна лента. Городской эфир, который создают сами люди — в местах,
+              stories, разговорах и своих событиях.
             </p>
           </div>
           <div className="mt-10 flex flex-wrap items-center gap-3">

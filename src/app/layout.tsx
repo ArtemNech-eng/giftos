@@ -5,11 +5,11 @@ import "./globals.css";
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "https://hochu-takzhe.ru"),
   title: {
-    default: "Хочу также — общайся, выходи в эфир, зарабатывай",
+    default: "Хочу также — живое медиапространство города",
     template: "%s · Хочу также",
   },
   description:
-    "Социальная creator-платформа общения, эфиров, поддержки и авторских страниц.",
+    "Живое медиапространство города: люди, места, эфиры, stories, поддержка и авторские страницы.",
   applicationName: "Хочу также",
   manifest: "/manifest.webmanifest",
   icons: {
@@ -19,12 +19,12 @@ export const metadata: Metadata = {
     siteName: "Хочу также",
     locale: "ru_RU",
     type: "website",
-    title: "Хочу также — общайся, выходи в эфир, зарабатывай",
+    title: "Хочу также — живое медиапространство города",
     description:
-      "Социальная creator-платформа общения, эфиров, поддержки и авторских страниц.",
+      "Люди, места, эфиры, stories, поддержка и авторские страницы в одном городском ритме.",
     images: [
       {
-        url: "/og?type=home&title=Хочу%20также&subtitle=Общайся.%20Выходи%20в%20эфир.%20Зарабатывай%20на%20своей%20аудитории.",
+        url: "/og?type=home&title=Хочу%20также&subtitle=Смотри,%20что%20сейчас%20происходит%20в%20твоём%20городе.%20Создавай%20свой%20сюжет.",
         width: 1200,
         height: 630,
       },
