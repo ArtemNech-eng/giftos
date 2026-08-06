@@ -48,6 +48,7 @@ const screens = [
   { id: "story", label: "Story", number: "10" },
   { id: "onboarding", label: "Старт", number: "11" },
   { id: "rankings", label: "Рейтинги", number: "12" },
+  { id: "people", label: "Люди", number: "13" },
 ] as const;
 
 type ScreenId = (typeof screens)[number]["id"];
@@ -669,6 +670,139 @@ function RankingsScreen() {
 
 function ChevronRightPreview() {
   return <ChevronRight className="size-4 shrink-0 text-[#9d90a4]" />;
+}
+
+function PeopleScreen() {
+  const cityPeople = [
+    {
+      name: "Настя",
+      identity: "Мастер маникюра у ДК",
+      context: "Показывает новую story",
+      icon: Sparkles,
+      index: 0,
+      circle: true,
+    },
+    {
+      name: "Макс",
+      identity: "Музыка и эфиры",
+      context: "В эфире: Песни во дворе",
+      icon: Radio,
+      index: 1,
+      circle: false,
+    },
+    {
+      name: "Лера",
+      identity: "Собирает прогулки",
+      context: "Сейчас в «Центре»",
+      icon: MapPin,
+      index: 2,
+      circle: false,
+    },
+  ];
+  return (
+    <div className="flex min-h-[730px] flex-col bg-[#fbf9fe] text-[#251d31]">
+      <header className="flex items-center justify-between px-4 pb-4 pt-5">
+        <span className="grid size-10 place-items-center rounded-full border border-[#2c2036]/10 bg-white text-[#5f5369]">
+          <ArrowUpRight className="size-4 rotate-[-135deg]" />
+        </span>
+        <span className="text-center">
+          <small className="block text-[9px] font-black uppercase tracking-[0.13em] text-[#8c7e94]">
+            Свои люди
+          </small>
+          <b className="block text-sm">Люди</b>
+        </span>
+        <span className="grid size-10 place-items-center rounded-full bg-[#f0e9ff] text-[#8753e6]">
+          <UsersRound className="size-4.5" />
+        </span>
+      </header>
+      <section className="mx-4 rounded-[1.7rem] bg-gradient-to-br from-[#322452] via-[#543d7a] to-[#7b67d8] p-5 text-white shadow-[0_14px_30px_rgba(63,37,98,.2)]">
+        <span className="bg-white/14 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.08em] text-[#fbd7e7]">
+          <MapPin className="size-3.5" /> Будённовск
+        </span>
+        <h1 className="mt-3 text-3xl font-black leading-[0.88] tracking-[-0.075em]">
+          НАЙДИ
+          <br />
+          СВОИХ.
+        </h1>
+        <p className="mt-3 max-w-64 text-[10px] leading-5 text-white/75">
+          Открывай людей через их stories, эфиры, события и публичные места.
+        </p>
+      </section>
+      <div className="mx-4 mt-4 grid grid-cols-2 gap-1 rounded-2xl bg-[#eee8f4] p-1 text-center text-[10px] font-black">
+        <span className="rounded-xl bg-white py-2.5 text-[#7549d0] shadow-[0_3px_10px_rgba(65,43,89,.08)]">
+          Будённовск
+        </span>
+        <span className="py-2.5 text-[#82758a]">Вся платформа</span>
+      </div>
+      <div className="border-[#2c2036]/9 mx-4 mt-4 flex items-center gap-2 rounded-2xl border bg-white px-3 py-2.5 shadow-[0_5px_15px_rgba(69,43,94,.04)]">
+        <Search className="size-4 text-[#8d7f96]" />
+        <span className="grow text-[10px] font-medium text-[#a99eae]">
+          Имя, ник или чем человек живёт…
+        </span>
+        <span className="grid size-7 place-items-center rounded-xl bg-[#f2ecfa] text-[#7549d0]">
+          <Search className="size-3.5" />
+        </span>
+      </div>
+      <div className="mx-4 mt-4 flex gap-2">
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-[#7549d0] px-3 py-2 text-[10px] font-black text-white">
+          <UsersRound className="size-3.5" /> Все
+        </span>
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-2 text-[10px] font-black text-[#786a81]">
+          <Radio className="size-3.5" /> Сейчас
+        </span>
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-2 text-[10px] font-black text-[#786a81]">
+          <Sparkles className="size-3.5" /> Создают
+        </span>
+      </div>
+      <section className="px-4 pt-5">
+        <div className="mb-3 flex items-end justify-between">
+          <span>
+            <h2 className="text-sm font-black">Люди рядом</h2>
+            <p className="mt-0.5 text-[10px] text-[#82758a]">
+              Сначала твой круг и живой контекст
+            </p>
+          </span>
+          <span className="rounded-full bg-[#efe9f6] px-2 py-1 text-[9px] font-black text-[#7a6688]">
+            3
+          </span>
+        </div>
+        <div className="space-y-2.5">
+          {cityPeople.map(({ name, identity, context, icon: Icon, index, circle }) => (
+            <div
+              className="border-[#2c2036]/9 rounded-[1.45rem] border bg-white p-3 shadow-[0_8px_22px_rgba(69,43,94,.05)]"
+              key={name}
+            >
+              <div className="flex items-center gap-3">
+                <Avatar index={index} name={name} size="size-12" />
+                <span className="min-w-0 grow">
+                  <span className="flex items-center gap-2">
+                    <b className="truncate text-sm">{name}</b>
+                    {circle && (
+                      <small className="rounded-full bg-[#f0eaff] px-1.5 py-0.5 text-[8px] font-black text-[#7549d0]">
+                        В твоём круге
+                      </small>
+                    )}
+                  </span>
+                  <small className="mt-1 flex items-center gap-1.5 truncate text-[10px] text-[#796d80]">
+                    <Sparkles className="size-3.5 shrink-0 text-[#8753e6]" /> {identity}
+                  </small>
+                </span>
+                <ChevronRightPreview />
+              </div>
+              <div className="mt-3 flex items-center gap-2 rounded-xl bg-[#faf7fc] px-3 py-2 text-[10px] font-bold text-[#6d5c7a]">
+                <span className="grid size-6 place-items-center rounded-lg bg-[#f0e9ff] text-[#8753e6]">
+                  <Icon className="size-3.5" />
+                </span>
+                <span className="grow truncate">{context}</span>
+                <ChevronRightPreview />
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+      <AppNav active="Город" />
+    </div>
+  );
 }
 
 function LocalScreen() {
@@ -1375,6 +1509,7 @@ export default async function PreviewPage({
     story: <StoryScreen />,
     onboarding: <OnboardingScreen />,
     rankings: <RankingsScreen />,
+    people: <PeopleScreen />,
   };
 
   return (
