@@ -372,14 +372,15 @@ export default async function PlacesPage() {
     profile_id: string;
     display_name: string;
     username: string;
-    score: number;
+    rank: number;
   }> = [];
   if (profile?.city_id) {
     const { data: rawRising } = await supabase
       .from("public_city_rankings")
-      .select("profile_id, display_name, username, score")
+      .select("profile_id, display_name, username, rank")
       .eq("city_id", profile.city_id)
       .eq("category", "rising")
+      .order("rank", { ascending: true })
       .limit(3);
     risingUsers = (rawRising ?? []) as typeof risingUsers;
   }
@@ -669,7 +670,7 @@ export default async function PlacesPage() {
             <section className="mt-6 rounded-2xl border border-[#ffe0aa] bg-[#fff8e9] p-4">
               <div className="flex items-center gap-2">
                 <Trophy className="size-5 text-[#a87511]" />
-                <h2 className="text-sm font-black">Кто вырос за неделю</h2>
+                <h2 className="text-sm font-black">В движении на этой неделе</h2>
               </div>
               <div className="mt-3 space-y-2">
                 {risingUsers.map((person, index) => (
@@ -685,7 +686,7 @@ export default async function PlacesPage() {
                       {person.display_name}
                     </span>
                     <span className="text-[10px] font-black text-[#a87511]">
-                      +{person.score}
+                      #{person.rank}
                     </span>
                   </Link>
                 ))}

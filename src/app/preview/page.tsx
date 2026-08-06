@@ -7,6 +7,7 @@ import {
   CalendarDays,
   Check,
   CirclePlus,
+  ChevronRight,
   Clock3,
   Compass,
   Crown,
@@ -19,6 +20,7 @@ import {
   Music2,
   Plane,
   Trophy,
+  TrendingUp,
   UsersRound,
   Radio,
   Search,
@@ -45,6 +47,7 @@ const screens = [
   { id: "live", label: "Эфир", number: "09" },
   { id: "story", label: "Story", number: "10" },
   { id: "onboarding", label: "Старт", number: "11" },
+  { id: "rankings", label: "Рейтинги", number: "12" },
 ] as const;
 
 type ScreenId = (typeof screens)[number]["id"];
@@ -523,6 +526,149 @@ function EventsScreen() {
 
 function CheckCirclePreview() {
   return <Check className="mt-0.5 size-4 shrink-0 text-[#258b82]" />;
+}
+
+function RankingsScreen() {
+  const peopleInRank = [
+    {
+      rank: 1,
+      name: "Настя",
+      note: "Мастер маникюра у ДК",
+      index: 0,
+      state: "Заметна в городе",
+    },
+    {
+      rank: 2,
+      name: "Макс",
+      note: "Музыка и эфиры",
+      index: 1,
+      state: "Выходит в эфир",
+    },
+    {
+      rank: 3,
+      name: "Лера",
+      note: "Собирает прогулки",
+      index: 2,
+      state: "В разговорах города",
+    },
+  ];
+  return (
+    <div className="flex min-h-[730px] flex-col bg-[#fbf9fe] text-[#251d31]">
+      <header className="flex items-center justify-between px-4 pb-4 pt-5">
+        <span className="grid size-10 place-items-center rounded-full border border-[#2c2036]/10 bg-white text-[#5f5369]">
+          <ArrowUpRight className="size-4 rotate-[-135deg]" />
+        </span>
+        <span className="text-center">
+          <small className="block text-[9px] font-black uppercase tracking-[0.13em] text-[#8c7e94]">
+            Репутация города
+          </small>
+          <b className="block text-sm">Рейтинги</b>
+        </span>
+        <span className="grid size-10 place-items-center rounded-full bg-[#f0e9ff] text-[#8753e6]">
+          <Trophy className="size-4.5" />
+        </span>
+      </header>
+      <section className="mx-4 rounded-[1.7rem] bg-gradient-to-br from-[#342556] via-[#57407e] to-[#816ede] p-5 text-white shadow-[0_14px_30px_rgba(63,37,98,.2)]">
+        <span className="bg-white/14 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.08em] text-[#fbd7e7]">
+          <MapPin className="size-3.5" /> Будённовск
+        </span>
+        <h1 className="mt-3 text-3xl font-black leading-[0.88] tracking-[-0.075em]">
+          КТО ЗАМЕТЕН
+          <br />
+          СЕЙЧАС.
+        </h1>
+        <p className="mt-3 max-w-64 text-[10px] leading-5 text-white/75">
+          Публичная репутация людей, которые создают движение в городе.
+        </p>
+        <div className="bg-white/13 mt-4 flex items-center gap-3 rounded-2xl p-3">
+          <span className="grid size-9 place-items-center rounded-xl bg-white/15 text-sm font-black">
+            #4
+          </span>
+          <span className="grow">
+            <small className="text-white/62 block text-[9px] font-black uppercase tracking-[0.09em]">
+              Твоя позиция
+            </small>
+            <b className="block text-[11px]">Лица города</b>
+          </span>
+          <ChevronRightPreview />
+        </div>
+      </section>
+      <div className="mx-4 mt-4 flex gap-1 overflow-hidden rounded-2xl bg-[#eee8f4] p-1 text-[10px] font-black">
+        <span className="flex shrink-0 items-center gap-1.5 rounded-xl bg-white px-3 py-2.5 text-[#7549d0] shadow-[0_3px_10px_rgba(65,43,89,.08)]">
+          <Trophy className="size-3.5" /> Главное
+        </span>
+        <span className="flex shrink-0 items-center gap-1.5 px-3 py-2.5 text-[#82758a]">
+          <TrendingUp className="size-3.5" /> Рост недели
+        </span>
+        <span className="flex shrink-0 items-center gap-1.5 px-3 py-2.5 text-[#82758a]">
+          <UsersRound className="size-3.5" /> В разговоре
+        </span>
+      </div>
+      <section className="border-[#2c2036]/8 mx-4 mt-5 rounded-[1.45rem] border bg-white p-4 shadow-[0_8px_22px_rgba(69,43,94,.05)]">
+        <div className="flex items-start gap-3">
+          <span className="grid size-10 place-items-center rounded-2xl bg-[#f3ebff] text-[#7549d0]">
+            <Trophy className="size-5" />
+          </span>
+          <span>
+            <h2 className="text-sm font-black">Лица города</h2>
+            <p className="mt-1 text-[10px] leading-4 text-[#756a7d]">
+              Кого сейчас чаще замечают в публичной городской жизни.
+            </p>
+          </span>
+        </div>
+      </section>
+      <section className="px-4 pt-5">
+        <div className="mb-3 flex items-end justify-between">
+          <span>
+            <h2 className="text-sm font-black">Сейчас в подборке</h2>
+            <p className="mt-0.5 text-[10px] text-[#82758a]">
+              Позиция следует за публичной активностью
+            </p>
+          </span>
+          <span className="rounded-full bg-[#efe9f6] px-2 py-1 text-[9px] font-black text-[#7a6688]">
+            3
+          </span>
+        </div>
+        <div className="space-y-2.5">
+          {peopleInRank.map((person) => (
+            <div
+              className="border-[#2c2036]/9 flex items-center gap-3 rounded-[1.4rem] border bg-white p-3 shadow-[0_8px_22px_rgba(69,43,94,.05)]"
+              key={person.name}
+            >
+              <span
+                className={`grid size-10 place-items-center rounded-2xl text-xs font-black ${person.rank === 1 ? "bg-[#fff4d8] text-[#a87511]" : person.rank === 2 ? "bg-[#edf0f7] text-[#66718b]" : "bg-[#fff0e8] text-[#b66c42]"}`}
+              >
+                {person.rank === 1 ? <Crown className="size-4" /> : `#${person.rank}`}
+              </span>
+              <Avatar index={person.index} name={person.name} size="size-11" />
+              <span className="min-w-0 grow">
+                <b className="block text-xs">{person.name}</b>
+                <small className="mt-1 flex items-center gap-1.5 truncate text-[10px] text-[#796d80]">
+                  <Sparkles className="size-3.5 shrink-0 text-[#8753e6]" />{" "}
+                  {person.note}
+                </small>
+                <small className="mt-1 block truncate text-[9px] font-bold text-[#a094a7]">
+                  {person.state}
+                </small>
+              </span>
+              <ChevronRightPreview />
+            </div>
+          ))}
+        </div>
+      </section>
+      <section className="mx-4 mt-5 flex gap-2.5 rounded-2xl bg-[#f0faf5] p-3.5 text-[#4c7169]">
+        <Check className="mt-0.5 size-4 shrink-0 text-[#258b82]" />
+        <p className="text-[10px] leading-4">
+          Место нельзя купить: бонусы и продвижение не добавляют позицию напрямую.
+        </p>
+      </section>
+      <AppNav active="Город" />
+    </div>
+  );
+}
+
+function ChevronRightPreview() {
+  return <ChevronRight className="size-4 shrink-0 text-[#9d90a4]" />;
 }
 
 function LocalScreen() {
@@ -1228,6 +1374,7 @@ export default async function PreviewPage({
     live: <LiveScreen />,
     story: <StoryScreen />,
     onboarding: <OnboardingScreen />,
+    rankings: <RankingsScreen />,
   };
 
   return (
