@@ -18,7 +18,6 @@ import {
   MapPin,
   MessageCircle,
   Music2,
-  Plane,
   Trophy,
   TrendingUp,
   UsersRound,
@@ -1038,116 +1037,115 @@ function LocalScreen() {
 function ProfileScreen() {
   return (
     <div className="flex min-h-[730px] flex-col bg-[#fbf9fe] text-[#251d31]">
-      <section className="relative h-52 overflow-hidden bg-[#422e60]">
-        {/* eslint-disable-next-line @next/next/no-img-element -- generated synthetic preview media */}
-        <img
-          alt="Демо-обложка профиля Насти"
-          className="size-full object-cover object-[center_44%]"
-          src="/preview/nastya-profile.jpg"
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/35 via-transparent to-[#2e1d42]/35" />
-        <button className="absolute left-4 top-4 grid size-9 place-items-center rounded-full bg-black/25 text-lg text-white backdrop-blur">
-          ‹
-        </button>
-        <button className="absolute right-4 top-4 grid size-9 place-items-center rounded-full bg-black/25 text-sm font-black text-white backdrop-blur">
-          •••
-        </button>
-      </section>
-      <section className="relative px-4">
-        <div className="-mt-11 flex items-end justify-between">
-          <span className="relative grid size-[82px] place-items-center rounded-full border-4 border-[#fbf9fe] bg-white shadow-[0_8px_24px_rgba(47,27,78,.2)]">
-            {/* eslint-disable-next-line @next/next/no-img-element -- generated synthetic preview media */}
-            <img
-              alt="Аватар Насти"
-              className="size-full rounded-full object-cover object-[center_40%]"
-              src="/preview/nastya-profile.jpg"
-            />
-            <span className="absolute -bottom-1 -right-1 size-5 rounded-full border-2 border-white bg-[#8753ed]" />
+      <header className="flex items-center justify-between px-4 pb-4 pt-5">
+        <span className="grid size-10 place-items-center rounded-full border border-[#2c2036]/10 bg-white text-[#5f5369]">
+          <ArrowUpRight className="size-4 rotate-[-135deg]" />
+        </span>
+        <span className="text-center">
+          <small className="block text-[9px] font-black uppercase tracking-[0.13em] text-[#8c7e94]">
+            Будённовск
+          </small>
+          <b className="block text-sm">Своя история</b>
+        </span>
+        <span className="grid size-10 place-items-center rounded-full border border-[#2c2036]/10 bg-white text-[#74677d]">
+          <X className="size-4" />
+        </span>
+      </header>
+      <section className="mx-4 rounded-[1.75rem] border border-white/80 bg-gradient-to-br from-[#f7ebff] via-[#fff8fc] to-[#eaf6ff] p-5 shadow-[0_14px_30px_rgba(69,43,94,.09)]">
+        <div className="flex items-start justify-between gap-4">
+          <span className="grid size-20 place-items-center overflow-hidden rounded-full bg-gradient-to-br from-[#ff83b0] to-[#815be8] p-0.5">
+            <span className="grid size-full overflow-hidden rounded-full bg-white">
+              {/* eslint-disable-next-line @next/next/no-img-element -- generated synthetic preview media */}
+              <img
+                alt="Аватар Насти"
+                className="size-full object-cover object-[center_40%]"
+                src="/preview/nastya-profile.jpg"
+              />
+            </span>
           </span>
-          <span className="w-20" />
+          <div className="flex gap-2">
+            <button className="rounded-xl border border-[#e1cff2] bg-white px-3 py-2 text-[10px] font-black text-[#7549d0]">
+              Подарок
+            </button>
+            <button className="rounded-xl bg-gradient-to-r from-[#ff5d9a] to-[#8254ed] px-3 py-2 text-[10px] font-black text-white">
+              Подписаться
+            </button>
+          </div>
         </div>
-        <div className="mt-3 flex items-center gap-1.5">
+        <div className="mt-5 flex flex-wrap items-center gap-2">
           <h1 className="text-2xl font-black tracking-[-0.06em]">Настя</h1>
-          <span className="grid size-4 place-items-center rounded-full bg-[#8753ed] text-[9px] font-black text-white">
-            ✓
+          <span className="inline-flex items-center gap-1 rounded-full bg-[#f0e9ff] px-2 py-1 text-[9px] font-black text-[#7549d0]">
+            <Sparkles className="size-3" /> Автор
+          </span>
+          <span className="rounded-full border border-[#c5e7dc] bg-[#effaf5] px-2 py-1 text-[9px] font-black text-[#258b82]">
+            Активный
           </span>
         </div>
-        <p className="mt-0.5 text-[11px] text-[#82758d]">23 года · Будённовск</p>
-        <div className="mt-4 grid grid-cols-3 text-center">
+        <p className="mt-1 flex items-center gap-1.5 text-[10px] text-[#756a7d]">
+          @nastya <span className="size-1 rounded-full bg-[#b0a5b7]" />
+          <MapPin className="size-3" /> Будённовск
+        </p>
+        <p className="mt-4 max-w-72 text-[11px] leading-5 text-[#5f5369]">
+          Музыка, люди и истории, которые хочется продолжать вместе.
+        </p>
+        <div className="mt-4 flex items-center gap-3 rounded-2xl bg-white/75 p-3 text-[#5d4c6b]">
+          <span className="grid size-8 place-items-center rounded-xl bg-[#ff4d78] text-white">
+            <Radio className="size-4" />
+          </span>
+          <span className="grow">
+            <small className="flex items-center gap-1 text-[8px] font-black uppercase tracking-[0.1em] text-[#d84b81]">
+              <span className="size-1.5 rounded-full bg-[#ff4d78]" /> В эфире
+            </small>
+            <b className="block text-[10px]">Песни во дворе</b>
+          </span>
+          <ChevronRightPreview />
+        </div>
+        <div className="mt-4 flex gap-5 text-center">
           <span>
             <b className="block text-sm">12,4K</b>
             <small className="text-[9px] text-[#8c8095]">Подписчики</small>
           </span>
           <span>
-            <b className="block text-sm">320</b>
-            <small className="text-[9px] text-[#8c8095]">Подписки</small>
+            <b className="block text-sm">8</b>
+            <small className="text-[9px] text-[#8c8095]">Желания</small>
           </span>
           <span>
-            <b className="block text-sm">1,2M</b>
-            <small className="text-[9px] text-[#8c8095]">Охват</small>
+            <b className="block text-sm">6</b>
+            <small className="text-[9px] text-[#8c8095]">Фото</small>
           </span>
         </div>
-        <p className="mt-4 text-[12px] leading-5 text-[#5f5368]">
-          Тут мы создаём классную атмосферу: музыка, игры и путешествия.
-        </p>
-        <div className="mt-3 flex gap-1.5">
-          <span className="inline-flex items-center gap-1 rounded-full bg-[#f0e7ff] px-2.5 py-1 text-[9px] font-bold text-[#7549d0]">
-            <Music2 className="size-3" /> Музыка
+      </section>
+      <section className="border-[#2c2036]/9 mx-4 mt-4 rounded-[1.5rem] border bg-white p-3.5 shadow-[0_8px_22px_rgba(69,43,94,.05)]">
+        <div className="flex items-start gap-3">
+          <span className="grid size-9 place-items-center rounded-xl bg-[#f0e9ff] text-[#8753e6]">
+            <LocalRoleIcon className="size-4" code="beauty" />
           </span>
-          <span className="inline-flex items-center gap-1 rounded-full bg-[#ffeaf3] px-2.5 py-1 text-[9px] font-bold text-[#c44476]">
-            <Gamepad2 className="size-3" /> Игры
-          </span>
-          <span className="inline-flex items-center gap-1 rounded-full bg-[#e7f7f4] px-2.5 py-1 text-[9px] font-bold text-[#258b82]">
-            <Plane className="size-3" /> Путешествия
+          <span className="grow">
+            <small className="text-[8px] font-black uppercase tracking-[0.1em] text-[#8753e6]">
+              Создаёт в Будённовске
+            </small>
+            <b className="mt-0.5 block text-[11px]">Мастер маникюра у ДК</b>
+            <small className="mt-1 inline-flex items-center gap-1 text-[9px] font-black text-[#7549d0]">
+              Новая story <ChevronRight className="size-3" />
+            </small>
           </span>
         </div>
-        <div className="divide-[#2c2036]/8 mt-4 grid grid-cols-3 divide-x overflow-hidden rounded-2xl bg-white shadow-[0_6px_18px_rgba(66,40,92,.06)]">
-          {["Написать\n49 ₽", "Поговорить\n15 мин", "Совместный стрим\n799 ₽"].map(
-            (item) => (
-              <button className="px-1 py-3 text-center" key={item}>
-                <MessageCircle className="mx-auto size-4 text-[#8753e6]" />
-                <span className="mt-1 block whitespace-pre-line text-[8px] font-bold leading-3 text-[#504458]">
-                  {item}
-                </span>
-              </button>
-            ),
-          )}
+        <div className="border-[#2c2036]/8 mt-3 border-t pt-3">
+          <span className="inline-flex items-center gap-1 rounded-full bg-[#fff4d8] px-2 py-1 text-[9px] font-black text-[#a87511]">
+            <Trophy className="size-3" /> #4 в городе
+          </span>
         </div>
-        <button className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#ff5d9a] to-[#8254ed] py-3 text-[11px] font-black text-white shadow-[0_7px_16px_rgba(160,75,213,.25)]">
-          Подписаться · 99 ₽ / мес
-        </button>
-        <button className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-[#f3edff] py-2.5 text-[11px] font-black text-[#7549d0]">
-          <Sparkles className="size-4" /> Отправить подарок
-        </button>
       </section>
       <div className="mt-5 grid grid-cols-3 border-y border-[#2c2036]/10 text-center text-[10px] font-bold">
-        <span className="border-b-2 border-[#f45293] py-3 text-[#7549d0]">Эфиры</span>
+        <span className="border-b-2 border-[#f45293] py-3 text-[#7549d0]">Обо мне</span>
+        <span className="py-3 text-[#887b91]">Stories</span>
         <span className="py-3 text-[#887b91]">Посты</span>
-        <span className="py-3 text-[#887b91]">Обо мне</span>
       </div>
       <section className="px-4 py-4">
-        <div className="flex gap-2.5">
-          <div className="relative h-24 grow overflow-hidden rounded-xl bg-[#422e60]">
-            {/* eslint-disable-next-line @next/next/no-img-element -- generated synthetic preview media */}
-            <img
-              alt="Демо эфир Насти"
-              className="size-full object-cover opacity-75"
-              src="/preview/nastya-profile.jpg"
-            />
-            <span className="absolute left-2 top-2 rounded bg-[#ff3f79] px-1.5 py-0.5 text-[8px] font-black text-white">
-              LIVE · 3,4K
-            </span>
-            <span className="absolute bottom-2 left-2 text-[10px] font-black text-white">
-              Сейчас в эфире
-            </span>
-          </div>
-          <div className="flex w-28 flex-col justify-between rounded-xl bg-gradient-to-br from-[#f4ebff] to-[#fff1f7] p-3">
-            <Radio className="size-5 text-[#8753e6]" />
-            <span>
-              <b className="block text-[10px]">Общаемся</b>
-              <small className="block text-[9px] text-[#7d7085]">и собираем идеи</small>
-            </span>
-          </div>
+        <div className="grid grid-cols-3 gap-2">
+          <span className="aspect-square rounded-xl bg-gradient-to-br from-[#f3e8ff] to-[#fff1f7]" />
+          <span className="aspect-square rounded-xl bg-gradient-to-br from-[#eef7f6] to-[#edf1ff]" />
+          <span className="aspect-square rounded-xl bg-gradient-to-br from-[#fff5e9] to-[#fff0f6]" />
         </div>
       </section>
       <AppNav active="Я" />

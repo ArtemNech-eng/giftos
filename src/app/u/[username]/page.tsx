@@ -1,7 +1,20 @@
 import Link from "next/link";
 import type { Metadata, Route } from "next";
 /* eslint-disable @next/next/no-img-element -- profile and story media use signed Storage URLs */
-import { ArrowLeft, MoreHorizontal, Play, Radio } from "lucide-react";
+import {
+  ArrowLeft,
+  ChevronRight,
+  Crown,
+  Gift,
+  MapPin,
+  MoreHorizontal,
+  Play,
+  Radio,
+  ShieldAlert,
+  Sparkles,
+  Trophy,
+  UsersRound,
+} from "lucide-react";
 import { notFound } from "next/navigation";
 
 import { blockUser, unblockUser } from "@/app/safety/actions";
@@ -20,6 +33,7 @@ import {
 } from "@/app/creator/subscriptions/actions";
 import { promoteTarget } from "@/app/shop/actions";
 import { createStory } from "@/app/stories/actions";
+import { BrandGiftIcon } from "@/components/brand-gift-icon";
 import { CreatorShareLink } from "@/components/creator-share-link";
 import { LocalRoleIcon } from "@/components/local-role-icon";
 import { ProfileGiftButton } from "@/components/profile-gift-button";
@@ -232,7 +246,6 @@ export default async function ProfilePage({
       }),
     })),
   );
-  const coverUrl = media[0]?.url ?? null;
   const activeStory = rawStories?.[0] ?? null;
   const interests = CATEGORIES.filter((category) =>
     rawWishes?.some((wish) => wish.category_slug === category.slug),
@@ -252,14 +265,17 @@ export default async function ProfilePage({
   const isCityChampion = Boolean(
     profile.city_id && lastCitySeason?.winner_city_id === profile.city_id,
   );
-  const { data: cityRank } = await supabase.rpc("city_rank", {
-    p_profile_id: profile.id,
-  });
-  const cityRankData = (cityRank ?? null) as {
-    rank: number;
-    city_size: number;
-    followers: number;
-  } | null;
+  const { data: cityRank } =
+    profile.city_id && profile.show_city
+      ? await supabase
+          .from("public_city_rankings")
+          .select("rank")
+          .eq("city_id", profile.city_id)
+          .eq("category", "top")
+          .eq("profile_id", profile.id)
+          .maybeSingle()
+      : { data: null };
+  const cityRankData = cityRank as { rank: number } | null;
   const { data: repRoles } = await supabase.rpc("reputation_roles", {
     p_profile_id: profile.id,
   });
@@ -275,11 +291,17 @@ export default async function ProfilePage({
     .eq("id", profile.id)
     .maybeSingle();
   const level = {
-    star: { label: "💎 Звезда", color: "text-[#e17dff] border-[#e17dff]/40" },
-    author: { label: "🎤 Автор", color: "text-[#7fd8ff] border-[#7fd8ff]/40" },
-    popular: { label: "🔥 Популярный", color: "text-[#ff9bc5] border-[#ff9bc5]/40" },
-    active: { label: "⭐ Активный", color: "text-[#8df0b4] border-[#8df0b4]/40" },
-    novice: { label: "🌱 Новичок", color: "text-[#766b80] border-[#2c2036]/15" },
+    star: { label: "Звезда", color: "border-[#d9c5f3] bg-[#f5efff] text-[#7954c7]" },
+    author: { label: "Автор", color: "border-[#c7ddf7] bg-[#eff7ff] text-[#4b69a8]" },
+    popular: {
+      label: "Заметный",
+      color: "border-[#f2cbdc] bg-[#fff2f7] text-[#c75883]",
+    },
+    active: {
+      label: "Активный",
+      color: "border-[#c5e7dc] bg-[#effaf5] text-[#258b82]",
+    },
+    novice: { label: "Новичок", color: "border-[#e2d9e8] bg-[#faf7fc] text-[#756a7d]" },
   }[
     followerCount >= 5000
       ? "star"
@@ -291,21 +313,12 @@ export default async function ProfilePage({
             ? "active"
             : "novice"
   ];
-  // Progress to the next level (pure activity thresholds).
-  const levelThresholds = [5, 50, 500, 5000];
-  const currentLevelIndex = levelThresholds.findIndex((t) => followerCount < t);
-  const nextThreshold =
-    currentLevelIndex >= 0 ? levelThresholds[currentLevelIndex] : null;
-  const levelProgress = nextThreshold
-    ? Math.min(100, Math.round((followerCount / nextThreshold) * 100))
-    : 100;
   const receivedGifts = (rawReceivedGifts ?? []) as Array<{
     sender_id: string;
     gift_code: string;
     price_stars: number;
     created_at: string;
   }>;
-  const giftEmoji = new Map((giftCatalog ?? []).map((gift) => [gift.code, gift.emoji]));
   const equipped = (
     (equippedItems ?? []) as Array<{
       item_id: string;
@@ -331,14 +344,21 @@ export default async function ProfilePage({
   const equippedBadges = equipped.filter((item) => item.itemType === "badge");
 
   return (
-    <main className="mx-auto min-h-screen max-w-[430px] bg-[#f7f4fb] pb-24 text-[#241a2c]">
-      <header className="absolute z-10 flex w-full max-w-[430px] items-center justify-between p-4">
+    <main className="mx-auto min-h-screen max-w-[430px] bg-[#f7f4fb] pb-24 pt-4 text-[#251d31]">
+      <header className="flex items-center justify-between px-4">
         <Link
-          className="grid size-9 place-items-center rounded-full bg-black/35 backdrop-blur"
-          href="/"
+          aria-label="Вернуться к людям"
+          className="border-[#2c2036]/9 grid size-10 place-items-center rounded-full border bg-white text-[#5f5369] shadow-[0_5px_15px_rgba(69,43,94,.05)]"
+          href="/people"
         >
-          <ArrowLeft className="size-5" />
+          <ArrowLeft className="size-4.5" />
         </Link>
+        <span className="text-center">
+          <small className="block text-[9px] font-black uppercase tracking-[0.13em] text-[#8c7e94]">
+            {profile.show_city && profile.city ? profile.city : "Профиль"}
+          </small>
+          <b className="mt-0.5 block text-sm">Своя история</b>
+        </span>
         <div className="flex items-center gap-2">
           {user && !isOwnProfile && (
             <ReportForm
@@ -347,52 +367,39 @@ export default async function ProfilePage({
               targetType="profile"
             />
           )}
-          <span className="grid size-9 place-items-center rounded-full bg-black/35 backdrop-blur">
-            <MoreHorizontal className="size-5" />
+          <span className="border-[#2c2036]/9 grid size-10 place-items-center rounded-full border bg-white text-[#74677d] shadow-[0_5px_15px_rgba(69,43,94,.05)]">
+            <MoreHorizontal className="size-4.5" />
           </span>
         </div>
       </header>
 
       <section
-        className={`relative h-64 overflow-hidden ${
+        className={`mx-4 mt-5 overflow-hidden rounded-[1.85rem] border border-white/70 p-5 shadow-[0_14px_32px_rgba(69,43,94,.09)] ${
           profileTheme
-            ? "bg-gradient-to-br from-[#0b1e3a] via-[#14255c] to-[#0d1030]"
-            : "bg-gradient-to-br from-[#3b183f] via-[#281831] to-[#171a2a]"
+            ? "bg-gradient-to-br from-[#e7edff] via-[#f8f4ff] to-[#fff0f7]"
+            : "bg-gradient-to-br from-[#f7ebff] via-[#fff8fc] to-[#eaf6ff]"
         }`}
       >
-        {coverUrl ? (
-          <img alt="" className="size-full object-cover opacity-80" src={coverUrl} />
-        ) : (
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_20%,rgba(236,68,154,0.48),transparent_25%),radial-gradient(circle_at_20%_90%,rgba(113,65,255,0.5),transparent_30%)]" />
-        )}
-      </section>
-
-      <section className="relative px-4 pb-5">
-        <div className="-mt-12 flex items-end justify-between">
+        <div className="flex items-start justify-between gap-4">
           <span
-            className={`grid size-24 place-items-center overflow-hidden rounded-[1.6rem] border-4 bg-[#32203a] text-3xl font-bold ${
-              avatarFrame
-                ? "border-[#ff77ba] shadow-[0_0_18px_rgba(255,119,186,0.5)]"
-                : "border-[#0c0e14]"
+            className={`grid size-20 shrink-0 place-items-center overflow-hidden rounded-full bg-gradient-to-br from-[#ff83b0] to-[#815be8] p-0.5 text-2xl font-black text-[#372c41] ${
+              avatarFrame ? "shadow-[0_0_0_4px_rgba(179,125,239,.22)]" : ""
             }`}
           >
-            {avatarUrl ? (
-              <img
-                alt={`Аватар ${profile.display_name}`}
-                className="size-full object-cover"
-                src={avatarUrl}
-              />
-            ) : (
-              profile.display_name.slice(0, 1).toUpperCase()
-            )}
-            {avatarFrame && (
-              <span className="absolute -bottom-1 -right-1 text-xl">
-                {avatarFrame.emoji}
-              </span>
-            )}
+            <span className="grid size-full place-items-center overflow-hidden rounded-full bg-[#f8f4fc]">
+              {avatarUrl ? (
+                <img
+                  alt={`Аватар ${profile.display_name}`}
+                  className="size-full object-cover"
+                  src={avatarUrl}
+                />
+              ) : (
+                profile.display_name.slice(0, 1).toUpperCase()
+              )}
+            </span>
           </span>
           {user && !isOwnProfile ? (
-            <div className="flex gap-2">
+            <div className="flex flex-wrap justify-end gap-2">
               {giftCatalog && giftCatalog.length > 0 && (
                 <ProfileGiftButton
                   gifts={giftCatalog.map((gift) => ({
@@ -411,10 +418,14 @@ export default async function ProfilePage({
                 <input name="profile_id" type="hidden" value={profile.id} />
                 <input name="username" type="hidden" value={profile.username} />
                 <button
-                  className={`h-10 rounded-xl px-4 text-sm font-bold ${existingFollow ? "border border-[#2c2036]/20 bg-[#f7f2fa]" : "bg-gradient-to-r from-[#ff4b8a] to-[#7d45ff] text-white"}`}
+                  className={`h-10 rounded-xl px-3.5 text-xs font-black shadow-[0_5px_12px_rgba(69,43,94,.08)] ${
+                    existingFollow
+                      ? "border border-[#d9cde3] bg-white text-[#665a72]"
+                      : "bg-gradient-to-r from-[#ff5d9a] to-[#8254ed] text-white"
+                  }`}
                   type="submit"
                 >
-                  {existingFollow ? "Вы подписаны" : "Подписаться"}
+                  {existingFollow ? "Ты подписан(а)" : "Подписаться"}
                 </button>
               </form>
               <form action={existingBlock ? unblockUser : blockUser}>
@@ -425,213 +436,232 @@ export default async function ProfilePage({
                   value={`/u/${profile.username}`}
                 />
                 <button
-                  className="h-10 rounded-xl border border-[#2c2036]/10 px-3 text-xs text-[#665a72]"
+                  aria-label={existingBlock ? "Разблокировать" : "Заблокировать"}
+                  className="grid size-10 place-items-center rounded-xl border border-[#ddcfdf] bg-white text-[#806d7f]"
                   type="submit"
                 >
-                  {existingBlock ? "Разблокировать" : "Блок"}
+                  <ShieldAlert className="size-4" />
                 </button>
               </form>
             </div>
           ) : isOwnProfile && !profile.is_creator ? (
             <Link
-              className="h-10 rounded-xl bg-gradient-to-r from-[#ff4b8a] to-[#7d45ff] px-4 py-2 text-sm font-bold text-white"
+              className="inline-flex h-10 items-center gap-2 rounded-xl bg-gradient-to-r from-[#ff5d9a] to-[#8254ed] px-3.5 text-xs font-black text-white shadow-[0_5px_12px_rgba(160,75,213,.2)]"
               href="/creator/start"
             >
-              Хочу также
+              <Sparkles className="size-4" /> Начать создавать
             </Link>
           ) : null}
         </div>
-        <div className="mt-4 flex flex-wrap items-center gap-2">
-          <h1 className="text-2xl font-bold">{profile.display_name}</h1>
-          {profile.is_creator && (
-            <span className="rounded-full bg-gradient-to-r from-[#f94d96] to-[#8953ff] px-2 py-1 text-xs font-semibold text-white">
-              Автор
-            </span>
-          )}
-          {vipActive && (
-            <span className="rounded-full border border-[#ffd35e]/50 bg-[#fff6df] px-2 py-1 text-xs font-bold text-[#ffd35e]">
-              👑 VIP
-            </span>
-          )}
-          <span
-            className={`rounded-full border px-2 py-1 text-xs font-semibold ${level.color}`}
-          >
-            {level.label}
-          </span>
-          {isCityChampion && (
+
+        <div className="mt-5">
+          <div className="flex flex-wrap items-center gap-2">
+            <h1 className="text-2xl font-black tracking-[-0.055em]">
+              {profile.display_name}
+            </h1>
+            {profile.is_creator && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-[#f0e9ff] px-2 py-1 text-[9px] font-black text-[#7549d0]">
+                <Sparkles className="size-3" /> Автор
+              </span>
+            )}
+            {vipActive && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-[#fff4d8] px-2 py-1 text-[9px] font-black text-[#a87511]">
+                <Crown className="size-3" /> VIP
+              </span>
+            )}
             <span
-              className="rounded-full border border-[#ffd35e]/50 bg-[#fff6df] px-2 py-1 text-xs font-bold text-[#ffd35e]"
-              title="Город выиграл сезон битвы городов"
+              className={`rounded-full border px-2 py-1 text-[9px] font-black ${level.color}`}
             >
-              🏆 Чемпион города
+              {level.label}
             </span>
-          )}
-          {cityAmbassadorCity && (
-            <span
-              className="rounded-full border border-[#ffbd5e]/50 bg-[#332516] px-2 py-1 text-xs font-bold text-[#ffd887]"
-              title={`Привёл(а) трёх активных жителей в ${cityAmbassadorCity}`}
-            >
-              🌆 Первая волна
-            </span>
-          )}
-          {equippedBadges.map((badge) => (
-            <span
-              className="rounded-full border border-[#2c2036]/15 bg-[#f7f2fa] px-2 py-1 text-xs"
-              key={badge.emoji}
-              title="Значок из магазина"
-            >
-              {badge.emoji}
-            </span>
-          ))}
-          {activeLive && (
-            <Link
-              className="inline-flex items-center gap-1.5 rounded-full bg-[#ff2d55] px-2.5 py-1 text-xs font-bold text-white"
-              href={`/live/${activeLive.slug}` as Route}
-            >
-              <span className="size-1.5 animate-pulse rounded-full bg-white" />В эфире
-            </Link>
-          )}
+          </div>
+          <p className="mt-1 flex flex-wrap items-center gap-1.5 text-[11px] text-[#756a7d]">
+            <span>@{profile.username}</span>
+            {profile.show_city && profile.city && (
+              <>
+                <span className="size-1 rounded-full bg-[#b0a5b7]" />
+                <span className="inline-flex items-center gap-1">
+                  <MapPin className="size-3" /> {profile.city}
+                </span>
+              </>
+            )}
+          </p>
+          <p className="mt-4 max-w-[22rem] text-sm leading-6 text-[#5f5369]">
+            {profile.creator_headline ??
+              profile.bio ??
+              "Собираю свою историю и своих людей в «Хочу также»."}
+          </p>
         </div>
-        <p className="mt-1 text-sm text-[#766b80]">
-          @{profile.username}
-          {profile.show_city && profile.city ? ` · ${profile.city}` : ""}
-        </p>
+
+        {activeLive && (
+          <Link
+            className="mt-4 flex items-center gap-3 rounded-2xl bg-white/75 p-3 text-[#5d4c6b] shadow-[0_5px_14px_rgba(69,43,94,.06)]"
+            href={`/live/${activeLive.slug}` as Route}
+          >
+            <span className="grid size-8 place-items-center rounded-xl bg-[#ff4d78] text-white">
+              <Radio className="size-4" />
+            </span>
+            <span className="min-w-0 grow">
+              <span className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-[0.1em] text-[#d84b81]">
+                <span className="size-1.5 animate-pulse rounded-full bg-[#ff4d78]" /> В
+                эфире
+              </span>
+              <b className="mt-0.5 block truncate text-[11px]">{activeLive.title}</b>
+            </span>
+            <ChevronRight className="size-4 shrink-0 text-[#9d90a4]" />
+          </Link>
+        )}
+
         {interests.length > 0 && (
-          <div className="mt-3 flex flex-wrap gap-2">
+          <div className="mt-4 flex flex-wrap gap-1.5">
             {interests.map((item) => (
               <span
-                className="rounded-full bg-[#f5eff8] px-2.5 py-1 text-xs text-[#54475e]"
+                className="rounded-full border border-[#dfd5e5] bg-white/75 px-2.5 py-1 text-[9px] font-bold text-[#6d6077]"
                 key={item.slug}
               >
-                {item.emoji} {item.label}
+                {item.label}
               </span>
             ))}
           </div>
         )}
-        <p className="mt-4 text-sm leading-6 text-[#54475e]">
-          {profile.creator_headline ??
-            profile.bio ??
-            "Создаю свою страницу в «Хочу также»."}
-        </p>
-        {localCreator && (
-          <section className="mt-4 rounded-2xl border border-[#d9c5f3] bg-gradient-to-r from-[#fffaff] to-[#f3edff] p-3.5">
-            <div className="flex items-start gap-3">
-              <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-white text-[#8753e6] shadow-[0_4px_12px_rgba(80,45,110,.08)]">
-                <LocalRoleIcon className="size-5" code={localCreator.role_code} />
+
+        {(isCityChampion || cityAmbassadorCity || equippedBadges.length > 0) && (
+          <div className="mt-4 flex flex-wrap gap-2">
+            {isCityChampion && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-[#fff4d8] px-2.5 py-1 text-[9px] font-black text-[#a87511]">
+                <Trophy className="size-3" /> Чемпион города
               </span>
-              <span className="min-w-0 grow">
-                <span className="text-[10px] font-black uppercase tracking-[0.11em] text-[#8753e6]">
-                  Создаёт в {profile.city ?? "городе"}
-                </span>
-                <b className="mt-0.5 block text-sm">
-                  {localCreator.city_label ??
-                    localCreator.headline ??
-                    "Показывает себя и свои идеи среди своих"}
-                </b>
-                {(localCreator.live_slug ||
-                  localCreator.story_id ||
-                  localCreator.event_id) && (
-                  <Link
-                    className="mt-2 inline-flex items-center gap-1 text-[10px] font-bold text-[#7549d0]"
-                    href={
-                      localCreator.live_slug
-                        ? (`/live/${localCreator.live_slug}` as Route)
-                        : localCreator.story_id
-                          ? (`/stories/${localCreator.story_id}` as Route)
-                          : (`/events/${localCreator.event_id}` as Route)
-                    }
-                  >
-                    {localCreator.live_slug
-                      ? "Сейчас в эфире"
-                      : localCreator.story_id
-                        ? "Новая story"
-                        : `Событие: ${localCreator.event_title ?? "открыть"}`}{" "}
-                    ›
-                  </Link>
-                )}
+            )}
+            {cityAmbassadorCity && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-[#effaf5] px-2.5 py-1 text-[9px] font-black text-[#258b82]">
+                <UsersRound className="size-3" /> Первая волна
               </span>
-            </div>
-          </section>
-        )}
-        <div className="mt-5 flex gap-7 text-center">
-          <span>
-            <b className="block text-lg">{followers ?? 0}</b>
-            <small className="text-xs text-[#766b80]">Подписчики</small>
-          </span>
-          <span>
-            <b className="block text-lg">{rawWishes?.length ?? 0}</b>
-            <small className="text-xs text-[#766b80]">Желания</small>
-          </span>
-          <span>
-            <b className="block text-lg">{media.length}</b>
-            <small className="text-xs text-[#766b80]">Фото</small>
-          </span>
-        </div>
-        {cityRankData && profile.show_city && (
-          <div className="mt-5 rounded-2xl border border-[#8f48ff]/30 bg-gradient-to-r from-[#f4ecff] to-[#fff6fb] p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-bold">#{cityRankData.rank} в городе</p>
-                <p className="mt-0.5 text-xs text-[#766b80]">
-                  {profile.city ?? "Город"} · среди {cityRankData.city_size} жителей
-                </p>
-              </div>
-              <span className="text-xl">🏆</span>
-            </div>
-            {nextThreshold ? (
-              <div className="mt-3">
-                <div className="h-1.5 overflow-hidden rounded-full bg-[#eee7f4]">
-                  <div
-                    className="h-full rounded-full bg-gradient-to-r from-[#ff4b8a] to-[#7d45ff] text-white"
-                    style={{ width: `${levelProgress}%` }}
-                  />
-                </div>
-                <p className="mt-2 text-xs text-[#766b80]">
-                  До уровня «{level.label.split(" ")[1] ?? "следующий"}»: ещё{" "}
-                  {nextThreshold - followerCount} подписчиков
-                </p>
-              </div>
-            ) : (
-              <p className="mt-2 text-xs text-[#8df0b4]">
-                Максимальный уровень — вы звезда!
-              </p>
             )}
-            {reputationRoles.length > 0 && (
-              <div className="mt-3 flex flex-wrap gap-1.5">
-                {reputationRoles.map((role) => (
-                  <span
-                    className="rounded-full border border-[#ffd35e]/40 bg-[#fff6df] px-2 py-0.5 text-[10px] font-bold text-[#ffd35e]"
-                    key={role}
-                  >
-                    {role}
-                  </span>
-                ))}
-              </div>
+            {equippedBadges.length > 0 && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-white/75 px-2.5 py-1 text-[9px] font-black text-[#7549d0]">
+                <Sparkles className="size-3" /> Коллекция {equippedBadges.length}
+              </span>
             )}
-          </div>
-        )}
-        {receivedGifts.length > 0 && (
-          <div className="mt-5 rounded-2xl border border-[#2c2036]/10 bg-white p-4">
-            <p className="text-sm font-bold">🎁 Подарки</p>
-            <div className="mt-2 flex flex-wrap gap-2">
-              {receivedGifts.slice(0, 10).map((gift, index) => (
-                <span
-                  className="grid size-10 place-items-center rounded-xl border border-[#2c2036]/10 bg-[#f7f2fa] text-xl"
-                  key={`${gift.gift_code}-${index}`}
-                  title={`${gift.gift_code} · ${gift.price_stars} ⭐`}
-                >
-                  {giftEmoji.get(gift.gift_code) ?? "🎁"}
-                </span>
-              ))}
-              {receivedGifts.length > 10 && (
-                <span className="grid size-10 place-items-center rounded-xl border border-[#2c2036]/10 bg-[#f7f2fa] text-xs text-[#766b80]">
-                  +{receivedGifts.length - 10}
-                </span>
-              )}
-            </div>
           </div>
         )}
       </section>
+
+      <section className="border-[#2c2036]/9 mx-4 mt-4 rounded-[1.55rem] border bg-white p-4 shadow-[0_8px_22px_rgba(69,43,94,.05)]">
+        {localCreator && (
+          <div className="flex items-start gap-3">
+            <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#f0e9ff] text-[#8753e6]">
+              <LocalRoleIcon className="size-5" code={localCreator.role_code} />
+            </span>
+            <span className="min-w-0 grow">
+              <span className="text-[9px] font-black uppercase tracking-[0.11em] text-[#8753e6]">
+                Создаёт в {profile.city ?? "городе"}
+              </span>
+              <b className="mt-0.5 block text-sm">
+                {localCreator.city_label ??
+                  localCreator.headline ??
+                  "Показывает себя и свои идеи среди своих"}
+              </b>
+              {(localCreator.live_slug ||
+                localCreator.story_id ||
+                localCreator.event_id) && (
+                <Link
+                  className="mt-2 inline-flex items-center gap-1 text-[10px] font-black text-[#7549d0]"
+                  href={
+                    localCreator.live_slug
+                      ? (`/live/${localCreator.live_slug}` as Route)
+                      : localCreator.story_id
+                        ? (`/stories/${localCreator.story_id}` as Route)
+                        : (`/events/${localCreator.event_id}` as Route)
+                  }
+                >
+                  {localCreator.live_slug
+                    ? "Сейчас в эфире"
+                    : localCreator.story_id
+                      ? "Новая story"
+                      : `Событие: ${localCreator.event_title ?? "открыть"}`}
+                  <ChevronRight className="size-3.5" />
+                </Link>
+              )}
+            </span>
+          </div>
+        )}
+        <div
+          className={`${localCreator ? "border-[#2c2036]/8 mt-4 border-t pt-4" : ""} flex gap-7 text-center`}
+        >
+          <span>
+            <b className="block text-lg">{followerCount}</b>
+            <small className="text-[10px] text-[#766b80]">Подписчики</small>
+          </span>
+          <span>
+            <b className="block text-lg">{rawWishes?.length ?? 0}</b>
+            <small className="text-[10px] text-[#766b80]">Желания</small>
+          </span>
+          <span>
+            <b className="block text-lg">{media.length}</b>
+            <small className="text-[10px] text-[#766b80]">Фото</small>
+          </span>
+        </div>
+      </section>
+
+      {cityRankData && profile.show_city && (
+        <section className="mx-4 mt-4 rounded-[1.55rem] border border-[#e3d4f5] bg-gradient-to-r from-[#fffaff] to-[#f2ecff] p-4 shadow-[0_8px_22px_rgba(69,43,94,.05)]">
+          <div className="flex items-start gap-3">
+            <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-white text-[#8753e6] shadow-[0_4px_12px_rgba(80,45,110,.08)]">
+              <Trophy className="size-5" />
+            </span>
+            <span className="min-w-0 grow">
+              <span className="text-[9px] font-black uppercase tracking-[0.11em] text-[#8753e6]">
+                Репутация города
+              </span>
+              <b className="mt-0.5 block text-sm">
+                #{cityRankData.rank} в {profile.city ?? "городе"}
+              </b>
+              <small className="mt-1 block text-[10px] leading-4 text-[#756a7d]">
+                Позиция следует за публичной активностью, её нельзя купить.
+              </small>
+            </span>
+          </div>
+          {reputationRoles.length > 0 && (
+            <div className="mt-3 flex flex-wrap gap-1.5">
+              {reputationRoles.map((role) => (
+                <span
+                  className="rounded-full bg-white px-2 py-1 text-[9px] font-bold text-[#6d5c7a]"
+                  key={role}
+                >
+                  {role}
+                </span>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
+
+      {receivedGifts.length > 0 && (
+        <section className="border-[#2c2036]/9 mx-4 mt-4 rounded-[1.55rem] border bg-white p-4 shadow-[0_8px_22px_rgba(69,43,94,.05)]">
+          <div className="flex items-center gap-2">
+            <span className="grid size-8 place-items-center rounded-xl bg-[#fff0f6] text-[#d84b81]">
+              <Gift className="size-4" />
+            </span>
+            <h2 className="text-xs font-black">Подарки</h2>
+          </div>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {receivedGifts.slice(0, 10).map((gift, index) => (
+              <span
+                className="grid size-10 place-items-center rounded-xl border border-[#eadfeb] bg-[#fbf8fd] text-[#8753e6]"
+                key={`${gift.gift_code}-${index}`}
+                title={`${gift.price_stars} Хочу-бонусов`}
+              >
+                <BrandGiftIcon className="size-5" code={gift.gift_code} />
+              </span>
+            ))}
+            {receivedGifts.length > 10 && (
+              <span className="grid size-10 place-items-center rounded-xl bg-[#f3eef7] text-[10px] font-black text-[#756a7d]">
+                +{receivedGifts.length - 10}
+              </span>
+            )}
+          </div>
+        </section>
+      )}
 
       {user &&
         !isOwnProfile &&
