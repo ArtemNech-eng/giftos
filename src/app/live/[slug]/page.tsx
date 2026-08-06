@@ -58,6 +58,7 @@ export default async function LiveRoomPage({
       .from("live_room_messages")
       .select("id, author_id, body, created_at")
       .eq("room_id", room.id)
+      .eq("is_hidden", false)
       .order("created_at", { ascending: true })
       .limit(100),
     supabase
@@ -505,6 +506,7 @@ export default async function LiveRoomPage({
         </div>
         {room.status === "live" ? (
           <LiveRoomRealtime
+            canModerate={room.host_id === user.id || isCohost}
             currentUserId={user.id}
             initialMessages={(messages ?? []).map((message) => ({
               id: message.id,
@@ -514,6 +516,7 @@ export default async function LiveRoomPage({
               author_name: names.get(message.author_id) ?? "Зритель",
             }))}
             roomId={room.id}
+            roomSlug={slug}
           />
         ) : (
           <div className="mt-4 max-h-64 space-y-3 overflow-y-auto">

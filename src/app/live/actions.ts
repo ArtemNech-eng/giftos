@@ -261,3 +261,49 @@ export async function endLiveRoom(formData: FormData) {
   revalidatePath("/creator/dashboard");
   redirect(`/live/${slug}` as Route);
 }
+
+/**
+ * Live chat moderation: the host (or co-host) hides a chat message in their
+ * own room. The realtime channel removes it from viewers' screens instantly.
+ */
+export async function hideLiveMessage(formData: FormData) {
+  const { supabase, user } = await requireUser();
+  const messageId = requiredText(formData.get("message_id"), 100);
+  if (!messageId) throw new Error("Сообщение не найдено.");
+
+  const { data: message } = await supabase
+    .from("live_room_messages")
+    .select("room_id")
+    .eq("id", messageId)
+    .maybeSingle();
+  if (!message) throw new Error("Сообщение не найдено.");
+
+  const { data: room } = await supabase
+    .from("live_rooms")
+    .select("host_id, status")
+    .eq("id", message.room_id)
+    .maybeSingle();
+  if (!room || room.status !== "live")
+    throw new Error("Эфир завершён, скрытие недоступно.");
+
+  const isHost = room.host_id === user.id;
+  let isCohost = false;
+  if (!isHost) {
+    const { data: participant } = await supabase
+      .from("live_room_participants")
+      .select("role")
+      .eq("room_id", message.room_id)
+      .eq("profile_id", user.id)
+      .is("left_at", null)
+      .maybeSingle();
+    isCohost = participant?.role === "cohost";
+  }
+  if (!isHost && !isCohost)
+    throw new Error("Только ведущий или со-ведущий может скрывать сообщения.");
+
+  const { error } = await supabase
+    .from("live_room_messages")
+    .update({ is_hidden: true, hidden_at: new Date().toISOString() })
+    .eq("id", messageId);
+  if (error) throw new Error(`Не удалось скрыть сообщение: ${error.message}`);
+}

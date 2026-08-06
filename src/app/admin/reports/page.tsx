@@ -21,7 +21,8 @@ type Report = {
     | "wish_comment"
     | "live_room"
     | "place"
-    | "place_message";
+    | "place_message"
+    | "live_message";
   target_id: string;
   reason: string;
   details: string | null;
@@ -50,6 +51,7 @@ const targetLabels: Record<string, string> = {
   live_room: "эфир",
   place: "место",
   place_message: "сообщение места",
+  live_message: "сообщение эфира",
 };
 
 function moderationActionFor(type: Report["target_type"]) {
@@ -62,6 +64,8 @@ function moderationActionFor(type: Report["target_type"]) {
   if (type === "place") return { value: "hide_place", label: "Скрыть место" };
   if (type === "place_message")
     return { value: "hide_place_message", label: "Скрыть сообщение" };
+  if (type === "live_message")
+    return { value: "hide_live_message", label: "Скрыть сообщение" };
   if (type === "profile")
     return { value: "suspend_profile", label: "Заблокировать профиль" };
   if (type === "fundraiser")
@@ -110,6 +114,7 @@ export default async function AdminReportsPage({
   const stories = new Map<string, string>();
   const liveRooms = new Map<string, string>();
   const places = new Map<string, string>();
+  const liveMessages = new Map<string, string>();
   for (const report of reports) {
     if (report.target_type === "profile") profiles.set(report.target_id, "");
     if (report.target_type === "wish") wishes.set(report.target_id, "");
@@ -117,6 +122,7 @@ export default async function AdminReportsPage({
     if (report.target_type === "story") stories.set(report.target_id, "");
     if (report.target_type === "live_room") liveRooms.set(report.target_id, "");
     if (report.target_type === "place") places.set(report.target_id, "");
+    if (report.target_type === "live_message") liveMessages.set(report.target_id, "");
   }
   if (profiles.size > 0) {
     const { data } = await supabase
@@ -160,6 +166,13 @@ export default async function AdminReportsPage({
       .in("id", [...places.keys()]);
     for (const row of data ?? []) places.set(row.id, row.name);
   }
+  if (liveMessages.size > 0) {
+    const { data } = await supabase
+      .from("live_room_messages")
+      .select("id, body")
+      .in("id", [...liveMessages.keys()]);
+    for (const row of data ?? []) liveMessages.set(row.id, row.body);
+  }
 
   function targetContext(report: Report) {
     if (report.target_type === "profile") return profiles.get(report.target_id) ?? null;
@@ -170,6 +183,8 @@ export default async function AdminReportsPage({
     if (report.target_type === "live_room")
       return liveRooms.get(report.target_id) ?? null;
     if (report.target_type === "place") return places.get(report.target_id) ?? null;
+    if (report.target_type === "live_message")
+      return liveMessages.get(report.target_id) ?? null;
     return null;
   }
 

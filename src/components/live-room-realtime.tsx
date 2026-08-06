@@ -2,7 +2,9 @@
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
 
+import { hideLiveMessage } from "@/app/live/actions";
 import { createClient } from "@/lib/supabase/client";
+import { ReportForm } from "@/components/report-form";
 
 export type LiveRoomMessageView = {
   id: string;
@@ -35,12 +37,16 @@ type FloatingReaction = { id: string; emoji: string; left: number };
  */
 export function LiveRoomRealtime({
   roomId,
+  roomSlug,
   currentUserId,
   initialMessages,
+  canModerate = false,
 }: {
   roomId: string;
+  roomSlug: string;
   currentUserId: string;
   initialMessages: LiveRoomMessageView[];
+  canModerate?: boolean;
 }) {
   const [messages, setMessages] = useState<LiveRoomMessageView[]>(initialMessages);
   const [authorNames, setAuthorNames] = useState<Record<string, string>>(() =>
@@ -51,6 +57,7 @@ export function LiveRoomRealtime({
   const [floating, setFloating] = useState<FloatingReaction[]>([]);
   const [body, setBody] = useState("");
   const [sending, setSending] = useState(false);
+  const [sendError, setSendError] = useState<string | null>(null);
 
   const seenMessageIds = useRef(new Set(initialMessages.map((message) => message.id)));
   const seenReactionIds = useRef(new Set<string>());
@@ -120,6 +127,23 @@ export function LiveRoomRealtime({
       .on(
         "postgres_changes",
         {
+          event: "UPDATE",
+          schema: "public",
+          table: "live_room_messages",
+          filter: `room_id=eq.${roomId}`,
+        },
+        (payload) => {
+          const record = payload.new as { id: string; is_hidden?: boolean };
+          // Hidden messages disappear from the chat instantly for everyone.
+          if (record?.id && record.is_hidden) {
+            seenMessageIds.current.delete(record.id);
+            setMessages((prev) => prev.filter((message) => message.id !== record.id));
+          }
+        },
+      )
+      .on(
+        "postgres_changes",
+        {
           event: "INSERT",
           schema: "public",
           table: "live_room_reactions",
@@ -152,12 +176,19 @@ export function LiveRoomRealtime({
     const text = body.trim();
     if (!text || sending || !supabaseEnabled) return;
     setSending(true);
+    setSendError(null);
     try {
       const supabase = createClient();
       const { error } = await supabase
         .from("live_room_messages")
         .insert({ room_id: roomId, author_id: currentUserId, body: text });
-      if (!error) setBody("");
+      if (!error) {
+        setBody("");
+      } else if (error.message.includes("live_chat_rate_limit")) {
+        setSendError("Слишком много сообщений — подождите минуту.");
+      } else {
+        setSendError("Не удалось отправить сообщение.");
+      }
     } finally {
       setSending(false);
     }
@@ -184,19 +215,45 @@ export function LiveRoomRealtime({
           </p>
         ) : (
           messages.map((message) => (
-            <p className="text-sm" key={message.id}>
-              <b className="mr-2">
-                {message.author_id === currentUserId
-                  ? "Вы"
-                  : (authorNames[message.author_id] ??
-                    message.author_name ??
-                    "Зритель")}
-              </b>
-              {message.body}
-            </p>
+            <div className="flex items-start gap-1.5" key={message.id}>
+              <p className="min-w-0 grow text-sm">
+                <b className="mr-2">
+                  {message.author_id === currentUserId
+                    ? "Вы"
+                    : (authorNames[message.author_id] ??
+                      message.author_name ??
+                      "Зритель")}
+                </b>
+                {message.body}
+              </p>
+              {canModerate && message.author_id !== currentUserId && (
+                <form action={hideLiveMessage}>
+                  <input name="message_id" type="hidden" value={message.id} />
+                  <button
+                    className="rounded-md px-1 py-0.5 text-xs text-[#8e747c] transition hover:bg-rose-50 hover:text-[#bd3e66]"
+                    title="Скрыть сообщение"
+                    type="submit"
+                  >
+                    скрыть
+                  </button>
+                </form>
+              )}
+              {message.author_id !== currentUserId && (
+                <ReportForm
+                  returnTo={`/live/${roomSlug}`}
+                  targetId={message.id}
+                  targetType="live_message"
+                />
+              )}
+            </div>
           ))
         )}
       </div>
+      {sendError && (
+        <p className="mt-2 rounded-lg bg-rose-950/40 px-3 py-1.5 text-xs text-rose-300">
+          {sendError}
+        </p>
+      )}
       {floating.length > 0 && (
         <div className="pointer-events-none absolute inset-x-0 bottom-24 h-44 overflow-hidden">
           {floating.map((reaction) => (

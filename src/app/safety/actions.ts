@@ -18,6 +18,7 @@ const reportTypes = new Set([
   "live_room",
   "place",
   "place_message",
+  "live_message",
 ]);
 const reportReasons = new Set([
   "fraud",

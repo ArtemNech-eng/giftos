@@ -15,7 +15,8 @@ export function ReportForm({
     | "wish_comment"
     | "live_room"
     | "place"
-    | "place_message";
+    | "place_message"
+    | "live_message";
   targetId: string;
   returnTo: string;
 }) {

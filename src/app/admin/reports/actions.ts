@@ -80,6 +80,12 @@ export async function moderateTarget(formData: FormData) {
       .update({ is_hidden: true })
       .eq("id", targetId);
     if (error) throw new Error(error.message);
+  } else if (action === "hide_live_message" && targetType === "live_message") {
+    const { error } = await supabase
+      .from("live_room_messages")
+      .update({ is_hidden: true, hidden_at: new Date().toISOString() })
+      .eq("id", targetId);
+    if (error) throw new Error(error.message);
   } else if (action === "suspend_profile" && targetType === "profile") {
     const { error } = await supabase
       .from("profiles")
