@@ -231,24 +231,24 @@ export default async function SeoLandingPage() {
           </p>
           <div className="mt-3 flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <h2 className="text-3xl font-bold">Будённовск уже в городе</h2>
+              <h2 className="text-3xl font-bold">Открываем Будённовск вместе</h2>
               <p className="mt-3 max-w-xl text-[#c5bdcf]">
-                Люди рядом, места, события, желания, эфиры и свои тусовки. Зайди
-                посмотреть, что происходит прямо сейчас.
+                Собираем первых жителей, авторов, желания и свои места. Не нужно быть
+                первым в пустоте — присоединяйся к тем, кто запускает город.
               </p>
             </div>
             <div className="flex flex-wrap gap-3">
               <Link
                 className="rounded-xl bg-white px-4 py-2.5 text-sm font-bold text-[#2c1742]"
-                href="/places"
+                href="/auth/sign-in"
               >
-                Куда пойдём?
+                Присоединиться
               </Link>
               <Link
                 className="rounded-xl border border-white/15 px-4 py-2.5 text-sm font-semibold"
-                href="/cities/battle"
+                href="/places"
               >
-                Битва городов
+                Посмотреть город
               </Link>
             </div>
           </div>
