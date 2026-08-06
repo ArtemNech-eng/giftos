@@ -518,10 +518,87 @@ export default async function SeoLandingPage() {
         </div>
       </section>
 
+      <section
+        className="relative mx-auto max-w-[1440px] px-5 py-24 sm:px-8 lg:px-12 lg:py-32"
+        id="first-wave"
+      >
+        <div className="flex flex-col justify-between gap-6 lg:flex-row lg:items-end">
+          <div className="max-w-3xl">
+            <p className="text-xs font-black uppercase tracking-[0.18em] text-[#cb3f78]">
+              Первая волна — это не очередь
+            </p>
+            <h2 className="mt-4 text-balance text-5xl font-black leading-[0.88] tracking-[-0.075em] sm:text-6xl">
+              Не будь первым в пустоте. Будь одним из первых.
+            </h2>
+          </div>
+          <p className="max-w-md text-lg leading-7 text-[#6a5e73]">
+            У каждого свой вход в город. Выбери, с чего хочешь начать — дальше платформа
+            сведёт желание с людьми и действиями.
+          </p>
+        </div>
+
+        <div className="mt-12 grid gap-4 md:grid-cols-3">
+          {[
+            {
+              number: "01",
+              icon: UsersRound,
+              color: "bg-[#f4e8ff] text-[#6e43cd]",
+              title: "Найти своих",
+              text: "Заявить интересы, увидеть похожих людей и не раствориться в общей ленте.",
+            },
+            {
+              number: "02",
+              icon: CirclePlay,
+              color: "bg-[#ffe4ef] text-[#df3d7b]",
+              title: "Показать себя",
+              text: "Создать страницу, рассказать о желании, выпускать stories и собирать вокруг себя аудиторию.",
+            },
+            {
+              number: "03",
+              icon: MapPin,
+              color: "bg-[#dff4f0] text-[#188c86]",
+              title: "Запустить повод",
+              text: "Открыть своё место, собрать небольшую тусовку или дать идею первому событию.",
+            },
+          ].map(({ number, icon: Icon, color, title, text }) => (
+            <article
+              className="group relative overflow-hidden rounded-[1.85rem] border border-[#2c1f37]/10 bg-white/75 p-6 shadow-[0_14px_38px_rgba(73,43,101,0.08)] transition duration-300 hover:-translate-y-1 hover:border-[#8b62dc]/35 hover:shadow-[0_24px_52px_rgba(73,43,101,0.14)] sm:p-7"
+              key={number}
+            >
+              <span className="absolute right-6 top-5 text-5xl font-black tracking-[-0.1em] text-[#2c1f37]/[0.06]">
+                {number}
+              </span>
+              <span className={`grid size-12 place-items-center rounded-2xl ${color}`}>
+                <Icon className="size-6" strokeWidth={1.8} />
+              </span>
+              <h3 className="mt-10 text-2xl font-black tracking-[-0.055em]">{title}</h3>
+              <p className="mt-3 max-w-sm text-sm leading-6 text-[#685c71]">{text}</p>
+              <span className="mt-8 inline-flex items-center gap-1.5 text-xs font-black uppercase tracking-[0.12em] text-[#7b52cf] transition group-hover:gap-2.5">
+                Твой маршрут <ArrowRight className="size-3.5" />
+              </span>
+            </article>
+          ))}
+        </div>
+
+        <div className="mt-5 flex flex-col gap-4 rounded-[1.6rem] border border-[#24182f]/10 bg-[#201827] px-6 py-5 text-white shadow-[0_18px_44px_rgba(43,25,61,0.18)] sm:flex-row sm:items-center sm:justify-between sm:px-7">
+          <p className="text-white/68 max-w-2xl text-sm leading-6">
+            Никаких обещаний «города, который уже кипит». Сначала — честный круг людей,
+            потом места, истории и ритм, который они создают сами.
+          </p>
+          <Link
+            className="group inline-flex shrink-0 items-center justify-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-black text-[#201827] transition hover:bg-[#ffdce9]"
+            href="/auth/sign-in"
+          >
+            Войти в круг
+            <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
+          </Link>
+        </div>
+      </section>
+
       {(creators.length > 0 || liveRooms.length > 0) && (
         <section
           className="relative mx-auto max-w-[1440px] px-5 py-24 sm:px-8 lg:px-12 lg:py-28"
-          id="first-wave"
+          id="voices"
         >
           <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
             <div>
