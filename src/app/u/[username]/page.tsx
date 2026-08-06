@@ -5,6 +5,7 @@ import {
   ArrowLeft,
   ChevronRight,
   Crown,
+  Gem,
   Gift,
   MapPin,
   MoreHorizontal,
@@ -36,7 +37,7 @@ import { createStory } from "@/app/stories/actions";
 import { BrandGiftIcon } from "@/components/brand-gift-icon";
 import { CreatorShareLink } from "@/components/creator-share-link";
 import { LocalRoleIcon } from "@/components/local-role-icon";
-import { ProfileGiftButton } from "@/components/profile-gift-button";
+import { CollectibleArtifactGiftButton } from "@/components/collectible-artifact-gift-button";
 import { WishCategoryIcon } from "@/components/wish-category-icon";
 import { ProfileQrCode } from "@/components/profile-qr-code";
 import { ReportForm } from "@/components/report-form";
@@ -124,7 +125,8 @@ export default async function ProfilePage({
     { data: activeLive },
     { data: vip },
     { data: rawReceivedGifts },
-    { data: giftCatalog },
+    { data: rawArtifactCatalog },
+    { data: rawArtifactShelf },
     { data: equippedItems },
   ] = await Promise.all([
     user && !isOwnProfile
@@ -229,12 +231,23 @@ export default async function ProfilePage({
       .eq("recipient_id", profile.id)
       .order("created_at", { ascending: false })
       .limit(20),
+    user && !isOwnProfile
+      ? supabase
+          .from("collectible_artifact_series")
+          .select(
+            "id, title, artwork_path, rarity, remaining_edition, total_edition, price_stars",
+          )
+          .eq("is_active", true)
+          .order("sort_order", { ascending: true })
+      : Promise.resolve({ data: [] }),
     supabase
-      .from("virtual_gifts")
-      .select("code, label, emoji, price_stars, requires_vip")
-      .eq("is_active", true)
-      .eq("economy", "platform")
-      .order("sort_order", { ascending: true }),
+      .from("public_collectible_artifact_shelf")
+      .select(
+        "id, serial_number, issued_at, series_slug, title, artwork_path, rarity, total_edition",
+      )
+      .eq("recipient_id", profile.id)
+      .order("issued_at", { ascending: false })
+      .limit(9),
     supabase
       .from("user_inventory")
       .select("item_id, virtual_items!inner(id, item_type, emoji, name)")
@@ -409,16 +422,17 @@ export default async function ProfilePage({
           </span>
           {user && !isOwnProfile ? (
             <div className="flex flex-wrap justify-end gap-2">
-              {giftCatalog && giftCatalog.length > 0 && (
-                <ProfileGiftButton
-                  gifts={giftCatalog.map((gift) => ({
-                    code: gift.code,
-                    label: gift.label,
-                    emoji: gift.emoji,
-                    price_stars: gift.price_stars ?? 0,
-                    requires_vip: Boolean(gift.requires_vip),
+              {rawArtifactCatalog && rawArtifactCatalog.length > 0 && (
+                <CollectibleArtifactGiftButton
+                  artifacts={rawArtifactCatalog.map((artifact) => ({
+                    id: artifact.id,
+                    title: artifact.title,
+                    artworkPath: artifact.artwork_path,
+                    rarity: artifact.rarity,
+                    remainingEdition: artifact.remaining_edition,
+                    totalEdition: artifact.total_edition,
+                    priceStars: artifact.price_stars,
                   }))}
-                  isVip={vipActive}
                   recipientId={profile.id}
                   username={profile.username}
                 />
@@ -724,6 +738,67 @@ export default async function ProfilePage({
             ))}
           </div>
         </section>
+      )}
+
+      {rawArtifactShelf && rawArtifactShelf.length > 0 && (
+        <section className="mx-4 mt-4 rounded-[1.55rem] border border-[#d9c5f3] bg-gradient-to-r from-[#fffaff] to-[#f3edff] p-4 shadow-[0_8px_22px_rgba(69,43,94,.05)]">
+          <div className="flex items-center justify-between">
+            <span>
+              <span className="flex items-center gap-2 text-sm font-black">
+                <Gem className="size-4 text-[#8753e6]" /> Коллекция
+              </span>
+              <small className="mt-0.5 block text-[10px] text-[#756a7d]">
+                ARTIFACTS 01
+              </small>
+            </span>
+            {isOwnProfile && (
+              <Link
+                className="text-[10px] font-black text-[#8753e6]"
+                href="/collection"
+              >
+                Моя полка ›
+              </Link>
+            )}
+          </div>
+          <div className="mt-3 grid grid-cols-3 gap-2">
+            {rawArtifactShelf.map((artifact) => (
+              <span
+                className="overflow-hidden rounded-xl border border-white/80 bg-white shadow-[0_4px_12px_rgba(69,43,94,.05)]"
+                key={artifact.id}
+              >
+                <img
+                  alt=""
+                  className="aspect-[3/4] w-full object-cover"
+                  src={artifact.artwork_path}
+                />
+                <span className="block p-2">
+                  <b className="block truncate text-[9px]">{artifact.title}</b>
+                  <small className="mt-0.5 block text-[8px] font-black text-[#8753e6]">
+                    #{artifact.serial_number} / {artifact.total_edition}
+                  </small>
+                </span>
+              </span>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {isOwnProfile && (!rawArtifactShelf || rawArtifactShelf.length === 0) && (
+        <Link
+          className="mx-4 mt-4 flex items-center gap-3 rounded-[1.55rem] border border-[#d9c5f3] bg-gradient-to-r from-[#fffaff] to-[#f3edff] p-4 shadow-[0_8px_22px_rgba(69,43,94,.05)]"
+          href="/collection"
+        >
+          <span className="grid size-10 place-items-center rounded-xl bg-white text-[#8753e6] shadow-[0_4px_12px_rgba(80,45,110,.08)]">
+            <Gem className="size-5" />
+          </span>
+          <span className="min-w-0 grow">
+            <b className="block text-xs">ARTIFACTS 01</b>
+            <span className="mt-1 block text-[10px] leading-4 text-[#756a7d]">
+              Первые десять лимитированных предметов уже можно посмотреть.
+            </span>
+          </span>
+          <ChevronRight className="size-4 shrink-0 text-[#8753e6]" />
+        </Link>
       )}
 
       {user &&

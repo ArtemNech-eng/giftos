@@ -50,7 +50,8 @@ const screens = [
   { id: "people", label: "Люди", number: "13" },
   { id: "settings", label: "Приватность", number: "14" },
   { id: "wishes", label: "Желания", number: "15" },
-  { id: "collectibles", label: "Коллекция", number: "16" },
+  { id: "collectibles", label: "Арт-направление", number: "16" },
+  { id: "collection", label: "Полка", number: "17" },
 ] as const;
 
 type ScreenId = (typeof screens)[number]["id"];
@@ -1393,6 +1394,104 @@ function CollectiblesScreen() {
   );
 }
 
+function CollectionScreen() {
+  const artifacts = [
+    ["key", "Ключ", "300", "39"],
+    ["relic", "Реликвия", "250", "59"],
+    ["compass", "Компас", "200", "79"],
+    ["cube", "Куб", "175", "99"],
+    ["lantern", "Фонарь", "150", "119"],
+    ["prism", "Призма", "100", "149"],
+    ["vial", "Флакон", "80", "179"],
+    ["seal", "Печать", "60", "219"],
+    ["sphere", "Сфера", "40", "269"],
+    ["orbit", "Орбита", "25", "349"],
+  ] as const;
+  return (
+    <div className="min-h-[730px] bg-[#fbf9fe] px-4 pb-6 pt-5 text-[#251d31]">
+      <header className="flex items-center justify-between">
+        <span className="grid size-10 place-items-center rounded-full border border-[#2c2036]/10 bg-white text-[#5f5369]">
+          <ArrowUpRight className="size-4 rotate-[-135deg]" />
+        </span>
+        <span className="text-center">
+          <small className="block text-[9px] font-black uppercase tracking-[0.13em] text-[#8c7e94]">
+            ARTIFACTS 01
+          </small>
+          <b className="block text-sm">Коллекция</b>
+        </span>
+        <span className="inline-flex h-10 items-center gap-1 rounded-full bg-[#f0e9ff] px-3 text-[10px] font-black text-[#7549d0]">
+          <Sparkles className="size-3.5" /> 2 800
+        </span>
+      </header>
+      <section className="mt-5 rounded-[1.7rem] bg-gradient-to-br from-[#322452] via-[#543d7a] to-[#7b67d8] p-5 text-white shadow-[0_14px_30px_rgba(63,37,98,.2)]">
+        <span className="bg-white/14 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.08em] text-[#fbd7e7]">
+          <Sparkles className="size-3.5" /> Первые десять
+        </span>
+        <h1 className="mt-3 text-3xl font-black leading-[0.88] tracking-[-0.075em]">
+          ДЕСЯТЬ
+          <br />
+          АРТЕФАКТОВ.
+        </h1>
+        <p className="mt-3 max-w-64 text-[10px] leading-5 text-white/75">
+          Лимитированные игровые предметы. Номер экземпляра появляется после вручения.
+        </p>
+      </section>
+      <section className="mt-5">
+        <div className="mb-3 flex items-end justify-between">
+          <span>
+            <h2 className="text-sm font-black">Первая десятка</h2>
+            <p className="mt-0.5 text-[10px] text-[#82758a]">
+              Выбери предмет на профиле человека
+            </p>
+          </span>
+          <span className="rounded-full bg-[#efe9f6] px-2 py-1 text-[9px] font-black text-[#7a6688]">
+            10
+          </span>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          {artifacts.map(([slug, name, left, price], index) => (
+            <article
+              className="border-[#2c2036]/9 overflow-hidden rounded-[1.35rem] border bg-white shadow-[0_8px_22px_rgba(69,43,94,.05)]"
+              key={slug}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element -- generated static artifact art */}
+              <img
+                alt=""
+                className="aspect-[3/2] w-full object-cover"
+                src={`/collectibles/artifacts/${slug}.jpg`}
+              />
+              <div className="p-3">
+                <span className="inline-flex rounded-full bg-[#f0e9ff] px-1.5 py-0.5 text-[8px] font-black text-[#7549d0]">
+                  {index < 5 ? "ЛИМИТИРОВАННЫЙ" : index < 8 ? "РЕДКИЙ" : "ИКОНИЧЕСКИЙ"}
+                </span>
+                <b className="mt-2 block text-[11px]">{name}</b>
+                <span className="mt-2 flex items-center justify-between text-[9px] font-black">
+                  <span className="text-[#8b6a9c]">{left} шт.</span>
+                  <span className="text-[#7549d0]">{price} ⭐</span>
+                </span>
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
+      <section className="mt-5 rounded-[1.45rem] border border-dashed border-[#cdbbe7] bg-[#fffcff] p-4 text-center">
+        <Sparkles className="mx-auto size-5 text-[#8753e6]" />
+        <b className="mt-2 block text-[11px]">Твоя полка пока свободна</b>
+        <small className="mt-1 block text-[9px] leading-4 text-[#81748a]">
+          Получи артефакт в подарок — здесь появится его serial.
+        </small>
+      </section>
+      <section className="mt-5 flex gap-2.5 rounded-2xl bg-[#f0faf5] p-3.5 text-[#4c7169]">
+        <Check className="mt-0.5 size-4 shrink-0 text-[#258b82]" />
+        <p className="text-[10px] leading-4">
+          Предметы не дают боевых статов и не влияют на рейтинг. Это коллекция и
+          красивый жест.
+        </p>
+      </section>
+    </div>
+  );
+}
+
 function IncomeIcon({ kind }: { kind: string }) {
   if (kind === "gift") return <Gift className="size-4" />;
   if (kind === "message") return <MessageCircle className="size-4" />;
@@ -1895,6 +1994,7 @@ export default async function PreviewPage({
     settings: <SettingsScreen />,
     wishes: <WishesScreen />,
     collectibles: <CollectiblesScreen />,
+    collection: <CollectionScreen />,
   };
 
   return (
