@@ -129,7 +129,7 @@ export default async function SeoLandingPage() {
   }
 
   return (
-    <main className="relative isolate overflow-hidden bg-[#09090d] text-white selection:bg-[#ff4b8a] selection:text-white">
+    <main className="landing-light relative isolate overflow-hidden bg-[#f7f3fa] text-[#201827] selection:bg-[#fc4e91] selection:text-white">
       <script
         dangerouslySetInnerHTML={{
           __html: JSON.stringify({
@@ -148,21 +148,21 @@ export default async function SeoLandingPage() {
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 -z-10 overflow-hidden"
       >
-        <div className="absolute -left-72 -top-72 size-[46rem] rounded-full bg-[#813cff]/20 blur-[130px]" />
-        <div className="absolute right-[-18rem] top-36 size-[42rem] rounded-full bg-[#ff416f]/20 blur-[140px]" />
-        <div className="absolute left-[30%] top-[65rem] size-[44rem] rounded-full bg-[#176fda]/10 blur-[150px]" />
-        <div className="landing-noise absolute inset-0 opacity-40" />
+        <div className="absolute -left-72 -top-72 size-[48rem] rounded-full bg-[#d8bcff]/75 blur-[120px]" />
+        <div className="absolute right-[-18rem] top-20 size-[43rem] rounded-full bg-[#ffc0d8]/70 blur-[135px]" />
+        <div className="absolute left-[25%] top-[65rem] size-[40rem] rounded-full bg-[#b8e7ee]/55 blur-[150px]" />
+        <div className="landing-light-noise absolute inset-0 opacity-30" />
       </div>
 
       <header className="relative z-20 mx-auto flex max-w-[1440px] items-center justify-between px-5 py-5 sm:px-8 lg:px-12 lg:py-7">
         <Link
+          aria-label="Хочу также — главная"
           className="group flex items-center gap-2.5"
           href="/"
-          aria-label="Хочу также — главная"
         >
-          <span className="relative grid size-10 place-items-center overflow-hidden rounded-[14px] bg-[#f5f2ed] text-xl font-black text-[#0a0a0d] transition-transform duration-300 group-hover:-rotate-6">
+          <span className="relative grid size-10 place-items-center overflow-hidden rounded-[14px] bg-[#201827] text-xl font-black text-white shadow-[0_12px_26px_rgba(56,30,79,0.16)] transition-transform duration-300 group-hover:-rotate-6">
             <span className="relative z-10">Х</span>
-            <span className="absolute -bottom-3 -right-2 size-7 rounded-full bg-[#ff4b8a]" />
+            <span className="absolute -bottom-3 -right-2 size-7 rounded-full bg-[#fc4e91]" />
           </span>
           <span className="text-[17px] font-black tracking-[-0.06em] sm:text-lg">
             {APP_NAME}
@@ -170,64 +170,64 @@ export default async function SeoLandingPage() {
         </Link>
 
         <nav
-          className="hidden items-center gap-7 text-sm font-bold text-white/55 md:flex"
+          className="hidden items-center gap-7 text-sm font-bold text-[#574c61] md:flex"
           aria-label="Основная навигация"
         >
-          <a className="transition hover:text-white" href="#inside">
+          <a className="transition hover:text-[#201827]" href="#inside">
             Зачем здесь быть
           </a>
-          <a className="transition hover:text-white" href="#budennovsk">
+          <a className="transition hover:text-[#201827]" href="#budennovsk">
             Будённовск
           </a>
-          <a className="transition hover:text-white" href="#first-wave">
+          <a className="transition hover:text-[#201827]" href="#first-wave">
             Первая волна
           </a>
         </nav>
 
         <Link
-          className="rounded-full border border-white/15 bg-white/[0.06] px-4 py-2 text-sm font-bold transition hover:border-white/30 hover:bg-white hover:text-[#101014] sm:px-5"
+          className="rounded-full border border-[#201827]/15 bg-white/55 px-4 py-2 text-sm font-black text-[#201827] shadow-sm transition hover:-translate-y-0.5 hover:border-[#201827]/30 hover:bg-[#201827] hover:text-white sm:px-5"
           href="/auth/sign-in"
         >
           Войти
         </Link>
       </header>
 
-      <section className="relative mx-auto grid min-h-[680px] max-w-[1440px] items-center gap-12 px-5 pb-20 pt-12 sm:px-8 lg:grid-cols-[minmax(0,1.04fr)_minmax(420px,0.96fr)] lg:px-12 lg:pb-28 lg:pt-20">
+      <section className="relative mx-auto grid max-w-[1440px] items-center gap-10 px-5 pb-20 pt-10 sm:px-8 lg:min-h-[710px] lg:grid-cols-[minmax(0,1.06fr)_minmax(420px,0.94fr)] lg:px-12 lg:pb-28 lg:pt-20">
         <div className="relative z-10 max-w-4xl">
-          <p className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.055] px-3.5 py-2 text-[11px] font-black uppercase tracking-[0.16em] text-[#ffb5d0]">
-            <span className="size-1.5 rounded-full bg-[#ff4b8a] shadow-[0_0_12px_#ff4b8a]" />
+          <p className="inline-flex items-center gap-2 rounded-full border border-[#7e53d8]/20 bg-white/65 px-3.5 py-2 text-[11px] font-black uppercase tracking-[0.16em] text-[#7442d3] shadow-[0_8px_30px_rgba(115,71,205,0.08)]">
+            <span className="size-1.5 rounded-full bg-[#fc4e91] shadow-[0_0_12px_#fc4e91]" />
             Будённовск · первая волна
           </p>
-          <h1 className="mt-7 max-w-4xl text-balance text-[clamp(3.4rem,8.2vw,8.4rem)] font-black leading-[0.83] tracking-[-0.082em]">
+          <h1 className="mt-7 max-w-4xl text-balance text-[clamp(3.5rem,8.2vw,8.4rem)] font-black leading-[0.83] tracking-[-0.084em]">
             Не листай
-            <span className="block text-transparent [-webkit-text-stroke:1px_rgba(255,255,255,0.72)]">
+            <span className="block text-[#201827]/20 [-webkit-text-stroke:1px_rgba(32,24,39,0.62)]">
               чужую жизнь.
             </span>
-            <span className="block bg-gradient-to-r from-[#ff5b8d] via-[#df63ff] to-[#8e81ff] bg-clip-text text-transparent">
+            <span className="block bg-gradient-to-r from-[#f94a8b] via-[#c45df1] to-[#7458dc] bg-clip-text text-transparent">
               Собери свою.
             </span>
           </h1>
           <div className="mt-8 grid max-w-2xl gap-5 sm:grid-cols-[1.1fr_0.9fr] sm:items-end">
-            <p className="text-white/64 text-pretty text-lg leading-7 sm:text-xl sm:leading-8">
-              <b className="font-bold text-white">Хочу также</b> — место, где желание
-              становится поводом встретиться, рассказать о себе, найти своих и сделать
-              что-то вместе.
+            <p className="text-pretty text-lg leading-7 text-[#4f4558] sm:text-xl sm:leading-8">
+              <b className="font-black text-[#201827]">Хочу также</b> — место, где
+              желание становится поводом встретиться, рассказать о себе, найти своих и
+              сделать что-то вместе.
             </p>
-            <p className="text-white/44 border-l border-[#ff4b8a]/70 pl-4 text-sm leading-6">
+            <p className="border-l border-[#fc4e91] pl-4 text-sm leading-6 text-[#72677c]">
               Не ещё одна витрина. Социальная среда, которую создают люди, а не
               рекламные кабинеты.
             </p>
           </div>
           <div className="mt-10 flex flex-wrap items-center gap-3">
             <Link
-              className="group inline-flex h-14 items-center gap-3 rounded-full bg-[#f6f2ed] px-6 text-sm font-black text-[#111116] transition hover:-translate-y-0.5 hover:bg-[#ffdfeb] sm:h-14 sm:px-7"
+              className="group inline-flex h-14 items-center gap-3 rounded-full bg-[#201827] px-6 text-sm font-black text-white shadow-[0_15px_32px_rgba(45,25,63,0.2)] transition hover:-translate-y-0.5 hover:bg-[#4b2d66] sm:px-7"
               href="/auth/sign-in"
             >
               Войти в первую волну
               <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
             </Link>
             <a
-              className="inline-flex h-14 items-center gap-2 rounded-full px-4 text-sm font-bold text-white/65 transition hover:text-white"
+              className="inline-flex h-14 items-center gap-2 rounded-full px-4 text-sm font-black text-[#62556c] transition hover:text-[#201827]"
               href="#inside"
             >
               Посмотреть, что внутри <ArrowDownRight className="size-4" />
@@ -236,51 +236,51 @@ export default async function SeoLandingPage() {
         </div>
 
         <div
-          className="relative mx-auto mt-1 w-full max-w-[320px] sm:max-w-[420px] lg:mt-0 lg:max-w-[580px]"
+          className="relative mx-auto mt-1 w-full max-w-[330px] sm:max-w-[430px] lg:mt-0 lg:max-w-[570px]"
           aria-label="Визуальная схема платформы"
         >
-          <div className="absolute -left-8 top-16 size-52 rounded-full border border-[#ff638f]/20" />
-          <div className="absolute -right-10 bottom-7 size-72 rounded-full border border-[#8e7bff]/15" />
+          <div className="absolute -left-9 top-16 size-52 rounded-full border border-[#d34b87]/20" />
+          <div className="absolute -right-12 bottom-7 size-72 rounded-full border border-[#7861e4]/20" />
           <div className="relative aspect-[0.95]">
-            <div className="absolute inset-x-[8%] inset-y-[3%] rotate-[7deg] rounded-[3rem] border border-white/10 bg-white/[0.035] shadow-[0_40px_100px_rgba(0,0,0,0.38)] backdrop-blur-md" />
-            <div className="absolute inset-x-[7%] inset-y-[6%] -rotate-[5deg] rounded-[3rem] border border-white/10 bg-gradient-to-br from-[#1f1830]/90 to-[#101017]/80" />
-            <div className="absolute inset-x-[13%] inset-y-[10%] overflow-hidden rounded-[2.6rem] border border-white/15 bg-[#111117] shadow-[0_35px_90px_rgba(0,0,0,0.55)]">
-              <div className="absolute -right-16 -top-16 size-56 rounded-full bg-[#ff4b8a]/55 blur-3xl" />
-              <div className="absolute -bottom-24 -left-24 size-64 rounded-full bg-[#7448ff]/45 blur-3xl" />
+            <div className="absolute inset-x-[8%] inset-y-[3%] rotate-[7deg] rounded-[3rem] border border-[#4c3e60]/10 bg-white/50 shadow-[0_40px_100px_rgba(82,52,106,0.17)] backdrop-blur-md" />
+            <div className="absolute inset-x-[7%] inset-y-[6%] -rotate-[5deg] rounded-[3rem] border border-[#7350c4]/15 bg-gradient-to-br from-[#f5e7f5] to-[#e5e5ff]" />
+            <div className="absolute inset-x-[13%] inset-y-[10%] overflow-hidden rounded-[2.6rem] border border-[#241b30]/10 bg-[#fffdfd] shadow-[0_35px_90px_rgba(62,37,88,0.23)]">
+              <div className="absolute -right-16 -top-16 size-56 rounded-full bg-[#ff76a9]/40 blur-3xl" />
+              <div className="absolute -bottom-24 -left-24 size-64 rounded-full bg-[#8e7cff]/35 blur-3xl" />
               <div className="relative flex h-full flex-col p-6">
-                <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-[0.18em] text-white/55">
+                <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-[0.18em] text-[#74697c]">
                   <span>Хочу также</span>
-                  <span className="rounded-full border border-white/15 px-2 py-1 text-[8px] text-white/75">
+                  <span className="rounded-full bg-[#f0e8ff] px-2 py-1 text-[8px] text-[#6e43cd]">
                     Город 01
                   </span>
                 </div>
                 <div className="mt-9">
-                  <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#ffacc7]">
+                  <p className="text-[11px] font-black uppercase tracking-[0.18em] text-[#d53776]">
                     из желания — в жизнь
                   </p>
-                  <p className="mt-2 max-w-sm text-4xl font-black leading-[0.88] tracking-[-0.07em]">
+                  <p className="mt-2 max-w-sm text-4xl font-black leading-[0.88] tracking-[-0.07em] text-[#221a2a]">
                     Люди не фон.
                     <br />
                     Люди — сюжет.
                   </p>
                 </div>
                 <div className="mt-auto grid grid-cols-2 gap-3">
-                  <div className="rounded-[1.35rem] border border-white/10 bg-[#fbf5ef] p-4 text-[#151218] shadow-xl">
-                    <span className="grid size-8 place-items-center rounded-full bg-[#ff4b8a] text-xs font-black text-white">
+                  <div className="rounded-[1.35rem] border border-[#362342]/10 bg-[#201827] p-4 text-white shadow-xl">
+                    <span className="grid size-8 place-items-center rounded-full bg-[#fc4e91] text-xs font-black">
                       01
                     </span>
-                    <p className="mt-6 text-[10px] font-black uppercase tracking-[0.12em] text-[#7c5967]">
+                    <p className="mt-6 text-[10px] font-black uppercase tracking-[0.12em] text-white/45">
                       Желание
                     </p>
                     <p className="mt-1 text-sm font-black leading-4">
                       Сказать, чего ты хочешь
                     </p>
                   </div>
-                  <div className="rounded-[1.35rem] border border-white/10 bg-white/[0.11] p-4 backdrop-blur">
+                  <div className="rounded-[1.35rem] border border-[#645075]/10 bg-white/75 p-4 text-[#201827] shadow-[0_12px_30px_rgba(83,54,111,0.08)]">
                     <span className="grid size-8 place-items-center rounded-full bg-[#7f5cff] text-xs font-black text-white">
                       02
                     </span>
-                    <p className="mt-6 text-[10px] font-black uppercase tracking-[0.12em] text-white/50">
+                    <p className="mt-6 text-[10px] font-black uppercase tracking-[0.12em] text-[#7d7087]">
                       Люди
                     </p>
                     <p className="mt-1 text-sm font-black leading-4">
@@ -288,15 +288,15 @@ export default async function SeoLandingPage() {
                     </p>
                   </div>
                 </div>
-                <div className="mt-3 flex items-center justify-between rounded-[1.15rem] border border-white/10 bg-black/20 px-4 py-3">
-                  <span className="text-xs font-bold text-white/75">
+                <div className="mt-3 flex items-center justify-between rounded-[1.15rem] border border-[#3b2a46]/10 bg-[#f8f3fb]/90 px-4 py-3">
+                  <span className="text-xs font-black text-[#5d5166]">
                     Место · разговор · действие
                   </span>
-                  <ArrowDownRight className="size-4 text-[#ff9cc1]" />
+                  <ArrowDownRight className="size-4 text-[#e44684]" />
                 </div>
               </div>
             </div>
-            <div className="absolute -left-4 bottom-14 flex items-center gap-3 rounded-2xl border border-white/15 bg-[#16131d]/85 px-3.5 py-3 shadow-2xl backdrop-blur-xl">
+            <div className="absolute -left-4 bottom-14 flex items-center gap-3 rounded-2xl border border-white/75 bg-[#201827] px-3.5 py-3 text-white shadow-2xl">
               <span className="grid size-8 place-items-center rounded-full bg-gradient-to-br from-[#ff8366] to-[#da4cff] text-xs font-black">
                 ♡
               </span>
@@ -314,8 +314,8 @@ export default async function SeoLandingPage() {
       </section>
 
       <section
-        className="relative border-y border-white/10 bg-[#f3eee8] py-4 text-[#111116]"
         aria-label="Направления платформы"
+        className="relative border-y border-[#291d35]/10 bg-white/80 py-4 text-[#201827]"
       >
         <div className="landing-track flex min-w-max items-center gap-7 whitespace-nowrap text-xl font-black tracking-[-0.055em] sm:text-2xl">
           {[
@@ -336,7 +336,7 @@ export default async function SeoLandingPage() {
           ].map((item, index) => (
             <span className="flex items-center gap-7" key={`${item}-${index}`}>
               {item}
-              <span className="size-2.5 rounded-full bg-[#ff4b8a]" />
+              <span className="size-2.5 rounded-full bg-[#fc4e91]" />
             </span>
           ))}
         </div>
@@ -348,14 +348,14 @@ export default async function SeoLandingPage() {
       >
         <div className="grid gap-8 lg:grid-cols-[0.76fr_1.24fr] lg:items-end">
           <div>
-            <p className="text-xs font-black uppercase tracking-[0.18em] text-[#ff9dc0]">
+            <p className="text-xs font-black uppercase tracking-[0.18em] text-[#cb3f78]">
               Не ради шума
             </p>
             <h2 className="mt-4 max-w-md text-balance text-5xl font-black leading-[0.89] tracking-[-0.07em] sm:text-6xl">
               Здесь есть, что начать.
             </h2>
           </div>
-          <p className="max-w-2xl text-lg leading-8 text-white/55 sm:text-xl">
+          <p className="max-w-2xl text-lg leading-8 text-[#605569] sm:text-xl">
             Платформа не подменяет реальную жизнь бесконечной лентой. Она даёт повод
             проявиться: с целью, интересом, эфиром, встречей или своей маленькой
             тусовкой.
@@ -363,18 +363,18 @@ export default async function SeoLandingPage() {
         </div>
 
         <div className="mt-12 grid gap-4 lg:grid-cols-12">
-          <article className="group relative overflow-hidden rounded-[2rem] border border-white/10 bg-[#e9e1d7] p-6 text-[#151218] sm:p-8 lg:col-span-7 lg:min-h-[390px]">
-            <div className="absolute -right-16 -top-12 size-72 rounded-full bg-[#ff5b8d] opacity-90 blur-[1px] transition duration-500 group-hover:scale-110" />
-            <div className="absolute bottom-[-8rem] right-20 size-80 rounded-full border-[40px] border-[#7e56ff]/30" />
+          <article className="group relative overflow-hidden rounded-[2rem] border border-[#2d2038]/10 bg-[#fffdfc] p-6 shadow-[0_20px_60px_rgba(79,49,103,0.08)] sm:p-8 lg:col-span-7 lg:min-h-[390px]">
+            <div className="absolute -right-16 -top-12 size-72 rounded-full bg-[#ff77a9] opacity-90 transition duration-500 group-hover:scale-110" />
+            <div className="absolute bottom-[-8rem] right-20 size-80 rounded-full border-[40px] border-[#7e56ff]/25" />
             <div className="relative flex h-full flex-col">
-              <span className="inline-flex w-fit items-center gap-2 rounded-full border border-black/10 bg-white/50 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.14em]">
-                <Heart className="size-3.5 fill-[#ff4b8a] text-[#ff4b8a]" />
-                Желание — это начало
+              <span className="inline-flex w-fit items-center gap-2 rounded-full border border-[#261b31]/10 bg-white/70 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.14em]">
+                <Heart className="size-3.5 fill-[#ff4b8a] text-[#ff4b8a]" /> Желание —
+                это начало
               </span>
               <h3 className="mt-7 max-w-lg text-balance text-4xl font-black leading-[0.9] tracking-[-0.065em] sm:text-5xl">
                 Скажи вслух, чего хочешь. Так тебя легче найти.
               </h3>
-              <p className="text-black/62 mt-5 max-w-md text-base leading-7">
+              <p className="mt-5 max-w-md text-base leading-7 text-[#554a5e]">
                 Желание — не ценник и не отчёт. Это живая точка, вокруг которой
                 появляются поддержка, диалог и похожие люди.
               </p>
@@ -387,20 +387,20 @@ export default async function SeoLandingPage() {
             </div>
           </article>
 
-          <article className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-[#1a1731] p-6 sm:p-8 lg:col-span-5 lg:min-h-[390px]">
-            <div className="absolute -bottom-20 -right-20 size-72 rounded-full bg-[#6955ff]/45 blur-2xl" />
+          <article className="relative overflow-hidden rounded-[2rem] bg-[#201827] p-6 text-white shadow-[0_20px_60px_rgba(49,29,72,0.22)] sm:p-8 lg:col-span-5 lg:min-h-[390px]">
+            <div className="absolute -bottom-20 -right-20 size-72 rounded-full bg-[#8d6dff]/45 blur-2xl" />
             <MapPin
               className="absolute right-8 top-8 size-16 text-[#ff79b0]/80"
               strokeWidth={1.2}
             />
             <div className="relative flex h-full flex-col">
-              <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#bbadff]">
+              <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#c9bfff]">
                 Город — не настройка профиля
               </p>
               <h3 className="mt-5 max-w-sm text-4xl font-black leading-[0.9] tracking-[-0.065em] sm:text-5xl">
                 Город — это «куда пойдём?»
               </h3>
-              <p className="text-white/58 mt-5 max-w-sm text-base leading-7">
+              <p className="text-white/62 mt-5 max-w-sm text-base leading-7">
                 Свои места, люди, разговоры и поводы встретиться. Начинаем с Будённовска
                 — честно, с нуля и вместе.
               </p>
@@ -413,28 +413,28 @@ export default async function SeoLandingPage() {
             </div>
           </article>
 
-          <article className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-[#111218] p-6 sm:p-8 lg:col-span-4 lg:min-h-[310px]">
-            <div className="absolute -right-10 top-0 size-48 rounded-full bg-[#ffd06d]/25 blur-3xl" />
-            <CirclePlay className="size-9 text-[#ffd06d]" strokeWidth={1.5} />
+          <article className="relative overflow-hidden rounded-[2rem] border border-[#2d2038]/10 bg-[#f2ebff] p-6 sm:p-8 lg:col-span-4 lg:min-h-[310px]">
+            <div className="absolute -right-10 top-0 size-48 rounded-full bg-[#ffe08a]/55 blur-3xl" />
+            <CirclePlay className="size-9 text-[#754be1]" strokeWidth={1.5} />
             <h3 className="mt-8 text-3xl font-black leading-[0.93] tracking-[-0.06em]">
               Покажи себя в движении.
             </h3>
-            <p className="mt-4 max-w-sm text-sm leading-6 text-white/55">
+            <p className="mt-4 max-w-sm text-sm leading-6 text-[#5c5066]">
               Stories, посты и эфиры — чтобы не остаться аватаркой в чужом списке.
             </p>
           </article>
 
-          <article className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-gradient-to-br from-[#ff4d82] via-[#b954e9] to-[#6954eb] p-6 sm:p-8 lg:col-span-4 lg:min-h-[310px]">
+          <article className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-[#ff4d82] via-[#b954e9] to-[#6954eb] p-6 text-white shadow-[0_20px_45px_rgba(184,72,181,0.22)] sm:p-8 lg:col-span-4 lg:min-h-[310px]">
             <MessageCircle className="size-9 text-white/90" strokeWidth={1.5} />
             <h3 className="mt-8 text-3xl font-black leading-[0.93] tracking-[-0.06em]">
               Не набирай аудиторию. Собирай своих.
             </h3>
-            <p className="mt-4 max-w-sm text-sm leading-6 text-white/80">
+            <p className="text-white/83 mt-4 max-w-sm text-sm leading-6">
               Здесь реакция может стать разговором, а разговор — новой общей историей.
             </p>
           </article>
 
-          <article className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-[#d9f3f0] p-6 text-[#0d2628] sm:p-8 lg:col-span-4 lg:min-h-[310px]">
+          <article className="relative overflow-hidden rounded-[2rem] border border-[#2d2038]/10 bg-[#dcf5f2] p-6 text-[#0d2628] sm:p-8 lg:col-span-4 lg:min-h-[310px]">
             <div className="absolute -bottom-20 -right-10 size-64 rounded-full border-[28px] border-[#36bbb3]/30" />
             <UsersRound className="size-9 text-[#158c87]" strokeWidth={1.5} />
             <h3 className="mt-8 max-w-xs text-3xl font-black leading-[0.93] tracking-[-0.06em]">
@@ -448,24 +448,32 @@ export default async function SeoLandingPage() {
       </section>
 
       <section
-        className="relative border-y border-white/10 bg-[#111117]"
+        className="relative overflow-hidden border-y border-[#2f203d]/10 bg-[#eae0fa]"
         id="budennovsk"
       >
-        <div className="mx-auto grid max-w-[1440px] gap-10 px-5 py-20 sm:px-8 lg:grid-cols-[1.06fr_0.94fr] lg:px-12 lg:py-28">
+        <div
+          aria-hidden="true"
+          className="absolute -left-40 bottom-[-18rem] size-[38rem] rounded-full bg-[#f870a4]/35 blur-[110px]"
+        />
+        <div
+          aria-hidden="true"
+          className="absolute -right-36 -top-32 size-[31rem] rounded-full bg-[#8e70f5]/35 blur-[110px]"
+        />
+        <div className="relative mx-auto grid max-w-[1440px] gap-10 px-5 py-20 sm:px-8 lg:grid-cols-[1.06fr_0.94fr] lg:px-12 lg:py-28">
           <div>
-            <p className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-[0.18em] text-[#ff9dc0]">
+            <p className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-[0.18em] text-[#8b43d1]">
               <MapPin className="size-4" /> Город 01 · Будённовск
             </p>
             <h2 className="mt-6 max-w-3xl text-balance text-5xl font-black leading-[0.87] tracking-[-0.075em] sm:text-7xl">
               Открываем город, а не изображаем толпу.
             </h2>
-            <p className="mt-8 max-w-xl text-lg leading-8 text-white/60 sm:text-xl">
+            <p className="mt-8 max-w-xl text-lg leading-8 text-[#564a61] sm:text-xl">
               Первый город ещё не наполнен. Поэтому мы не рисуем чужие сторис, не ставим
               липовые счётчики и не зовём тебя быть «первым в пустоте». Мы собираем
               стартовый круг людей, которым важно сделать Будённовск живым.
             </p>
             <Link
-              className="group mt-9 inline-flex items-center gap-3 rounded-full bg-[#ff4b8a] px-6 py-3.5 text-sm font-black transition hover:-translate-y-0.5 hover:bg-[#ff77a7]"
+              className="group mt-9 inline-flex items-center gap-3 rounded-full bg-[#201827] px-6 py-3.5 text-sm font-black text-white shadow-[0_16px_34px_rgba(48,27,70,0.2)] transition hover:-translate-y-0.5 hover:bg-[#4b2d66]"
               href="/auth/sign-in"
             >
               Стать частью первой волны
@@ -492,17 +500,17 @@ export default async function SeoLandingPage() {
               },
             ].map((step) => (
               <div
-                className="group flex gap-5 rounded-[1.6rem] border border-white/10 bg-white/[0.035] p-5 transition hover:border-[#ff76a8]/50 hover:bg-white/[0.06] sm:block lg:flex"
+                className="group flex gap-5 rounded-[1.6rem] border border-white/65 bg-white/55 p-5 shadow-[0_12px_30px_rgba(76,44,110,0.08)] transition hover:-translate-y-0.5 hover:bg-white/75 sm:block lg:flex"
                 key={step.number}
               >
-                <span className="shrink-0 text-4xl font-black leading-none tracking-[-0.08em] text-[#ff709f] sm:block lg:text-5xl">
+                <span className="shrink-0 text-4xl font-black leading-none tracking-[-0.08em] text-[#e34f8a] sm:block lg:text-5xl">
                   {step.number}
                 </span>
                 <div className="sm:mt-6 lg:mt-0">
                   <h3 className="text-lg font-black tracking-[-0.03em]">
                     {step.title}
                   </h3>
-                  <p className="text-white/52 mt-2 text-sm leading-6">{step.text}</p>
+                  <p className="mt-2 text-sm leading-6 text-[#665a70]">{step.text}</p>
                 </div>
               </div>
             ))}
@@ -517,14 +525,14 @@ export default async function SeoLandingPage() {
         >
           <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
             <div>
-              <p className="text-xs font-black uppercase tracking-[0.18em] text-[#ff9dc0]">
+              <p className="text-xs font-black uppercase tracking-[0.18em] text-[#cb3f78]">
                 Настоящие люди
               </p>
               <h2 className="mt-4 text-balance text-4xl font-black leading-[0.9] tracking-[-0.065em] sm:text-5xl">
                 Первые голоса уже звучат.
               </h2>
             </div>
-            <p className="text-white/48 max-w-sm text-sm leading-6">
+            <p className="max-w-sm text-sm leading-6 text-[#70647b]">
               Этот блок появляется только из открытых профилей и активных эфиров
               платформы.
             </p>
@@ -534,26 +542,26 @@ export default async function SeoLandingPage() {
             <div className="mt-10 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {creators.map((creator, index) => (
                 <Link
-                  className="group relative overflow-hidden rounded-[1.65rem] border border-white/10 bg-white/[0.04] p-5 transition hover:-translate-y-1 hover:border-white/30 hover:bg-white/[0.07]"
+                  className="group relative overflow-hidden rounded-[1.65rem] border border-[#2b2035]/10 bg-white/80 p-5 shadow-[0_12px_35px_rgba(78,48,106,0.08)] transition hover:-translate-y-1 hover:border-[#7d50d0]/35 hover:shadow-[0_22px_45px_rgba(78,48,106,0.16)]"
                   href={`/u/${creator.username}`}
                   key={creator.username}
                 >
                   <div
-                    className={`absolute -right-8 -top-10 size-32 rounded-full bg-gradient-to-br opacity-60 blur-2xl ${creatorColors[index % creatorColors.length]}`}
+                    className={`absolute -right-8 -top-10 size-32 rounded-full bg-gradient-to-br opacity-55 blur-2xl ${creatorColors[index % creatorColors.length]}`}
                   />
                   <div className="relative flex items-start justify-between gap-3">
                     <span
-                      className={`grid size-12 place-items-center rounded-2xl bg-gradient-to-br text-lg font-black ${creatorColors[index % creatorColors.length]}`}
+                      className={`grid size-12 place-items-center rounded-2xl bg-gradient-to-br text-lg font-black text-white ${creatorColors[index % creatorColors.length]}`}
                     >
                       {creator.display_name.slice(0, 1).toUpperCase()}
                     </span>
-                    <ArrowDownRight className="size-5 text-white/45 transition-transform group-hover:translate-x-1 group-hover:translate-y-1 group-hover:text-white" />
+                    <ArrowDownRight className="size-5 text-[#695e73] transition-transform group-hover:translate-x-1 group-hover:translate-y-1 group-hover:text-[#201827]" />
                   </div>
                   <div className="relative mt-8">
                     <p className="text-xl font-black tracking-[-0.04em]">
                       {creator.display_name}
                     </p>
-                    <p className="mt-2 line-clamp-2 min-h-10 text-sm leading-5 text-white/55">
+                    <p className="mt-2 line-clamp-2 min-h-10 text-sm leading-5 text-[#685d72]">
                       {creator.creator_headline ?? "Автор в «Хочу также»"}
                     </p>
                   </div>
@@ -565,12 +573,12 @@ export default async function SeoLandingPage() {
           {liveRooms.length > 0 && (
             <div className="mt-12">
               <div className="mb-5 flex items-center gap-2 text-sm font-black">
-                <Radio className="size-4 text-[#ff5a8d]" /> Сейчас в эфире
+                <Radio className="size-4 text-[#e74782]" /> Сейчас в эфире
               </div>
               <div className="grid gap-3 md:grid-cols-3">
                 {liveRooms.map((room) => (
                   <Link
-                    className="group rounded-[1.5rem] border border-[#ff6d9f]/25 bg-gradient-to-br from-[#32142a] to-[#17141e] p-5 transition hover:border-[#ff8eb5]/70"
+                    className="group rounded-[1.5rem] bg-[#201827] p-5 text-white shadow-[0_18px_40px_rgba(41,23,59,0.2)] transition hover:-translate-y-0.5 hover:bg-[#34253f]"
                     href={`/live/${room.slug}`}
                     key={room.id}
                   >
@@ -595,29 +603,29 @@ export default async function SeoLandingPage() {
         </section>
       )}
 
-      <section className="relative overflow-hidden border-t border-white/10 bg-[#f3eee8] px-5 py-20 text-[#111116] sm:px-8 lg:px-12 lg:py-28">
+      <section className="relative overflow-hidden border-t border-[#2d2038]/10 bg-[#201827] px-5 py-20 text-white sm:px-8 lg:px-12 lg:py-28">
         <div
           aria-hidden="true"
-          className="absolute -right-28 -top-48 size-[34rem] rounded-full bg-[#ff6c9b]/55 blur-3xl"
+          className="absolute -right-28 -top-48 size-[34rem] rounded-full bg-[#ff6c9b]/45 blur-3xl"
         />
         <div
           aria-hidden="true"
           className="absolute -bottom-64 left-[38%] size-[38rem] rounded-full bg-[#735bff]/35 blur-3xl"
         />
         <div className="relative mx-auto max-w-[1100px] text-center">
-          <p className="text-xs font-black uppercase tracking-[0.18em] text-[#b93162]">
+          <p className="text-xs font-black uppercase tracking-[0.18em] text-[#ffb6d0]">
             Это только начинается
           </p>
           <h2 className="mt-6 text-balance text-[clamp(3.4rem,8vw,7.3rem)] font-black leading-[0.82] tracking-[-0.09em]">
             Твоё «хочу»
-            <span className="block text-[#ff427c]">может стать общим.</span>
+            <span className="block text-[#ff86b2]">может стать общим.</span>
           </h2>
-          <p className="text-black/62 mx-auto mt-8 max-w-xl text-lg leading-8 sm:text-xl">
+          <p className="mx-auto mt-8 max-w-xl text-lg leading-8 text-white/65 sm:text-xl">
             Войди в первую волну «Хочу также» и помоги открыть первый живой город — без
             декораций, по-настоящему.
           </p>
           <Link
-            className="h-15 group mt-10 inline-flex items-center gap-3 rounded-full bg-[#111116] px-7 text-sm font-black text-white transition hover:-translate-y-0.5 hover:bg-[#33273a]"
+            className="group mt-10 inline-flex h-14 items-center gap-3 rounded-full bg-white px-7 text-sm font-black text-[#201827] transition hover:-translate-y-0.5 hover:bg-[#ffdce9]"
             href="/auth/sign-in"
           >
             Присоединиться к первой волне
@@ -626,8 +634,8 @@ export default async function SeoLandingPage() {
         </div>
       </section>
 
-      <footer className="bg-[#09090d] px-5 py-8 sm:px-8 lg:px-12">
-        <div className="mx-auto flex max-w-[1440px] flex-col gap-4 text-xs font-bold text-white/40 sm:flex-row sm:items-center sm:justify-between">
+      <footer className="bg-[#15101a] px-5 py-8 text-white sm:px-8 lg:px-12">
+        <div className="mx-auto flex max-w-[1440px] flex-col gap-4 text-xs font-bold text-white/45 sm:flex-row sm:items-center sm:justify-between">
           <span>
             © {new Date().getFullYear()} {APP_NAME}
           </span>
