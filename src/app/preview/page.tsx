@@ -1292,10 +1292,10 @@ function ProfileScreen() {
 function CollectiblesScreen() {
   const directions = [
     {
-      title: "Скульптуры и панно",
-      note: "Фигура + арт-панно. Самый галерейный и спокойный путь.",
-      src: "/preview/collectibles/art-toy-matrix.jpg",
-      tone: "bg-[#f3e8ff] text-[#7549d0]",
+      title: "Скульптуры и панно · выбрано",
+      note: "Доработанный единый set: керамические фигуры, панно и один красный акцент.",
+      src: "/preview/collectibles/objects-01-selected.jpg",
+      tone: "bg-[#f0e9ff] text-[#7549d0]",
     },
     {
       title: "Галерея героев",
