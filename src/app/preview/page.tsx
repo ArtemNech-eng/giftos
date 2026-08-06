@@ -245,9 +245,7 @@ function ProfileScreen() {
             />
             <span className="absolute -bottom-1 -right-1 size-5 rounded-full border-2 border-white bg-[#8753ed]" />
           </span>
-          <button className="rounded-xl bg-gradient-to-r from-[#ff5d9a] to-[#8254ed] px-4 py-2.5 text-xs font-black text-white shadow-[0_7px_16px_rgba(160,75,213,.28)]">
-            Подписаться
-          </button>
+          <span className="w-20" />
         </div>
         <div className="mt-3 flex items-center gap-1.5">
           <h1 className="text-2xl font-black tracking-[-0.06em]">Настя</h1>
@@ -299,7 +297,10 @@ function ProfileScreen() {
             ),
           )}
         </div>
-        <button className="mt-2.5 flex w-full items-center justify-center gap-2 rounded-xl bg-[#f3edff] py-2.5 text-[11px] font-black text-[#7549d0]">
+        <button className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#ff5d9a] to-[#8254ed] py-3 text-[11px] font-black text-white shadow-[0_7px_16px_rgba(160,75,213,.25)]">
+          Подписаться · 99 ₽ / мес
+        </button>
+        <button className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-[#f3edff] py-2.5 text-[11px] font-black text-[#7549d0]">
           <Sparkles className="size-4" /> Отправить подарок
         </button>
       </section>
@@ -309,17 +310,28 @@ function ProfileScreen() {
         <span className="py-3 text-[#887b91]">Обо мне</span>
       </div>
       <section className="px-4 py-4">
-        <div className="flex items-center gap-3 rounded-2xl bg-gradient-to-r from-[#f4ebff] to-[#fff1f7] p-3">
-          <span className="grid size-11 place-items-center rounded-xl bg-[#ff4f8e] text-white">
-            <Radio className="size-5" />
-          </span>
-          <span className="grow">
-            <b className="block text-xs">Сейчас в эфире</b>
-            <small className="block text-[10px] text-[#7d7085]">
-              Общаемся и собираем идеи
-            </small>
-          </span>
-          <ChevronRight className="size-4 text-[#8753e6]" />
+        <div className="flex gap-2.5">
+          <div className="relative h-24 grow overflow-hidden rounded-xl bg-[#422e60]">
+            {/* eslint-disable-next-line @next/next/no-img-element -- generated synthetic preview media */}
+            <img
+              alt="Демо эфир Насти"
+              className="size-full object-cover opacity-75"
+              src="/preview/nastya-profile.jpg"
+            />
+            <span className="absolute left-2 top-2 rounded bg-[#ff3f79] px-1.5 py-0.5 text-[8px] font-black text-white">
+              LIVE · 3,4K
+            </span>
+            <span className="absolute bottom-2 left-2 text-[10px] font-black text-white">
+              Сейчас в эфире
+            </span>
+          </div>
+          <div className="flex w-28 flex-col justify-between rounded-xl bg-gradient-to-br from-[#f4ebff] to-[#fff1f7] p-3">
+            <Radio className="size-5 text-[#8753e6]" />
+            <span>
+              <b className="block text-[10px]">Общаемся</b>
+              <small className="block text-[9px] text-[#7d7085]">и собираем идеи</small>
+            </span>
+          </div>
         </div>
       </section>
       <AppNav active="Я" />
