@@ -4,6 +4,7 @@ import { MapPin, Plus, TrendingUp, Trophy, UsersRound } from "lucide-react";
 
 import { CityPulse, type CityPulseItem } from "@/components/city-pulse";
 import { EmptyState } from "@/components/empty-state";
+import { PlaceIcon } from "@/components/place-icon";
 import { requireUser } from "@/lib/auth";
 import { getSignedImageUrl } from "@/lib/media";
 
@@ -19,7 +20,7 @@ type PlaceRow = {
   id: string;
   name: string;
   description: string | null;
-  emoji: string;
+  icon_code: string;
   kind: "fixed" | "personal" | "temporary";
   creator_id: string | null;
   promoted_until: string | null;
@@ -99,7 +100,7 @@ export default async function PlacesPage() {
     const { data: rawPlaces } = await supabase
       .from("places")
       .select(
-        "id, name, description, emoji, kind, creator_id, promoted_until, pinned_until",
+        "id, name, description, icon_code, kind, creator_id, promoted_until, pinned_until",
       )
       .eq("city_id", profile.city_id)
       .eq("is_active", true)
@@ -195,7 +196,9 @@ export default async function PlacesPage() {
         <Link className="text-sm text-[#e3a3d5]" href="/feed">
           ← Лента
         </Link>
-        <h1 className="text-lg font-bold">📍 {cityName ?? "Город"}</h1>
+        <h1 className="flex items-center gap-1.5 text-lg font-bold">
+          <MapPin className="size-4 text-[#d68cff]" /> {cityName ?? "Город"}
+        </h1>
         <Link
           aria-label="Создать место"
           className="grid size-9 place-items-center rounded-full bg-gradient-to-r from-[#ff4b8a] to-[#7d45ff]"
@@ -260,8 +263,8 @@ export default async function PlacesPage() {
                 href={`/places/${place.id}` as Route}
                 key={place.id}
               >
-                <span className="grid size-12 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-[#3b193d] to-[#1f1a38] text-2xl">
-                  {place.emoji}
+                <span className="grid size-12 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-[#3b193d] to-[#1f1a38] text-[#e5c3ff]">
+                  <PlaceIcon className="size-6" code={place.icon_code} />
                 </span>
                 <span className="min-w-0 grow">
                   <span className="flex items-center gap-2">

@@ -19,7 +19,7 @@ export async function inviteLiveHostToPlace(formData: FormData) {
 
   const { data: place } = await supabase
     .from("places")
-    .select("id, creator_id, name, emoji, kind")
+    .select("id, creator_id, name, icon_code, kind")
     .eq("id", placeId)
     .eq("is_active", true)
     .maybeSingle();
@@ -42,7 +42,7 @@ export async function inviteLiveHostToPlace(formData: FormData) {
     type: "place_invite",
     entity_type: "place",
     entity_id: place.id,
-    payload: { place_name: `${place.emoji} ${place.name}` },
+    payload: { place_name: place.name },
   });
 
   revalidatePath(`/places/${place.id}`);
@@ -60,7 +60,7 @@ export async function inviteProfileToPlace(formData: FormData) {
 
   const { data: place } = await supabase
     .from("places")
-    .select("id, creator_id, name, emoji, kind")
+    .select("id, creator_id, name, icon_code, kind")
     .eq("id", placeId)
     .eq("is_active", true)
     .maybeSingle();
@@ -83,7 +83,7 @@ export async function inviteProfileToPlace(formData: FormData) {
     type: "place_invite",
     entity_type: "place",
     entity_id: place.id,
-    payload: { place_name: `${place.emoji} ${place.name}` },
+    payload: { place_name: place.name },
   });
 
   revalidatePath(`/places/${place.id}`);
@@ -101,7 +101,7 @@ export async function inviteToPlace(formData: FormData) {
 
   const { data: place } = await supabase
     .from("places")
-    .select("id, creator_id, name, emoji, kind")
+    .select("id, creator_id, name, icon_code, kind")
     .eq("id", placeId)
     .eq("is_active", true)
     .maybeSingle();
@@ -132,7 +132,7 @@ export async function inviteToPlace(formData: FormData) {
     type: "place_invite",
     entity_type: "place",
     entity_id: place.id,
-    payload: { place_name: `${place.emoji} ${place.name}` },
+    payload: { place_name: place.name },
   });
 
   revalidatePath(`/places/${place.id}`);
@@ -372,9 +372,22 @@ export async function createPlace(formData: FormData) {
   const { supabase, user } = await requireUser();
   const name = requiredText(formData.get("name"), 60);
   const description = optionalText(formData.get("description"), 500);
-  const emoji = optionalText(formData.get("emoji"), 8) || "🏠";
+  const iconCode = optionalText(formData.get("icon_code"), 20) || "place";
+  const validIconCodes = new Set([
+    "center",
+    "music",
+    "gaming",
+    "night",
+    "meet",
+    "sport",
+    "coffee",
+    "event",
+    "home",
+    "place",
+  ]);
   const kind = formData.get("kind") === "temporary" ? "temporary" : "personal";
   if (!name) throw new Error("Укажите название места.");
+  if (!validIconCodes.has(iconCode)) throw new Error("Выберите иконку места.");
 
   const { data: profile } = await supabase
     .from("profiles")
@@ -390,7 +403,7 @@ export async function createPlace(formData: FormData) {
       creator_id: user.id,
       name,
       description,
-      emoji,
+      icon_code: iconCode,
       kind,
     })
     .select("id")

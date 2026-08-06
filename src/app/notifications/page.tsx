@@ -194,13 +194,9 @@ function notificationCopy(notification: Notification, actor: Actor | undefined) 
       typeof notification.payload.place_name === "string"
         ? notification.payload.place_name
         : "место";
-    const placeEmoji =
-      typeof notification.payload.place_emoji === "string"
-        ? notification.payload.place_emoji
-        : "📍";
     return {
       icon: MessageCircle,
-      title: `${actorName} написал(а) в чат места ${placeEmoji} «${placeName}»`,
+      title: `${actorName} написал(а) в чат места «${placeName}»`,
       href: notification.entity_id
         ? (`/places/${notification.entity_id}` as Route)
         : "/places",

@@ -16,6 +16,7 @@ import {
 } from "@/app/places/actions";
 import { LivePlaceChat } from "@/components/live-place-chat";
 import { PlaceGiftButton } from "@/components/place-gift-button";
+import { PlaceIcon } from "@/components/place-icon";
 import { PlaceInviteButton } from "@/components/place-invite-button";
 import { ReportForm } from "@/components/report-form";
 import { requireUser } from "@/lib/auth";
@@ -38,7 +39,7 @@ export default async function PlacePage({
   const { data: place } = await supabase
     .from("places")
     .select(
-      "id, city_id, creator_id, name, description, emoji, kind, created_at, popularity_score, theme_id, emblem_id, place_themes!left(gradient), place_emblems!left(emoji)",
+      "id, city_id, creator_id, name, description, icon_code, kind, created_at, popularity_score, theme_id, emblem_id, place_themes!left(gradient), place_emblems!left(emoji)",
     )
     .eq("id", id)
     .eq("is_active", true)
@@ -132,7 +133,7 @@ export default async function PlacePage({
     .limit(8);
   const { data: myInvitePlaces } = await supabase
     .from("places")
-    .select("id, name, emoji")
+    .select("id, name, icon_code")
     .eq("creator_id", user.id)
     .eq("is_active", true)
     .neq("kind", "fixed")
@@ -196,8 +197,10 @@ export default async function PlacePage({
         >
           <ArrowLeft className="size-5" />
         </Link>
-        <h1 className="text-lg font-bold">
-          {place.emoji} {place.name} {placeEmblem ?? ""}
+        <h1 className="flex items-center gap-2 text-lg font-bold">
+          <PlaceIcon className="size-5 text-[#cbb8ff]" code={place.icon_code} />
+          {place.name}
+          {placeEmblem ?? ""}
         </h1>
         <ReportForm
           returnTo={`/places/${place.id}`}
@@ -289,7 +292,7 @@ export default async function PlacePage({
                     places={(myInvitePlaces ?? []).map((p) => ({
                       id: p.id,
                       name: p.name,
-                      emoji: p.emoji,
+                      icon_code: p.icon_code,
                     }))}
                     profileId={person.id}
                     returnTo={`/places/${place.id}`}

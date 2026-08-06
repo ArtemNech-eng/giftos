@@ -105,7 +105,7 @@ export default async function LiveRoomPage({
     supabase.from("live_room_donations").select("amount_minor").eq("room_id", room.id),
     supabase
       .from("places")
-      .select("id, name, emoji, kind")
+      .select("id, name, icon_code, kind")
       .eq("creator_id", user.id)
       .eq("is_active", true)
       .neq("kind", "fixed")
@@ -462,7 +462,7 @@ export default async function LiveRoomPage({
                 </option>
                 {(myPlaces ?? []).map((place) => (
                   <option key={place.id} value={place.id}>
-                    {place.emoji} {place.name}
+                    {place.name}
                   </option>
                 ))}
               </select>

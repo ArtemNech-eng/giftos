@@ -4,6 +4,7 @@ import { useState } from "react";
 import { UserPlus } from "lucide-react";
 
 import { inviteProfileToPlace } from "@/app/places/actions";
+import { PlaceIcon } from "@/components/place-icon";
 
 /**
  * «Позвать в тусовку» button on a person's card inside a place: pick one
@@ -16,7 +17,7 @@ export function PlaceInviteButton({
 }: {
   profileId: string;
   returnTo: string;
-  places: Array<{ id: string; name: string; emoji: string }>;
+  places: Array<{ id: string; name: string; icon_code: string }>;
 }) {
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -57,7 +58,10 @@ export function PlaceInviteButton({
                 onClick={() => void submit(place.id)}
                 type="button"
               >
-                <span className="text-base">{place.emoji}</span>
+                <PlaceIcon
+                  className="size-4 shrink-0 text-[#d9b7ff]"
+                  code={place.icon_code}
+                />
                 <span className="truncate font-semibold">{place.name}</span>
               </button>
             ))}
