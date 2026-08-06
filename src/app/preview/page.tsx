@@ -1559,56 +1559,72 @@ function StoryScreen() {
 
 function OnboardingScreen() {
   return (
-    <div className="min-h-[730px] bg-[#fbf9fe] p-5 text-[#251d31]">
-      <Mark />
-      <h1 className="mt-8 text-3xl font-black leading-[0.9] tracking-[-0.07em]">
-        Добро пожаловать
-        <br />в Хочу также!
-      </h1>
-      <p className="mt-4 max-w-60 text-[12px] leading-5 text-[#70647a]">
-        Ты можешь не только смотреть, но и собирать свою аудиторию здесь.
-      </p>
-      <div className="mt-7 space-y-3">
-        {[
-          { icon: UserRound, text: "Создай профиль" },
-          { icon: MessageCircle, text: "Расскажи о себе" },
-          { icon: Radio, text: "Начни эфир или общайся" },
-          { icon: Sparkles, text: "Получай поддержку и донаты" },
-        ].map(({ icon: Icon, text }) => (
-          <span className="flex items-center gap-3 text-[11px] font-bold" key={text}>
-            <span className="grid size-8 place-items-center rounded-lg bg-[#f0e7ff] text-[#8753e6]">
-              <Icon className="size-4" />
-            </span>
-            {text}
-          </span>
-        ))}
+    <div className="min-h-[730px] bg-[#fbf9fe] px-4 pb-5 pt-5 text-[#251d31]">
+      <header className="flex items-center justify-between">
+        <Mark />
+        <span className="text-center">
+          <small className="block text-[9px] font-black uppercase tracking-[0.13em] text-[#8c7e94]">
+            Первый вход
+          </small>
+          <b className="mt-0.5 block text-sm">Соберём твой круг</b>
+        </span>
+        <span className="grid size-10 place-items-center rounded-full bg-[#f0e9ff] text-xs font-black text-[#7549d0]">
+          1/3
+        </span>
+      </header>
+      <div className="mt-5 flex gap-1.5">
+        <span className="h-1.5 grow rounded-full bg-[#8254ed]" />
+        <span className="h-1.5 grow rounded-full bg-[#e8e1ed]" />
+        <span className="h-1.5 grow rounded-full bg-[#e8e1ed]" />
       </div>
-      <section className="mt-8 overflow-hidden rounded-[1.7rem] bg-gradient-to-br from-[#f3e8ff] to-[#fff0f7] p-4">
-        <div className="flex items-center gap-3">
-          <span className="relative grid size-14 place-items-center overflow-hidden rounded-2xl bg-[#8753ed]">
-            {/* eslint-disable-next-line @next/next/no-img-element -- generated synthetic preview media */}
-            <img
-              alt="Демо автора"
-              className="size-full object-cover"
-              src="/preview/max-live.jpg"
-            />
+      <section className="mt-5 rounded-[1.7rem] bg-gradient-to-br from-[#332452] via-[#58407f] to-[#8069d9] p-5 text-white shadow-[0_14px_30px_rgba(63,37,98,.2)]">
+        <span className="bg-white/14 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.08em] text-[#fbd7e7]">
+          <MapPin className="size-3.5" /> Твоя точка входа
+        </span>
+        <h1 className="mt-3 text-3xl font-black leading-[0.88] tracking-[-0.075em]">
+          ЗДЕСЬ НАЧИНАЕТСЯ
+          <br />
+          ТВОЙ ГОРОД.
+        </h1>
+        <p className="mt-3 max-w-64 text-[10px] leading-5 text-white/75">
+          Выбери город, чтобы видеть своих людей, места, эфиры и события. Его можно
+          изменить.
+        </p>
+      </section>
+      <section className="border-[#2c2036]/9 mt-5 rounded-[1.5rem] border bg-white p-4 shadow-[0_8px_22px_rgba(69,43,94,.05)]">
+        <b className="block text-xs">Твой город</b>
+        <div className="mt-2 flex items-center gap-2 rounded-xl border border-[#2c2036]/10 bg-[#fbf9fe] px-3 py-3">
+          <MapPin className="size-4 text-[#8753e6]" />
+          <span className="grow text-[11px] font-bold text-[#5f5269]">Будённовск</span>
+          <ChevronRightPreview />
+        </div>
+        <div className="mt-4 flex items-center gap-3 rounded-2xl bg-[#fbf9fe] p-3">
+          <span className="grid size-9 place-items-center rounded-xl bg-[#f0e9ff] text-[#8753e6]">
+            <MapPin className="size-4" />
           </span>
-          <span>
-            <b className="block text-xs">Твой профиль может выглядеть так</b>
-            <small className="block text-[10px] text-[#7c6d85]">
-              Люди, эфиры, интересы и аудитория
+          <span className="grow">
+            <b className="block text-[10px]">Показывать мой город</b>
+            <small className="block text-[9px] leading-4 text-[#81748a]">
+              Точный адрес и геолокация не показываются.
             </small>
+          </span>
+          <span className="flex h-5 w-9 rounded-full bg-[#7c55dc] p-0.5">
+            <span className="block size-4 translate-x-4 rounded-full bg-white" />
           </span>
         </div>
       </section>
-      <button className="mt-8 flex w-full items-center justify-center rounded-2xl bg-gradient-to-r from-[#ff5d9a] to-[#8254ed] py-3.5 text-sm font-black text-white shadow-[0_9px_20px_rgba(160,75,213,.24)]">
-        Создать профиль
+      <button className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#ff5d9a] to-[#8254ed] py-3.5 text-sm font-black text-white shadow-[0_10px_22px_rgba(160,75,213,.24)]">
+        Продолжить <ChevronRight className="size-4" />
       </button>
-      <button className="mt-3 w-full text-center text-[10px] font-bold text-[#8753e6]">
-        Сделаю позже
-      </button>
+      <p className="mt-4 flex items-center justify-center gap-1.5 text-center text-[9px] leading-4 text-[#81748a]">
+        <LockKeyholePreview /> Настройки приватности будут на следующем шаге.
+      </p>
     </div>
   );
+}
+
+function LockKeyholePreview() {
+  return <Check className="size-3.5 text-[#8753e6]" />;
 }
 
 export default async function PreviewPage({
