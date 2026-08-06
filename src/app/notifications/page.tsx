@@ -189,6 +189,24 @@ function notificationCopy(notification: Notification, actor: Actor | undefined) 
     };
   }
 
+  if (notification.type === "place_message") {
+    const placeName =
+      typeof notification.payload.place_name === "string"
+        ? notification.payload.place_name
+        : "место";
+    const placeEmoji =
+      typeof notification.payload.place_emoji === "string"
+        ? notification.payload.place_emoji
+        : "📍";
+    return {
+      icon: MessageCircle,
+      title: `${actorName} написал(а) в чат места ${placeEmoji} «${placeName}»`,
+      href: notification.entity_id
+        ? (`/places/${notification.entity_id}` as Route)
+        : "/places",
+    };
+  }
+
   if (notification.type === "place_gift") {
     const giftLabel =
       typeof notification.payload.gift_label === "string"
