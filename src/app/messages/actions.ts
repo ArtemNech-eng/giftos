@@ -14,6 +14,15 @@ export async function sendDirectMessage(formData: FormData) {
   const body = requiredText(formData.get("body"), 2000);
   if (!conversationId || !body) throw new Error("Введите сообщение.");
 
+  // Anti-spam: at most 20 messages per minute per sender.
+  const { count: recentCount } = await supabase
+    .from("messages")
+    .select("*", { count: "exact", head: true })
+    .eq("sender_id", user.id)
+    .gte("created_at", new Date(Date.now() - 60_000).toISOString());
+  if ((recentCount ?? 0) >= 20)
+    throw new Error("Слишком часто. Подождите минуту и попробуйте снова.");
+
   const { error } = await supabase
     .from("messages")
     .insert({ conversation_id: conversationId, sender_id: user.id, body });

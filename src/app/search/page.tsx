@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Route } from "next";
 import {
+  CalendarDays,
   Compass,
   MessageSquareText,
   Search as SearchIcon,
@@ -72,6 +73,8 @@ export default async function SearchPage({
   let people: PersonResult[] = [];
   let interestPeople: PersonResult[] = [];
   let comments: CommentResult[] = [];
+  let events: Array<{ id: string; title: string; starts_at: string; scope: string }> =
+    [];
 
   if (hasSupabaseEnvironment() && query.length >= 2) {
     const supabase = await createClient();
@@ -96,6 +99,7 @@ export default async function SearchPage({
       personResponse,
       interestResponse,
       commentResponse,
+      eventResponse,
     ] = await Promise.all([
       matchedCategory
         ? fundraiserQuery.eq("category_slug", matchedCategory.slug)
@@ -143,6 +147,13 @@ export default async function SearchPage({
           .order("created_at", { ascending: false })
           .limit(8),
       ]),
+      supabase
+        .from("events")
+        .select("id, title, starts_at, scope")
+        .eq("is_cancelled", false)
+        .ilike("title", `%${query}%`)
+        .order("starts_at", { ascending: true })
+        .limit(8),
     ]);
 
     fundraisers = (fundraiserResponse.data ?? []) as FundraiserResult[];
@@ -164,6 +175,19 @@ export default async function SearchPage({
     }
 
     const [fundraiserComments, wishComments] = commentResponse;
+    events = (
+      (eventResponse.data ?? []) as Array<{
+        id: string;
+        title: string;
+        starts_at: string;
+        scope: string;
+      }>
+    ).map((event) => ({
+      id: event.id,
+      title: event.title,
+      starts_at: event.starts_at,
+      scope: event.scope,
+    }));
     const rawComments: CommentResult[] = [
       ...(fundraiserComments.data ?? []).flatMap((row) => {
         const fundraiser = row.fundraisers?.[0];
@@ -207,7 +231,12 @@ export default async function SearchPage({
       .slice(0, 8);
   }
 
-  const total = fundraisers.length + wishes.length + people.length + comments.length;
+  const total =
+    fundraisers.length +
+    wishes.length +
+    people.length +
+    comments.length +
+    events.length;
 
   return (
     <>
@@ -455,6 +484,36 @@ export default async function SearchPage({
                       </p>
                       <p className="mt-4 truncate text-sm font-bold text-[#bd3e66]">
                         {comment.targetTitle}
+                      </p>
+                    </Link>
+                  ))}
+                </div>
+              </section>
+            )}
+            {events.length > 0 && (
+              <section>
+                <div className="mb-4 flex items-center gap-2">
+                  <CalendarDays className="size-5 text-[#d34872]" />
+                  <h2 className="text-xl font-bold">События</h2>
+                </div>
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {events.map((event) => (
+                    <Link
+                      className="surface rounded-2xl p-5 transition hover:-translate-y-0.5 hover:shadow-glow"
+                      href={`/events/${event.id}` as Route}
+                      key={event.id}
+                    >
+                      <span className="text-3xl">
+                        {event.scope === "open" ? "🌎" : "📍"}
+                      </span>
+                      <p className="mt-3 font-bold">{event.title}</p>
+                      <p className="mt-2 text-sm text-[#826c73]">
+                        {new Intl.DateTimeFormat("ru-RU", {
+                          day: "numeric",
+                          month: "short",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        }).format(new Date(event.starts_at))}
                       </p>
                     </Link>
                   ))}
