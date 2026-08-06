@@ -49,6 +49,11 @@ export function CityPulseRefresh({ cityId }: { cityId: string | null | undefined
         { event: "*", schema: "public", table: "events" },
         refresh,
       )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "city_social_moments" },
+        refresh,
+      )
       .subscribe();
 
     return () => {

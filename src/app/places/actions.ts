@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 
 import { requireUser } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { recordCitySocialMoment } from "@/lib/city-social-moments";
 import { optionalText, requiredText } from "@/lib/validation";
 
 /** Invite the live room host into one of my places. */
@@ -282,6 +283,14 @@ export async function sendPlaceGift(formData: FormData) {
   if (ledgerError)
     throw new Error(`Не удалось начислить тестовый доход: ${ledgerError.message}`);
 
+  await recordCitySocialMoment({
+    kind: "place_gift",
+    actorId: user.id,
+    subjectId: recipientId,
+    placeId,
+    giftCode: gift.code,
+  });
+
   await admin.from("notifications").insert({
     recipient_id: recipientId,
     actor_id: user.id,
@@ -358,13 +367,27 @@ export async function joinPlace(formData: FormData) {
   const placeId = requiredText(formData.get("place_id"), 100);
   if (!placeId) return;
 
+  const { data: existing } = await supabase
+    .from("place_members")
+    .select("place_id")
+    .eq("place_id", placeId)
+    .eq("profile_id", user.id)
+    .maybeSingle();
   await supabase
     .from("place_members")
     .upsert(
       { place_id: placeId, profile_id: user.id, role: "member" },
       { onConflict: "place_id,profile_id" },
     );
+  if (!existing) {
+    await recordCitySocialMoment({
+      kind: "place_join",
+      actorId: user.id,
+      placeId,
+    });
+  }
   revalidatePath(`/places/${placeId}`);
+  revalidatePath("/places");
   redirect(`/places/${placeId}` as Route);
 }
 

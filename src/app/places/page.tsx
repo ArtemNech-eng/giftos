@@ -108,22 +108,47 @@ export default async function PlacesPage() {
       .eq("city_id", profile.city_id)
       .order("created_at", { ascending: false })
       .limit(8);
+    const pulseRows = (rawPulse ?? []) as Array<{
+      city_id: string;
+      kind: CityPulseItem["kind"];
+      actor_id: string;
+      actor_name: string;
+      actor_username: string;
+      actor_avatar_path: string | null;
+      target_id: string;
+      target_name: string;
+      target_emoji: string;
+      target_slug: string | null;
+      created_at: string;
+    }>;
+    const { data: rawSocialMoments } = await supabase
+      .from("public_city_social_moments")
+      .select(
+        "city_id, kind, actor_id, actor_name, actor_username, actor_avatar_path, target_id, target_name, target_slug, created_at",
+      )
+      .eq("city_id", profile.city_id)
+      .order("created_at", { ascending: false })
+      .limit(8);
+    const socialRows = (rawSocialMoments ?? []) as Array<{
+      city_id: string;
+      kind: CityPulseItem["kind"];
+      actor_id: string;
+      actor_name: string;
+      actor_username: string;
+      actor_avatar_path: string | null;
+      target_id: string | null;
+      target_name: string;
+      target_slug: string | null;
+      created_at: string;
+    }>;
+    const allPulseRows = [
+      ...pulseRows,
+      ...socialRows.map((item) => ({ ...item, target_emoji: "" })),
+    ].sort(
+      (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+    );
     cityPulse = await Promise.all(
-      (
-        (rawPulse ?? []) as Array<{
-          city_id: string;
-          kind: CityPulseItem["kind"];
-          actor_id: string;
-          actor_name: string;
-          actor_username: string;
-          actor_avatar_path: string | null;
-          target_id: string;
-          target_name: string;
-          target_emoji: string;
-          target_slug: string | null;
-          created_at: string;
-        }>
-      ).map(async (item) => ({
+      allPulseRows.slice(0, 8).map(async (item) => ({
         city_id: item.city_id,
         kind: item.kind,
         actor_id: item.actor_id,
@@ -133,7 +158,7 @@ export default async function PlacesPage() {
           bucket: "avatars",
           path: item.actor_avatar_path,
         }),
-        target_id: item.target_id,
+        target_id: item.target_id ?? item.actor_id,
         target_name: item.target_name,
         target_emoji: item.target_emoji,
         target_slug: item.target_slug,

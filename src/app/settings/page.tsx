@@ -19,7 +19,7 @@ export default async function SettingsPage() {
   const { data: profile } = await supabase
     .from("profiles")
     .select(
-      "username, display_name, bio, city, show_city, profile_visibility, allow_direct_messages",
+      "username, display_name, bio, city, show_city, profile_visibility, allow_direct_messages, share_city_moments",
     )
     .eq("id", user.id)
     .maybeSingle();
@@ -102,6 +102,21 @@ export default async function SettingsPage() {
             type="checkbox"
           />
           Показывать город в профиле
+        </label>
+        <label className="flex cursor-pointer items-start gap-2 text-sm">
+          <input
+            className="mt-0.5 accent-[#ff4b8a]"
+            defaultChecked={profile?.share_city_moments ?? false}
+            name="share_city_moments"
+            type="checkbox"
+          />
+          <span>
+            <span className="block">Показывать мои публичные моменты в городе</span>
+            <span className="mt-0.5 block text-xs leading-5 text-[#a9a1b4]">
+              Вступления в тусовки, публичные подарки и поддержка эфира появятся только
+              когда все участники разрешили это в настройках.
+            </span>
+          </span>
         </label>
         <label className="flex cursor-pointer items-center gap-2 text-sm">
           <input

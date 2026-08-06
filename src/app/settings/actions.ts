@@ -14,6 +14,7 @@ export async function updateProfileSettings(formData: FormData) {
   const bio = optionalText(formData.get("bio"), 500);
   const city = optionalText(formData.get("city"), 100);
   const showCity = formData.get("show_city") === "on";
+  const shareCityMoments = formData.get("share_city_moments") === "on";
   const allowDirectMessages = formData.get("allow_direct_messages") === "on";
   const profileVisibility =
     formData.get("profile_visibility") === "private" ? "private" : "public";
@@ -35,6 +36,7 @@ export async function updateProfileSettings(formData: FormData) {
       city,
       city_id: cityId,
       show_city: showCity,
+      share_city_moments: shareCityMoments,
       allow_direct_messages: allowDirectMessages,
       profile_visibility: profileVisibility,
       updated_at: new Date().toISOString(),

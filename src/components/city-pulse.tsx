@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Route } from "next";
 import {
   CalendarDays,
+  Gift,
   MapPin,
   MessageCircle,
   Radio,
@@ -11,7 +12,17 @@ import {
 
 export type CityPulseItem = {
   city_id: string;
-  kind: "presence" | "place_message" | "live" | "event" | "ambassador";
+  kind:
+    | "presence"
+    | "place_message"
+    | "live"
+    | "event"
+    | "ambassador"
+    | "place_join"
+    | "place_gift"
+    | "profile_gift"
+    | "live_gift"
+    | "live_donation";
   actor_id: string;
   actor_name: string;
   actor_username: string;
@@ -57,6 +68,33 @@ function copyForPulse(item: CityPulseItem) {
         href: `/u/${item.actor_username}` as Route,
         label: "новый амбассадор",
       };
+    case "place_join":
+      return {
+        action: `присоединился(-ась) к «${item.target_name}»`,
+        href: `/places/${item.target_id}` as Route,
+        label: "новый участник тусовки",
+      };
+    case "place_gift":
+      return {
+        action: `отправил(а) подарок ${item.target_name}`,
+        href: `/places/${item.target_id}` as Route,
+        label: "публичный подарок",
+      };
+    case "profile_gift":
+      return {
+        action: `отправил(а) подарок ${item.target_name}`,
+        href: `/u/${item.actor_username}` as Route,
+        label: "публичный подарок",
+      };
+    case "live_gift":
+    case "live_donation":
+      return {
+        action: `поддержал(а) эфир «${item.target_name}»`,
+        href: item.target_slug
+          ? (`/live/${item.target_slug}` as Route)
+          : ("/feed" as Route),
+        label: "поддержка эфира",
+      };
   }
 }
 
@@ -64,7 +102,8 @@ function pulseIcon(kind: CityPulseItem["kind"]) {
   if (kind === "presence") return MapPin;
   if (kind === "place_message") return MessageCircle;
   if (kind === "event") return CalendarDays;
-  if (kind === "live") return Radio;
+  if (kind === "live" || kind === "live_gift" || kind === "live_donation") return Radio;
+  if (kind === "place_gift" || kind === "profile_gift") return Gift;
   return Sparkles;
 }
 

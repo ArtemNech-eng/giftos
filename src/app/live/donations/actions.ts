@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 
 import { requireUser } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { recordCitySocialMoment } from "@/lib/city-social-moments";
 import { requiredText } from "@/lib/validation";
 
 export async function sendTestLiveDonation(formData: FormData) {
@@ -58,6 +59,13 @@ export async function sendTestLiveDonation(formData: FormData) {
     },
     { onConflict: "source_type,source_id" },
   );
+
+  await recordCitySocialMoment({
+    kind: "live_donation",
+    actorId: user.id,
+    subjectId: room.host_id,
+    liveRoomId: room.id,
+  });
 
   // No redirect: the donation streams to every participant through Realtime
   // and is rendered as an overlay banner over the media area.

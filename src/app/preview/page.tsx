@@ -233,9 +233,20 @@ function FeedScreen() {
 
 function CityScreen() {
   const pulse = [
-    { name: "Настя", text: "общается в «Центре»", type: "сейчас" },
-    { name: "Макс", text: "начал эфир из «Музыки»", type: "LIVE" },
-    { name: "Влад", text: "поднялся на 3 места в рейтинге", type: "↑ рейтинг" },
+    { name: "Настя", text: "общается в «Центре»", type: "сейчас", gift: false },
+    { name: "Макс", text: "начал эфир из «Музыки»", type: "LIVE", gift: false },
+    {
+      name: "Лера",
+      text: "подарила Максу подарок в «Музыке»",
+      type: "момент",
+      gift: true,
+    },
+    {
+      name: "Влад",
+      text: "поднялся на 3 места в рейтинге",
+      type: "↑ рейтинг",
+      gift: false,
+    },
   ];
   return (
     <div className="flex min-h-[730px] flex-col bg-[#fbf9fe] text-[#251d31]">
@@ -291,11 +302,17 @@ function CityScreen() {
                   {item.text}
                 </small>
               </span>
-              <span
-                className={`rounded-full px-2 py-1 text-[8px] font-black ${index === 1 ? "bg-[#ffe5ef] text-[#d54279]" : "bg-[#f1e9ff] text-[#7549d0]"}`}
-              >
-                {item.type}
-              </span>
+              {item.gift ? (
+                <span className="grid size-8 place-items-center rounded-xl bg-[#fff0f6] text-[#d54279]">
+                  <BrandGiftIcon className="size-5" code="heart" />
+                </span>
+              ) : (
+                <span
+                  className={`rounded-full px-2 py-1 text-[8px] font-black ${index === 1 ? "bg-[#ffe5ef] text-[#d54279]" : "bg-[#f1e9ff] text-[#7549d0]"}`}
+                >
+                  {item.type}
+                </span>
+              )}
             </div>
           ))}
         </div>
