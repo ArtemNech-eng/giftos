@@ -231,7 +231,7 @@ export default async function PlacesPage() {
       </Link>
       <Link
         className="mt-3 flex items-center justify-center gap-2 text-sm font-semibold text-[#ffd35e]"
-        href="/places/leaderboard"
+        href="/city/rankings"
       >
         <Trophy className="size-4" /> Рейтинги города
       </Link>

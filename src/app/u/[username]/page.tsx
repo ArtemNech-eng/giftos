@@ -242,6 +242,10 @@ export default async function ProfilePage({
     city_size: number;
     followers: number;
   } | null;
+  const { data: repRoles } = await supabase.rpc("reputation_roles", {
+    p_profile_id: profile.id,
+  });
+  const reputationRoles = (repRoles ?? []) as string[];
   const level = {
     star: { label: "💎 Звезда", color: "text-[#e17dff] border-[#e17dff]/40" },
     author: { label: "🎤 Автор", color: "text-[#7fd8ff] border-[#7fd8ff]/40" },
@@ -507,6 +511,18 @@ export default async function ProfilePage({
               <p className="mt-2 text-xs text-[#8df0b4]">
                 Максимальный уровень — вы звезда!
               </p>
+            )}
+            {reputationRoles.length > 0 && (
+              <div className="mt-3 flex flex-wrap gap-1.5">
+                {reputationRoles.map((role) => (
+                  <span
+                    className="rounded-full border border-[#ffd35e]/40 bg-[#2a2215] px-2 py-0.5 text-[10px] font-bold text-[#ffd35e]"
+                    key={role}
+                  >
+                    {role}
+                  </span>
+                ))}
+              </div>
             )}
           </div>
         )}
