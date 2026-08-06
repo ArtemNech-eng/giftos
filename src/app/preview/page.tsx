@@ -1292,9 +1292,9 @@ function ProfileScreen() {
 function CollectiblesScreen() {
   const directions = [
     {
-      title: "Скульптуры и панно · выбрано",
-      note: "Доработанный единый set: керамические фигуры, панно и один красный акцент.",
-      src: "/preview/collectibles/objects-01-selected.jpg",
+      title: "Игровые артефакты · выбрано",
+      note: "Доработанный единый set: десять редких игровых предметов в gallery-подаче.",
+      src: "/preview/collectibles/game-artifacts-selected.jpg",
       tone: "bg-[#f0e9ff] text-[#7549d0]",
     },
     {
