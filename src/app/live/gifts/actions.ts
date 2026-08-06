@@ -1,8 +1,6 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import type { Route } from "next";
-import { redirect } from "next/navigation";
 
 import { requireUser } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -64,7 +62,8 @@ export async function sendTestLiveGift(formData: FormData) {
     { onConflict: "source_type,source_id" },
   );
 
+  // No redirect: the gift event streams to every participant through
+  // Realtime and is rendered as a story-like overlay on the room page.
   revalidatePath(`/live/${slug}`);
   revalidatePath("/creator/earnings");
-  redirect(`/live/${slug}?gift=sent` as Route);
 }

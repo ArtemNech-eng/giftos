@@ -66,6 +66,8 @@ export async function postFundraiserComment(formData: FormData) {
     author_id: user.id,
     body,
   });
+  if (error?.message.includes("comment_rate_limit"))
+    throw new Error("Слишком много сообщений — подождите минуту.");
   if (error) throw new Error(`Не удалось отправить сообщение: ${error.message}`);
 
   revalidatePath(`/fundraisers/${fundraiserSlug}`);

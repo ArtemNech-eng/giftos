@@ -28,7 +28,18 @@ export async function generateMetadata({
     title: `${post.title} — «Хочу также»`,
     description,
     alternates: { canonical: `/posts/${slug}` },
-    openGraph: { title: post.title, description, type: "article" },
+    openGraph: {
+      title: post.title,
+      description,
+      type: "article",
+      images: [
+        {
+          url: `/og?type=post&title=${encodeURIComponent(post.title)}&subtitle=${encodeURIComponent(description.slice(0, 160))}`,
+          width: 1200,
+          height: 630,
+        },
+      ],
+    },
   };
 }
 

@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 
 import { requireUser } from "@/lib/auth";
+import { awardCityPoints } from "@/lib/city-battle";
 import { isUploadedFile, uploadOwnedImage } from "@/lib/media";
 import {
   optionalText,
@@ -29,6 +30,15 @@ export async function completeOnboarding(formData: FormData) {
   if (!displayName) throw new Error("Укажите имя, которое увидят другие пользователи.");
   if (interestSlugs.length === 0) throw new Error("Выберите хотя бы один интерес.");
 
+  // Normalize the free-text city to a stable catalog entry (city_id).
+  let cityId: string | null = null;
+  if (city) {
+    const { data: resolved } = await supabase.rpc("resolve_city", {
+      p_city: city,
+    });
+    cityId = resolved ?? null;
+  }
+
   let avatarPath: string | undefined;
   const avatar = formData.get("avatar");
   if (isUploadedFile(avatar)) {
@@ -44,6 +54,7 @@ export async function completeOnboarding(formData: FormData) {
     display_name: displayName,
     bio,
     city,
+    city_id: cityId,
     show_city: formData.get("show_city") === "on",
     allow_direct_messages: formData.get("allow_direct_messages") === "on",
     profile_visibility:
@@ -78,6 +89,9 @@ export async function completeOnboarding(formData: FormData) {
   );
   if (interestsError)
     throw new Error(`Не удалось сохранить интересы: ${interestsError.message}`);
+
+  // City battle: qualified action (profile completed).
+  await awardCityPoints(supabase, "profile_completed", user.id);
 
   revalidatePath("/");
   revalidatePath(`/u/${username}`);

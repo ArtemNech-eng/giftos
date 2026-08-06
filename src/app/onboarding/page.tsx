@@ -1,10 +1,12 @@
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 import { CheckCircle2 } from "lucide-react";
 
 import { completeOnboarding } from "@/app/onboarding/actions";
 import { FieldLabel, inputClassName, textAreaClassName } from "@/components/form-field";
 import { SubmitButton } from "@/components/submit-button";
 import { CATEGORIES } from "@/lib/constants";
+import { detectCityByIp } from "@/lib/geo";
 import { requireUser } from "@/lib/auth";
 
 export const metadata = {
@@ -23,6 +25,28 @@ export default async function OnboardingPage() {
     .maybeSingle();
 
   if (profile?.onboarding_completed_at) redirect("/feed");
+
+  // Prefill the city from the visitor's IP (best-effort, Dadata).
+  let detectedCity: string | null = null;
+  if (!profile?.city) {
+    const headerList = await headers();
+    const forwarded =
+      headerList.get("x-forwarded-for") ?? headerList.get("x-real-ip") ?? "";
+    const clientIp = forwarded.split(",")[0]?.trim();
+    if (clientIp) {
+      const geo = await detectCityByIp(clientIp);
+      detectedCity = geo?.city ?? null;
+    }
+  }
+
+  const { data: cities } = await supabase
+    .from("cities")
+    .select("name")
+    .eq("is_active", true)
+    .order("sort_order", { ascending: true })
+    .order("name", { ascending: true })
+    .limit(50);
+  const cityNames = (cities ?? []).map((city) => city.name);
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-10 sm:px-6 sm:py-14">
@@ -102,12 +126,23 @@ export default async function OnboardingPage() {
             </FieldLabel>
             <input
               className={inputClassName}
-              defaultValue={profile?.city ?? ""}
+              defaultValue={profile?.city ?? detectedCity ?? ""}
               id="city"
+              list="city-options"
               maxLength={100}
               name="city"
-              placeholder="Казань"
+              placeholder="Будённовск"
             />
+            {detectedCity && !profile?.city && (
+              <p className="mt-1.5 text-xs text-[#8a7d95]">
+                📍 Определили город по IP: {detectedCity}. Можно изменить.
+              </p>
+            )}
+            <datalist id="city-options">
+              {cityNames.map((name) => (
+                <option key={name} value={name} />
+              ))}
+            </datalist>
             <label className="mt-2 flex cursor-pointer items-center gap-2 text-sm text-[#725c63]">
               <input
                 defaultChecked={profile?.show_city ?? false}

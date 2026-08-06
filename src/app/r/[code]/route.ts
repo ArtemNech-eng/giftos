@@ -13,6 +13,16 @@ export function GET(
       sameSite: "lax",
       path: "/",
     });
+    // City tag from the invite link («bring a friend to Budyonnovsk»).
+    const city =
+      url.searchParams.get("city") ?? request.nextUrl.searchParams.get("city");
+    if (city) {
+      response.cookies.set("ht_city", city, {
+        maxAge: 60 * 60 * 24 * 30,
+        sameSite: "lax",
+        path: "/",
+      });
+    }
     return response;
   });
 }

@@ -5,7 +5,18 @@ export function ReportForm({
   targetId,
   returnTo,
 }: {
-  targetType: "profile" | "wish" | "fundraiser" | "comment" | "message";
+  targetType:
+    | "profile"
+    | "wish"
+    | "fundraiser"
+    | "comment"
+    | "message"
+    | "story"
+    | "wish_comment"
+    | "live_room"
+    | "place"
+    | "place_message"
+    | "live_message";
   targetId: string;
   returnTo: string;
 }) {

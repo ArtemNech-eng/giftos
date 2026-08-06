@@ -1,9 +1,22 @@
 import Link from "next/link";
 import type { Route } from "next";
-import { Bell, CheckCheck, Gift, Heart, MessageCircle, UserPlus } from "lucide-react";
+import {
+  Bell,
+  CalendarDays,
+  CalendarX2,
+  CheckCheck,
+  Gift,
+  Heart,
+  MapPin,
+  MessageCircle,
+  Radio,
+  Sparkles,
+  UserPlus,
+} from "lucide-react";
 
 import { markAllNotificationsRead } from "@/app/social/actions";
 import { EmptyState } from "@/components/empty-state";
+import { PushNotificationButton } from "@/components/push-notification-button";
 import { SiteHeader } from "@/components/site-header";
 import { requireUser } from "@/lib/auth";
 import { formatRubles } from "@/lib/money";
@@ -59,6 +72,40 @@ function notificationCopy(notification: Notification, actor: Actor | undefined) 
     };
   }
 
+  if (notification.type === "fundraiser_gift") {
+    const slug =
+      typeof notification.payload.slug === "string" ? notification.payload.slug : null;
+    return {
+      icon: Gift,
+      title: `${actorName} отправил(а) подарок в ваш сбор`,
+      href: slug ? (`/fundraisers/${slug}` as Route) : "/notifications",
+    };
+  }
+
+  if (notification.type === "fundraiser_follow") {
+    const slug =
+      typeof notification.payload.slug === "string" ? notification.payload.slug : null;
+    return {
+      icon: Bell,
+      title: `${actorName} теперь следит за вашим сбором`,
+      href: slug ? (`/fundraisers/${slug}` as Route) : "/notifications",
+    };
+  }
+
+  if (notification.type === "wish_also_want") {
+    const wishTitle =
+      typeof notification.payload.wish_title === "string"
+        ? notification.payload.wish_title
+        : "ваше желание";
+    return {
+      icon: Sparkles,
+      title: `${actorName} тоже хочет «${wishTitle}»`,
+      href: notification.entity_id
+        ? (`/wishes/${notification.entity_id}` as Route)
+        : "/notifications",
+    };
+  }
+
   if (
     notification.type === "creator_offer_request" ||
     notification.type === "paid_message_request"
@@ -80,6 +127,97 @@ function notificationCopy(notification: Notification, actor: Actor | undefined) 
       icon: MessageCircle,
       title: `${actorName} пригласил(-а) вас в совместный эфир`,
       href: slug ? (`/live/${slug}` as Route) : "/notifications",
+    };
+  }
+
+  if (notification.type === "live_started") {
+    const slug =
+      typeof notification.payload.slug === "string" ? notification.payload.slug : null;
+    const roomTitle =
+      typeof notification.payload.title === "string"
+        ? notification.payload.title
+        : "эфир";
+    return {
+      icon: Radio,
+      title: `${actorName} начал(а) эфир «${roomTitle}»`,
+      href: slug ? (`/live/${slug}` as Route) : "/feed",
+    };
+  }
+
+  if (notification.type === "event_created") {
+    const eventTitle =
+      typeof notification.payload.event_title === "string"
+        ? notification.payload.event_title
+        : "событие";
+    const isOpen = notification.payload.scope === "open";
+    return {
+      icon: CalendarDays,
+      title: isOpen
+        ? `${actorName} создал(а) открытое событие «${eventTitle}»`
+        : `В вашем городе: «${eventTitle}»`,
+      href: notification.entity_id
+        ? (`/events/${notification.entity_id}` as Route)
+        : "/events",
+    };
+  }
+
+  if (notification.type === "event_cancelled") {
+    const eventTitle =
+      typeof notification.payload.event_title === "string"
+        ? notification.payload.event_title
+        : "событие";
+    return {
+      icon: CalendarX2,
+      title: `Событие «${eventTitle}» отменено`,
+      href: notification.entity_id
+        ? (`/events/${notification.entity_id}` as Route)
+        : "/events",
+    };
+  }
+
+  if (notification.type === "place_invite") {
+    const placeName =
+      typeof notification.payload.place_name === "string"
+        ? notification.payload.place_name
+        : "тусовку";
+    return {
+      icon: MapPin,
+      title: `${actorName} позвал(а) вас в ${placeName}`,
+      href: notification.entity_id
+        ? (`/places/${notification.entity_id}` as Route)
+        : "/places",
+    };
+  }
+
+  if (notification.type === "place_message") {
+    const placeName =
+      typeof notification.payload.place_name === "string"
+        ? notification.payload.place_name
+        : "место";
+    const placeEmoji =
+      typeof notification.payload.place_emoji === "string"
+        ? notification.payload.place_emoji
+        : "📍";
+    return {
+      icon: MessageCircle,
+      title: `${actorName} написал(а) в чат места ${placeEmoji} «${placeName}»`,
+      href: notification.entity_id
+        ? (`/places/${notification.entity_id}` as Route)
+        : "/places",
+    };
+  }
+
+  if (notification.type === "place_gift") {
+    const giftLabel =
+      typeof notification.payload.gift_label === "string"
+        ? notification.payload.gift_label
+        : "подарок";
+    return {
+      icon: Gift,
+      title: `${actorName} отправил(а) вам подарок (${giftLabel})`,
+      href: notification.entity_id
+        ? (`/places/${notification.entity_id}` as Route)
+        : "/places",
     };
   }
 
@@ -163,6 +301,16 @@ export default async function NotificationsPage() {
             </form>
           )}
         </div>
+
+        <section className="mt-6 rounded-2xl bg-[#fff8f9] p-4">
+          <p className="font-semibold">Браузерные уведомления</p>
+          <p className="mt-1 text-sm leading-5 text-[#826c73]">
+            Получайте push, когда любимый автор выходит в эфир.
+          </p>
+          <div className="mt-3">
+            <PushNotificationButton />
+          </div>
+        </section>
 
         <section className="mt-7">
           {notifications.length === 0 ? (

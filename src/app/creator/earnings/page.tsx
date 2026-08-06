@@ -54,6 +54,7 @@ export default async function CreatorEarningsPage() {
     support: "Поддержка",
     subscription: "Подписки",
     gift: "Подарки",
+    live_donation: "Донаты эфира",
   };
 
   return (
@@ -115,6 +116,7 @@ export default async function CreatorEarningsPage() {
                 "support",
                 "subscription",
                 "gift",
+                "live_donation",
               ].map((type) => (
                 <div
                   className="border-white/8 flex items-center justify-between rounded-xl border bg-[#171923] px-4 py-3"

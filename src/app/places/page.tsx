@@ -1,0 +1,283 @@
+import Link from "next/link";
+import type { Route } from "next";
+import { MapPin, Plus, TrendingUp, Trophy, UsersRound } from "lucide-react";
+
+import { requireUser } from "@/lib/auth";
+import { EmptyState } from "@/components/empty-state";
+
+export const metadata = {
+  title: "Город",
+  robots: { index: false, follow: false },
+};
+export const dynamic = "force-dynamic";
+
+const ONLINE_WINDOW = 15 * 60 * 1000; // 15 minutes soft online
+
+type PlaceRow = {
+  id: string;
+  name: string;
+  description: string | null;
+  emoji: string;
+  kind: "fixed" | "personal" | "temporary";
+  creator_id: string | null;
+  promoted_until: string | null;
+  pinned_until: string | null;
+};
+
+export default async function PlacesPage() {
+  const { supabase, user } = await requireUser();
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("city_id, city")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  let places: Array<PlaceRow & { online: number; friends: number; unread: number }> =
+    [];
+  let cityName: string | null = null;
+  if (profile?.city_id) {
+    const { data: cityRow } = await supabase
+      .from("cities")
+      .select("name")
+      .eq("id", profile.city_id)
+      .maybeSingle();
+    cityName = cityRow?.name ?? profile.city ?? null;
+
+    // When the user last read each place (for the unread badge).
+    const { data: myPresence } = await supabase
+      .from("place_presence")
+      .select("place_id, last_read_at")
+      .eq("profile_id", user.id);
+    const myLastRead = new Map<string, string>(
+      (myPresence ?? []).map((row) => [row.place_id, row.last_read_at]),
+    );
+
+    const { data: rawPlaces } = await supabase
+      .from("places")
+      .select(
+        "id, name, description, emoji, kind, creator_id, promoted_until, pinned_until",
+      )
+      .eq("city_id", profile.city_id)
+      .eq("is_active", true)
+      .order("pinned_until", { ascending: false, nullsFirst: false })
+      .order("promoted_until", { ascending: false, nullsFirst: false })
+      .order("created_at", { ascending: true })
+      .limit(100);
+    const rows = (rawPlaces ?? []) as PlaceRow[];
+
+    // Unread messages per place (after the user's last read).
+    const unreadByPlace = new Map<string, number>();
+    const readPlaces = rows.filter((row) => myLastRead.has(row.id));
+    if (readPlaces.length > 0) {
+      const { data: rawUnread } = await supabase
+        .from("place_messages")
+        .select("place_id, created_at")
+        .in(
+          "place_id",
+          readPlaces.map((row) => row.id),
+        );
+      for (const message of rawUnread ?? []) {
+        const lastRead = myLastRead.get(message.place_id);
+        if (lastRead && new Date(message.created_at) > new Date(lastRead)) {
+          unreadByPlace.set(
+            message.place_id,
+            (unreadByPlace.get(message.place_id) ?? 0) + 1,
+          );
+        }
+      }
+    }
+
+    const cutoff = new Date(Date.now() - ONLINE_WINDOW).toISOString();
+    const [{ data: presence }, { data: members }, { data: myFollows }] =
+      await Promise.all([
+        supabase
+          .from("place_presence")
+          .select("place_id, profile_id")
+          .gte("last_seen_at", cutoff),
+        supabase.from("place_members").select("place_id, profile_id"),
+        supabase.from("user_follows").select("following_id").eq("follower_id", user.id),
+      ]);
+    const followed = new Set((myFollows ?? []).map((row) => row.following_id));
+    const onlineByPlace = new Map<string, number>();
+    const friendsByPlace = new Map<string, number>();
+    for (const row of presence ?? []) {
+      onlineByPlace.set(row.place_id, (onlineByPlace.get(row.place_id) ?? 0) + 1);
+      if (followed.has(row.profile_id))
+        friendsByPlace.set(row.place_id, (friendsByPlace.get(row.place_id) ?? 0) + 1);
+    }
+    const memberSet = new Set(
+      (members ?? []).map((row) => `${row.place_id}:${row.profile_id}`),
+    );
+    places = rows.map((place) => ({
+      ...place,
+      online: onlineByPlace.get(place.id) ?? 0,
+      friends: friendsByPlace.get(place.id) ?? 0,
+      joined: memberSet.has(`${place.id}:${user.id}`),
+      unread: unreadByPlace.get(place.id) ?? 0,
+    }));
+  }
+
+  const now = Date.now();
+  const sorted = [...places].sort((a, b) => {
+    const aPinned = a.pinned_until && new Date(a.pinned_until).getTime() > now;
+    const bPinned = b.pinned_until && new Date(b.pinned_until).getTime() > now;
+    if (aPinned !== bPinned) return aPinned ? -1 : 1;
+    const aPromoted = a.promoted_until && new Date(a.promoted_until).getTime() > now;
+    const bPromoted = b.promoted_until && new Date(b.promoted_until).getTime() > now;
+    if (aPromoted !== bPromoted) return aPromoted ? -1 : 1;
+    return b.online - a.online;
+  });
+
+  // «Who rose this week» — top rising users of the city.
+  let risingUsers: Array<{
+    profile_id: string;
+    display_name: string;
+    username: string;
+    score: number;
+  }> = [];
+  if (profile?.city_id) {
+    const { data: rawRising } = await supabase
+      .from("public_city_rankings")
+      .select("profile_id, display_name, username, score")
+      .eq("city_id", profile.city_id)
+      .eq("category", "rising")
+      .limit(3);
+    risingUsers = (rawRising ?? []) as typeof risingUsers;
+  }
+
+  return (
+    <main className="mx-auto min-h-screen max-w-[430px] bg-[#0c0e14] px-4 py-5 text-white">
+      <header className="flex items-center justify-between">
+        <Link className="text-sm text-[#e3a3d5]" href="/feed">
+          ← Лента
+        </Link>
+        <h1 className="text-lg font-bold">📍 {cityName ?? "Город"}</h1>
+        <Link
+          aria-label="Создать место"
+          className="grid size-9 place-items-center rounded-full bg-gradient-to-r from-[#ff4b8a] to-[#7d45ff]"
+          href="/places/new"
+        >
+          <Plus className="size-5" />
+        </Link>
+      </header>
+
+      <section className="mt-5 rounded-2xl border border-[#8f48ff]/30 bg-gradient-to-r from-[#1f1631] to-[#171824] p-4">
+        <p className="text-lg font-bold">Куда пойдём?</p>
+        <p className="mt-1 text-sm leading-6 text-[#b9b1c5]">
+          Пойдём посмотрим, кто сейчас в городе. Выбери место и заходи.
+        </p>
+      </section>
+
+      {risingUsers.length > 0 && (
+        <section className="mt-5 rounded-2xl border border-[#8df0b4]/25 bg-gradient-to-r from-[#14221d] to-[#171824] p-4">
+          <div className="flex items-center gap-2">
+            <TrendingUp className="size-5 text-[#8df0b4]" />
+            <p className="text-sm font-bold">Кто поднялся за неделю</p>
+          </div>
+          <div className="mt-3 space-y-1.5">
+            {risingUsers.map((person, index) => (
+              <Link
+                className="flex items-center gap-2 text-sm"
+                href={`/u/${person.username}` as Route}
+                key={person.profile_id}
+              >
+                <span className="w-5 text-center">
+                  {index === 0 ? "🚀" : `${index + 1}`}
+                </span>
+                <span className="min-w-0 grow truncate font-semibold">
+                  {person.display_name}
+                </span>
+                <span className="shrink-0 text-xs text-[#8df0b4]">+{person.score}</span>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+
+      <section className="mt-5">
+        {sorted.length === 0 ? (
+          <EmptyState
+            actionHref={profile?.city_id ? "/places/new" : "/onboarding"}
+            actionLabel={profile?.city_id ? "Создать место" : "Указать город"}
+            description={
+              profile?.city_id
+                ? "Мест пока нет — создайте первое."
+                : "Укажите город в профиле, чтобы видеть места."
+            }
+            title={profile?.city_id ? "Город пуст" : "Город не указан"}
+          />
+        ) : (
+          <div className="space-y-2.5">
+            {sorted.map((place) => (
+              <Link
+                className="border-white/8 flex items-center gap-3 rounded-2xl border bg-[#171923] p-4 transition hover:border-[#8f48ff]/60"
+                href={`/places/${place.id}` as Route}
+                key={place.id}
+              >
+                <span className="grid size-12 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-[#3b193d] to-[#1f1a38] text-2xl">
+                  {place.emoji}
+                </span>
+                <span className="min-w-0 grow">
+                  <span className="flex items-center gap-2">
+                    <span className="truncate font-bold">{place.name}</span>
+                    {place.kind === "personal" && (
+                      <span className="rounded-full bg-[#b550ff]/20 px-1.5 py-0.5 text-[10px] font-semibold text-[#e7c9f5]">
+                        🏠
+                      </span>
+                    )}
+                    {place.kind === "temporary" && (
+                      <span className="rounded-full bg-[#ffd35e]/15 px-1.5 py-0.5 text-[10px] font-semibold text-[#ffd35e]">
+                        🔥
+                      </span>
+                    )}
+                    {place.pinned_until &&
+                      new Date(place.pinned_until).getTime() > Date.now() && (
+                        <span className="rounded-full bg-[#ff4b8a]/20 px-1.5 py-0.5 text-[10px] font-semibold text-[#ff9bc5]">
+                          📌 Закреплено
+                        </span>
+                      )}
+                    {place.promoted_until &&
+                      new Date(place.promoted_until).getTime() > Date.now() && (
+                        <span className="rounded-full bg-[#ffd35e]/25 px-1.5 py-0.5 text-[10px] font-semibold text-[#ffd35e]">
+                          🚀 Поднято
+                        </span>
+                      )}
+                  </span>
+                  <span className="mt-0.5 flex items-center gap-3 text-xs text-[#aaa4b7]">
+                    <span className="inline-flex items-center gap-1">
+                      <UsersRound className="size-3.5" /> {place.online} сейчас
+                    </span>
+                    {place.friends > 0 && (
+                      <span className="text-[#ffd35e]">
+                        Твои друзья: {place.friends}
+                      </span>
+                    )}
+                    {place.unread > 0 && (
+                      <span className="rounded-full bg-[#ff4b8a] px-2 py-0.5 text-[10px] font-bold text-white">
+                        {place.unread} новых
+                      </span>
+                    )}
+                  </span>
+                </span>
+                <span className="shrink-0 text-[#e3a3d5]">›</span>
+              </Link>
+            ))}
+          </div>
+        )}
+      </section>
+
+      <Link
+        className="mt-7 flex items-center justify-center gap-2 text-sm font-semibold text-[#e8a1d5]"
+        href="/places/new"
+      >
+        <MapPin className="size-4" /> Создать свою тусовку
+      </Link>
+      <Link
+        className="mt-3 flex items-center justify-center gap-2 text-sm font-semibold text-[#ffd35e]"
+        href="/city/rankings"
+      >
+        <Trophy className="size-4" /> Рейтинги города
+      </Link>
+    </main>
+  );
+}

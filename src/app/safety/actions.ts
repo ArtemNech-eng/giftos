@@ -7,7 +7,19 @@ import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { optionalText, requiredText } from "@/lib/validation";
 
-const reportTypes = new Set(["profile", "wish", "fundraiser", "comment", "message"]);
+const reportTypes = new Set([
+  "profile",
+  "wish",
+  "fundraiser",
+  "comment",
+  "message",
+  "story",
+  "wish_comment",
+  "live_room",
+  "place",
+  "place_message",
+  "live_message",
+]);
 const reportReasons = new Set([
   "fraud",
   "prohibited_content",
@@ -37,6 +49,8 @@ export async function createReport(formData: FormData) {
     details,
   });
 
+  if (error?.message.includes("report_rate_limit"))
+    throw new Error("Слишком много жалоб — подождите минуту.");
   if (error?.code === "23505") {
     redirect(`${returnTo}?report=already` as Route);
   }

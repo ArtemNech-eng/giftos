@@ -43,4 +43,73 @@
   .surface {
     @apply border border-white/80 bg-white/80 shadow-[0_10px_30px_rgba(84,41,57,0.06)] backdrop-blur;
   }
+
+  .live-reaction-float {
+    animation: live-reaction-float 2.6s ease-out forwards;
+  }
+
+  .live-gift-event {
+    animation: live-gift-event 4.5s ease-out forwards;
+  }
+
+  .live-donation-event {
+    animation: live-donation-event 6s ease-out forwards;
+  }
+}
+
+@keyframes live-donation-event {
+  0% {
+    transform: translateX(-24px) scale(0.94);
+    opacity: 0;
+  }
+  8% {
+    transform: translateX(0) scale(1);
+    opacity: 1;
+  }
+  82% {
+    transform: translateX(0) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(-14px) scale(0.96);
+    opacity: 0;
+  }
+}
+
+@keyframes live-gift-event {
+  0% {
+    transform: translateY(18px) scale(0.92);
+    opacity: 0;
+  }
+  10% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+  80% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-10px) scale(0.95);
+    opacity: 0;
+  }
+}
+
+@keyframes live-reaction-float {
+  0% {
+    transform: translateY(0) scale(0.5);
+    opacity: 0;
+  }
+  15% {
+    transform: translateY(-10px) scale(1.2);
+    opacity: 1;
+  }
+  70% {
+    transform: translateY(-80px) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-150px) scale(0.9);
+    opacity: 0;
+  }
 }

@@ -4,11 +4,13 @@ import { CalendarDays, Gift, Lock, Share2, UsersRound } from "lucide-react";
 import { notFound } from "next/navigation";
 
 import { invitePrivateFundraiserMember } from "@/app/fundraisers/actions";
+import { sendTestFundraiserGift } from "@/app/fundraisers/gifts/actions";
 import {
   postFundraiserComment,
   startFundraiserSupport,
 } from "@/app/fundraisers/support-actions";
 import { toggleFundraiserFollow } from "@/app/social/actions";
+import { CopyFundraiserLinkButton } from "@/components/copy-fundraiser-link-button";
 import { EmptyState } from "@/components/empty-state";
 import { LiveDiscussionRefresh } from "@/components/live-discussion-refresh";
 import { ReportForm } from "@/components/report-form";
@@ -45,6 +47,13 @@ export async function generateMetadata({
       title: `${fundraiser.title} — «Хочу также»`,
       description,
       type: "article",
+      images: [
+        {
+          url: `/og?type=fundraiser&title=${encodeURIComponent(fundraiser.title)}&subtitle=${encodeURIComponent(description.slice(0, 160))}`,
+          width: 1200,
+          height: 630,
+        },
+      ],
     },
   };
 }
@@ -107,6 +116,17 @@ export default async function FundraiserPage({
   const commenterById = new Map(
     (commenterProfiles ?? []).map((profile) => [profile.id, profile]),
   );
+  const [{ data: giftCatalog }, { count: giftCount }] = await Promise.all([
+    supabase
+      .from("virtual_gifts")
+      .select("code, label, emoji, price_minor")
+      .eq("is_active", true)
+      .order("sort_order", { ascending: true }),
+    supabase
+      .from("fundraiser_gifts")
+      .select("*", { count: "exact", head: true })
+      .eq("fundraiser_id", fundraiser.id),
+  ]);
 
   const coverImageUrl = await getSignedImageUrl({
     bucket: "fundraiser-media",
@@ -241,6 +261,7 @@ export default async function FundraiserPage({
                     {existingFundraiserFollow ? "Вы следите" : "Следить за сбором"}
                   </button>
                 </form>
+                <CopyFundraiserLinkButton slug={fundraiser.slug} />
                 <ReportForm
                   returnTo={`/fundraisers/${fundraiser.slug}`}
                   targetId={fundraiser.id}
@@ -386,6 +407,42 @@ export default async function FundraiserPage({
         <div className="surface rounded-2xl p-5 sm:p-6">
           <p className="text-sm font-semibold text-[#bd3e66]">Люди вокруг цели</p>
           <h2 className="mt-1 text-2xl font-bold">Обсуждение</h2>
+          {user && !isAuthor && giftCatalog && giftCatalog.length > 0 && (
+            <div className="mt-5 rounded-xl bg-[#fff8f9] p-3">
+              <div className="mb-2 flex items-center justify-between">
+                <p className="text-sm font-semibold text-[#bd3e66]">
+                  Отправить подарок автору
+                </p>
+                <span className="text-xs text-[#9b858c]">
+                  {giftCount ?? 0} подарков
+                </span>
+              </div>
+              <div className="grid grid-cols-4 gap-2">
+                {giftCatalog.map((gift) => (
+                  <form action={sendTestFundraiserGift} key={gift.code}>
+                    <input name="fundraiser_id" type="hidden" value={fundraiser.id} />
+                    <input name="slug" type="hidden" value={fundraiser.slug} />
+                    <input name="gift_code" type="hidden" value={gift.code} />
+                    <button
+                      className="flex w-full flex-col items-center rounded-xl border border-[#ead9df] bg-white px-1 py-2 transition hover:border-[#df4f7d]"
+                      type="submit"
+                    >
+                      <span className="text-2xl">{gift.emoji}</span>
+                      <span className="mt-1 text-[10px] text-[#674f57]">
+                        {gift.label}
+                      </span>
+                      <span className="text-[10px] font-semibold text-[#c53d68]">
+                        {gift.price_minor / 100} ₽
+                      </span>
+                    </button>
+                  </form>
+                ))}
+              </div>
+              <p className="mt-2 text-xs text-[#9b858c]">
+                Подарки в тестовом режиме формируют test-доход автора.
+              </p>
+            </div>
+          )}
           {user ? (
             <form action={postFundraiserComment} className="mt-5">
               <input name="fundraiser_id" type="hidden" value={fundraiser.id} />

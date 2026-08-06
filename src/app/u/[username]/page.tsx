@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { Metadata, Route } from "next";
 /* eslint-disable @next/next/no-img-element -- profile and story media use signed Storage URLs */
-import { ArrowLeft, MoreHorizontal, Play } from "lucide-react";
+import { ArrowLeft, MoreHorizontal, Play, Radio } from "lucide-react";
 import { notFound } from "next/navigation";
 
 import { blockUser, unblockUser } from "@/app/safety/actions";
@@ -14,10 +14,15 @@ import {
   updateMessageRequestSettings,
 } from "@/app/creator/messages/actions";
 import {
+  cancelCreatorSubscription,
   testSubscribeToCreator,
   updateCreatorSubscriptionSettings,
 } from "@/app/creator/subscriptions/actions";
+import { promoteTarget } from "@/app/shop/actions";
 import { createStory } from "@/app/stories/actions";
+import { CreatorShareLink } from "@/components/creator-share-link";
+import { ProfileGiftButton } from "@/components/profile-gift-button";
+import { ProfileQrCode } from "@/components/profile-qr-code";
 import { ReportForm } from "@/components/report-form";
 import { CATEGORIES } from "@/lib/constants";
 import { getSignedImageUrl } from "@/lib/media";
@@ -55,6 +60,13 @@ export async function generateMetadata({
       title: `${profile.display_name} — «Хочу также»`,
       description,
       type: "profile",
+      images: [
+        {
+          url: `/og?type=profile&title=${encodeURIComponent(profile.display_name)}&subtitle=${encodeURIComponent(description.slice(0, 160))}`,
+          width: 1200,
+          height: 630,
+        },
+      ],
     },
   };
 }
@@ -72,7 +84,7 @@ export default async function ProfilePage({
   const { data: profile } = await supabase
     .from("profiles")
     .select(
-      "id, username, display_name, bio, city, show_city, avatar_path, is_creator, creator_headline, message_requests_enabled, paid_message_price_minor, subscriptions_enabled, subscription_price_minor",
+      "id, username, display_name, bio, city, city_id, show_city, avatar_path, is_creator, creator_headline, message_requests_enabled, paid_message_price_minor, subscriptions_enabled, subscription_price_minor, promoted_until",
     )
     .eq("username", username.toLowerCase())
     .maybeSingle();
@@ -93,6 +105,11 @@ export default async function ProfilePage({
     { data: rawPosts },
     { data: rawOffers },
     { count: followers },
+    { data: activeLive },
+    { data: vip },
+    { data: rawReceivedGifts },
+    { data: giftCatalog },
+    { data: equippedItems },
   ] = await Promise.all([
     user && !isOwnProfile
       ? supabase
@@ -168,6 +185,37 @@ export default async function ProfilePage({
       .from("user_follows")
       .select("*", { count: "exact", head: true })
       .eq("following_id", profile.id),
+    supabase
+      .from("live_rooms")
+      .select("id, slug, title, status")
+      .eq("host_id", profile.id)
+      .eq("status", "live")
+      .eq("visibility", "public")
+      .order("started_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    supabase
+      .from("vip_subscriptions")
+      .select("expires_at, status")
+      .eq("profile_id", profile.id)
+      .maybeSingle(),
+    supabase
+      .from("profile_gifts")
+      .select("sender_id, gift_code, price_stars, created_at")
+      .eq("recipient_id", profile.id)
+      .order("created_at", { ascending: false })
+      .limit(20),
+    supabase
+      .from("virtual_gifts")
+      .select("code, label, emoji, price_stars, requires_vip")
+      .eq("is_active", true)
+      .eq("economy", "platform")
+      .order("sort_order", { ascending: true }),
+    supabase
+      .from("user_inventory")
+      .select("item_id, virtual_items!inner(id, item_type, emoji, name)")
+      .eq("profile_id", profile.id)
+      .eq("is_equipped", true),
   ]);
 
   const avatarUrl = await getSignedImageUrl({
@@ -188,6 +236,88 @@ export default async function ProfilePage({
   const interests = CATEGORIES.filter((category) =>
     rawWishes?.some((wish) => wish.category_slug === category.slug),
   ).slice(0, 4);
+
+  const vipActive = Boolean(
+    vip && vip.status === "active" && new Date(vip.expires_at) > new Date(),
+  );
+  const followerCount = followers ?? 0;
+  const { data: lastCitySeason } = await supabase
+    .from("city_seasons")
+    .select("winner_city_id")
+    .not("winner_city_id", "is", null)
+    .order("finished_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const isCityChampion = Boolean(
+    profile.city_id && lastCitySeason?.winner_city_id === profile.city_id,
+  );
+  const { data: cityRank } = await supabase.rpc("city_rank", {
+    p_profile_id: profile.id,
+  });
+  const cityRankData = (cityRank ?? null) as {
+    rank: number;
+    city_size: number;
+    followers: number;
+  } | null;
+  const { data: repRoles } = await supabase.rpc("reputation_roles", {
+    p_profile_id: profile.id,
+  });
+  const reputationRoles = (repRoles ?? []) as string[];
+  const level = {
+    star: { label: "💎 Звезда", color: "text-[#e17dff] border-[#e17dff]/40" },
+    author: { label: "🎤 Автор", color: "text-[#7fd8ff] border-[#7fd8ff]/40" },
+    popular: { label: "🔥 Популярный", color: "text-[#ff9bc5] border-[#ff9bc5]/40" },
+    active: { label: "⭐ Активный", color: "text-[#8df0b4] border-[#8df0b4]/40" },
+    novice: { label: "🌱 Новичок", color: "text-[#aaa4b7] border-white/15" },
+  }[
+    followerCount >= 5000
+      ? "star"
+      : followerCount >= 500
+        ? "author"
+        : followerCount >= 50
+          ? "popular"
+          : followerCount >= 5
+            ? "active"
+            : "novice"
+  ];
+  // Progress to the next level (pure activity thresholds).
+  const levelThresholds = [5, 50, 500, 5000];
+  const currentLevelIndex = levelThresholds.findIndex((t) => followerCount < t);
+  const nextThreshold =
+    currentLevelIndex >= 0 ? levelThresholds[currentLevelIndex] : null;
+  const levelProgress = nextThreshold
+    ? Math.min(100, Math.round((followerCount / nextThreshold) * 100))
+    : 100;
+  const receivedGifts = (rawReceivedGifts ?? []) as Array<{
+    sender_id: string;
+    gift_code: string;
+    price_stars: number;
+    created_at: string;
+  }>;
+  const giftEmoji = new Map((giftCatalog ?? []).map((gift) => [gift.code, gift.emoji]));
+  const equipped = (
+    (equippedItems ?? []) as Array<{
+      item_id: string;
+      virtual_items: Array<{
+        id: string;
+        item_type: string;
+        emoji: string;
+        name: string;
+      }>;
+    }>
+  ).flatMap((row) =>
+    row.virtual_items?.[0]
+      ? [
+          {
+            itemType: row.virtual_items[0].item_type,
+            emoji: row.virtual_items[0].emoji,
+          },
+        ]
+      : [],
+  );
+  const avatarFrame = equipped.find((item) => item.itemType === "avatar_frame");
+  const profileTheme = equipped.find((item) => item.itemType === "profile_theme");
+  const equippedBadges = equipped.filter((item) => item.itemType === "badge");
 
   return (
     <main className="mx-auto min-h-screen max-w-[430px] bg-[#0c0e14] pb-24 text-white">
@@ -212,7 +342,13 @@ export default async function ProfilePage({
         </div>
       </header>
 
-      <section className="relative h-64 overflow-hidden bg-gradient-to-br from-[#3b183f] via-[#281831] to-[#171a2a]">
+      <section
+        className={`relative h-64 overflow-hidden ${
+          profileTheme
+            ? "bg-gradient-to-br from-[#0b1e3a] via-[#14255c] to-[#0d1030]"
+            : "bg-gradient-to-br from-[#3b183f] via-[#281831] to-[#171a2a]"
+        }`}
+      >
         {coverUrl ? (
           <img alt="" className="size-full object-cover opacity-80" src={coverUrl} />
         ) : (
@@ -222,7 +358,13 @@ export default async function ProfilePage({
 
       <section className="relative px-4 pb-5">
         <div className="-mt-12 flex items-end justify-between">
-          <span className="grid size-24 place-items-center overflow-hidden rounded-[1.6rem] border-4 border-[#0c0e14] bg-[#32203a] text-3xl font-bold">
+          <span
+            className={`grid size-24 place-items-center overflow-hidden rounded-[1.6rem] border-4 bg-[#32203a] text-3xl font-bold ${
+              avatarFrame
+                ? "border-[#ff77ba] shadow-[0_0_18px_rgba(255,119,186,0.5)]"
+                : "border-[#0c0e14]"
+            }`}
+          >
             {avatarUrl ? (
               <img
                 alt={`Аватар ${profile.display_name}`}
@@ -232,9 +374,28 @@ export default async function ProfilePage({
             ) : (
               profile.display_name.slice(0, 1).toUpperCase()
             )}
+            {avatarFrame && (
+              <span className="absolute -bottom-1 -right-1 text-xl">
+                {avatarFrame.emoji}
+              </span>
+            )}
           </span>
           {user && !isOwnProfile ? (
             <div className="flex gap-2">
+              {giftCatalog && giftCatalog.length > 0 && (
+                <ProfileGiftButton
+                  gifts={giftCatalog.map((gift) => ({
+                    code: gift.code,
+                    label: gift.label,
+                    emoji: gift.emoji,
+                    price_stars: gift.price_stars ?? 0,
+                    requires_vip: Boolean(gift.requires_vip),
+                  }))}
+                  isVip={vipActive}
+                  recipientId={profile.id}
+                  username={profile.username}
+                />
+              )}
               <form action={toggleUserFollow}>
                 <input name="profile_id" type="hidden" value={profile.id} />
                 <input name="username" type="hidden" value={profile.username} />
@@ -276,6 +437,41 @@ export default async function ProfilePage({
               Автор
             </span>
           )}
+          {vipActive && (
+            <span className="rounded-full border border-[#ffd35e]/50 bg-[#2a2215] px-2 py-1 text-xs font-bold text-[#ffd35e]">
+              👑 VIP
+            </span>
+          )}
+          <span
+            className={`rounded-full border px-2 py-1 text-xs font-semibold ${level.color}`}
+          >
+            {level.label}
+          </span>
+          {isCityChampion && (
+            <span
+              className="rounded-full border border-[#ffd35e]/50 bg-[#2a2215] px-2 py-1 text-xs font-bold text-[#ffd35e]"
+              title="Город выиграл сезон битвы городов"
+            >
+              🏆 Чемпион города
+            </span>
+          )}
+          {equippedBadges.map((badge) => (
+            <span
+              className="rounded-full border border-white/15 bg-white/5 px-2 py-1 text-xs"
+              key={badge.emoji}
+              title="Значок из магазина"
+            >
+              {badge.emoji}
+            </span>
+          ))}
+          {activeLive && (
+            <Link
+              className="inline-flex items-center gap-1.5 rounded-full bg-[#ff2d55] px-2.5 py-1 text-xs font-bold text-white"
+              href={`/live/${activeLive.slug}` as Route}
+            >
+              <span className="size-1.5 animate-pulse rounded-full bg-white" />В эфире
+            </Link>
+          )}
         </div>
         <p className="mt-1 text-sm text-[#b9b1c5]">
           @{profile.username}
@@ -312,18 +508,77 @@ export default async function ProfilePage({
             <small className="text-xs text-[#aaa3b5]">Фото</small>
           </span>
         </div>
+        {cityRankData && profile.show_city && (
+          <div className="mt-5 rounded-2xl border border-[#8f48ff]/30 bg-gradient-to-r from-[#1f1631] to-[#171824] p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-bold">#{cityRankData.rank} в городе</p>
+                <p className="mt-0.5 text-xs text-[#aaa4b7]">
+                  {profile.city ?? "Город"} · среди {cityRankData.city_size} жителей
+                </p>
+              </div>
+              <span className="text-xl">🏆</span>
+            </div>
+            {nextThreshold ? (
+              <div className="mt-3">
+                <div className="h-1.5 overflow-hidden rounded-full bg-white/10">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-[#ff4b8a] to-[#7d45ff]"
+                    style={{ width: `${levelProgress}%` }}
+                  />
+                </div>
+                <p className="mt-2 text-xs text-[#aaa4b7]">
+                  До уровня «{level.label.split(" ")[1] ?? "следующий"}»: ещё{" "}
+                  {nextThreshold - followerCount} подписчиков
+                </p>
+              </div>
+            ) : (
+              <p className="mt-2 text-xs text-[#8df0b4]">
+                Максимальный уровень — вы звезда!
+              </p>
+            )}
+            {reputationRoles.length > 0 && (
+              <div className="mt-3 flex flex-wrap gap-1.5">
+                {reputationRoles.map((role) => (
+                  <span
+                    className="rounded-full border border-[#ffd35e]/40 bg-[#2a2215] px-2 py-0.5 text-[10px] font-bold text-[#ffd35e]"
+                    key={role}
+                  >
+                    {role}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+        {receivedGifts.length > 0 && (
+          <div className="mt-5 rounded-2xl border border-white/10 bg-[#171923] p-4">
+            <p className="text-sm font-bold">🎁 Подарки</p>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {receivedGifts.slice(0, 10).map((gift, index) => (
+                <span
+                  className="grid size-10 place-items-center rounded-xl border border-white/10 bg-white/5 text-xl"
+                  key={`${gift.gift_code}-${index}`}
+                  title={`${gift.gift_code} · ${gift.price_stars} ⭐`}
+                >
+                  {giftEmoji.get(gift.gift_code) ?? "🎁"}
+                </span>
+              ))}
+              {receivedGifts.length > 10 && (
+                <span className="grid size-10 place-items-center rounded-xl border border-white/10 bg-white/5 text-xs text-[#aaa4b7]">
+                  +{receivedGifts.length - 10}
+                </span>
+              )}
+            </div>
+          </div>
+        )}
       </section>
 
       {user &&
         !isOwnProfile &&
         profile.subscriptions_enabled &&
         profile.subscription_price_minor && (
-          <form
-            action={testSubscribeToCreator}
-            className="mx-4 mb-3 rounded-2xl border border-[#ff9ed0]/35 bg-gradient-to-r from-[#30182f] to-[#191827] p-4"
-          >
-            <input name="creator_id" type="hidden" value={profile.id} />
-            <input name="username" type="hidden" value={profile.username} />
+          <div className="mx-4 mb-3 rounded-2xl border border-[#ff9ed0]/35 bg-gradient-to-r from-[#30182f] to-[#191827] p-4">
             <div className="flex items-center justify-between">
               <span>
                 <b className="block">Подписка на автора</b>
@@ -335,14 +590,40 @@ export default async function ProfilePage({
                 {formatRubles(profile.subscription_price_minor)} / мес
               </b>
             </div>
-            <button
-              className={`mt-3 rounded-xl px-4 py-2 text-sm font-bold ${existingSubscription ? "bg-white/10 text-[#d8d0e0]" : "bg-gradient-to-r from-[#ff4b8a] to-[#7d45ff]"}`}
-              disabled={Boolean(existingSubscription)}
-              type="submit"
-            >
-              {existingSubscription ? "Вы подписаны" : "Подписаться в тестовом режиме"}
-            </button>
-          </form>
+            {existingSubscription ? (
+              <div className="mt-3 flex items-center justify-between gap-3">
+                <span className="text-xs text-[#b9b1c5]">
+                  Активна до{" "}
+                  {new Intl.DateTimeFormat("ru-RU", {
+                    day: "numeric",
+                    month: "short",
+                    year: "numeric",
+                  }).format(new Date(existingSubscription.expires_at))}
+                </span>
+                <form action={cancelCreatorSubscription}>
+                  <input name="creator_id" type="hidden" value={profile.id} />
+                  <input name="username" type="hidden" value={profile.username} />
+                  <button
+                    className="rounded-xl border border-[#ff5b99]/40 px-3 py-1.5 text-xs font-semibold text-[#ff9bc5]"
+                    type="submit"
+                  >
+                    Отменить
+                  </button>
+                </form>
+              </div>
+            ) : (
+              <form action={testSubscribeToCreator} className="mt-3">
+                <input name="creator_id" type="hidden" value={profile.id} />
+                <input name="username" type="hidden" value={profile.username} />
+                <button
+                  className="rounded-xl bg-gradient-to-r from-[#ff4b8a] to-[#7d45ff] px-4 py-2 text-sm font-bold"
+                  type="submit"
+                >
+                  Подписаться в тестовом режиме
+                </button>
+              </form>
+            )}
+          </div>
         )}
 
       {user &&
@@ -402,6 +683,28 @@ export default async function ProfilePage({
 
       {tab === "about" && (
         <section className="space-y-3 p-4">
+          {activeLive && (
+            <Link
+              className="flex items-center gap-3 rounded-2xl border border-[#ff2d55]/50 bg-gradient-to-r from-[#2a1222] to-[#1b1528] p-3"
+              href={`/live/${activeLive.slug}` as Route}
+            >
+              <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#ff2d55]">
+                <Radio className="size-5 fill-white text-white" />
+              </span>
+              <span className="min-w-0 grow">
+                <span className="flex items-center gap-1.5 text-xs font-bold text-[#ff7fb5]">
+                  <span className="size-1.5 animate-pulse rounded-full bg-[#ff2d55]" />
+                  СЕЙЧАС В ЭФИРЕ
+                </span>
+                <span className="mt-0.5 block truncate text-sm font-bold">
+                  {activeLive.title}
+                </span>
+              </span>
+              <span className="shrink-0 text-xs font-semibold text-[#ffb7dd]">
+                Смотреть ›
+              </span>
+            </Link>
+          )}
           {activeStory && (
             <Link
               className="flex items-center gap-3 rounded-2xl border border-[#b550ff]/40 bg-gradient-to-r from-[#23142e] to-[#191827] p-3"
@@ -565,6 +868,34 @@ export default async function ProfilePage({
         </section>
       )}
 
+      {isOwnProfile && (
+        <div className="mx-4 mt-3">
+          <form action={promoteTarget}>
+            <input name="target" type="hidden" value="profile" />
+            <input name="target_id" type="hidden" value={profile.id} />
+            <input name="return_to" type="hidden" value={`/u/${profile.username}`} />
+            <button
+              className="flex w-full items-center justify-center gap-2 rounded-2xl border border-[#ffd35e]/40 bg-[#2a2215] py-3 text-sm font-bold text-[#ffd35e]"
+              type="submit"
+            >
+              🚀 Продвинуть профиль за 300 ⭐ (24 часа)
+            </button>
+          </form>
+          {profile.promoted_until &&
+            new Date(profile.promoted_until).getTime() > Date.now() && (
+              <p className="mt-2 text-center text-xs text-[#8df0b4]">
+                Профиль продвинут до{" "}
+                {new Intl.DateTimeFormat("ru-RU", {
+                  day: "numeric",
+                  month: "short",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                }).format(new Date(profile.promoted_until))}
+              </p>
+            )}
+        </div>
+      )}
+
       {isOwnProfile && profile.is_creator && (
         <details className="mx-4 rounded-2xl border border-white/10 bg-[#171923] p-4">
           <summary className="cursor-pointer text-sm font-bold">
@@ -626,7 +957,53 @@ export default async function ProfilePage({
             <span>Запросы</span>
             <span className="text-[#df9cff]">›</span>
           </Link>
+          <Link
+            className="flex items-center justify-between rounded-2xl border border-white/10 bg-[#171923] px-4 py-3 text-sm font-bold"
+            href="/settings"
+          >
+            <span>Настройки</span>
+            <span className="text-[#df9cff]">›</span>
+          </Link>
+          <Link
+            className="flex items-center justify-between rounded-2xl border border-white/10 bg-[#171923] px-4 py-3 text-sm font-bold"
+            href="/profile/media"
+          >
+            <span>Мои фото</span>
+            <span className="text-[#df9cff]">›</span>
+          </Link>
         </div>
+      )}
+      {isOwnProfile && !profile.is_creator && (
+        <div className="mx-4 mt-5">
+          <Link
+            className="flex items-center justify-between rounded-2xl border border-white/10 bg-[#171923] px-4 py-3 text-sm font-bold"
+            href="/settings"
+          >
+            <span>Настройки</span>
+            <span className="text-[#df9cff]">›</span>
+          </Link>
+          <Link
+            className="mt-3 flex items-center justify-between rounded-2xl border border-white/10 bg-[#171923] px-4 py-3 text-sm font-bold"
+            href="/profile/media"
+          >
+            <span>Мои фото</span>
+            <span className="text-[#df9cff]">›</span>
+          </Link>
+        </div>
+      )}
+      {isOwnProfile && (
+        <details className="mx-4 mt-3 rounded-2xl border border-white/10 bg-[#171923] p-4">
+          <summary className="cursor-pointer text-sm font-bold">
+            Поделиться профилем
+          </summary>
+          <div className="mt-4 flex flex-col items-center gap-3">
+            <CreatorShareLink username={profile.username} />
+            <ProfileQrCode
+              name={profile.display_name}
+              url={`${process.env.NEXT_PUBLIC_APP_URL ?? "https://hochutakzhe.ru"}/u/${profile.username}`}
+            />
+          </div>
+        </details>
       )}
       {isOwnProfile && profile.is_creator && (
         <details className="mx-4 mt-3 rounded-2xl border border-white/10 bg-[#171923] p-4">

@@ -44,6 +44,48 @@ export async function moderateTarget(formData: FormData) {
       .update({ is_hidden: true })
       .eq("id", targetId);
     if (error) throw new Error(error.message);
+  } else if (action === "hide_wish" && targetType === "wish") {
+    const { error } = await supabase
+      .from("wishes")
+      .update({ is_archived: true })
+      .eq("id", targetId);
+    if (error) throw new Error(error.message);
+  } else if (action === "hide_wish_comment" && targetType === "wish_comment") {
+    const { error } = await supabase
+      .from("wish_comments")
+      .update({ is_hidden: true })
+      .eq("id", targetId);
+    if (error) throw new Error(error.message);
+  } else if (action === "hide_story" && targetType === "story") {
+    const { error } = await supabase
+      .from("stories")
+      .update({ moderation_status: "rejected", moderated_at: new Date().toISOString() })
+      .eq("id", targetId);
+    if (error) throw new Error(error.message);
+  } else if (action === "end_live_room" && targetType === "live_room") {
+    const { error } = await supabase
+      .from("live_rooms")
+      .update({ status: "ended", ended_at: new Date().toISOString() })
+      .eq("id", targetId);
+    if (error) throw new Error(error.message);
+  } else if (action === "hide_place" && targetType === "place") {
+    const { error } = await supabase
+      .from("places")
+      .update({ is_active: false })
+      .eq("id", targetId);
+    if (error) throw new Error(error.message);
+  } else if (action === "hide_place_message" && targetType === "place_message") {
+    const { error } = await supabase
+      .from("place_messages")
+      .update({ is_hidden: true })
+      .eq("id", targetId);
+    if (error) throw new Error(error.message);
+  } else if (action === "hide_live_message" && targetType === "live_message") {
+    const { error } = await supabase
+      .from("live_room_messages")
+      .update({ is_hidden: true, hidden_at: new Date().toISOString() })
+      .eq("id", targetId);
+    if (error) throw new Error(error.message);
   } else if (action === "suspend_profile" && targetType === "profile") {
     const { error } = await supabase
       .from("profiles")

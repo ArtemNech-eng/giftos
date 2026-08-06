@@ -12,6 +12,7 @@ type WishValues = {
   category_slug?: string | null;
   visibility?: "public" | "private";
   source_wish_id?: string | null;
+  image_path?: string | null;
 };
 
 export function WishForm({
@@ -125,6 +126,12 @@ export function WishForm({
             name="image"
             type="file"
           />
+          {values?.image_path && (
+            <label className="mt-2 flex cursor-pointer items-center gap-2 text-sm text-[#8e6672]">
+              <input name="remove_image" type="checkbox" value="on" />
+              Убрать текущее фото
+            </label>
+          )}
           <p className="mt-1.5 text-xs text-[#9b858c]">JPG, PNG или WebP, до 10 МБ.</p>
         </div>
       </div>

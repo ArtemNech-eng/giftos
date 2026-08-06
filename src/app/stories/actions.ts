@@ -5,6 +5,7 @@ import type { Route } from "next";
 import { redirect } from "next/navigation";
 
 import { requireUser } from "@/lib/auth";
+import { awardCityPoints } from "@/lib/city-battle";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isUploadedFile, uploadOwnedStoryVideo } from "@/lib/media";
 import { parseAmountToMinor } from "@/lib/money";
@@ -24,18 +25,25 @@ export async function createStory(formData: FormData) {
   }
 
   const path = await uploadOwnedStoryVideo({ file: video, ownerId: user.id });
-  const { error } = await supabase.from("stories").insert({
-    author_id: user.id,
-    media_path: path,
-    caption,
-    access_type: accessType,
-    unlock_price_minor: accessType === "paid" ? priceMinor : null,
-  });
+  const { data: story, error } = await supabase
+    .from("stories")
+    .insert({
+      author_id: user.id,
+      media_path: path,
+      caption,
+      access_type: accessType,
+      unlock_price_minor: accessType === "paid" ? priceMinor : null,
+    })
+    .select("id")
+    .single();
 
   if (error) {
     await createAdminClient().storage.from("story-media").remove([path]);
     throw new Error(`Не удалось опубликовать story: ${error.message}`);
   }
+
+  // City battle: qualified action (story published).
+  await awardCityPoints(supabase, "story_published", story?.id);
 
   revalidatePath("/");
   revalidatePath(`/u/${username}`);

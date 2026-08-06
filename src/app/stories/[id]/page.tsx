@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { sendTestStoryGift } from "@/app/stories/gifts/actions";
 import { toggleStoryReaction } from "@/app/stories/reactions/actions";
 import { testUnlockStory } from "@/app/stories/actions";
+import { ReportForm } from "@/components/report-form";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { formatRubles } from "@/lib/money";
 import { getSignedImageUrl } from "@/lib/media";
@@ -117,6 +118,29 @@ export default async function StoryPage({
               >
                 Аналитика
               </Link>
+            )}
+            {user && !isAuthor && (
+              <Link
+                className="text-sm font-semibold text-[#b9b2c7]"
+                href="/stories/viewed"
+              >
+                Мои просмотры
+              </Link>
+            )}
+            {user && !isAuthor && (
+              <Link
+                className="text-sm font-semibold text-[#b9b2c7]"
+                href="/stories/opens"
+              >
+                Мои открытия
+              </Link>
+            )}
+            {user && !isAuthor && (
+              <ReportForm
+                returnTo={`/stories/${story.id}`}
+                targetId={story.id}
+                targetType="story"
+              />
             )}
             {author?.username && (
               <Link

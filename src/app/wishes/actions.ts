@@ -5,8 +5,10 @@ import type { Route } from "next";
 import { redirect } from "next/navigation";
 
 import { requireUser } from "@/lib/auth";
+import { awardCityPoints } from "@/lib/city-battle";
 import { isUploadedFile, uploadOwnedImage } from "@/lib/media";
 import { parseAmountToMinor } from "@/lib/money";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { isValidUrl, optionalText, requiredText } from "@/lib/validation";
 
 function wishInput(formData: FormData) {
@@ -67,7 +69,13 @@ export async function createWish(formData: FormData) {
   if (error) throw new Error(`Не удалось создать желание: ${error.message}`);
 
   // A referral becomes active only after onboarding and a meaningful action.
-  await supabase.rpc("claim_referral_bonus_if_qualified");
+  const { data: claimed } = await supabase.rpc("claim_referral_bonus_if_qualified");
+
+  // City battle: qualified actions.
+  await awardCityPoints(supabase, "wish_published", data.id);
+  if (claimed === true) {
+    await awardCityPoints(supabase, "referral_qualified", `referral-${user.id}`);
+  }
 
   revalidatePath("/");
   redirect(`/wishes/${data.id}/edit`);
@@ -80,13 +88,19 @@ export async function updateWish(formData: FormData) {
   if (!wishId) throw new Error("Не найдено желание для обновления.");
 
   const image = formData.get("image");
+  const removeImage = formData.get("remove_image") === "on";
   const imagePath = isUploadedFile(image)
     ? await uploadOwnedImage({ file: image, ownerId: user.id, bucket: "wish-media" })
-    : undefined;
+    : removeImage
+      ? null
+      : undefined;
 
   const { error } = await supabase
     .from("wishes")
-    .update({ ...input, ...(imagePath ? { image_path: imagePath } : {}) })
+    .update({
+      ...input,
+      ...(imagePath !== undefined ? { image_path: imagePath } : {}),
+    })
     .eq("id", wishId)
     .eq("author_id", user.id);
 
@@ -119,7 +133,7 @@ export async function toggleAlsoWantWish(formData: FormData) {
 
   const { data: wish } = await supabase
     .from("wishes")
-    .select("id, visibility, is_archived")
+    .select("id, author_id, title, visibility, is_archived")
     .eq("id", wishId)
     .maybeSingle();
   if (!wish || wish.visibility !== "public" || wish.is_archived)
@@ -142,8 +156,86 @@ export async function toggleAlsoWantWish(formData: FormData) {
         .insert({ wish_id: wishId, profile_id: user.id });
   if (error) throw new Error(`Не удалось обновить «Хочу также»: ${error.message}`);
 
+  // Notify the wish author when someone marks «Хочу также» (not on removal).
+  if (!existing && wish.author_id !== user.id) {
+    await createAdminClient()
+      .from("notifications")
+      .insert({
+        recipient_id: wish.author_id,
+        actor_id: user.id,
+        type: "wish_also_want",
+        entity_type: "wish",
+        entity_id: wish.id,
+        payload: { wish_title: wish.title },
+      });
+  }
+
   revalidatePath(`/wishes/${wishId}`);
   redirect(`/wishes/${wishId}` as Route);
+}
+
+/**
+ * Feed version of the «Хочу также» toggle: updates the count via the DB
+ * trigger and refreshes the feed in place, without navigating away.
+ */
+export async function toggleAlsoWantWishFromFeed(formData: FormData) {
+  const { supabase, user } = await requireUser();
+  const wishId = requiredText(formData.get("wish_id"), 100);
+  if (!wishId) return;
+
+  const { data: wish } = await supabase
+    .from("wishes")
+    .select("id, visibility, is_archived")
+    .eq("id", wishId)
+    .maybeSingle();
+  if (!wish || wish.visibility !== "public" || wish.is_archived) return;
+
+  const { data: existing } = await supabase
+    .from("wish_also_wants")
+    .select("wish_id")
+    .eq("wish_id", wishId)
+    .eq("profile_id", user.id)
+    .maybeSingle();
+  const { error } = existing
+    ? await supabase
+        .from("wish_also_wants")
+        .delete()
+        .eq("wish_id", wishId)
+        .eq("profile_id", user.id)
+    : await supabase
+        .from("wish_also_wants")
+        .insert({ wish_id: wishId, profile_id: user.id });
+  if (error) throw new Error(`Не удалось обновить «Хочу также»: ${error.message}`);
+
+  revalidatePath("/feed");
+  revalidatePath(`/wishes/${wishId}`);
+}
+
+export async function postWishComment(formData: FormData) {
+  const { supabase, user } = await requireUser();
+  const wishId = requiredText(formData.get("wish_id"), 100);
+  const body = requiredText(formData.get("body"), 2000);
+  if (!wishId || !body) throw new Error("Введите сообщение для обсуждения.");
+
+  const { data: wish } = await supabase
+    .from("wishes")
+    .select("id, visibility, is_archived")
+    .eq("id", wishId)
+    .maybeSingle();
+  if (!wish || wish.visibility !== "public" || wish.is_archived)
+    throw new Error("Это желание недоступно.");
+
+  const { error } = await supabase.from("wish_comments").insert({
+    wish_id: wishId,
+    author_id: user.id,
+    body,
+  });
+  if (error?.message.includes("comment_rate_limit"))
+    throw new Error("Слишком много сообщений — подождите минуту.");
+  if (error) throw new Error(`Не удалось отправить сообщение: ${error.message}`);
+
+  revalidatePath(`/wishes/${wishId}`);
+  redirect(`/wishes/${wishId}#discussion` as Route);
 }
 
 export async function cloneWish(formData: FormData) {
