@@ -3,6 +3,7 @@ import {
   ArrowUpRight,
   CirclePlus,
   Compass,
+  MapPin,
   MessageCircle,
   Radio,
   Search,
@@ -19,12 +20,13 @@ export const metadata = {
 
 const screens = [
   { id: "feed", label: "Главная", number: "01" },
-  { id: "profile", label: "Профиль", number: "02" },
-  { id: "earnings", label: "Доход", number: "03" },
-  { id: "bonuses", label: "Рефералы", number: "04" },
-  { id: "messages", label: "Сообщения", number: "05" },
-  { id: "live", label: "Эфир", number: "06" },
-  { id: "onboarding", label: "Старт", number: "07" },
+  { id: "city", label: "Город сейчас", number: "02" },
+  { id: "profile", label: "Профиль", number: "03" },
+  { id: "earnings", label: "Доход", number: "04" },
+  { id: "bonuses", label: "Рефералы", number: "05" },
+  { id: "messages", label: "Сообщения", number: "06" },
+  { id: "live", label: "Эфир", number: "07" },
+  { id: "onboarding", label: "Старт", number: "08" },
 ] as const;
 
 type ScreenId = (typeof screens)[number]["id"];
@@ -69,7 +71,7 @@ function Avatar({
 function AppNav({ active }: { active: string }) {
   const entries = [
     { label: "Главная", icon: Compass },
-    { label: "Поиск", icon: Search },
+    { label: "Город", icon: MapPin },
     { label: "Чаты", icon: MessageCircle },
     { label: "Я", icon: UserRound },
   ];
@@ -216,6 +218,133 @@ function FeedScreen() {
         </div>
       </section>
       <AppNav active="Главная" />
+    </div>
+  );
+}
+
+function CityScreen() {
+  const pulse = [
+    { name: "Настя", text: "общается в «Центре»", type: "сейчас" },
+    { name: "Макс", text: "начал эфир из «Музыки»", type: "LIVE" },
+    { name: "Влад", text: "поднялся на 3 места в рейтинге", type: "↑ рейтинг" },
+  ];
+  return (
+    <div className="flex min-h-[730px] flex-col bg-[#fbf9fe] text-[#251d31]">
+      <header className="flex items-center justify-between px-4 pb-4 pt-5">
+        <span className="grid size-10 place-items-center rounded-full border border-[#2c2036]/10 bg-white text-[#7549d0]">
+          <MapPin className="size-5" />
+        </span>
+        <span className="text-center">
+          <small className="block text-[9px] font-black uppercase tracking-[0.12em] text-[#8b7e92]">
+            Твой город
+          </small>
+          <h1 className="text-base font-black">Будённовск</h1>
+        </span>
+        <span className="grid size-10 place-items-center rounded-full bg-gradient-to-br from-[#ff5d9a] to-[#8254ed] text-xl text-white">
+          +
+        </span>
+      </header>
+      <section className="mx-4 overflow-hidden rounded-[1.7rem] bg-gradient-to-br from-[#2e2250] via-[#49316e] to-[#7459d7] p-5 text-white shadow-[0_12px_28px_rgba(63,37,98,.24)]">
+        <p className="text-[10px] font-black uppercase tracking-[0.14em] text-[#ffb7d0]">
+          Город сейчас
+        </p>
+        <h2 className="mt-2 text-3xl font-black leading-[0.88] tracking-[-0.08em]">
+          НЕ ГДЕ-ТО.
+          <br />А РЯДОМ.
+        </h2>
+        <p className="text-white/72 mt-3 max-w-52 text-[11px] leading-5">
+          Смотри, кто сейчас здесь, куда зайти и что уже происходит.
+        </p>
+        <div className="mt-5 flex gap-2">
+          <span className="bg-white/14 rounded-full px-2.5 py-1 text-[9px] font-black">
+            18 в городе
+          </span>
+          <span className="bg-white/14 rounded-full px-2.5 py-1 text-[9px] font-black">
+            4 места живые
+          </span>
+        </div>
+      </section>
+      <section className="px-4 pt-6">
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="text-sm font-black">Сейчас происходит</h2>
+          <span className="text-[10px] font-bold text-[#8753e6]">Обновляется</span>
+        </div>
+        <div className="overflow-hidden rounded-2xl border border-[#2c2036]/10 bg-white">
+          {pulse.map((item, index) => (
+            <div
+              className="border-[#2c2036]/8 flex items-center gap-3 border-b px-3 py-3 last:border-0"
+              key={item.name}
+            >
+              <Avatar index={index} name={item.name} size="size-10" />
+              <span className="min-w-0 grow">
+                <b className="block text-[11px]">{item.name}</b>
+                <small className="block truncate text-[10px] text-[#81748a]">
+                  {item.text}
+                </small>
+              </span>
+              <span
+                className={`rounded-full px-2 py-1 text-[8px] font-black ${index === 1 ? "bg-[#ffe5ef] text-[#d54279]" : "bg-[#f1e9ff] text-[#7549d0]"}`}
+              >
+                {item.type}
+              </span>
+            </div>
+          ))}
+        </div>
+      </section>
+      <section className="px-4 pt-6">
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="text-sm font-black">Куда зайдём?</h2>
+          <span className="text-[10px] font-bold text-[#8753e6]">Все места ›</span>
+        </div>
+        <div className="flex gap-2.5 overflow-hidden">
+          {[
+            {
+              emoji: "🏙",
+              name: "Центр",
+              online: "6 сейчас",
+              color: "from-[#f4e7ff] to-[#eaf6ff]",
+            },
+            {
+              emoji: "♪",
+              name: "Музыка",
+              online: "4 сейчас",
+              color: "from-[#ffe8f1] to-[#fff0dc]",
+            },
+            {
+              emoji: "🎮",
+              name: "Игровая",
+              online: "3 сейчас",
+              color: "from-[#e7f7f3] to-[#e9efff]",
+            },
+          ].map((place) => (
+            <div
+              className={`w-28 shrink-0 rounded-2xl bg-gradient-to-br ${place.color} p-3`}
+              key={place.name}
+            >
+              <span className="text-xl">{place.emoji}</span>
+              <b className="mt-5 block text-[11px]">{place.name}</b>
+              <small className="mt-0.5 block text-[9px] text-[#756b80]">
+                ● {place.online}
+              </small>
+            </div>
+          ))}
+        </div>
+      </section>
+      <section className="mx-4 mt-6 rounded-2xl border border-[#ffe0aa] bg-[#fff8e9] p-3">
+        <div className="flex items-center gap-3">
+          <span className="grid size-10 place-items-center rounded-xl bg-[#ffdf82] text-lg">
+            🏆
+          </span>
+          <span className="grow">
+            <b className="block text-[11px]">Кто вырос за неделю</b>
+            <small className="block text-[10px] text-[#826f4b]">
+              Влад +3 позиции · Настя в топ-10
+            </small>
+          </span>
+          <span className="text-[10px] font-black text-[#a87714]">Рейтинг ›</span>
+        </div>
+      </section>
+      <AppNav active="Город" />
     </div>
   );
 }
@@ -711,6 +840,7 @@ export default async function PreviewPage({
     : "feed";
   const content: Record<ScreenId, React.ReactNode> = {
     feed: <FeedScreen />,
+    city: <CityScreen />,
     profile: <ProfileScreen />,
     earnings: <EarningsScreen />,
     bonuses: <BonusesScreen />,

@@ -2,8 +2,10 @@ import Link from "next/link";
 import type { Route } from "next";
 import { MapPin, Plus, TrendingUp, Trophy, UsersRound } from "lucide-react";
 
-import { requireUser } from "@/lib/auth";
+import { CityPulse, type CityPulseItem } from "@/components/city-pulse";
 import { EmptyState } from "@/components/empty-state";
+import { requireUser } from "@/lib/auth";
+import { getSignedImageUrl } from "@/lib/media";
 
 export const metadata = {
   title: "Город",
@@ -35,6 +37,7 @@ export default async function PlacesPage() {
   let places: Array<PlaceRow & { online: number; friends: number; unread: number }> =
     [];
   let cityName: string | null = null;
+  let cityPulse: CityPulseItem[] = [];
   if (profile?.city_id) {
     const { data: cityRow } = await supabase
       .from("cities")
@@ -42,6 +45,47 @@ export default async function PlacesPage() {
       .eq("id", profile.city_id)
       .maybeSingle();
     cityName = cityRow?.name ?? profile.city ?? null;
+
+    const { data: rawPulse } = await supabase
+      .from("public_city_pulse")
+      .select(
+        "city_id, kind, actor_id, actor_name, actor_username, actor_avatar_path, target_id, target_name, target_emoji, target_slug, created_at",
+      )
+      .eq("city_id", profile.city_id)
+      .order("created_at", { ascending: false })
+      .limit(8);
+    cityPulse = await Promise.all(
+      (
+        (rawPulse ?? []) as Array<{
+          city_id: string;
+          kind: CityPulseItem["kind"];
+          actor_id: string;
+          actor_name: string;
+          actor_username: string;
+          actor_avatar_path: string | null;
+          target_id: string;
+          target_name: string;
+          target_emoji: string;
+          target_slug: string | null;
+          created_at: string;
+        }>
+      ).map(async (item) => ({
+        city_id: item.city_id,
+        kind: item.kind,
+        actor_id: item.actor_id,
+        actor_name: item.actor_name,
+        actor_username: item.actor_username,
+        actor_avatar_url: await getSignedImageUrl({
+          bucket: "avatars",
+          path: item.actor_avatar_path,
+        }),
+        target_id: item.target_id,
+        target_name: item.target_name,
+        target_emoji: item.target_emoji,
+        target_slug: item.target_slug,
+        created_at: item.created_at,
+      })),
+    );
 
     // When the user last read each place (for the unread badge).
     const { data: myPresence } = await supabase
@@ -167,6 +211,8 @@ export default async function PlacesPage() {
           Пойдём посмотрим, кто сейчас в городе. Выбери место и заходи.
         </p>
       </section>
+
+      {cityName && <CityPulse cityName={cityName} items={cityPulse} />}
 
       {risingUsers.length > 0 && (
         <section className="mt-5 rounded-2xl border border-[#8df0b4]/25 bg-gradient-to-r from-[#14221d] to-[#171824] p-4">
