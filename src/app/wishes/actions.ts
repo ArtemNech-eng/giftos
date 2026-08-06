@@ -88,13 +88,19 @@ export async function updateWish(formData: FormData) {
   if (!wishId) throw new Error("Не найдено желание для обновления.");
 
   const image = formData.get("image");
+  const removeImage = formData.get("remove_image") === "on";
   const imagePath = isUploadedFile(image)
     ? await uploadOwnedImage({ file: image, ownerId: user.id, bucket: "wish-media" })
-    : undefined;
+    : removeImage
+      ? null
+      : undefined;
 
   const { error } = await supabase
     .from("wishes")
-    .update({ ...input, ...(imagePath ? { image_path: imagePath } : {}) })
+    .update({
+      ...input,
+      ...(imagePath !== undefined ? { image_path: imagePath } : {}),
+    })
     .eq("id", wishId)
     .eq("author_id", user.id);
 

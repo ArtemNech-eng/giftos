@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { requireUser } from "@/lib/auth";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 /**
  * Feed-friendly «Хочу также» toggle: POST wish_id -> toggles and returns
@@ -14,7 +15,7 @@ export async function POST(request: Request) {
 
   const { data: wish } = await supabase
     .from("wishes")
-    .select("id, visibility, is_archived")
+    .select("id, author_id, title, visibility, is_archived")
     .eq("id", wishId)
     .maybeSingle();
   if (!wish || wish.visibility !== "public" || wish.is_archived)
@@ -36,6 +37,24 @@ export async function POST(request: Request) {
         .from("wish_also_wants")
         .insert({ wish_id: wishId, profile_id: user.id });
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  // Notify the author when someone marks «Хочу также» from the feed.
+  if (!existing && wish.author_id !== user.id) {
+    try {
+      await createAdminClient()
+        .from("notifications")
+        .insert({
+          recipient_id: wish.author_id,
+          actor_id: user.id,
+          type: "wish_also_want",
+          entity_type: "wish",
+          entity_id: wish.id,
+          payload: { wish_title: wish.title },
+        });
+    } catch {
+      // Notification failure must not break the toggle.
+    }
+  }
 
   const { data: updated } = await supabase
     .from("wishes")
