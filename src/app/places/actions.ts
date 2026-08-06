@@ -99,6 +99,38 @@ export async function pinPlaceWithBonus(formData: FormData) {
   redirect(`/places/${placeId}?pinned=1` as Route);
 }
 
+/** Buy a theme for the place (creator only). */
+export async function buyPlaceTheme(formData: FormData) {
+  const { supabase } = await requireUser();
+  const placeId = requiredText(formData.get("place_id"), 100);
+  const themeId = requiredText(formData.get("theme_id"), 100);
+  if (!placeId || !themeId) throw new Error("Тема не найдена.");
+  const { error } = await supabase.rpc("buy_place_theme", {
+    p_place_id: placeId,
+    p_theme_id: themeId,
+  });
+  if (error) throw new Error(`Не удалось купить тему: ${error.message}`);
+  revalidatePath(`/places/${placeId}`);
+  revalidatePath("/bonuses");
+  redirect(`/places/${placeId}?styled=1` as Route);
+}
+
+/** Buy an emblem for the place (creator only). */
+export async function buyPlaceEmblem(formData: FormData) {
+  const { supabase } = await requireUser();
+  const placeId = requiredText(formData.get("place_id"), 100);
+  const emblemId = requiredText(formData.get("emblem_id"), 100);
+  if (!placeId || !emblemId) throw new Error("Эмблема не найдена.");
+  const { error } = await supabase.rpc("buy_place_emblem", {
+    p_place_id: placeId,
+    p_emblem_id: emblemId,
+  });
+  if (error) throw new Error(`Не удалось купить эмблему: ${error.message}`);
+  revalidatePath(`/places/${placeId}`);
+  revalidatePath("/bonuses");
+  redirect(`/places/${placeId}?styled=1` as Route);
+}
+
 /** Send a virtual gift to a person met in the place. */
 export async function sendPlaceGift(formData: FormData) {
   const { supabase, user } = await requireUser();

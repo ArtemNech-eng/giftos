@@ -4,6 +4,8 @@ import { ArrowLeft, CalendarDays, MapPin, UsersRound } from "lucide-react";
 import { notFound } from "next/navigation";
 
 import {
+  buyPlaceEmblem,
+  buyPlaceTheme,
   enterPlace,
   inviteToPlace,
   joinPlace,
@@ -34,12 +36,18 @@ export default async function PlacePage({
   const { data: place } = await supabase
     .from("places")
     .select(
-      "id, city_id, creator_id, name, description, emoji, kind, created_at, popularity_score",
+      "id, city_id, creator_id, name, description, emoji, kind, created_at, popularity_score, theme_id, emblem_id, place_themes!left(gradient), place_emblems!left(emoji)",
     )
     .eq("id", id)
     .eq("is_active", true)
     .maybeSingle();
   if (!place) notFound();
+  const placeThemeGradient = Array.isArray(place.place_themes)
+    ? (place.place_themes[0]?.gradient ?? null)
+    : null;
+  const placeEmblem = Array.isArray(place.place_emblems)
+    ? (place.place_emblems[0]?.emoji ?? null)
+    : null;
 
   const cutoff = new Date(Date.now() - ONLINE_WINDOW).toISOString();
   const [
@@ -51,6 +59,8 @@ export default async function PlacePage({
     { count: liveCount },
     { data: activeLive },
     { data: placeEvents },
+    { data: themeCatalog },
+    { data: emblemCatalog },
   ] = await Promise.all([
     supabase
       .from("place_presence")
@@ -100,6 +110,16 @@ export default async function PlacePage({
       .gte("starts_at", new Date().toISOString())
       .order("starts_at", { ascending: true })
       .limit(3),
+    supabase
+      .from("place_themes")
+      .select("id, name, gradient, price_stars")
+      .eq("is_active", true)
+      .order("sort_order", { ascending: true }),
+    supabase
+      .from("place_emblems")
+      .select("id, name, emoji, price_stars")
+      .eq("is_active", true)
+      .order("sort_order", { ascending: true }),
   ]);
   const online = (presence ?? []).length;
   const { data: giftCatalog } = await supabase
@@ -142,7 +162,7 @@ export default async function PlacePage({
           <ArrowLeft className="size-5" />
         </Link>
         <h1 className="text-lg font-bold">
-          {place.emoji} {place.name}
+          {place.emoji} {place.name} {placeEmblem ?? ""}
         </h1>
         <ReportForm
           returnTo={`/places/${place.id}`}
@@ -151,7 +171,13 @@ export default async function PlacePage({
         />
       </header>
 
-      <section className="mt-5 rounded-2xl border border-white/10 bg-[#171923] p-4">
+      <section
+        className={`mt-5 rounded-2xl border border-white/10 p-4 ${
+          placeThemeGradient
+            ? `bg-gradient-to-br ${placeThemeGradient}`
+            : "bg-[#171923]"
+        }`}
+      >
         <div className="flex flex-wrap items-center gap-2">
           {place.kind !== "fixed" && place.creator_id && (
             <span className="rounded-full bg-[#ffd35e]/15 px-2.5 py-1 text-xs font-bold text-[#ffd35e]">
@@ -284,6 +310,52 @@ export default async function PlacePage({
             <p className="mt-2 text-xs text-[#a9a1b4]">
               Закреплённое место всегда вверху списка города (7 дней).
             </p>
+            {(themeCatalog?.length ?? 0) > 0 && (
+              <div className="mt-3">
+                <p className="text-xs font-semibold text-[#e7c9f5]">Тема места</p>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {(themeCatalog ?? []).map((theme) => (
+                    <form action={buyPlaceTheme} key={theme.id}>
+                      <input name="place_id" type="hidden" value={place.id} />
+                      <input name="theme_id" type="hidden" value={theme.id} />
+                      <button
+                        className={`rounded-xl border px-3 py-1.5 text-xs font-semibold ${
+                          place.theme_id === theme.id
+                            ? "border-[#8df0b4]/50 bg-[#15281d] text-[#8df0b4]"
+                            : "border-white/15 bg-white/5"
+                        }`}
+                        type="submit"
+                      >
+                        {theme.name} · {theme.price_stars} ⭐
+                      </button>
+                    </form>
+                  ))}
+                </div>
+              </div>
+            )}
+            {(emblemCatalog?.length ?? 0) > 0 && (
+              <div className="mt-3">
+                <p className="text-xs font-semibold text-[#e7c9f5]">Эмблема</p>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {(emblemCatalog ?? []).map((emblem) => (
+                    <form action={buyPlaceEmblem} key={emblem.id}>
+                      <input name="place_id" type="hidden" value={place.id} />
+                      <input name="emblem_id" type="hidden" value={emblem.id} />
+                      <button
+                        className={`rounded-xl border px-3 py-1.5 text-xs font-semibold ${
+                          place.emblem_id === emblem.id
+                            ? "border-[#8df0b4]/50 bg-[#15281d] text-[#8df0b4]"
+                            : "border-white/15 bg-white/5"
+                        }`}
+                        type="submit"
+                      >
+                        {emblem.emoji} {emblem.name} · {emblem.price_stars} ⭐
+                      </button>
+                    </form>
+                  ))}
+                </div>
+              </div>
+            )}
             <form action={inviteToPlace} className="mt-3">
               <input name="place_id" type="hidden" value={place.id} />
               <p className="text-xs font-semibold text-[#e7c9f5]">Позвать в тусовку</p>
