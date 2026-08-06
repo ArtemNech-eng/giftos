@@ -1,6 +1,16 @@
+/* eslint-disable @next/next/no-img-element -- avatars use short-lived signed Storage URLs */
 import Link from "next/link";
 import type { Route } from "next";
-import { ArrowLeft, CalendarDays, MapPin, UsersRound } from "lucide-react";
+import {
+  ArrowLeft,
+  CalendarDays,
+  CircleDot,
+  Radio,
+  Sparkles,
+  TrendingUp,
+  Pin,
+  UsersRound,
+} from "lucide-react";
 import { notFound } from "next/navigation";
 
 import {
@@ -14,12 +24,15 @@ import {
   promotePlaceWithBonus,
   useCityAmbassadorPromotion,
 } from "@/app/places/actions";
+import { BrandGiftIcon } from "@/components/brand-gift-icon";
 import { LivePlaceChat } from "@/components/live-place-chat";
 import { PlaceGiftButton } from "@/components/place-gift-button";
+import { PlaceRoomRefresh } from "@/components/place-room-refresh";
 import { PlaceIcon } from "@/components/place-icon";
 import { PlaceInviteButton } from "@/components/place-invite-button";
 import { ReportForm } from "@/components/report-form";
 import { requireUser } from "@/lib/auth";
+import { getSignedImageUrl } from "@/lib/media";
 
 export const metadata = {
   title: "Место",
@@ -142,7 +155,7 @@ export default async function PlacePage({
   const { data: onlineProfiles } = onlineIds.length
     ? await supabase
         .from("profiles")
-        .select("id, username, display_name, is_creator")
+        .select("id, username, display_name, avatar_path, is_creator")
         .in("id", onlineIds)
     : { data: [] };
   const profileById = new Map(
@@ -151,6 +164,54 @@ export default async function PlacePage({
   const people = (presence ?? [])
     .map((row) => profileById.get(row.profile_id))
     .filter((profile): profile is NonNullable<typeof profile> => Boolean(profile));
+  const { data: myFollows } = await supabase
+    .from("user_follows")
+    .select("following_id")
+    .eq("follower_id", user.id);
+  const followingSet = new Set((myFollows ?? []).map((row) => row.following_id));
+  const peopleWithAvatars = await Promise.all(
+    [...people]
+      .sort((a, b) => Number(followingSet.has(b.id)) - Number(followingSet.has(a.id)))
+      .map(async (person) => ({
+        ...person,
+        avatarUrl: await getSignedImageUrl({
+          bucket: "avatars",
+          path: person.avatar_path,
+        }),
+      })),
+  );
+
+  const { data: rawMoments } = await supabase
+    .from("public_city_social_moments")
+    .select(
+      "kind, actor_id, actor_name, actor_username, actor_avatar_path, target_id, target_name, target_slug, created_at",
+    )
+    .eq("city_id", place.city_id)
+    .eq("target_id", place.id)
+    .order("created_at", { ascending: false })
+    .limit(4);
+  const placeMoments = await Promise.all(
+    (
+      (rawMoments ?? []) as Array<{
+        kind:
+          "place_join" | "place_gift" | "profile_gift" | "live_gift" | "live_donation";
+        actor_id: string;
+        actor_name: string;
+        actor_username: string;
+        actor_avatar_path: string | null;
+        target_id: string | null;
+        target_name: string;
+        target_slug: string | null;
+        created_at: string;
+      }>
+    ).map(async (moment) => ({
+      ...moment,
+      avatarUrl: await getSignedImageUrl({
+        bucket: "avatars",
+        path: moment.actor_avatar_path,
+      }),
+    })),
+  );
 
   const authorIds = [...new Set((messages ?? []).map((m) => m.author_id))];
   const { data: authorProfiles } = authorIds.length
@@ -189,16 +250,17 @@ export default async function PlacePage({
   );
 
   return (
-    <main className="mx-auto min-h-screen max-w-[430px] bg-[#0c0e14] px-4 py-5 text-white">
+    <main className="mx-auto min-h-screen max-w-[430px] bg-[#f7f4fb] px-4 pb-10 pt-5 text-[#251d31]">
+      <PlaceRoomRefresh placeId={place.id} />
       <header className="flex items-center justify-between">
         <Link
-          className="bg-white/8 grid size-9 place-items-center rounded-full"
+          className="grid size-10 place-items-center rounded-full border border-[#2c2036]/10 bg-white shadow-[0_6px_18px_rgba(64,38,88,.08)]"
           href="/places"
         >
           <ArrowLeft className="size-5" />
         </Link>
-        <h1 className="flex items-center gap-2 text-lg font-bold">
-          <PlaceIcon className="size-5 text-[#cbb8ff]" code={place.icon_code} />
+        <h1 className="flex items-center gap-2 text-lg font-black tracking-[-0.03em]">
+          <PlaceIcon className="size-5 text-[#8753e6]" code={place.icon_code} />
           {place.name}
           {placeEmblem ?? ""}
         </h1>
@@ -210,30 +272,28 @@ export default async function PlacePage({
       </header>
 
       <section
-        className={`mt-5 rounded-2xl border border-white/10 p-4 ${
-          placeThemeGradient
-            ? `bg-gradient-to-br ${placeThemeGradient}`
-            : "bg-[#171923]"
+        className={`mt-5 rounded-[1.8rem] border border-[#2c2036]/10 p-5 shadow-[0_12px_30px_rgba(69,43,94,.07)] ${
+          placeThemeGradient ? `bg-gradient-to-br ${placeThemeGradient}` : "bg-white"
         }`}
       >
         <div className="flex flex-wrap items-center gap-2">
           {place.kind !== "fixed" && place.creator_id && (
-            <span className="rounded-full bg-[#ffd35e]/15 px-2.5 py-1 text-xs font-bold text-[#ffd35e]">
-              👑 Создатель
+            <span className="inline-flex items-center gap-1 rounded-full bg-[#fff4d8] px-2.5 py-1 text-xs font-bold text-[#a87511]">
+              <Sparkles className="size-3" /> Создатель
             </span>
           )}
           {place.popularity_score >= 10 && (
-            <span className="rounded-full bg-[#ff4b8a]/15 px-2.5 py-1 text-xs font-bold text-[#ff9bc5]">
-              🔥 Популярная тусовка
+            <span className="inline-flex items-center gap-1 rounded-full bg-[#fff0f6] px-2.5 py-1 text-xs font-bold text-[#d84b81]">
+              <CircleDot className="size-3" /> Популярная тусовка
             </span>
           )}
-          <span className="rounded-full bg-white/5 px-2.5 py-1 text-xs text-[#aaa4b7]">
-            {place.popularity_score} активность
+          <span className="rounded-full bg-[#f5eff8] px-2.5 py-1 text-xs text-[#756a7d]">
+            {place.popularity_score} активности
           </span>
         </div>
-        <div className="mt-3 flex items-center gap-2">
-          <UsersRound className="size-5 text-[#9e88ff]" />
-          <p className="text-sm font-bold">
+        <div className="mt-4 flex items-center gap-2">
+          <UsersRound className="size-5 text-[#8753e6]" />
+          <p className="text-sm font-black">
             Сейчас здесь {online}{" "}
             {online === 1
               ? "человек"
@@ -242,7 +302,7 @@ export default async function PlacePage({
                 : "человек"}
           </p>
         </div>
-        <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-[#aaa4b7]">
+        <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-[#756a7d]">
           <span>{memberCount ?? 0} участников</span>
           <span>{messageCount ?? 0} сообщений</span>
           {place.kind !== "fixed" && <span>{liveCount ?? 0} эфиров</span>}
@@ -255,83 +315,103 @@ export default async function PlacePage({
           </span>
         </div>
         {place.description && (
-          <p className="mt-2 text-sm leading-6 text-[#b9b1c5]">{place.description}</p>
+          <p className="mt-3 text-sm leading-6 text-[#62566c]">{place.description}</p>
         )}
-        <div className="mt-3 flex flex-wrap gap-2">
-          {people.length === 0 ? (
-            <p className="text-xs text-[#aaa4b7]">Пока пусто — будь первым здесь!</p>
+        <div className="mt-4">
+          {peopleWithAvatars.length === 0 ? (
+            <p className="rounded-xl bg-[#f7f2fa] p-3 text-xs text-[#7b7083]">
+              Пока никого нет — отметься «Я здесь», чтобы место стало живым для
+              следующих людей.
+            </p>
           ) : (
-            people.map((person) => (
-              <span
-                className="border-white/8 flex items-center gap-2 rounded-full border bg-white/5 py-1 pl-2.5 pr-1 text-xs"
-                key={person.id}
-              >
-                <Link
-                  className="flex items-center gap-1.5 transition hover:text-[#8df0b4]"
-                  href={`/u/${person.username}` as Route}
-                  title="Подойти и познакомиться"
+            <div className="flex gap-2.5 overflow-x-auto pb-1">
+              {peopleWithAvatars.map((person) => (
+                <div
+                  className="w-28 shrink-0 rounded-2xl border border-[#2c2036]/10 bg-white p-2.5 text-center"
+                  key={person.id}
                 >
-                  <span className="size-1.5 rounded-full bg-[#8df0b4]" />
-                  {person.display_name}
-                  {person.is_creator && " 👑"}
-                </Link>
-                {person.id !== user.id && giftCatalog && giftCatalog.length > 0 && (
-                  <PlaceGiftButton
-                    gifts={giftCatalog.map((gift) => ({
-                      code: gift.code,
-                      label: gift.label,
-                      emoji: gift.emoji,
-                      price_minor: gift.price_minor,
-                    }))}
-                    placeId={place.id}
-                    recipientId={person.id}
-                  />
-                )}
-                {person.id !== user.id && (myInvitePlaces ?? []).length > 0 && (
-                  <PlaceInviteButton
-                    places={(myInvitePlaces ?? []).map((p) => ({
-                      id: p.id,
-                      name: p.name,
-                      icon_code: p.icon_code,
-                    }))}
-                    profileId={person.id}
-                    returnTo={`/places/${place.id}`}
-                  />
-                )}
-              </span>
-            ))
+                  <Link href={`/u/${person.username}` as Route} title="Открыть профиль">
+                    <span className="relative mx-auto grid size-11 place-items-center overflow-hidden rounded-full bg-gradient-to-br from-[#ff78ad] to-[#8753ed] p-0.5">
+                      <span className="grid size-full place-items-center overflow-hidden rounded-full bg-[#f7f1fa] text-xs font-black text-[#33263d]">
+                        {person.avatarUrl ? (
+                          <img
+                            alt=""
+                            className="size-full object-cover"
+                            src={person.avatarUrl}
+                          />
+                        ) : (
+                          person.display_name.slice(0, 1).toUpperCase()
+                        )}
+                      </span>
+                      <span className="absolute bottom-0 right-0 size-2.5 rounded-full border-2 border-white bg-[#47bf8e]" />
+                    </span>
+                    <b className="mt-1.5 block truncate text-[10px]">
+                      {person.display_name}
+                    </b>
+                  </Link>
+                  {person.id !== user.id && (
+                    <div className="mt-2 flex justify-center gap-1">
+                      {giftCatalog && giftCatalog.length > 0 && (
+                        <PlaceGiftButton
+                          gifts={giftCatalog.map((gift) => ({
+                            code: gift.code,
+                            label: gift.label,
+                            emoji: gift.emoji,
+                            price_minor: gift.price_minor,
+                          }))}
+                          placeId={place.id}
+                          recipientId={person.id}
+                        />
+                      )}
+                      {(myInvitePlaces ?? []).length > 0 && (
+                        <PlaceInviteButton
+                          places={(myInvitePlaces ?? []).map((p) => ({
+                            id: p.id,
+                            name: p.name,
+                            icon_code: p.icon_code,
+                          }))}
+                          profileId={person.id}
+                          returnTo={`/places/${place.id}`}
+                        />
+                      )}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
           )}
         </div>
-        <div className="mt-4 flex gap-2">
-          <form action={enterPlace}>
+        <div className="mt-5 flex gap-2">
+          <form className="grow" action={enterPlace}>
             <input name="place_id" type="hidden" value={place.id} />
             <button
-              className="rounded-xl bg-gradient-to-r from-[#ff4b8a] to-[#7d45ff] px-4 py-2 text-sm font-bold"
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#ff5d9a] to-[#8254ed] px-4 py-2.5 text-sm font-black text-white shadow-[0_7px_16px_rgba(160,75,213,.2)]"
               type="submit"
             >
-              Я здесь
+              <CircleDot className="size-4" /> Я здесь
             </button>
           </form>
-          <form action={leavePlace}>
-            <input name="place_id" type="hidden" value={place.id} />
-            <button
-              className="rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-sm font-semibold"
-              type="submit"
-            >
-              Выйти
-            </button>
-          </form>
-          {!isMember && place.kind !== "fixed" && (
+          {isMember ? (
+            <form action={leavePlace}>
+              <input name="place_id" type="hidden" value={place.id} />
+              <button
+                className="rounded-xl border border-[#2c2036]/10 bg-white px-4 py-2.5 text-sm font-semibold text-[#665a72]"
+                type="submit"
+              >
+                Выйти
+              </button>
+            </form>
+          ) : place.kind !== "fixed" ? (
             <form action={joinPlace}>
               <input name="place_id" type="hidden" value={place.id} />
               <button
-                className="rounded-xl border border-[#b550ff]/40 bg-[#1b1528] px-4 py-2 text-sm font-semibold text-[#e7c9f5]"
+                className="rounded-xl border border-[#ad7bf4]/35 bg-[#f2eaff] px-4 py-2.5 text-sm font-semibold text-[#7549d0]"
                 type="submit"
               >
                 Вступить
               </button>
             </form>
-          )}
+          ) : null}
         </div>
         {place.creator_id === user.id && place.kind !== "fixed" && (
           <div className="mt-4 border-t border-white/10 pt-3">
@@ -352,7 +432,7 @@ export default async function PlacePage({
                 className="flex w-full items-center justify-center gap-2 rounded-xl border border-[#ffd35e]/40 bg-[#2a2215] py-2.5 text-sm font-bold text-[#ffd35e]"
                 type="submit"
               >
-                🚀 Поднять тусовку за 200 ⭐
+                <TrendingUp className="size-4" /> Поднять тусовку за 200 ⭐
               </button>
             </form>
             <p className="mt-2 text-xs text-[#a9a1b4]">
@@ -364,7 +444,7 @@ export default async function PlacePage({
                 className="flex w-full items-center justify-center gap-2 rounded-xl border border-[#ff4b8a]/40 bg-[#2a1222] py-2.5 text-sm font-bold text-[#ff9bc5]"
                 type="submit"
               >
-                📌 Закрепить на неделю за 500 ⭐
+                <Pin className="size-4" /> Закрепить на неделю за 500 ⭐
               </button>
             </form>
             <p className="mt-2 text-xs text-[#a9a1b4]">
@@ -439,34 +519,89 @@ export default async function PlacePage({
         )}
       </section>
 
+      {placeMoments.length > 0 && (
+        <section className="mt-5 overflow-hidden rounded-[1.6rem] border border-[#2c2036]/10 bg-white shadow-[0_10px_25px_rgba(69,43,94,.06)]">
+          <div className="border-[#2c2036]/8 flex items-center justify-between border-b px-4 py-3">
+            <span>
+              <h2 className="text-sm font-black">Последнее в месте</h2>
+              <p className="mt-0.5 text-[10px] text-[#81748a]">
+                Только публичные моменты участников
+              </p>
+            </span>
+            <Sparkles className="size-4 text-[#8753e6]" />
+          </div>
+          <div className="divide-[#2c2036]/8 divide-y">
+            {placeMoments.map((moment) => {
+              const isGift = moment.kind === "place_gift";
+              return (
+                <Link
+                  className="flex items-center gap-3 px-4 py-3 transition hover:bg-[#faf6fd]"
+                  href={`/u/${moment.actor_username}` as Route}
+                  key={`${moment.kind}-${moment.actor_id}-${moment.created_at}`}
+                >
+                  <span className="grid size-9 shrink-0 place-items-center overflow-hidden rounded-full bg-gradient-to-br from-[#ff78ad] to-[#8753ed] p-0.5">
+                    <span className="grid size-full place-items-center overflow-hidden rounded-full bg-[#f7f1fa] text-xs font-black text-[#33263d]">
+                      {moment.avatarUrl ? (
+                        <img
+                          alt=""
+                          className="size-full object-cover"
+                          src={moment.avatarUrl}
+                        />
+                      ) : (
+                        moment.actor_name.slice(0, 1).toUpperCase()
+                      )}
+                    </span>
+                  </span>
+                  <span className="min-w-0 grow text-[11px]">
+                    <b>{moment.actor_name}</b>{" "}
+                    <span className="text-[#6e6178]">
+                      {isGift
+                        ? `отправил(а) подарок ${moment.target_name}`
+                        : `присоединился(-ась) к «${place.name}»`}
+                    </span>
+                  </span>
+                  {isGift ? (
+                    <BrandGiftIcon className="size-5 text-[#d84b81]" code="heart" />
+                  ) : (
+                    <UsersRound className="size-4 text-[#8753e6]" />
+                  )}
+                </Link>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
       {activeLive && (
-        <section className="mt-5 rounded-2xl border border-[#ff2d55]/50 bg-gradient-to-r from-[#2a1222] to-[#1b1528] p-4">
-          <p className="text-xs font-bold text-[#ff7fb5]">🔴 В ЭФИРЕ ВНУТРИ МЕСТА</p>
-          <p className="mt-1 font-bold">{activeLive.title}</p>
+        <section className="mt-5 rounded-2xl border border-[#ffc5da] bg-gradient-to-r from-[#fff0f6] to-[#f4edff] p-4">
+          <p className="flex items-center gap-1.5 text-xs font-black text-[#d84b81]">
+            <Radio className="size-3.5" /> В эфире внутри места
+          </p>
+          <p className="mt-1 text-sm font-black">{activeLive.title}</p>
           <Link
-            className="mt-3 inline-flex h-10 items-center rounded-xl bg-[#ff2d55] px-4 text-sm font-bold"
+            className="mt-3 inline-flex h-10 items-center rounded-xl bg-gradient-to-r from-[#ff5d9a] to-[#8254ed] px-4 text-sm font-bold text-white"
             href={`/live/${activeLive.slug}` as Route}
           >
-            Смотреть эфир ›
+            Смотреть эфир
           </Link>
         </section>
       )}
 
       {(placeEvents ?? []).length > 0 && (
-        <section className="mt-5 rounded-2xl border border-white/10 bg-[#171923] p-4">
+        <section className="mt-5 rounded-2xl border border-[#c8e5e1] bg-[#f1faf8] p-4">
           <div className="flex items-center gap-2">
-            <CalendarDays className="size-5 text-[#7fd8ff]" />
-            <h2 className="font-bold">События места</h2>
+            <CalendarDays className="size-5 text-[#258b82]" />
+            <h2 className="text-sm font-black">События места</h2>
           </div>
           <div className="mt-3 space-y-2">
             {(placeEvents ?? []).map((event) => (
               <Link
-                className="flex items-center justify-between rounded-xl bg-white/5 p-3 text-sm"
+                className="border-[#2c2036]/8 flex items-center justify-between rounded-xl border bg-white p-3 text-sm"
                 href={`/events/${event.id}` as Route}
                 key={event.id}
               >
                 <span className="truncate font-semibold">{event.title}</span>
-                <span className="ml-2 shrink-0 text-xs text-[#aaa4b7]">
+                <span className="ml-2 shrink-0 text-xs text-[#756a7d]">
                   {new Intl.DateTimeFormat("ru-RU", {
                     day: "numeric",
                     month: "short",
@@ -480,10 +615,15 @@ export default async function PlacePage({
         </section>
       )}
 
-      <section className="mt-5 rounded-2xl border border-white/10 bg-[#171923] p-4">
+      <section className="mt-5 rounded-[1.6rem] border border-[#2c2036]/10 bg-white p-4 shadow-[0_10px_25px_rgba(69,43,94,.06)]">
         <div className="flex items-center gap-2">
-          <MapPin className="size-5 text-[#d68cff]" />
-          <h2 className="font-bold">Общий разговор</h2>
+          <CircleDot className="size-5 text-[#8753e6]" />
+          <span>
+            <h2 className="text-sm font-black">Общий разговор</h2>
+            <p className="mt-0.5 text-[10px] text-[#81748a]">
+              Говорят те, кто сейчас в этой тусовке
+            </p>
+          </span>
         </div>
         <LivePlaceChat
           currentUserId={user.id}
