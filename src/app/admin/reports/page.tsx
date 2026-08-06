@@ -231,6 +231,12 @@ export default async function AdminReportsPage({
             </span>
           ) : null}
         </Link>
+        <Link
+          className="flex flex-1 items-center justify-center rounded-lg px-4 py-2 text-sm font-semibold text-[#8e6a75] hover:text-[#bd3e66]"
+          href="/admin/actions"
+        >
+          Действия
+        </Link>
       </nav>
 
       <section className="mt-8">

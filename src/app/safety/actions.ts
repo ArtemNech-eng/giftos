@@ -49,6 +49,8 @@ export async function createReport(formData: FormData) {
     details,
   });
 
+  if (error?.message.includes("report_rate_limit"))
+    throw new Error("Слишком много жалоб — подождите минуту.");
   if (error?.code === "23505") {
     redirect(`${returnTo}?report=already` as Route);
   }
