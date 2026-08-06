@@ -11,10 +11,12 @@ export function FeedWishToggle({
   wishId,
   initialCount,
   initialActive,
+  size = "compact",
 }: {
   wishId: string;
   initialCount: number;
   initialActive: boolean;
+  size?: "compact" | "prominent";
 }) {
   const [count, setCount] = useState(initialCount);
   const [active, setActive] = useState(initialActive);
@@ -46,7 +48,11 @@ export function FeedWishToggle({
   return (
     <button
       aria-pressed={active}
-      className={`inline-flex shrink-0 items-center gap-1 rounded-full border px-2.5 py-1.5 text-xs font-bold transition ${
+      className={`inline-flex shrink-0 items-center gap-1.5 border font-black transition ${
+        size === "prominent"
+          ? "h-11 rounded-xl px-4 text-xs"
+          : "rounded-full px-2.5 py-1.5 text-xs"
+      } ${
         active
           ? "border-[#f2bfd4] bg-[#fff0f6] text-[#c34e79]"
           : "border-[#e1d6e7] bg-white text-[#756a7d] hover:border-[#c89be9]"
@@ -55,7 +61,11 @@ export function FeedWishToggle({
       type="button"
     >
       <Sparkles className="size-3.5" />
-      {count > 0 ? count : "Хочу также"}
+      {size === "prominent"
+        ? `${active ? "Уже хочу" : "Хочу также"}${count > 0 ? ` · ${count}` : ""}`
+        : count > 0
+          ? count
+          : "Хочу также"}
     </button>
   );
 }

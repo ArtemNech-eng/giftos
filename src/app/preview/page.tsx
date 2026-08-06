@@ -53,6 +53,7 @@ const screens = [
   { id: "collectibles", label: "Арт-направление", number: "16" },
   { id: "collection", label: "Полка", number: "17" },
   { id: "unboxing", label: "Распаковка", number: "18" },
+  { id: "wish", label: "Желание", number: "19" },
 ] as const;
 
 type ScreenId = (typeof screens)[number]["id"];
@@ -1563,6 +1564,106 @@ function UnboxingScreen() {
   );
 }
 
+function WishScreen() {
+  return (
+    <div className="min-h-[730px] bg-[#fbf9fe] px-4 pb-6 pt-5 text-[#251d31]">
+      <header className="flex items-center justify-between">
+        <span className="grid size-10 place-items-center rounded-full border border-[#2c2036]/10 bg-white text-[#5f5369]">
+          <ArrowUpRight className="size-4 rotate-[-135deg]" />
+        </span>
+        <span className="text-center">
+          <small className="block text-[9px] font-black uppercase tracking-[0.13em] text-[#8c7e94]">
+            Хочу также
+          </small>
+          <b className="block text-sm">Желание</b>
+        </span>
+        <span className="w-10" />
+      </header>
+      <article className="border-[#2c2036]/9 mt-5 rounded-[1.7rem] border bg-white p-4 shadow-[0_14px_32px_rgba(69,43,94,.08)]">
+        <div className="flex items-start gap-4">
+          <span className="grid size-28 shrink-0 overflow-hidden rounded-[1.5rem] bg-gradient-to-br from-[#f3e8ff] to-[#fff0f6]">
+            {/* eslint-disable-next-line @next/next/no-img-element -- generated synthetic preview media */}
+            <img
+              alt=""
+              className="size-full object-cover object-[center_42%]"
+              src="/preview/nastya-profile.jpg"
+            />
+          </span>
+          <span className="min-w-0 grow">
+            <span className="inline-flex items-center gap-1 rounded-full bg-[#f0e9ff] px-2 py-1 text-[8px] font-black uppercase tracking-[0.08em] text-[#7549d0]">
+              <Sparkles className="size-3" /> Фото и видео
+            </span>
+            <h1 className="mt-3 text-xl font-black leading-[0.95] tracking-[-0.055em]">
+              Камера для первых съёмок
+            </h1>
+            <span className="mt-3 inline-flex rounded-full bg-[#fff6e8] px-2 py-1 text-[9px] font-black text-[#9a7a52]">
+              ~ 89 000 ₽
+            </span>
+          </span>
+        </div>
+        <div className="mt-4 flex items-center gap-2 rounded-2xl bg-[#fbf9fe] p-2.5">
+          <Avatar index={0} name="Настя" size="size-8" />
+          <span className="grow">
+            <b className="block text-[10px]">Настя</b>
+            <small className="block text-[9px] text-[#82758a]">
+              Автор желания · Будённовск
+            </small>
+          </span>
+          <ChevronRightPreview />
+        </div>
+        <p className="mt-4 text-[11px] leading-5 text-[#5f5369]">
+          Хочу начать снимать город и людей, которые создают в нём свои истории.
+        </p>
+        <div className="mt-5 flex gap-2">
+          <span className="inline-flex h-11 items-center gap-1.5 rounded-xl bg-gradient-to-r from-[#ff5d9a] to-[#8254ed] px-4 text-[11px] font-black text-white">
+            <Heart className="size-4" /> Хочу также · 18
+          </span>
+          <span className="inline-flex h-11 items-center gap-1 rounded-xl border border-[#dfd5e5] bg-white px-3 text-[10px] font-black text-[#665a72]">
+            <CirclePlus className="size-3.5" /> В мой список
+          </span>
+        </div>
+      </article>
+      <section className="border-[#2c2036]/9 mt-5 rounded-[1.45rem] border bg-white p-3.5 shadow-[0_8px_22px_rgba(69,43,94,.05)]">
+        <div className="flex items-center justify-between">
+          <span>
+            <h2 className="flex items-center gap-2 text-sm font-black">
+              <UsersRound className="size-4 text-[#8753e6]" /> Хотят также
+            </h2>
+            <p className="mt-0.5 text-[9px] text-[#82758a]">Люди с похожей историей</p>
+          </span>
+          <span className="rounded-full bg-[#f0e9ff] px-2 py-1 text-[9px] font-black text-[#7549d0]">
+            18
+          </span>
+        </div>
+        <div className="mt-3 flex gap-2">
+          {["Макс", "Лера", "Дима", "Ксюша"].map((name, index) => (
+            <span className="flex w-12 flex-col items-center gap-1" key={name}>
+              <Avatar index={index + 1} name={name} size="size-9" />
+              <small className="w-12 truncate text-center text-[8px] font-bold">
+                {name}
+              </small>
+            </span>
+          ))}
+        </div>
+      </section>
+      <section className="border-[#2c2036]/9 mt-5 rounded-[1.45rem] border bg-white p-3.5 shadow-[0_8px_22px_rgba(69,43,94,.05)]">
+        <h2 className="flex items-center gap-2 text-sm font-black">
+          <MessageCircle className="size-4 text-[#8753e6]" /> Обсуждение
+        </h2>
+        <div className="mt-3 rounded-xl bg-[#fbf9fe] p-3">
+          <div className="flex items-center gap-2">
+            <Avatar index={2} name="Лера" size="size-7" />
+            <b className="text-[10px]">Лера</b>
+          </div>
+          <p className="mt-2 text-[10px] leading-4 text-[#5f5369]">
+            Твоя первая камера точно соберёт вокруг тебя истории. Жду первые кадры.
+          </p>
+        </div>
+      </section>
+    </div>
+  );
+}
+
 function IncomeIcon({ kind }: { kind: string }) {
   if (kind === "gift") return <Gift className="size-4" />;
   if (kind === "message") return <MessageCircle className="size-4" />;
@@ -2067,6 +2168,7 @@ export default async function PreviewPage({
     collectibles: <CollectiblesScreen />,
     collection: <CollectionScreen />,
     unboxing: <UnboxingScreen />,
+    wish: <WishScreen />,
   };
 
   return (
