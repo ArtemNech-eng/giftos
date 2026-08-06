@@ -52,6 +52,7 @@ const screens = [
   { id: "wishes", label: "Желания", number: "15" },
   { id: "collectibles", label: "Арт-направление", number: "16" },
   { id: "collection", label: "Полка", number: "17" },
+  { id: "unboxing", label: "Распаковка", number: "18" },
 ] as const;
 
 type ScreenId = (typeof screens)[number]["id"];
@@ -1492,6 +1493,50 @@ function CollectionScreen() {
   );
 }
 
+function UnboxingScreen() {
+  return (
+    <div className="flex min-h-[730px] flex-col bg-[#17131f] p-4 text-white">
+      <header className="flex items-center justify-between text-[9px] font-black uppercase tracking-[0.14em] text-white/55">
+        <span>ARTIFACTS 01</span>
+        <span>В КОЛЛЕКЦИИ</span>
+      </header>
+      <section className="relative mt-5 flex grow flex-col items-center justify-center overflow-hidden rounded-[2rem] border border-white/10 bg-[radial-gradient(circle_at_50%_32%,rgba(181,139,242,.25),transparent_28%),radial-gradient(circle_at_50%_90%,rgba(231,71,133,.17),transparent_35%),#211a2b] px-5 py-10 text-center">
+        <span className="bg-[#8a66d8]/16 absolute -left-12 top-16 size-40 rounded-full blur-3xl" />
+        <span className="bg-[#e45890]/12 absolute -right-12 bottom-10 size-40 rounded-full blur-3xl" />
+        <span className="bg-white/8 relative z-10 rounded-full border border-white/15 px-3 py-1 text-[9px] font-black uppercase tracking-[0.12em] text-[#e6d7ff]">
+          ЛИМИТИРОВАННЫЙ ЭКЗЕМПЛЯР
+        </span>
+        <div className="bg-white/8 relative z-10 mt-8 w-56 overflow-hidden rounded-[1.6rem] border border-white/20 p-2 shadow-[0_20px_36px_rgba(0,0,0,.24)]">
+          {/* eslint-disable-next-line @next/next/no-img-element -- generated static artifact art */}
+          <img
+            alt="Фонарь"
+            className="aspect-[3/4] w-full rounded-[1.2rem] object-cover"
+            src="/collectibles/artifacts/lantern.jpg"
+          />
+        </div>
+        <div className="relative z-10 mt-7">
+          <span className="mx-auto grid size-10 place-items-center rounded-full bg-[#f0e9ff] text-[#7549d0]">
+            <Check className="size-5" />
+          </span>
+          <h1 className="mt-4 text-3xl font-black tracking-[-0.07em]">Фонарь</h1>
+          <p className="mt-2 text-sm text-white/70">Теперь он на твоей полке.</p>
+          <span className="bg-white/12 mt-5 inline-flex rounded-full px-4 py-2 text-sm font-black text-[#f3e9ff]">
+            #047 / 150
+          </span>
+        </div>
+      </section>
+      <div className="mt-5 grid grid-cols-2 gap-2">
+        <span className="bg-white/8 flex items-center justify-center gap-1.5 rounded-2xl border border-white/15 py-3 text-[11px] font-black text-white">
+          Моя полка <ChevronRight className="size-3.5" />
+        </span>
+        <span className="flex items-center justify-center gap-1.5 rounded-2xl bg-gradient-to-r from-[#ff5d9a] to-[#8254ed] py-3 text-[11px] font-black text-white">
+          В профиль <ChevronRight className="size-3.5" />
+        </span>
+      </div>
+    </div>
+  );
+}
+
 function IncomeIcon({ kind }: { kind: string }) {
   if (kind === "gift") return <Gift className="size-4" />;
   if (kind === "message") return <MessageCircle className="size-4" />;
@@ -1995,6 +2040,7 @@ export default async function PreviewPage({
     wishes: <WishesScreen />,
     collectibles: <CollectiblesScreen />,
     collection: <CollectionScreen />,
+    unboxing: <UnboxingScreen />,
   };
 
   return (

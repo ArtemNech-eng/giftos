@@ -8,6 +8,7 @@ import {
   CalendarX2,
   CheckCheck,
   Gift,
+  Gem,
   Heart,
   MapPin,
   MessageCircle,
@@ -168,6 +169,22 @@ function notificationCopy(notification: Notification, actor: Actor | undefined) 
       href: notification.entity_id
         ? (`/events/${notification.entity_id}` as Route)
         : ("/events" as Route),
+    };
+  }
+  if (notification.type === "collectible_artifact_received") {
+    const artifactTitle =
+      typeof notification.payload.artifact_title === "string"
+        ? notification.payload.artifact_title
+        : "артефакт";
+    const serial = Number(notification.payload.serial_number);
+    return {
+      icon: Gem,
+      title: Number.isFinite(serial)
+        ? `Тебе подарили «${artifactTitle}» · #${serial}`
+        : `Тебе подарили «${artifactTitle}»`,
+      href: notification.entity_id
+        ? (`/collection/unbox/${notification.entity_id}` as Route)
+        : ("/collection" as Route),
     };
   }
   if (notification.type === "place_invite") {

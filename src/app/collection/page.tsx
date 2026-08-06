@@ -33,6 +33,7 @@ type ArtifactInstance = {
   series_id: string;
   serial_number: number;
   issued_at: string;
+  unboxed_at: string | null;
 };
 
 const rarityLabel = {
@@ -59,15 +60,16 @@ export default async function CollectionPage() {
         .order("sort_order", { ascending: true }),
       supabase
         .from("collectible_artifact_instances")
-        .select("id, series_id, serial_number, issued_at")
+        .select("id, series_id, serial_number, issued_at, unboxed_at")
         .eq("recipient_id", user.id)
         .order("issued_at", { ascending: false }),
     ]);
   const series = (rawSeries ?? []) as ArtifactSeries[];
   const instances = (rawInstances ?? []) as ArtifactInstance[];
   const seriesById = new Map(series.map((item) => [item.id, item]));
+  const unboxedInstances = instances.filter((instance) => instance.unboxed_at);
   const ownedBySeries = new Map<string, ArtifactInstance[]>();
-  for (const instance of instances) {
+  for (const instance of unboxedInstances) {
     const current = ownedBySeries.get(instance.series_id) ?? [];
     current.push(instance);
     ownedBySeries.set(instance.series_id, current);
@@ -109,7 +111,7 @@ export default async function CollectionPage() {
         </p>
       </section>
 
-      {instances.length > 0 && (
+      {unboxedInstances.length > 0 && (
         <section className="mt-5">
           <div className="mb-3 flex items-end justify-between">
             <span>
@@ -119,11 +121,11 @@ export default async function CollectionPage() {
               </p>
             </span>
             <span className="rounded-full bg-[#efe9f6] px-2 py-1 text-[9px] font-black text-[#7a6688]">
-              {instances.length}
+              {unboxedInstances.length}
             </span>
           </div>
           <div className="grid grid-cols-3 gap-2">
-            {instances.slice(0, 9).flatMap((instance) => {
+            {unboxedInstances.slice(0, 9).flatMap((instance) => {
               const artifact = seriesById.get(instance.series_id);
               return artifact
                 ? [
