@@ -18,6 +18,7 @@ import {
   testSubscribeToCreator,
   updateCreatorSubscriptionSettings,
 } from "@/app/creator/subscriptions/actions";
+import { promoteTarget } from "@/app/shop/actions";
 import { createStory } from "@/app/stories/actions";
 import { CreatorShareLink } from "@/components/creator-share-link";
 import { ProfileGiftButton } from "@/components/profile-gift-button";
@@ -76,7 +77,7 @@ export default async function ProfilePage({
   const { data: profile } = await supabase
     .from("profiles")
     .select(
-      "id, username, display_name, bio, city, show_city, avatar_path, is_creator, creator_headline, message_requests_enabled, paid_message_price_minor, subscriptions_enabled, subscription_price_minor",
+      "id, username, display_name, bio, city, show_city, avatar_path, is_creator, creator_headline, message_requests_enabled, paid_message_price_minor, subscriptions_enabled, subscription_price_minor, promoted_until",
     )
     .eq("username", username.toLowerCase())
     .maybeSingle();
@@ -101,6 +102,7 @@ export default async function ProfilePage({
     { data: vip },
     { data: rawReceivedGifts },
     { data: giftCatalog },
+    { data: equippedItems },
   ] = await Promise.all([
     user && !isOwnProfile
       ? supabase
@@ -202,6 +204,11 @@ export default async function ProfilePage({
       .eq("is_active", true)
       .eq("economy", "platform")
       .order("sort_order", { ascending: true }),
+    supabase
+      .from("user_inventory")
+      .select("item_id, virtual_items!inner(id, item_type, emoji, name)")
+      .eq("profile_id", profile.id)
+      .eq("is_equipped", true),
   ]);
 
   const avatarUrl = await getSignedImageUrl({
@@ -251,6 +258,29 @@ export default async function ProfilePage({
     created_at: string;
   }>;
   const giftEmoji = new Map((giftCatalog ?? []).map((gift) => [gift.code, gift.emoji]));
+  const equipped = (
+    (equippedItems ?? []) as Array<{
+      item_id: string;
+      virtual_items: Array<{
+        id: string;
+        item_type: string;
+        emoji: string;
+        name: string;
+      }>;
+    }>
+  ).flatMap((row) =>
+    row.virtual_items?.[0]
+      ? [
+          {
+            itemType: row.virtual_items[0].item_type,
+            emoji: row.virtual_items[0].emoji,
+          },
+        ]
+      : [],
+  );
+  const avatarFrame = equipped.find((item) => item.itemType === "avatar_frame");
+  const profileTheme = equipped.find((item) => item.itemType === "profile_theme");
+  const equippedBadges = equipped.filter((item) => item.itemType === "badge");
 
   return (
     <main className="mx-auto min-h-screen max-w-[430px] bg-[#0c0e14] pb-24 text-white">
@@ -275,7 +305,13 @@ export default async function ProfilePage({
         </div>
       </header>
 
-      <section className="relative h-64 overflow-hidden bg-gradient-to-br from-[#3b183f] via-[#281831] to-[#171a2a]">
+      <section
+        className={`relative h-64 overflow-hidden ${
+          profileTheme
+            ? "bg-gradient-to-br from-[#0b1e3a] via-[#14255c] to-[#0d1030]"
+            : "bg-gradient-to-br from-[#3b183f] via-[#281831] to-[#171a2a]"
+        }`}
+      >
         {coverUrl ? (
           <img alt="" className="size-full object-cover opacity-80" src={coverUrl} />
         ) : (
@@ -285,7 +321,13 @@ export default async function ProfilePage({
 
       <section className="relative px-4 pb-5">
         <div className="-mt-12 flex items-end justify-between">
-          <span className="grid size-24 place-items-center overflow-hidden rounded-[1.6rem] border-4 border-[#0c0e14] bg-[#32203a] text-3xl font-bold">
+          <span
+            className={`grid size-24 place-items-center overflow-hidden rounded-[1.6rem] border-4 bg-[#32203a] text-3xl font-bold ${
+              avatarFrame
+                ? "border-[#ff77ba] shadow-[0_0_18px_rgba(255,119,186,0.5)]"
+                : "border-[#0c0e14]"
+            }`}
+          >
             {avatarUrl ? (
               <img
                 alt={`Аватар ${profile.display_name}`}
@@ -294,6 +336,11 @@ export default async function ProfilePage({
               />
             ) : (
               profile.display_name.slice(0, 1).toUpperCase()
+            )}
+            {avatarFrame && (
+              <span className="absolute -bottom-1 -right-1 text-xl">
+                {avatarFrame.emoji}
+              </span>
             )}
           </span>
           {user && !isOwnProfile ? (
@@ -361,6 +408,15 @@ export default async function ProfilePage({
           >
             {level.label}
           </span>
+          {equippedBadges.map((badge) => (
+            <span
+              className="rounded-full border border-white/15 bg-white/5 px-2 py-1 text-xs"
+              key={badge.emoji}
+              title="Значок из магазина"
+            >
+              {badge.emoji}
+            </span>
+          ))}
           {activeLive && (
             <Link
               className="inline-flex items-center gap-1.5 rounded-full bg-[#ff2d55] px-2.5 py-1 text-xs font-bold text-white"
@@ -720,6 +776,34 @@ export default async function ProfilePage({
             </Link>
           ))}
         </section>
+      )}
+
+      {isOwnProfile && (
+        <div className="mx-4 mt-3">
+          <form action={promoteTarget}>
+            <input name="target" type="hidden" value="profile" />
+            <input name="target_id" type="hidden" value={profile.id} />
+            <input name="return_to" type="hidden" value={`/u/${profile.username}`} />
+            <button
+              className="flex w-full items-center justify-center gap-2 rounded-2xl border border-[#ffd35e]/40 bg-[#2a2215] py-3 text-sm font-bold text-[#ffd35e]"
+              type="submit"
+            >
+              🚀 Продвинуть профиль за 300 ⭐ (24 часа)
+            </button>
+          </form>
+          {profile.promoted_until &&
+            new Date(profile.promoted_until).getTime() > Date.now() && (
+              <p className="mt-2 text-center text-xs text-[#8df0b4]">
+                Профиль продвинут до{" "}
+                {new Intl.DateTimeFormat("ru-RU", {
+                  day: "numeric",
+                  month: "short",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                }).format(new Date(profile.promoted_until))}
+              </p>
+            )}
+        </div>
       )}
 
       {isOwnProfile && profile.is_creator && (

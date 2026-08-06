@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 
 import { endLiveRoom, inviteLiveCohost, removeLiveCohost } from "@/app/live/actions";
+import { promoteTarget } from "@/app/shop/actions";
 import { sendTestLiveDonation } from "@/app/live/donations/actions";
 import { sendTestLiveGift } from "@/app/live/gifts/actions";
 import { CopyLiveRoomLinkButton } from "@/components/copy-live-room-link-button";
@@ -337,15 +338,28 @@ export default async function LiveRoomPage({
         </section>
       )}
       {room.status === "live" && room.host_id === user.id && (
-        <form action={endLiveRoom} className="mt-5">
-          <input name="slug" type="hidden" value={slug} />
-          <button
-            className="flex w-full items-center justify-center gap-2 rounded-2xl border border-[#ff5b99]/40 bg-[#2a1222] py-3 text-sm font-bold text-[#ff9bc5]"
-            type="submit"
-          >
-            <Square className="size-4" /> Завершить эфир
-          </button>
-        </form>
+        <div className="mt-5 space-y-2">
+          <form action={promoteTarget}>
+            <input name="target" type="hidden" value="live" />
+            <input name="target_id" type="hidden" value={room.id} />
+            <input name="return_to" type="hidden" value={`/live/${slug}`} />
+            <button
+              className="flex w-full items-center justify-center gap-2 rounded-2xl border border-[#ffd35e]/40 bg-[#2a2215] py-3 text-sm font-bold text-[#ffd35e]"
+              type="submit"
+            >
+              🚀 Продвинуть эфир за 150 ⭐
+            </button>
+          </form>
+          <form action={endLiveRoom}>
+            <input name="slug" type="hidden" value={slug} />
+            <button
+              className="flex w-full items-center justify-center gap-2 rounded-2xl border border-[#ff5b99]/40 bg-[#2a1222] py-3 text-sm font-bold text-[#ff9bc5]"
+              type="submit"
+            >
+              <Square className="size-4" /> Завершить эфир
+            </button>
+          </form>
+        </div>
       )}
       {room.status === "live" &&
         room.host_id !== user.id &&

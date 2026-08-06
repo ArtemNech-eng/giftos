@@ -4,6 +4,7 @@ import { ArrowLeft, CalendarDays, MapPin, UsersRound } from "lucide-react";
 import { notFound } from "next/navigation";
 
 import { cancelEvent, joinEvent, leaveEvent } from "@/app/events/actions";
+import { promoteTarget } from "@/app/shop/actions";
 import { requireUser } from "@/lib/auth";
 
 export const metadata = {
@@ -171,15 +172,32 @@ export default async function EventPage({
           {!event.is_cancelled && (
             <div className="mt-4">
               {isAuthor ? (
-                <form action={cancelEvent}>
-                  <input name="event_id" type="hidden" value={event.id} />
-                  <button
-                    className="w-full rounded-xl border border-[#ff5b99]/40 bg-[#2a1222] py-3 text-sm font-bold text-[#ff9bc5]"
-                    type="submit"
-                  >
-                    Отменить событие
-                  </button>
-                </form>
+                <div className="space-y-2">
+                  <form action={promoteTarget}>
+                    <input name="target" type="hidden" value="event" />
+                    <input name="target_id" type="hidden" value={event.id} />
+                    <input
+                      name="return_to"
+                      type="hidden"
+                      value={`/events/${event.id}`}
+                    />
+                    <button
+                      className="w-full rounded-xl border border-[#ffd35e]/40 bg-[#2a2215] py-3 text-sm font-bold text-[#ffd35e]"
+                      type="submit"
+                    >
+                      🚀 Продвинуть событие за 100 ⭐
+                    </button>
+                  </form>
+                  <form action={cancelEvent}>
+                    <input name="event_id" type="hidden" value={event.id} />
+                    <button
+                      className="w-full rounded-xl border border-[#ff5b99]/40 bg-[#2a1222] py-3 text-sm font-bold text-[#ff9bc5]"
+                      type="submit"
+                    >
+                      Отменить событие
+                    </button>
+                  </form>
+                </div>
               ) : isJoined ? (
                 <form action={leaveEvent}>
                   <input name="event_id" type="hidden" value={event.id} />

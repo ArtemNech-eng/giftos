@@ -65,3 +65,20 @@ export async function sendProfileGift(formData: FormData) {
   revalidatePath("/bonuses");
   redirect(`/u/${username}?gift=sent` as Route);
 }
+
+/** Promote a profile / live / event for stars (100% platform revenue). */
+export async function promoteTarget(formData: FormData) {
+  const { supabase } = await requireUser();
+  const target = requiredText(formData.get("target"), 20);
+  const targetId = requiredText(formData.get("target_id"), 100);
+  const returnTo = requiredText(formData.get("return_to"), 200) || "/";
+  if (!target || !targetId) throw new Error("Объект не найден.");
+  const { error } = await supabase.rpc("promote_with_hocu_bonus", {
+    p_target: target,
+    p_target_id: targetId,
+  });
+  if (error) throw new Error(`Не удалось продвинуть: ${error.message}`);
+  revalidatePath(returnTo);
+  revalidatePath("/bonuses");
+  redirect(`${returnTo}?promoted=1` as Route);
+}
