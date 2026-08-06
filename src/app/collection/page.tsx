@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { Route } from "next";
 /* eslint-disable @next/next/no-img-element -- generated static pre-production artifact art */
 import {
   ArrowLeft,
@@ -214,19 +215,23 @@ export default async function CollectionPage() {
                 className="border-[#2c2036]/9 overflow-hidden rounded-[1.4rem] border bg-white shadow-[0_8px_22px_rgba(69,43,94,.05)]"
                 key={artifact.id}
               >
-                <img
-                  alt=""
-                  className="aspect-[3/2] w-full object-cover"
-                  src={artifact.artwork_path}
-                />
-                <div className="p-3">
-                  <span className="inline-flex rounded-full bg-[#f0e9ff] px-1.5 py-0.5 text-[8px] font-black text-[#7549d0]">
-                    {rarityLabel[artifact.rarity]}
-                  </span>
-                  <h3 className="mt-2 text-xs font-black">{artifact.title}</h3>
-                  <p className="mt-1 line-clamp-2 text-[9px] leading-4 text-[#756a7d]">
-                    {artifact.description}
-                  </p>
+                <Link className="block" href={`/collection/${artifact.slug}` as Route}>
+                  <img
+                    alt={artifact.title}
+                    className="aspect-[3/4] w-full object-cover"
+                    src={artifact.artwork_path}
+                  />
+                  <div className="p-3">
+                    <span className="inline-flex rounded-full bg-[#f0e9ff] px-1.5 py-0.5 text-[8px] font-black text-[#7549d0]">
+                      {rarityLabel[artifact.rarity]}
+                    </span>
+                    <h3 className="mt-2 text-xs font-black">{artifact.title}</h3>
+                    <p className="mt-1 line-clamp-2 text-[9px] leading-4 text-[#756a7d]">
+                      {artifact.description}
+                    </p>
+                  </div>
+                </Link>
+                <div className="px-3 pb-3">
                   <div className="mt-3 flex items-center justify-between text-[9px] font-black">
                     <span className="text-[#8b6a9c]">
                       {artifact.remaining_edition} / {artifact.total_edition}

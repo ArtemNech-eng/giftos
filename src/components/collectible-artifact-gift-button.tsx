@@ -77,7 +77,7 @@ export function CollectibleArtifactGiftButton({
                 {/* eslint-disable-next-line @next/next/no-img-element -- generated static pre-production artifact art */}
                 <img
                   alt=""
-                  className="aspect-[3/2] w-full object-cover"
+                  className="aspect-[3/4] w-full object-cover"
                   src={artifact.artworkPath}
                 />
                 <span className="block p-2">
