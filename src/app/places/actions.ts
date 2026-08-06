@@ -206,10 +206,12 @@ export async function enterPlace(formData: FormData) {
       profile_id: user.id,
       entered_at: now,
       last_seen_at: now,
+      last_read_at: now,
     },
     { onConflict: "place_id,profile_id" },
   );
   revalidatePath(`/places/${placeId}`);
+  revalidatePath("/places");
 }
 
 export async function leavePlace(formData: FormData) {

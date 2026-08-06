@@ -32,7 +32,8 @@ export default async function PlacesPage() {
     .eq("id", user.id)
     .maybeSingle();
 
-  let places: Array<PlaceRow & { online: number; friends: number }> = [];
+  let places: Array<PlaceRow & { online: number; friends: number; unread: number }> =
+    [];
   let cityName: string | null = null;
   if (profile?.city_id) {
     const { data: cityRow } = await supabase
@@ -41,6 +42,15 @@ export default async function PlacesPage() {
       .eq("id", profile.city_id)
       .maybeSingle();
     cityName = cityRow?.name ?? profile.city ?? null;
+
+    // When the user last read each place (for the unread badge).
+    const { data: myPresence } = await supabase
+      .from("place_presence")
+      .select("place_id, last_read_at")
+      .eq("profile_id", user.id);
+    const myLastRead = new Map<string, string>(
+      (myPresence ?? []).map((row) => [row.place_id, row.last_read_at]),
+    );
 
     const { data: rawPlaces } = await supabase
       .from("places")
@@ -54,6 +64,28 @@ export default async function PlacesPage() {
       .order("created_at", { ascending: true })
       .limit(100);
     const rows = (rawPlaces ?? []) as PlaceRow[];
+
+    // Unread messages per place (after the user's last read).
+    const unreadByPlace = new Map<string, number>();
+    const readPlaces = rows.filter((row) => myLastRead.has(row.id));
+    if (readPlaces.length > 0) {
+      const { data: rawUnread } = await supabase
+        .from("place_messages")
+        .select("place_id, created_at")
+        .in(
+          "place_id",
+          readPlaces.map((row) => row.id),
+        );
+      for (const message of rawUnread ?? []) {
+        const lastRead = myLastRead.get(message.place_id);
+        if (lastRead && new Date(message.created_at) > new Date(lastRead)) {
+          unreadByPlace.set(
+            message.place_id,
+            (unreadByPlace.get(message.place_id) ?? 0) + 1,
+          );
+        }
+      }
+    }
 
     const cutoff = new Date(Date.now() - ONLINE_WINDOW).toISOString();
     const [{ data: presence }, { data: members }, { data: myFollows }] =
@@ -81,6 +113,7 @@ export default async function PlacesPage() {
       online: onlineByPlace.get(place.id) ?? 0,
       friends: friendsByPlace.get(place.id) ?? 0,
       joined: memberSet.has(`${place.id}:${user.id}`),
+      unread: unreadByPlace.get(place.id) ?? 0,
     }));
   }
 
@@ -174,6 +207,11 @@ export default async function PlacesPage() {
                     {place.friends > 0 && (
                       <span className="text-[#ffd35e]">
                         Твои друзья: {place.friends}
+                      </span>
+                    )}
+                    {place.unread > 0 && (
+                      <span className="rounded-full bg-[#ff4b8a] px-2 py-0.5 text-[10px] font-bold text-white">
+                        {place.unread} новых
                       </span>
                     )}
                   </span>
