@@ -217,6 +217,11 @@ export function OnboardingFlow({
                 {cityHint}
               </p>
             )}
+            <p className="mt-3 flex gap-2 rounded-xl bg-[#f8f5fb] px-3 py-2.5 text-[10px] leading-4 text-[#756a7d]">
+              <CheckCircle2 className="mt-0.5 size-3.5 shrink-0 text-[#8753e6]" />
+              Город нужен, чтобы ты видел(а) свою городскую сцену. Переключатель ниже
+              решает только, увидят ли тебя другие.
+            </p>
             <div className="mt-4">
               <ToggleRow
                 checked={profile.showCity}

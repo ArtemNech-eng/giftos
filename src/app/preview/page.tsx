@@ -1598,7 +1598,11 @@ function OnboardingScreen() {
           <span className="grow text-[11px] font-bold text-[#5f5269]">Будённовск</span>
           <ChevronRightPreview />
         </div>
-        <div className="mt-4 flex items-center gap-3 rounded-2xl bg-[#fbf9fe] p-3">
+        <p className="mt-3 flex gap-2 rounded-xl bg-[#f8f5fb] p-2.5 text-[9px] leading-4 text-[#756a7d]">
+          <Check className="mt-0.5 size-3.5 shrink-0 text-[#8753e6]" /> Город нужен,
+          чтобы ты видел(а) свою сцену. Переключатель ниже — только для других.
+        </p>
+        <div className="mt-3 flex items-center gap-3 rounded-2xl bg-[#fbf9fe] p-3">
           <span className="grid size-9 place-items-center rounded-xl bg-[#f0e9ff] text-[#8753e6]">
             <MapPin className="size-4" />
           </span>
