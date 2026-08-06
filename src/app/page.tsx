@@ -373,6 +373,12 @@ export default async function SeoLandingPage({
           <a className="transition hover:text-[#201827]" href="#first-wave">
             Первая волна
           </a>
+          <Link
+            className="rounded-full bg-[#f0e5ff] px-3 py-1.5 text-[#7549d0] transition hover:bg-[#e6d4ff]"
+            href="/preview"
+          >
+            Посмотреть кабинет
+          </Link>
         </nav>
 
         <Link
@@ -419,12 +425,12 @@ export default async function SeoLandingPage({
               Войти в первую волну
               <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
             </Link>
-            <a
-              className="inline-flex h-14 items-center gap-2 rounded-full px-4 text-sm font-black text-[#62556c] transition hover:text-[#201827]"
-              href="#inside"
+            <Link
+              className="inline-flex h-14 items-center gap-2 rounded-full border border-[#2d2038]/10 bg-white/60 px-4 text-sm font-black text-[#62556c] shadow-[0_7px_20px_rgba(64,38,88,0.05)] transition hover:-translate-y-0.5 hover:bg-white hover:text-[#201827]"
+              href="/preview"
             >
-              Посмотреть, что внутри <ArrowDownRight className="size-4" />
-            </a>
+              Посмотреть кабинет <ArrowDownRight className="size-4" />
+            </Link>
           </div>
         </div>
 
