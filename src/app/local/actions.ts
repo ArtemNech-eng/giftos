@@ -7,6 +7,7 @@ import { requireUser } from "@/lib/auth";
 import { optionalText } from "@/lib/validation";
 
 const roles = new Set([
+  "creator",
   "beauty",
   "photo",
   "music",
@@ -14,6 +15,11 @@ const roles = new Set([
   "education",
   "events",
   "food",
+  "transport",
+  "retail",
+  "film",
+  "health",
+  "public",
   "service",
   "other",
 ]);
@@ -23,6 +29,7 @@ export async function updateLocalCreatorProfile(formData: FormData) {
   const { supabase, user } = await requireUser();
   const isListed = formData.get("is_listed") === "on";
   const roleCode = optionalText(formData.get("role_code"), 30) || "other";
+  const cityLabel = optionalText(formData.get("city_label"), 40);
   const headline = optionalText(formData.get("headline"), 120);
   if (!roles.has(roleCode)) throw new Error("Выберите корректную роль.");
 
@@ -41,6 +48,7 @@ export async function updateLocalCreatorProfile(formData: FormData) {
     profile_id: user.id,
     is_listed: isListed,
     role_code: roleCode,
+    city_label: cityLabel,
     headline,
     updated_at: new Date().toISOString(),
   });

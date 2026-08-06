@@ -270,7 +270,7 @@ export default async function ProfilePage({
   const { data: localCreator } = await supabase
     .from("public_local_creators")
     .select(
-      "role_code, headline, live_slug, live_title, story_id, event_id, event_title",
+      "role_code, city_label, headline, live_slug, live_title, story_id, event_id, event_title",
     )
     .eq("id", profile.id)
     .maybeSingle();
@@ -524,7 +524,9 @@ export default async function ProfilePage({
                   Создаёт в {profile.city ?? "городе"}
                 </span>
                 <b className="mt-0.5 block text-sm">
-                  {localCreator.headline ?? "Показывает себя и свои идеи среди своих"}
+                  {localCreator.city_label ??
+                    localCreator.headline ??
+                    "Показывает себя и свои идеи среди своих"}
                 </b>
                 {(localCreator.live_slug ||
                   localCreator.story_id ||

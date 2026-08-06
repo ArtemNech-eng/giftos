@@ -25,7 +25,7 @@ export default async function LocalCreatorPage() {
       .maybeSingle(),
     supabase
       .from("local_creator_profiles")
-      .select("is_listed, role_code, headline")
+      .select("is_listed, role_code, city_label, headline")
       .eq("profile_id", user.id)
       .maybeSingle(),
   ]);
@@ -112,6 +112,22 @@ export default async function LocalCreatorPage() {
             ))}
           </div>
         </div>
+
+        <label className="block">
+          <span className="text-sm font-black">Как тебя знают в городе?</span>
+          <span className="ml-1 text-[10px] text-[#8a7d92]">необязательно</span>
+          <input
+            className="mt-2 h-12 w-full rounded-2xl border border-[#2c2036]/10 bg-[#faf7fc] px-3.5 text-sm outline-none placeholder:text-[#a69bab] focus:border-[#9a62eb] focus:ring-4 focus:ring-[#9a62eb]/10"
+            defaultValue={local?.city_label ?? ""}
+            maxLength={40}
+            name="city_label"
+            placeholder="Например: мастер маникюра у ДК"
+          />
+          <span className="mt-1.5 block text-[10px] leading-5 text-[#8a7d92]">
+            Это самоописание, не подтверждённая профессиональная или государственная
+            должность.
+          </span>
+        </label>
 
         <label className="block">
           <span className="text-sm font-black">Что сейчас показываешь?</span>

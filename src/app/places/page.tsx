@@ -60,6 +60,7 @@ type LocalCreatorPreview = {
   displayName: string;
   avatarUrl: string | null;
   roleCode: string;
+  cityLabel: string | null;
   headline: string | null;
   liveSlug: string | null;
   liveTitle: string | null;
@@ -314,7 +315,7 @@ export default async function PlacesPage() {
     const { data: rawLocalCreators } = await supabase
       .from("public_local_creators")
       .select(
-        "id, username, display_name, avatar_path, role_code, headline, live_slug, live_title, story_id, event_id, event_title",
+        "id, username, display_name, avatar_path, role_code, city_label, headline, live_slug, live_title, story_id, event_id, event_title",
       )
       .eq("city_id", profile.city_id)
       .order("updated_at", { ascending: false })
@@ -327,6 +328,7 @@ export default async function PlacesPage() {
           display_name: string;
           avatar_path: string | null;
           role_code: string;
+          city_label: string | null;
           headline: string | null;
           live_slug: string | null;
           live_title: string | null;
@@ -343,6 +345,7 @@ export default async function PlacesPage() {
           path: creator.avatar_path,
         }),
         roleCode: creator.role_code,
+        cityLabel: creator.city_label,
         headline: creator.headline,
         liveSlug: creator.live_slug,
         liveTitle: creator.live_title,
@@ -523,7 +526,8 @@ export default async function PlacesPage() {
                         {state}
                       </span>
                       <small className="mt-1 line-clamp-2 block min-h-7 text-[9px] leading-3 text-[#81748a]">
-                        {creator.headline ??
+                        {creator.cityLabel ??
+                          creator.headline ??
                           creator.eventTitle ??
                           creator.liveTitle ??
                           "Показывает себя в городе"}
