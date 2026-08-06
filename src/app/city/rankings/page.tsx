@@ -1,6 +1,15 @@
 import Link from "next/link";
 import type { Route } from "next";
-import { ArrowLeft, Flame, Heart, Home, Mic2, Trophy, TrendingUp } from "lucide-react";
+import {
+  ArrowLeft,
+  Flame,
+  Heart,
+  Home,
+  Mic2,
+  Sparkles,
+  Trophy,
+  TrendingUp,
+} from "lucide-react";
 
 import { requireUser } from "@/lib/auth";
 
@@ -28,6 +37,8 @@ const CATEGORIES = [
   { key: "streamer", label: "🎤 Эфиры", icon: Mic2 },
   { key: "rising", label: "📈 Растущие", icon: TrendingUp },
   { key: "social", label: "🤝 Общительные", icon: Heart },
+  { key: "discovery", label: "🌟 Открытия", icon: Sparkles },
+  { key: "favorite", label: "❤️ Любимцы", icon: Heart },
 ] as const;
 
 export default async function CityRankingsPage({
