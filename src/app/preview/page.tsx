@@ -50,6 +50,7 @@ const screens = [
   { id: "people", label: "Люди", number: "13" },
   { id: "settings", label: "Приватность", number: "14" },
   { id: "wishes", label: "Желания", number: "15" },
+  { id: "collectibles", label: "Коллекция", number: "16" },
 ] as const;
 
 type ScreenId = (typeof screens)[number]["id"];
@@ -1288,6 +1289,110 @@ function ProfileScreen() {
   );
 }
 
+function CollectiblesScreen() {
+  const directions = [
+    {
+      title: "Скульптуры и панно",
+      note: "Фигура + арт-панно. Самый галерейный и спокойный путь.",
+      src: "/preview/collectibles/art-toy-matrix.jpg",
+      tone: "bg-[#f3e8ff] text-[#7549d0]",
+    },
+    {
+      title: "Галерея героев",
+      note: "Десять персонажей в одном модном художественном мире.",
+      src: "/preview/collectibles/surreal-gallery-matrix.jpg",
+      tone: "bg-[#fff0f6] text-[#d84b81]",
+    },
+    {
+      title: "Мягкие коллекционные фигуры",
+      note: "Более персонажный и игрушечный путь — проверяем, не слишком ли cute.",
+      src: "/preview/collectibles/character-matrix.jpg",
+      tone: "bg-[#eaf7f5] text-[#258b82]",
+    },
+  ];
+  return (
+    <div className="min-h-[730px] bg-[#fbf9fe] px-4 pb-6 pt-5 text-[#251d31]">
+      <header className="flex items-center justify-between">
+        <span className="grid size-10 place-items-center rounded-full border border-[#2c2036]/10 bg-white text-[#5f5369]">
+          <ArrowUpRight className="size-4 rotate-[-135deg]" />
+        </span>
+        <span className="text-center">
+          <small className="block text-[9px] font-black uppercase tracking-[0.13em] text-[#8c7e94]">
+            Флагманский дроп
+          </small>
+          <b className="block text-sm">Первые десять</b>
+        </span>
+        <span className="grid size-10 place-items-center rounded-full bg-[#f0e9ff] text-[#8753e6]">
+          <Sparkles className="size-4.5" />
+        </span>
+      </header>
+      <section className="mt-5 rounded-[1.7rem] bg-gradient-to-br from-[#322452] via-[#543d7a] to-[#7b67d8] p-5 text-white shadow-[0_14px_30px_rgba(63,37,98,.2)]">
+        <span className="bg-white/14 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.08em] text-[#fbd7e7]">
+          <Sparkles className="size-3.5" /> ХОЧУ / ОБЪЕКТЫ 01
+        </span>
+        <h1 className="mt-3 text-3xl font-black leading-[0.88] tracking-[-0.075em]">
+          НЕ ИКОНКИ.
+          <br />
+          ДЕСЯТЬ ВЕЩЕЙ.
+        </h1>
+        <p className="mt-3 max-w-64 text-[10px] leading-5 text-white/75">
+          Сначала выбираем художественный мир. Серии, номера и распаковка появятся после
+          выбора.
+        </p>
+      </section>
+      <section className="mt-5">
+        <div className="mb-3 flex items-end justify-between">
+          <span>
+            <h2 className="text-sm font-black">Три направления</h2>
+            <p className="mt-0.5 text-[10px] text-[#82758a]">
+              Synthetic art research · не финальные арты
+            </p>
+          </span>
+          <span className="rounded-full bg-[#efe9f6] px-2 py-1 text-[9px] font-black text-[#7a6688]">
+            10 × 3
+          </span>
+        </div>
+        <div className="space-y-4">
+          {directions.map((direction, index) => (
+            <article
+              className="border-[#2c2036]/9 overflow-hidden rounded-[1.45rem] border bg-white shadow-[0_8px_22px_rgba(69,43,94,.06)]"
+              key={direction.title}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element -- generated synthetic concept art */}
+              <img
+                alt={`Концепт коллекции: ${direction.title}`}
+                className="aspect-[5/3] w-full object-cover"
+                src={direction.src}
+              />
+              <div className="p-3.5">
+                <span
+                  className={`inline-flex rounded-full px-2 py-1 text-[8px] font-black ${direction.tone}`}
+                >
+                  НАПРАВЛЕНИЕ 0{index + 1}
+                </span>
+                <h3 className="mt-2 text-xs font-black">{direction.title}</h3>
+                <p className="mt-1 text-[10px] leading-4 text-[#756a7d]">
+                  {direction.note}
+                </p>
+                <span className="mt-3 inline-flex items-center gap-1 text-[9px] font-black text-[#8753e6]">
+                  10 лимитированных фигур <ChevronRight className="size-3" />
+                </span>
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
+      <section className="mt-5 flex gap-2.5 rounded-2xl bg-[#f0faf5] p-3.5 text-[#4c7169]">
+        <Check className="mt-0.5 size-4 shrink-0 text-[#258b82]" />
+        <p className="text-[10px] leading-4">
+          После выбора одного направления фиксируем десять силуэтов, тиражи и витрину.
+          Распаковка — следующий слой.
+        </p>
+      </section>
+    </div>
+  );
+}
+
 function IncomeIcon({ kind }: { kind: string }) {
   if (kind === "gift") return <Gift className="size-4" />;
   if (kind === "message") return <MessageCircle className="size-4" />;
@@ -1789,6 +1894,7 @@ export default async function PreviewPage({
     people: <PeopleScreen />,
     settings: <SettingsScreen />,
     wishes: <WishesScreen />,
+    collectibles: <CollectiblesScreen />,
   };
 
   return (
