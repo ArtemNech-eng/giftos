@@ -34,6 +34,11 @@ const THEMES: Record<string, { accent: string; glow: string; label: string }> = 
     glow: "rgba(127,216,255,0.45)",
     label: "Публикация · «Хочу также»",
   },
+  invite: {
+    accent: "#ff5b96",
+    glow: "rgba(222,100,255,0.55)",
+    label: "Приглашение в город",
+  },
 };
 
 /**
@@ -49,6 +54,11 @@ export async function GET(request: Request) {
   const theme = THEMES[type] ?? THEMES.home;
   const title = (searchParams.get("title") ?? "Хочу также").slice(0, 90);
   const subtitle = (searchParams.get("subtitle") ?? "").slice(0, 170);
+  const people = (searchParams.get("people") ?? "")
+    .split(",")
+    .map((value) => value.trim().slice(0, 1).toUpperCase())
+    .filter(Boolean)
+    .slice(0, 4);
   const initial = (title.trim()[0] ?? "Х").toUpperCase();
   const [regular, bold] = await Promise.all([regularFont, boldFont]);
 
@@ -166,6 +176,46 @@ export async function GET(request: Request) {
           </div>
         )}
       </div>
+
+      {type === "invite" && people.length > 0 && (
+        <div style={{ display: "flex", alignItems: "center", gap: "0" }}>
+          {people.map((person, index) => (
+            <div
+              key={`${person}-${index}`}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: "54px",
+                height: "54px",
+                borderRadius: "999px",
+                marginLeft: index === 0 ? "0" : "-10px",
+                background:
+                  index % 2 === 0
+                    ? "linear-gradient(135deg, #ff5b96, #9a63ff)"
+                    : "linear-gradient(135deg, #62c9d8, #7261ff)",
+                border: "3px solid #0c0e14",
+                fontSize: "24px",
+                fontWeight: 800,
+                color: "#ffffff",
+              }}
+            >
+              {person}
+            </div>
+          ))}
+          <div
+            style={{
+              display: "flex",
+              marginLeft: "18px",
+              color: "#e9e2f2",
+              fontSize: "25px",
+              fontWeight: 700,
+            }}
+          >
+            Уже в круге города
+          </div>
+        </div>
+      )}
 
       <div
         style={{

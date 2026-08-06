@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { Route } from "next";
+import type { Metadata, Route } from "next";
 /* eslint-disable @next/next/no-img-element -- city avatars use short-lived signed Storage URLs */
 import {
   ArrowDownRight,
@@ -18,11 +18,71 @@ import { getSignedImageUrl } from "@/lib/media";
 import { hasSupabaseEnvironment } from "@/lib/supabase/env";
 import { createClient } from "@/lib/supabase/server";
 
-export const metadata = {
-  title: "Хочу также — желания ведут к людям",
-  description:
-    "Социальная платформа желаний, людей, мест и эфиров. Открываем Будённовск вместе.",
-};
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<{ city?: string; invite?: string }>;
+}): Promise<Metadata> {
+  const { city: rawCity, invite } = await searchParams;
+  const citySlug = normalizeCitySlug(rawCity);
+  const isInvite = Boolean(invite && citySlug);
+  const fallback: Metadata = {
+    title: "Хочу также — желания ведут к людям",
+    description:
+      "Социальная платформа желаний, людей, мест и эфиров. Открываем Будённовск вместе.",
+  };
+  if (!isInvite) return fallback;
+
+  let cityName =
+    rawCity?.replace(/-/g, " ").replace(/^./, (letter) => letter.toUpperCase()) ??
+    "город";
+  let initials: string[] = [];
+  if (hasSupabaseEnvironment()) {
+    try {
+      const supabase = await createClient();
+      const { data: city } = await supabase
+        .from("cities")
+        .select("id, name")
+        .eq("normalized_name", citySlug)
+        .eq("is_active", true)
+        .maybeSingle();
+      if (city) {
+        cityName = city.name;
+        const { data: members } = await supabase
+          .from("public_city_people")
+          .select("display_name")
+          .eq("city_id", city.id)
+          .limit(4);
+        initials = (members ?? []).map((member) =>
+          member.display_name.slice(0, 1).toUpperCase(),
+        );
+      }
+    } catch {
+      // A city-specific share card still works without a configured data service.
+    }
+  }
+
+  const title = `Тебя приглашают в ${cityName}`;
+  const subtitle = "Приглашение в город · +200 ⭐ за активного приглашённого";
+  const imageParams = new URLSearchParams({
+    type: "invite",
+    title,
+    subtitle,
+  });
+  if (initials.length > 0) imageParams.set("people", initials.join(","));
+  return {
+    title,
+    description: subtitle,
+    robots: { index: false, follow: false },
+    alternates: { canonical: "/" },
+    openGraph: {
+      type: "website",
+      title,
+      description: subtitle,
+      images: [{ url: `/og?${imageParams.toString()}`, width: 1200, height: 630 }],
+    },
+  };
+}
 
 export const dynamic = "force-dynamic";
 
@@ -47,6 +107,8 @@ type CityMemberPreview = {
   avatarUrl: string | null;
   isCreator: boolean;
 };
+
+type CityLaunchPhase = "prelaunch" | "gathering" | "active";
 
 function normalizeCitySlug(value: string | undefined) {
   return (value ?? "")
@@ -95,6 +157,7 @@ export default async function SeoLandingPage({
   let launchCityName = "Будённовск";
   let launchCityMembers: CityMemberPreview[] = [];
   let launchCityPeopleCount = 0;
+  let launchCityPhase: CityLaunchPhase = "prelaunch";
 
   if (hasSupabaseEnvironment()) {
     const sessionClient = await createClient();
@@ -134,19 +197,43 @@ export default async function SeoLandingPage({
       creators = (creatorData ?? []) as CreatorPreview[];
       if (launchCity) {
         launchCityName = launchCity.name;
-        const [{ data: rawCityMembers }, { count: cityPeopleCount }] =
-          await Promise.all([
-            supabase
-              .from("public_city_people")
-              .select("id, username, display_name, avatar_path, is_creator")
-              .eq("city_id", launchCity.id)
-              .limit(12),
-            supabase
-              .from("public_city_people")
-              .select("id", { count: "exact", head: true })
-              .eq("city_id", launchCity.id),
-          ]);
+        const [
+          { data: rawCityMembers },
+          { count: cityPeopleCount },
+          { count: communityPlaceCount },
+          { count: upcomingEventCount },
+        ] = await Promise.all([
+          supabase
+            .from("public_city_people")
+            .select("id, username, display_name, avatar_path, is_creator")
+            .eq("city_id", launchCity.id)
+            .limit(12),
+          supabase
+            .from("public_city_people")
+            .select("id", { count: "exact", head: true })
+            .eq("city_id", launchCity.id),
+          supabase
+            .from("places")
+            .select("id", { count: "exact", head: true })
+            .eq("city_id", launchCity.id)
+            .neq("kind", "fixed")
+            .eq("is_active", true),
+          supabase
+            .from("events")
+            .select("id", { count: "exact", head: true })
+            .eq("city_id", launchCity.id)
+            .eq("is_cancelled", false)
+            .gte("starts_at", new Date().toISOString()),
+        ]);
         launchCityPeopleCount = cityPeopleCount ?? 0;
+        launchCityPhase =
+          launchCityPeopleCount >= 20 &&
+          (communityPlaceCount ?? 0) >= 3 &&
+          (upcomingEventCount ?? 0) >= 2
+            ? "active"
+            : launchCityPeopleCount >= 2
+              ? "gathering"
+              : "prelaunch";
         launchCityMembers = await Promise.all(
           (rawCityMembers ?? []).map(async (member) => ({
             id: member.id,
@@ -210,6 +297,27 @@ export default async function SeoLandingPage({
       liveRooms = [];
     }
   }
+
+  const cityLaunchCopy = {
+    prelaunch: {
+      eyebrow: `${launchCityName} · первая волна`,
+      title: "Открываем город, а не изображаем толпу.",
+      description: `Город ещё не наполнен. Поэтому мы не рисуем чужие сторис, не ставим липовые счётчики и не зовём тебя быть «первым в пустоте». Мы собираем стартовый круг людей, которым важно сделать ${launchCityName} живым.`,
+      button: "Стать частью первой волны",
+    },
+    gathering: {
+      eyebrow: `${launchCityName} · уже собирается`,
+      title: `${launchCityName} уже собирается.`,
+      description: `Здесь уже появились реальные люди. Мы продолжаем собирать жителей, авторов и первые поводы встретиться — без искусственного шума.`,
+      button: "Войти в круг города",
+    },
+    active: {
+      eyebrow: `${launchCityName} · сейчас`,
+      title: `${launchCityName} сейчас.`,
+      description: `Люди, места и события уже дают городу ритм. Заходи посмотреть, кто рядом и куда пойти сегодня.`,
+      button: "Открыть город",
+    },
+  }[launchCityPhase];
 
   return (
     <main className="landing-light relative isolate overflow-hidden bg-[#f7f3fa] text-[#201827] selection:bg-[#fc4e91] selection:text-white">
@@ -281,7 +389,7 @@ export default async function SeoLandingPage({
             <span className="size-1.5 rounded-full bg-[#fc4e91] shadow-[0_0_12px_#fc4e91]" />
             {inviteCode
               ? `Тебя приглашают в ${launchCityName}`
-              : `${launchCityName} · первая волна`}
+              : cityLaunchCopy.eyebrow}
           </p>
           <h1 className="mt-7 max-w-4xl text-balance text-[clamp(3.5rem,8.2vw,8.4rem)] font-black leading-[0.83] tracking-[-0.084em]">
             Не листай
@@ -486,8 +594,9 @@ export default async function SeoLandingPage({
                 Город — это «куда пойдём?»
               </h3>
               <p className="text-white/62 mt-5 max-w-sm text-base leading-7">
-                Свои места, люди, разговоры и поводы встретиться. Начинаем с{" "}
-                {launchCityName}— честно, с нуля и вместе.
+                {launchCityPhase === "active"
+                  ? `Свои места, люди, разговоры и поводы встретиться — ${launchCityName} уже живёт этим ритмом.`
+                  : `Свои места, люди, разговоры и поводы встретиться. Начинаем с ${launchCityName} — честно, с нуля и вместе.`}
               </p>
               <a
                 className="mt-auto inline-flex w-fit items-center gap-2 pt-10 text-sm font-black text-[#f5dff0] transition hover:gap-3"
@@ -550,18 +659,16 @@ export default async function SeoLandingPage({
               <MapPin className="size-4" /> Город 01 · {launchCityName}
             </p>
             <h2 className="mt-6 max-w-3xl text-balance text-5xl font-black leading-[0.87] tracking-[-0.075em] sm:text-7xl">
-              Открываем город, а не изображаем толпу.
+              {cityLaunchCopy.title}
             </h2>
             <p className="mt-8 max-w-xl text-lg leading-8 text-[#564a61] sm:text-xl">
-              Город ещё не наполнен. Поэтому мы не рисуем чужие сторис, не ставим
-              липовые счётчики и не зовём тебя быть «первым в пустоте». Мы собираем
-              стартовый круг людей, которым важно сделать {launchCityName} живым.
+              {cityLaunchCopy.description}
             </p>
             <Link
               className="group mt-9 inline-flex items-center gap-3 rounded-full bg-[#201827] px-6 py-3.5 text-sm font-black text-white shadow-[0_16px_34px_rgba(48,27,70,0.2)] transition hover:-translate-y-0.5 hover:bg-[#4b2d66]"
               href={signInHref}
             >
-              Стать частью первой волны
+              {cityLaunchCopy.button}
               <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
             </Link>
           </div>
@@ -747,8 +854,9 @@ export default async function SeoLandingPage({
 
         <div className="mt-5 flex flex-col gap-4 rounded-[1.6rem] border border-[#24182f]/10 bg-[#201827] px-6 py-5 text-white shadow-[0_18px_44px_rgba(43,25,61,0.18)] sm:flex-row sm:items-center sm:justify-between sm:px-7">
           <p className="text-white/68 max-w-2xl text-sm leading-6">
-            Никаких обещаний «города, который уже кипит». Сначала — честный круг людей,
-            потом места, истории и ритм, который они создают сами.
+            {launchCityPhase === "active"
+              ? "Город уже живёт за счёт настоящих людей, мест и поводов встретиться — без накруток и декораций."
+              : "Никаких обещаний «города, который уже кипит». Сначала — честный круг людей, потом места, истории и ритм, который они создают сами."}
           </p>
           <Link
             className="group inline-flex shrink-0 items-center justify-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-black text-[#201827] transition hover:bg-[#ffdce9]"

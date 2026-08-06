@@ -1,5 +1,15 @@
 import Link from "next/link";
-import { Copy, Gift, MapPin, ShoppingBag, Sparkles, UsersRound } from "lucide-react";
+import {
+  Check,
+  CircleDashed,
+  Clock3,
+  Copy,
+  Gift,
+  MapPin,
+  ShoppingBag,
+  Sparkles,
+  UsersRound,
+} from "lucide-react";
 
 import { CreatorShareLink } from "@/components/creator-share-link";
 import { ReferralQrCode } from "@/components/referral-qr-code";
@@ -19,12 +29,24 @@ type BonusEntry = {
   created_at: string;
 };
 
+type ReferralProgress = {
+  referral_id: string;
+  status: "registered" | "qualified" | "held" | "approved" | "rejected";
+  created_at: string;
+  onboarding_completed: boolean;
+  first_action_completed: boolean;
+  qualified_at: string | null;
+  hold_until: string | null;
+  approved_at: string | null;
+};
+
 export default async function BonusesPage() {
   const { supabase, user } = await requireUser();
   const [
     { data: wallet },
     { data: rawEntries },
     { data: referrals },
+    { data: rawReferralProgress },
     { data: settings },
   ] = await Promise.all([
     supabase
@@ -43,6 +65,7 @@ export default async function BonusesPage() {
       .select("id, status, created_at")
       .eq("referrer_id", user.id)
       .order("created_at", { ascending: false }),
+    supabase.rpc("referral_progress"),
     supabase
       .from("bonus_settings")
       .select("referral_reward, hold_days")
@@ -50,6 +73,7 @@ export default async function BonusesPage() {
       .maybeSingle(),
   ]);
   const entries = (rawEntries ?? []) as BonusEntry[];
+  const referralProgress = (rawReferralProgress ?? []) as ReferralProgress[];
   const reward = settings?.referral_reward ?? 200;
   const { data: referralLink } = await supabase.rpc("create_referral_link", {
     p_user_id: user.id,
@@ -135,6 +159,102 @@ export default async function BonusesPage() {
           </div>
         )}
       </section>
+
+      <section className="mt-6">
+        <div className="flex items-end justify-between gap-3">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.12em] text-[#cda6ff]">
+              Без догадок
+            </p>
+            <h2 className="mt-1 font-bold">Путь до +{reward} ⭐</h2>
+          </div>
+          <span className="text-right text-xs leading-5 text-[#aaa2b4]">
+            Только реальные этапы
+          </span>
+        </div>
+
+        {referralProgress.length > 0 ? (
+          <div className="mt-3 space-y-3">
+            {referralProgress.slice(0, 5).map((referral, index) => {
+              const bonusReady = referral.status === "approved";
+              const bonusHeld = referral.status === "held";
+              const firstActionDone = referral.first_action_completed;
+              return (
+                <article
+                  className="border-white/8 rounded-2xl border bg-[#171923] p-4"
+                  key={referral.referral_id}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <span>
+                      <b className="block text-sm">Приглашение #{index + 1}</b>
+                      <small className="mt-0.5 block text-xs text-[#aaa2b4]">
+                        {bonusReady
+                          ? `+${reward} ⭐ начислены`
+                          : bonusHeld
+                            ? "Бонус на проверке"
+                            : "Ждём следующий шаг"}
+                      </small>
+                    </span>
+                    <span
+                      className={`rounded-full px-2.5 py-1 text-[10px] font-bold ${
+                        bonusReady
+                          ? "bg-[#173023] text-[#8df0b4]"
+                          : bonusHeld
+                            ? "bg-[#2d2917] text-[#ffd35e]"
+                            : "bg-[#251b33] text-[#d7b2ff]"
+                      }`}
+                    >
+                      {bonusReady ? "ГОТОВО" : bonusHeld ? "ПРОВЕРКА" : "В ПУТИ"}
+                    </span>
+                  </div>
+                  <div className="mt-4 grid grid-cols-3 gap-2">
+                    {[
+                      { label: "Вход", done: true },
+                      { label: "Профиль", done: referral.onboarding_completed },
+                      { label: "Первое действие", done: firstActionDone },
+                    ].map((step) => (
+                      <div className="min-w-0" key={step.label}>
+                        <span
+                          className={`grid size-6 place-items-center rounded-full text-xs ${
+                            step.done
+                              ? "bg-[#6bdbab] text-[#10231a]"
+                              : "bg-white/10 text-[#8e8797]"
+                          }`}
+                        >
+                          {step.done ? (
+                            <Check className="size-3.5" />
+                          ) : (
+                            <CircleDashed className="size-3.5" />
+                          )}
+                        </span>
+                        <span
+                          className={`mt-1.5 block text-[10px] leading-4 ${
+                            step.done ? "text-[#e4ddea]" : "text-[#89828f]"
+                          }`}
+                        >
+                          {step.label}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                  {bonusHeld && referral.hold_until && (
+                    <p className="mt-3 flex items-center gap-1.5 text-xs text-[#ffd35e]">
+                      <Clock3 className="size-3.5" /> Бонус станет доступен после
+                      проверки.
+                    </p>
+                  )}
+                </article>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="mt-3 rounded-2xl border border-dashed border-white/15 bg-white/[0.03] p-4 text-sm leading-6 text-[#aaa2b4]">
+            Первый приглашённый появится здесь. Когда он заполнит профиль и сделает
+            первое действие, этапы загорятся по-настоящему.
+          </div>
+        )}
+      </section>
+
       <section className="mt-6">
         <h2 className="font-bold">Как получить ⭐</h2>
         <div className="mt-3 space-y-2">
