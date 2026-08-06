@@ -10,6 +10,7 @@ import {
   startFundraiserSupport,
 } from "@/app/fundraisers/support-actions";
 import { toggleFundraiserFollow } from "@/app/social/actions";
+import { CopyFundraiserLinkButton } from "@/components/copy-fundraiser-link-button";
 import { EmptyState } from "@/components/empty-state";
 import { LiveDiscussionRefresh } from "@/components/live-discussion-refresh";
 import { ReportForm } from "@/components/report-form";
@@ -253,6 +254,7 @@ export default async function FundraiserPage({
                     {existingFundraiserFollow ? "Вы следите" : "Следить за сбором"}
                   </button>
                 </form>
+                <CopyFundraiserLinkButton slug={fundraiser.slug} />
                 <ReportForm
                   returnTo={`/fundraisers/${fundraiser.slug}`}
                   targetId={fundraiser.id}

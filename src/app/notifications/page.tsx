@@ -82,6 +82,16 @@ function notificationCopy(notification: Notification, actor: Actor | undefined) 
     };
   }
 
+  if (notification.type === "fundraiser_follow") {
+    const slug =
+      typeof notification.payload.slug === "string" ? notification.payload.slug : null;
+    return {
+      icon: Bell,
+      title: `${actorName} теперь следит за вашим сбором`,
+      href: slug ? (`/fundraisers/${slug}` as Route) : "/notifications",
+    };
+  }
+
   if (notification.type === "wish_also_want") {
     const wishTitle =
       typeof notification.payload.wish_title === "string"
