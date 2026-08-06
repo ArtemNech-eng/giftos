@@ -151,12 +151,14 @@ function WishListCard({ wish, ownList }: { wish: WishCard; ownList: boolean }) {
 export default async function WishesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ scope?: string }>;
+  searchParams: Promise<{ scope?: string; author?: string }>;
 }) {
-  const { scope: rawScope = "mine" } = await searchParams;
+  const { scope: rawScope = "mine", author: rawAuthor = "" } = await searchParams;
   const scope = SCOPES.some((item) => item.key === rawScope)
     ? (rawScope as WishScope)
     : "mine";
+  const authorUsername = rawAuthor.trim().toLowerCase().slice(0, 30);
+  const hasAuthorFilter = Boolean(authorUsername);
   const { supabase, user } = await requireUser();
   const { data: profile } = await supabase
     .from("profiles")
@@ -164,8 +166,31 @@ export default async function WishesPage({
     .eq("id", user.id)
     .maybeSingle();
 
+  const { data: profileListOwner } = authorUsername
+    ? await supabase
+        .from("profiles")
+        .select("id, username, display_name")
+        .eq("username", authorUsername)
+        .maybeSingle()
+    : { data: null };
+  const isOwnProfileList = profileListOwner?.id === user.id;
+
+  const authorListUnavailable = hasAuthorFilter && !profileListOwner;
   let wishes: WishRow[] = [];
-  if (scope === "mine") {
+  if (profileListOwner) {
+    let listQuery = supabase
+      .from("wishes")
+      .select(
+        "id, author_id, title, description, image_path, estimated_cost_minor, category_slug, visibility, also_wants_count, created_at",
+      )
+      .eq("author_id", profileListOwner.id)
+      .eq("is_archived", false)
+      .order("created_at", { ascending: false })
+      .limit(80);
+    if (!isOwnProfileList) listQuery = listQuery.eq("visibility", "public");
+    const { data } = await listQuery;
+    wishes = (data ?? []) as WishRow[];
+  } else if (!hasAuthorFilter && scope === "mine") {
     const { data } = await supabase
       .from("wishes")
       .select(
@@ -303,7 +328,7 @@ export default async function WishesPage({
           {title}.
         </h2>
         <p className="max-w-70 mt-3 text-[11px] leading-5 text-[#756a7d]">{subtitle}</p>
-        {scope === "mine" && (
+        {!hasAuthorFilter && scope === "mine" && (
           <Link
             className="mt-4 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#ff5d9a] to-[#8254ed] px-3.5 py-2.5 text-[10px] font-black text-white shadow-[0_7px_16px_rgba(160,75,213,.18)]"
             href="/wishes/new"
@@ -313,22 +338,34 @@ export default async function WishesPage({
         )}
       </section>
 
-      <nav className="mt-5 grid grid-cols-3 gap-1 rounded-2xl bg-[#ebe5f1] p-1 text-center text-[10px] font-black">
-        {SCOPES.map((item) => (
+      {profileListOwner ? (
+        <nav className="mt-5 flex items-center justify-between rounded-2xl bg-[#eee8f4] p-1 text-[10px] font-black">
           <Link
-            className={`rounded-xl px-2 py-2.5 transition ${
-              scope === item.key
-                ? "bg-white text-[#7549d0] shadow-[0_3px_10px_rgba(65,43,89,.08)]"
-                : "text-[#82758a]"
-            }`}
-            href={`/wishes?scope=${item.key}`}
-            key={item.key}
+            className="rounded-xl bg-white px-3 py-2.5 text-[#7549d0] shadow-[0_3px_10px_rgba(65,43,89,.08)]"
+            href="/wishes"
           >
-            {item.key === "city" && <MapPin className="mr-1 inline size-3" />}
-            {item.label}
+            Мои желания
           </Link>
-        ))}
-      </nav>
+          <span className="px-3 text-[#82758a]">Открытый список</span>
+        </nav>
+      ) : (
+        <nav className="mt-5 grid grid-cols-3 gap-1 rounded-2xl bg-[#ebe5f1] p-1 text-center text-[10px] font-black">
+          {SCOPES.map((item) => (
+            <Link
+              className={`rounded-xl px-2 py-2.5 transition ${
+                scope === item.key
+                  ? "bg-white text-[#7549d0] shadow-[0_3px_10px_rgba(65,43,89,.08)]"
+                  : "text-[#82758a]"
+              }`}
+              href={`/wishes?scope=${item.key}`}
+              key={item.key}
+            >
+              {item.key === "city" && <MapPin className="mr-1 inline size-3" />}
+              {item.label}
+            </Link>
+          ))}
+        </nav>
+      )}
 
       {scope === "city" && !hasCity ? (
         <section className="mt-6 rounded-[1.6rem] border border-dashed border-[#cdbbe7] bg-[#fffcff] p-5 text-center shadow-[0_8px_22px_rgba(69,43,94,.04)]">
@@ -350,14 +387,22 @@ export default async function WishesPage({
         <section className="mt-6 rounded-[1.6rem] border border-dashed border-[#cdbbe7] bg-[#fffcff] p-5 text-center shadow-[0_8px_22px_rgba(69,43,94,.04)]">
           <Sparkles className="mx-auto size-7 text-[#8753e6]" />
           <h2 className="mt-3 text-lg font-black tracking-[-0.045em]">
-            {scope === "mine" ? "Начни с одного желания" : "Истории только собираются"}
+            {profileListOwner
+              ? "Пока нет открытых желаний"
+              : scope === "mine"
+                ? "Начни с одного желания"
+                : "Истории только собираются"}
           </h2>
           <p className="mt-2 text-xs leading-5 text-[#756a7d]">
-            {scope === "mine"
-              ? "Не обязательно превращать желание в сбор. Сначала просто сохрани то, что тебе важно."
-              : "Здесь появляются только реальные публичные желания — без выдуманных карточек."}
+            {authorListUnavailable
+              ? "Можно вернуться к своим желаниям или открыть публичные истории города."
+              : profileListOwner
+                ? "Когда человек откроет желание в профиле, оно появится здесь."
+                : scope === "mine"
+                  ? "Не обязательно превращать желание в сбор. Сначала просто сохрани то, что тебе важно."
+                  : "Здесь появляются только реальные публичные желания — без выдуманных карточек."}
           </p>
-          {scope === "mine" && (
+          {!hasAuthorFilter && scope === "mine" && (
             <Link
               className="mt-4 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#ff5d9a] to-[#8254ed] px-4 py-2.5 text-xs font-black text-white"
               href="/wishes/new"
@@ -385,7 +430,11 @@ export default async function WishesPage({
           </div>
           <div className="space-y-2.5">
             {cards.map((wish) => (
-              <WishListCard key={wish.id} ownList={scope === "mine"} wish={wish} />
+              <WishListCard
+                key={wish.id}
+                ownList={scope === "mine" || isOwnProfileList}
+                wish={wish}
+              />
             ))}
           </div>
         </section>

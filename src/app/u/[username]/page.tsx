@@ -683,11 +683,16 @@ export default async function ProfilePage({
                   : "То, что сейчас важно человеку"}
               </p>
             </span>
-            {isOwnProfile && (
-              <Link className="text-[10px] font-black text-[#8753e6]" href="/wishes">
-                Все ›
-              </Link>
-            )}
+            <Link
+              className="text-[10px] font-black text-[#8753e6]"
+              href={
+                isOwnProfile
+                  ? "/wishes"
+                  : (`/wishes?author=${profile.username}` as Route)
+              }
+            >
+              Все ›
+            </Link>
           </div>
           <div className="mt-3 space-y-2">
             {rawWishes.slice(0, 3).map((wish) => (
