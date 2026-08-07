@@ -210,6 +210,8 @@ function FeedScreen() {
             >
               {/* eslint-disable-next-line @next/next/no-img-element -- generated synthetic preview media */}
               <img
+                loading="lazy"
+                decoding="async"
                 alt={`Демо эфир ${item.name}`}
                 className={`size-full object-cover ${item.position}`}
                 src={item.src}
@@ -1225,6 +1227,8 @@ function ProfileScreen() {
             <span className="grid size-full overflow-hidden rounded-full bg-white">
               {/* eslint-disable-next-line @next/next/no-img-element -- generated synthetic preview media */}
               <img
+                loading="lazy"
+                decoding="async"
                 alt="Аватар Насти"
                 className="size-full object-cover object-[center_40%]"
                 src="/preview/nastya-profile.jpg"
@@ -1392,6 +1396,8 @@ function CollectiblesScreen() {
             >
               {/* eslint-disable-next-line @next/next/no-img-element -- generated synthetic concept art */}
               <img
+                loading="lazy"
+                decoding="async"
                 alt={`Концепт коллекции: ${direction.title}`}
                 className="aspect-[5/3] w-full object-cover"
                 src={direction.src}
@@ -1487,6 +1493,8 @@ function CollectionScreen() {
             >
               {/* eslint-disable-next-line @next/next/no-img-element -- generated static artifact art */}
               <img
+                loading="lazy"
+                decoding="async"
                 alt=""
                 className="aspect-[3/2] w-full object-cover"
                 src={`/collectibles/artifacts/${slug}.jpg`}
@@ -1520,6 +1528,8 @@ function CollectionScreen() {
         <div className="mt-3 flex gap-3 rounded-2xl bg-[#fbf9fe] p-2.5">
           {/* eslint-disable-next-line @next/next/no-img-element -- generated static artifact art */}
           <img
+            loading="lazy"
+            decoding="async"
             alt="Фонарь"
             className="h-24 w-[72px] rounded-xl object-cover"
             src="/collectibles/artifacts/lantern.jpg"
@@ -1565,6 +1575,8 @@ function UnboxingScreen() {
         <div className="bg-white/8 relative z-10 mt-8 w-56 overflow-hidden rounded-[1.6rem] border border-white/20 p-2 shadow-[0_20px_36px_rgba(0,0,0,.24)]">
           {/* eslint-disable-next-line @next/next/no-img-element -- generated static artifact art */}
           <img
+            loading="lazy"
+            decoding="async"
             alt="Фонарь"
             className="aspect-[3/4] w-full rounded-[1.2rem] object-cover"
             src="/collectibles/artifacts/lantern.jpg"
@@ -1613,6 +1625,8 @@ function WishScreen() {
           <span className="grid size-28 shrink-0 overflow-hidden rounded-[1.5rem] bg-gradient-to-br from-[#f3e8ff] to-[#fff0f6]">
             {/* eslint-disable-next-line @next/next/no-img-element -- generated synthetic preview media */}
             <img
+              loading="lazy"
+              decoding="async"
               alt=""
               className="size-full object-cover object-[center_42%]"
               src="/preview/nastya-profile.jpg"
@@ -1713,6 +1727,8 @@ function FundraiserScreen() {
           <span className="grid size-28 shrink-0 overflow-hidden rounded-[1.5rem] bg-gradient-to-br from-[#fff0e3] to-[#f5e9ff]">
             {/* eslint-disable-next-line @next/next/no-img-element -- generated synthetic preview media */}
             <img
+              loading="lazy"
+              decoding="async"
               alt=""
               className="size-full object-cover object-[center_42%]"
               src="/preview/max-live.jpg"
@@ -3097,6 +3113,8 @@ function StoryScreen() {
       <section className="relative flex min-h-[560px] flex-col overflow-hidden bg-[#30213f]">
         {/* eslint-disable-next-line @next/next/no-img-element -- generated synthetic preview media */}
         <img
+          loading="lazy"
+          decoding="async"
           alt="Демо story Насти"
           className="absolute inset-0 size-full object-cover object-[center_42%]"
           src="/preview/nastya-profile.jpg"
@@ -3111,6 +3129,8 @@ function StoryScreen() {
               <span className="grid size-9 place-items-center overflow-hidden rounded-full border border-white/40">
                 {/* eslint-disable-next-line @next/next/no-img-element -- generated synthetic preview media */}
                 <img
+                  loading="lazy"
+                  decoding="async"
                   alt=""
                   className="size-full object-cover"
                   src="/preview/nastya-profile.jpg"

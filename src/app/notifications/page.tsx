@@ -482,6 +482,8 @@ export default async function NotificationsPage({
                         <span className="grid size-full place-items-center overflow-hidden rounded-full bg-[#f7f1fa] text-[#8753e6]">
                           {actor?.avatar_url ? (
                             <img
+                              loading="lazy"
+                              decoding="async"
                               alt=""
                               className="size-full object-cover"
                               src={actor.avatar_url}

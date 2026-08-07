@@ -140,7 +140,13 @@ function PersonAvatar({ person }: { person: RankedPerson }) {
     <span className="grid size-11 shrink-0 place-items-center overflow-hidden rounded-full bg-gradient-to-br from-[#ff83b0] to-[#815be8] p-0.5">
       <span className="grid size-full place-items-center overflow-hidden rounded-full bg-[#f8f4fc] text-xs font-black text-[#372c41]">
         {person.avatarUrl ? (
-          <img alt="" className="size-full object-cover" src={person.avatarUrl} />
+          <img
+            loading="lazy"
+            decoding="async"
+            alt=""
+            className="size-full object-cover"
+            src={person.avatarUrl}
+          />
         ) : (
           person.display_name.slice(0, 1).toUpperCase()
         )}

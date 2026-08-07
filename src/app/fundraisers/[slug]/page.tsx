@@ -92,7 +92,13 @@ function PersonAvatar({ person, size = "size-8" }: { person: Person; size?: stri
     >
       <span className="grid size-full place-items-center overflow-hidden rounded-full bg-[#f8f4fc] text-[9px] font-black text-[#372c41]">
         {person.avatarUrl ? (
-          <img alt="" className="size-full object-cover" src={person.avatarUrl} />
+          <img
+            loading="lazy"
+            decoding="async"
+            alt=""
+            className="size-full object-cover"
+            src={person.avatarUrl}
+          />
         ) : (
           person.displayName.slice(0, 1).toUpperCase()
         )}
@@ -229,7 +235,13 @@ export default async function FundraiserPage({
         <div className="flex items-start gap-4">
           <span className="grid size-28 shrink-0 place-items-center overflow-hidden rounded-[1.5rem] bg-gradient-to-br from-[#fff0e3] to-[#f5e9ff] text-[#8753e6]">
             {coverImageUrl ? (
-              <img alt="" className="size-full object-cover" src={coverImageUrl} />
+              <img
+                loading="lazy"
+                decoding="async"
+                alt=""
+                className="size-full object-cover"
+                src={coverImageUrl}
+              />
             ) : (
               <WishCategoryIcon
                 category={fundraiser.category_slug}

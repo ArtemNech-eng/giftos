@@ -120,6 +120,8 @@ export default async function ProfileMediaPage() {
                 {item.url ? (
                   // eslint-disable-next-line @next/next/no-img-element -- signed Storage URL has no stable host
                   <img
+                    loading="lazy"
+                    decoding="async"
                     alt=""
                     className="aspect-[4/3] w-full object-cover"
                     src={item.url}

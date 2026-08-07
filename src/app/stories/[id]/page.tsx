@@ -179,6 +179,8 @@ export default async function StoryPage({
                 <span className="grid size-9 shrink-0 place-items-center overflow-hidden rounded-full border border-white/45 bg-[#2b1d31] text-xs font-black">
                   {authorAvatarUrl ? (
                     <img
+                      loading="lazy"
+                      decoding="async"
                       alt=""
                       className="size-full object-cover"
                       src={authorAvatarUrl}

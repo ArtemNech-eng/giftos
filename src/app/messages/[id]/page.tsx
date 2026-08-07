@@ -98,7 +98,13 @@ export default async function ConversationPage({
           <span className="grid size-10 shrink-0 place-items-center overflow-hidden rounded-full bg-gradient-to-br from-[#ff78ad] to-[#8753ed] p-0.5">
             <span className="grid size-full place-items-center overflow-hidden rounded-full bg-[#f7f1fa] text-xs font-black text-[#33263d]">
               {otherAvatarUrl ? (
-                <img alt="" className="size-full object-cover" src={otherAvatarUrl} />
+                <img
+                  loading="lazy"
+                  decoding="async"
+                  alt=""
+                  className="size-full object-cover"
+                  src={otherAvatarUrl}
+                />
               ) : (
                 (other?.display_name ?? "Д").slice(0, 1).toUpperCase()
               )}

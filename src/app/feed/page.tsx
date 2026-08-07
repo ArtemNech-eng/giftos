@@ -933,7 +933,13 @@ function Avatar({
       <span className="grid size-full place-items-center overflow-hidden rounded-full bg-white text-lg font-bold text-[#2b2036] shadow-[0_4px_12px_rgba(57,35,82,0.13)]">
         {imageUrl ? (
           // eslint-disable-next-line @next/next/no-img-element -- signed Storage URL has no stable image host
-          <img alt="" className="size-full object-cover" src={imageUrl} />
+          <img
+            loading="lazy"
+            decoding="async"
+            alt=""
+            className="size-full object-cover"
+            src={imageUrl}
+          />
         ) : (
           name.slice(0, 1).toUpperCase()
         )}

@@ -768,6 +768,8 @@ export default async function SeoLandingPage({
                       <span className="grid size-full place-items-center overflow-hidden rounded-full bg-[#ede5f4] text-[#36293f]">
                         {member.avatarUrl ? (
                           <img
+                            loading="lazy"
+                            decoding="async"
                             alt={`Аватар ${member.displayName}`}
                             className="size-full object-cover"
                             src={member.avatarUrl}

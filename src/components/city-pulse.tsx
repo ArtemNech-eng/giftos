@@ -177,6 +177,8 @@ export function CityPulse({
                   {item.actor_avatar_url ? (
                     // eslint-disable-next-line @next/next/no-img-element -- short-lived signed Storage URL
                     <img
+                      loading="lazy"
+                      decoding="async"
                       alt=""
                       className="size-full object-cover"
                       src={item.actor_avatar_url}

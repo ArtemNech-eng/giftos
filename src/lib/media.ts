@@ -60,6 +60,13 @@ async function uploadMediaFile({
   return path;
 }
 
+// In-process signed URL cache. Signed Storage URLs are valid for an hour,
+// so regenerating them on every render (49+ calls per page) is pure waste.
+// A short TTL keeps the cache warm across renders while never outliving the
+// URL validity window. One instance = one cache; fine for the launch stage.
+const SIGNED_URL_TTL_MS = 50 * 60 * 1000;
+const signedUrlCache = new Map<string, { url: string | null; expiresAt: number }>();
+
 export async function getSignedImageUrl({
   bucket,
   path,
@@ -68,13 +75,17 @@ export async function getSignedImageUrl({
   path: string | null | undefined;
 }) {
   if (!path) return null;
+  const key = `${bucket}:${path}`;
+  const cached = signedUrlCache.get(key);
+  if (cached && cached.expiresAt > Date.now()) return cached.url;
   try {
     const admin = createAdminClient();
     const { data, error } = await admin.storage
       .from(bucket)
       .createSignedUrl(path, 60 * 60);
-    if (error) return null;
-    return data.signedUrl;
+    const url = error ? null : data.signedUrl;
+    signedUrlCache.set(key, { url, expiresAt: Date.now() + SIGNED_URL_TTL_MS });
+    return url;
   } catch {
     return null;
   }

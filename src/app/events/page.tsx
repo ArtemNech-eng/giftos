@@ -89,7 +89,13 @@ function EventAuthorAvatar({ card }: { card: EventCard }) {
     <span className="grid size-7 shrink-0 place-items-center overflow-hidden rounded-full bg-gradient-to-br from-[#ff83b0] to-[#815be8] p-0.5">
       <span className="grid size-full place-items-center overflow-hidden rounded-full bg-[#f8f4fc] text-[9px] font-black text-[#372c41]">
         {card.authorAvatarUrl ? (
-          <img alt="" className="size-full object-cover" src={card.authorAvatarUrl} />
+          <img
+            loading="lazy"
+            decoding="async"
+            alt=""
+            className="size-full object-cover"
+            src={card.authorAvatarUrl}
+          />
         ) : (
           card.authorName.slice(0, 1).toUpperCase()
         )}

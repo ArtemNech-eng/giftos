@@ -418,6 +418,8 @@ export default async function ProfilePage({
             <span className="grid size-full place-items-center overflow-hidden rounded-full bg-[#f8f4fc]">
               {avatarUrl ? (
                 <img
+                  loading="lazy"
+                  decoding="async"
                   alt={`Аватар ${profile.display_name}`}
                   className="size-full object-cover"
                   src={avatarUrl}
@@ -789,6 +791,8 @@ export default async function ProfilePage({
                 key={artifact.id}
               >
                 <img
+                  loading="lazy"
+                  decoding="async"
                   alt=""
                   className="aspect-[3/4] w-full object-cover"
                   src={artifact.artwork_path}
@@ -1066,6 +1070,8 @@ export default async function ProfilePage({
                   (item) =>
                     item.url && (
                       <img
+                        loading="lazy"
+                        decoding="async"
                         alt=""
                         className="aspect-square rounded-xl object-cover"
                         key={item.id}

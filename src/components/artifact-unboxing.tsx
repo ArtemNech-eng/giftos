@@ -66,6 +66,8 @@ export function ArtifactUnboxing({
         >
           {/* eslint-disable-next-line @next/next/no-img-element -- generated static pre-production artifact art */}
           <img
+            loading="lazy"
+            decoding="async"
             alt={opened ? artifact.title : "Артефакт ждёт распаковки"}
             className={`aspect-[3/4] w-full rounded-[1.2rem] object-cover transition duration-700 ${
               opened ? "blur-0" : "blur-sm"

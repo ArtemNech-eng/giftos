@@ -62,6 +62,8 @@ export async function StoryStrip() {
                     {item.avatarUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element -- signed Storage URL has no stable host
                       <img
+                        loading="lazy"
+                        decoding="async"
                         alt=""
                         className="size-full object-cover"
                         src={item.avatarUrl}

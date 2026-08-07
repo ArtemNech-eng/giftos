@@ -93,6 +93,8 @@ export default async function ArtifactDetailPage({
 
       <section className="mt-5 overflow-hidden rounded-[1.8rem] border border-white/80 bg-gradient-to-br from-[#fffaff] via-[#f4effd] to-[#eaf5ff] p-3 shadow-[0_14px_32px_rgba(69,43,94,.1)]">
         <img
+          loading="lazy"
+          decoding="async"
           alt={artifact.title}
           className="aspect-[3/4] w-full rounded-[1.45rem] object-cover"
           src={artifact.artwork_path}

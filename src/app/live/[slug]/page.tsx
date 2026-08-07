@@ -268,7 +268,13 @@ export default async function LiveRoomPage({
             <span className="grid size-10 shrink-0 place-items-center overflow-hidden rounded-full bg-gradient-to-br from-[#ff78ad] to-[#8753ed] p-0.5">
               <span className="grid size-full place-items-center overflow-hidden rounded-full bg-[#2b1d31] text-xs font-black">
                 {hostAvatarUrl ? (
-                  <img alt="" className="size-full object-cover" src={hostAvatarUrl} />
+                  <img
+                    loading="lazy"
+                    decoding="async"
+                    alt=""
+                    className="size-full object-cover"
+                    src={hostAvatarUrl}
+                  />
                 ) : (
                   (host?.display_name ?? "А").slice(0, 1).toUpperCase()
                 )}

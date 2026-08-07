@@ -339,6 +339,8 @@ export default async function PlacePage({
                       <span className="grid size-full place-items-center overflow-hidden rounded-full bg-[#f7f1fa] text-xs font-black text-[#33263d]">
                         {person.avatarUrl ? (
                           <img
+                            loading="lazy"
+                            decoding="async"
                             alt=""
                             className="size-full object-cover"
                             src={person.avatarUrl}
@@ -550,6 +552,8 @@ export default async function PlacePage({
                     <span className="grid size-full place-items-center overflow-hidden rounded-full bg-[#f7f1fa] text-xs font-black text-[#33263d]">
                       {moment.avatarUrl ? (
                         <img
+                          loading="lazy"
+                          decoding="async"
                           alt=""
                           className="size-full object-cover"
                           src={moment.avatarUrl}

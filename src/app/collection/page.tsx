@@ -141,6 +141,8 @@ export default async function CollectionPage() {
                       key={instance.id}
                     >
                       <img
+                        loading="lazy"
+                        decoding="async"
                         alt=""
                         className="aspect-[3/4] w-full object-cover"
                         src={artifact.artwork_path}
@@ -217,6 +219,8 @@ export default async function CollectionPage() {
               >
                 <Link className="block" href={`/collection/${artifact.slug}` as Route}>
                   <img
+                    loading="lazy"
+                    decoding="async"
                     alt={artifact.title}
                     className="aspect-[3/4] w-full object-cover"
                     src={artifact.artwork_path}

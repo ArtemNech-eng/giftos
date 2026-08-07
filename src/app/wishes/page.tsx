@@ -64,7 +64,13 @@ function WishVisual({ wish }: { wish: WishCard }) {
   return (
     <span className="grid size-14 shrink-0 place-items-center overflow-hidden rounded-2xl bg-gradient-to-br from-[#f3e8ff] to-[#fff0f6] text-[#8753e6]">
       {wish.imageUrl ? (
-        <img alt="" className="size-full object-cover" src={wish.imageUrl} />
+        <img
+          loading="lazy"
+          decoding="async"
+          alt=""
+          className="size-full object-cover"
+          src={wish.imageUrl}
+        />
       ) : (
         <WishCategoryIcon category={wish.category_slug} className="size-6" />
       )}
@@ -77,7 +83,13 @@ function AuthorAvatar({ author }: { author: NonNullable<WishCard["author"]> }) {
     <span className="grid size-5 shrink-0 place-items-center overflow-hidden rounded-full bg-gradient-to-br from-[#ff83b0] to-[#815be8] p-px">
       <span className="grid size-full place-items-center overflow-hidden rounded-full bg-[#f8f4fc] text-[7px] font-black text-[#372c41]">
         {author.avatarUrl ? (
-          <img alt="" className="size-full object-cover" src={author.avatarUrl} />
+          <img
+            loading="lazy"
+            decoding="async"
+            alt=""
+            className="size-full object-cover"
+            src={author.avatarUrl}
+          />
         ) : (
           author.displayName.slice(0, 1).toUpperCase()
         )}

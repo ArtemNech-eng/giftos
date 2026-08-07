@@ -109,7 +109,13 @@ function PersonAvatar({
     >
       <span className="grid size-full place-items-center overflow-hidden rounded-full bg-[#f8f4fc] text-xs font-black text-[#372c41]">
         {avatarUrl ? (
-          <img alt="" className="size-full object-cover" src={avatarUrl} />
+          <img
+            loading="lazy"
+            decoding="async"
+            alt=""
+            className="size-full object-cover"
+            src={avatarUrl}
+          />
         ) : (
           name.slice(0, 1).toUpperCase()
         )}

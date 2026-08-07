@@ -83,7 +83,13 @@ function CircleAvatar({ person, index }: { person: CirclePerson; index: number }
     >
       <span className="grid size-full place-items-center overflow-hidden rounded-full bg-[#f7f1fa] text-xs font-black text-[#33263d]">
         {person.avatarUrl ? (
-          <img alt="" className="size-full object-cover" src={person.avatarUrl} />
+          <img
+            loading="lazy"
+            decoding="async"
+            alt=""
+            className="size-full object-cover"
+            src={person.avatarUrl}
+          />
         ) : (
           person.displayName.slice(0, 1).toUpperCase()
         )}
