@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { ClipboardList, ShieldAlert } from "lucide-react";
+import { ClipboardList } from "lucide-react";
 
+import { AdminNav } from "@/components/admin-nav";
 import { requireModerator } from "@/lib/auth";
 import { EmptyState } from "@/components/empty-state";
 
@@ -82,38 +83,7 @@ export default async function AdminActionsPage() {
         <ClipboardList className="mb-2 hidden size-8 text-[#d34872] sm:block" />
       </div>
 
-      <nav className="mt-6 flex gap-1 rounded-xl bg-[#f5e9ed] p-1">
-        <Link
-          className="flex flex-1 items-center justify-center rounded-lg px-4 py-2 text-sm font-semibold text-[#8e6a75] hover:text-[#bd3e66]"
-          href="/admin/reports"
-        >
-          Жалобы
-        </Link>
-        <Link
-          className="flex flex-1 items-center justify-center rounded-lg px-4 py-2 text-sm font-semibold text-[#8e6a75] hover:text-[#bd3e66]"
-          href="/admin/stories"
-        >
-          Видео
-        </Link>
-        <Link
-          className="flex flex-1 items-center justify-center rounded-lg px-4 py-2 text-sm font-semibold text-[#8e6a75] hover:text-[#bd3e66]"
-          href="/admin/economy"
-        >
-          Экономика
-        </Link>
-        <Link
-          className="flex flex-1 items-center justify-center rounded-lg px-4 py-2 text-sm font-semibold text-[#8e6a75] hover:text-[#bd3e66]"
-          href="/admin/city"
-        >
-          Город
-        </Link>
-        <Link
-          className="flex flex-1 items-center justify-center rounded-lg bg-white px-4 py-2 text-sm font-semibold text-[#bd3e66] shadow-sm"
-          href="/admin/actions"
-        >
-          <ShieldAlert className="mr-1 size-4" /> Действия
-        </Link>
-      </nav>
+      <AdminNav active="/admin/actions" />
 
       <section className="mt-8">
         {actions.length === 0 ? (

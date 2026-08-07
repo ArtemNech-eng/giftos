@@ -4,6 +4,7 @@ import { Clapperboard, ShieldAlert } from "lucide-react";
 
 import { moderateStory } from "@/app/admin/stories/actions";
 import { EmptyState } from "@/components/empty-state";
+import { AdminNav } from "@/components/admin-nav";
 import { requireModerator } from "@/lib/auth";
 import { getSignedImageUrl } from "@/lib/media";
 
@@ -68,26 +69,7 @@ export default async function AdminStoriesPage() {
         <ShieldAlert className="mb-2 hidden size-8 text-[#d34872] sm:block" />
       </div>
 
-      <nav className="mt-6 flex gap-1 rounded-xl bg-[#f5e9ed] p-1">
-        <Link
-          className="flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold text-[#8e6a75] hover:text-[#bd3e66]"
-          href="/admin/reports"
-        >
-          Жалобы
-        </Link>
-        <Link
-          className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-white px-4 py-2 text-sm font-semibold text-[#bd3e66] shadow-sm"
-          href="/admin/stories"
-        >
-          <Clapperboard className="size-4" /> Видео на проверке
-        </Link>
-        <Link
-          className="flex flex-1 items-center justify-center rounded-lg px-4 py-2 text-sm font-semibold text-[#8e6a75] hover:text-[#bd3e66]"
-          href="/admin/actions"
-        >
-          Действия
-        </Link>
-      </nav>
+      <AdminNav active="/admin/stories" />
 
       <section className="mt-8">
         {storiesWithUrl.length === 0 ? (

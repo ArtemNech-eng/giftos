@@ -3,6 +3,7 @@ import { Archive, Inbox, ShieldAlert } from "lucide-react";
 
 import { moderateTarget, resolveReport } from "@/app/admin/reports/actions";
 import { EmptyState } from "@/components/empty-state";
+import { AdminNav } from "@/components/admin-nav";
 import { requireModerator } from "@/lib/auth";
 
 export const metadata = { title: "Модерация", robots: { index: false, follow: false } };
@@ -200,7 +201,9 @@ export default async function AdminReportsPage({
         <ShieldAlert className="mb-2 hidden size-8 text-[#d34872] sm:block" />
       </div>
 
-      <nav className="mt-6 flex gap-1 rounded-xl bg-[#f5e9ed] p-1">
+      <AdminNav active="/admin/reports" />
+
+      <nav className="mt-4 flex gap-1 rounded-xl bg-[#f5e9ed] p-1">
         <Link
           className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold ${
             tab === "queue"

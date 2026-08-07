@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 
 import { finishSeason, startSeason } from "@/app/admin/city/actions";
+import { AdminNav } from "@/components/admin-nav";
 import { requireModerator } from "@/lib/auth";
 
 export const metadata = {
@@ -100,38 +101,7 @@ export default async function AdminCityPage() {
         <Activity className="mb-2 hidden size-8 text-[#d34872] sm:block" />
       </div>
 
-      <nav className="mt-6 flex gap-1 rounded-xl bg-[#f5e9ed] p-1">
-        <Link
-          className="flex flex-1 items-center justify-center rounded-lg px-4 py-2 text-sm font-semibold text-[#8e6a75] hover:text-[#bd3e66]"
-          href="/admin/reports"
-        >
-          Жалобы
-        </Link>
-        <Link
-          className="flex flex-1 items-center justify-center rounded-lg px-4 py-2 text-sm font-semibold text-[#8e6a75] hover:text-[#bd3e66]"
-          href="/admin/stories"
-        >
-          Видео
-        </Link>
-        <Link
-          className="flex flex-1 items-center justify-center rounded-lg px-4 py-2 text-sm font-semibold text-[#8e6a75] hover:text-[#bd3e66]"
-          href="/admin/economy"
-        >
-          <Coins className="mr-1 size-4" /> Экономика
-        </Link>
-        <Link
-          className="flex flex-1 items-center justify-center rounded-lg bg-white px-4 py-2 text-sm font-semibold text-[#bd3e66] shadow-sm"
-          href="/admin/city"
-        >
-          <MapPin className="mr-1 size-4" /> Город
-        </Link>
-        <Link
-          className="flex flex-1 items-center justify-center rounded-lg px-4 py-2 text-sm font-semibold text-[#8e6a75] hover:text-[#bd3e66]"
-          href="/admin/actions"
-        >
-          Действия
-        </Link>
-      </nav>
+      <AdminNav active="/admin/city" />
 
       <section className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-4">
         <div className="surface rounded-2xl p-4">
