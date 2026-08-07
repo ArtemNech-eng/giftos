@@ -2130,57 +2130,99 @@ function MessagesScreen() {
 
 function LiveScreen() {
   return (
-    <div className="min-h-[730px] bg-[#fbf9fe] p-4 text-[#251d31]">
-      <header className="flex items-center justify-between px-1 pt-1">
-        <X className="size-5" />
-        <h1 className="text-sm font-black">Создание эфира</h1>
-        <span className="w-5" />
-      </header>
-      <section className="mt-6 rounded-[1.8rem] border border-[#2c2036]/10 bg-white p-5 shadow-[0_12px_30px_rgba(65,43,89,.08)]">
-        <span className="mx-auto grid size-16 place-items-center rounded-[1.4rem] bg-gradient-to-br from-[#f3e7ff] to-[#ffeaf3] text-[#8753e6]">
-          <Radio className="size-7" />
+    <div className="min-h-[730px] bg-[#fbf9fe] px-4 pb-6 pt-5 text-[#251d31]">
+      <header className="flex items-center justify-between">
+        <span className="grid size-10 place-items-center rounded-full border border-[#2c2036]/10 bg-white text-[#5f5369]">
+          <ArrowUpRight className="size-4 rotate-[-135deg]" />
         </span>
-        <p className="mt-4 text-center text-[10px] font-black uppercase tracking-[0.12em] text-[#8753e6]">
-          Live room
+        <span className="text-center">
+          <small className="block text-[9px] font-black uppercase tracking-[0.13em] text-[#8c7e94]">
+            Городская сцена
+          </small>
+          <b className="block text-sm">Новый эфир</b>
+        </span>
+        <span className="grid size-10 place-items-center rounded-full bg-[#f0e9ff] text-[#8753e6]">
+          <Radio className="size-4.5" />
+        </span>
+      </header>
+      <section className="mt-5 rounded-[1.7rem] bg-gradient-to-br from-[#332452] via-[#58407f] to-[#8069d9] p-5 text-white shadow-[0_14px_30px_rgba(63,37,98,.2)]">
+        <span className="bg-white/14 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.08em] text-[#fbd7e7]">
+          <Radio className="size-3.5" /> Запусти момент
+        </span>
+        <h1 className="mt-3 text-3xl font-black leading-[0.88] tracking-[-0.075em]">
+          ВЫЙДИ К СВОИМ
+          <br />В ЭФИР.
+        </h1>
+        <p className="mt-3 max-w-64 text-[10px] leading-5 text-white/75">
+          Эфир может начать разговор в городе или продолжить твою историю.
         </p>
-        <h2 className="mt-1 text-center text-2xl font-black tracking-[-0.06em]">
-          Начать эфир
-        </h2>
-        <p className="mx-auto mt-2 max-w-64 text-center text-[10px] leading-4 text-[#81748a]">
-          Комната, ссылка и чат — чтобы собрать своих без лишних настроек.
-        </p>
-        <div className="mt-5 space-y-4">
-          <Field label="Название эфира" value="Например: Болтаем и играем 💜" />
-          <Field label="Кто может смотреть" value="Все ›" />
-          <div className="flex items-center justify-between rounded-xl bg-[#f7f2fa] px-3 py-3 text-[10px] font-bold">
-            <span>Разрешить чат</span>
-            <span className="h-5 w-9 rounded-full bg-[#8753ed] p-0.5">
-              <span className="block size-4 translate-x-4 rounded-full bg-white" />
-            </span>
-          </div>
-          <div className="flex items-center justify-between rounded-xl bg-[#f7f2fa] px-3 py-3 text-[10px] font-bold">
-            <span>Сохранить эфир</span>
-            <span className="h-5 w-9 rounded-full bg-[#8753ed] p-0.5">
-              <span className="block size-4 translate-x-4 rounded-full bg-white" />
-            </span>
-          </div>
-        </div>
-        <button className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#ff5d9a] to-[#8254ed] py-3.5 text-sm font-black text-white shadow-[0_9px_20px_rgba(160,75,213,.24)]">
-          Начать эфир <ArrowUpRight className="size-4" />
-        </button>
       </section>
-    </div>
-  );
-}
-
-function Field({ label, value }: { label: string; value: string }) {
-  return (
-    <label className="block">
-      <span className="text-[10px] font-black text-[#5f526a]">{label}</span>
-      <span className="mt-1.5 flex h-11 items-center rounded-xl border border-[#2c2036]/10 bg-[#faf7fc] px-3 text-[10px] text-[#9a8fa1]">
-        {value}
+      <section className="border-[#2c2036]/9 mt-5 rounded-[1.5rem] border bg-white p-3.5 shadow-[0_8px_22px_rgba(69,43,94,.05)]">
+        <b className="block text-[11px]">Как называется эфир?</b>
+        <span className="mt-2 flex rounded-xl border border-[#2c2036]/10 bg-[#fbf9fe] px-3 py-3 text-[10px] font-semibold text-[#aaa0ae]">
+          Музыка во дворе
+        </span>
+        <b className="mt-4 block text-[10px]">Что сейчас будет происходить?</b>
+        <span className="mt-2 block min-h-20 rounded-xl border border-[#2c2036]/10 bg-[#fbf9fe] p-3 text-[10px] leading-4 text-[#aaa0ae]">
+          Играю новые песни и собираю истории от своих.
+        </span>
+      </section>
+      <section className="border-[#2c2036]/9 mt-3 rounded-[1.5rem] border bg-white p-3.5 shadow-[0_8px_22px_rgba(69,43,94,.05)]">
+        <div className="flex items-center gap-2">
+          <span className="grid size-8 place-items-center rounded-xl bg-[#fff0f6] text-[#d84b81]">
+            <Sparkles className="size-4" />
+          </span>
+          <span>
+            <b className="block text-[11px]">Контекст эфира</b>
+            <small className="block text-[9px] text-[#81748a]">
+              Помогает людям понять, куда они заходят
+            </small>
+          </span>
+        </div>
+        <div className="mt-3 flex items-center gap-2 rounded-xl bg-[#fbf9fe] p-3 text-[10px] font-bold text-[#665a72]">
+          <MapPin className="size-4 text-[#258b82]" /> Музыка · Будённовск{" "}
+          <ChevronRightPreview />
+        </div>
+        <div className="mt-2 flex items-center gap-2 rounded-xl bg-[#fbf9fe] p-3 text-[10px] font-bold text-[#665a72]">
+          <Sparkles className="size-4 text-[#8753e6]" /> Продолжить желание «Домашняя
+          студия» <ChevronRightPreview />
+        </div>
+      </section>
+      <section className="border-[#2c2036]/9 mt-3 rounded-[1.5rem] border bg-white p-3.5 shadow-[0_8px_22px_rgba(69,43,94,.05)]">
+        <div className="flex items-center gap-2">
+          <span className="grid size-8 place-items-center rounded-xl bg-[#eef2ff] text-[#536cb8]">
+            <UsersRound className="size-4" />
+          </span>
+          <span>
+            <b className="block text-[11px]">Кто сможет смотреть?</b>
+            <small className="block text-[9px] text-[#81748a]">
+              Выбираешь до старта
+            </small>
+          </span>
+        </div>
+        <div className="mt-3 space-y-2">
+          <span className="flex items-center gap-2 rounded-xl bg-[#fbf9fe] p-2.5 text-[9px] font-bold text-[#7549d0]">
+            <span className="size-2 rounded-full bg-[#7549d0]" /> Публичный · город и
+            подписчики
+          </span>
+          <span className="flex items-center gap-2 rounded-xl bg-[#fbf9fe] p-2.5 text-[9px] font-bold text-[#756a7d]">
+            <span className="size-2 rounded-full bg-[#d9d0df]" /> По ссылке · не в общей
+            сцене
+          </span>
+          <span className="flex items-center gap-2 rounded-xl bg-[#fbf9fe] p-2.5 text-[9px] font-bold text-[#756a7d]">
+            <span className="size-2 rounded-full bg-[#d9d0df]" /> Приватный · скрыт из
+            города
+          </span>
+        </div>
+      </section>
+      <section className="mt-4 flex gap-2 rounded-xl bg-[#f0faf5] p-3 text-[9px] leading-4 text-[#4c7169]">
+        <Check className="mt-0.5 size-3.5 shrink-0 text-[#258b82]" /> Комната и чат
+        создаются сейчас. Видео и звук появятся после настройки self-hosted LiveKit/SFU.
+      </section>
+      <span className="mt-4 flex w-full items-center justify-center rounded-2xl bg-gradient-to-r from-[#ff5d9a] to-[#8254ed] py-3.5 text-[11px] font-black text-white">
+        Создать эфир
       </span>
-    </label>
+    </div>
   );
 }
 
