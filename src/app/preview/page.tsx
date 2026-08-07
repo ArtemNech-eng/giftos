@@ -19,6 +19,9 @@ import {
   Hand,
   HandCoins,
   Heart,
+  ImagePlus,
+  Images,
+  Lock,
   MapPin,
   Medal,
   MessageCircle,
@@ -36,6 +39,7 @@ import {
   UserRound,
   UserPlus,
   ThumbsUp,
+  Trash2,
   WalletCards,
   Waves,
   X,
@@ -75,6 +79,7 @@ const screens = [
   { id: "shop", label: "Магазин", number: "26" },
   { id: "battle", label: "Битва городов", number: "27" },
   { id: "live-analytics", label: "Аналитика эфира", number: "28" },
+  { id: "profile-media", label: "Мои фото", number: "29" },
 ] as const;
 
 type ScreenId = (typeof screens)[number]["id"];
@@ -2924,6 +2929,85 @@ function LiveAnalyticsScreen() {
   );
 }
 
+function ProfileMediaScreen() {
+  return (
+    <div className="min-h-[730px] bg-[#fbf9fe] px-4 pb-6 pt-5 text-[#251d31]">
+      <header className="flex items-center justify-between">
+        <span className="grid size-10 place-items-center rounded-full border border-[#2c2036]/10 bg-white text-[#5f5369]">
+          <ArrowUpRight className="size-4 rotate-[-135deg]" />
+        </span>
+        <span className="text-center">
+          <small className="block text-[9px] font-black uppercase tracking-[0.13em] text-[#8c7e94]">
+            Ваш профиль
+          </small>
+          <b className="block text-sm">Мои фото</b>
+        </span>
+        <span className="grid size-10 place-items-center rounded-full bg-[#fff0f6] text-[#d84b81]">
+          <Images className="size-4.5" />
+        </span>
+      </header>
+      <section className="mt-5 rounded-[1.7rem] bg-gradient-to-br from-[#fff0f7] via-[#f6edff] to-[#eaf5ff] p-5 shadow-[0_14px_30px_rgba(69,43,94,.1)]">
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-white/75 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.08em] text-[#d84b81]">
+          <Images className="size-3.5" /> Галерея
+        </span>
+        <h1 className="mt-3 text-3xl font-black leading-[0.88] tracking-[-0.075em]">
+          До шести
+          <br />
+          фотографий.
+        </h1>
+        <p className="mt-3 max-w-64 text-[10px] leading-5 text-[#756a7d]">
+          Первая — обложка профиля. Остальные показывают вашу историю людям, которые
+          заходят в гости.
+        </p>
+      </section>
+      <section className="border-[#2c2036]/9 mt-4 rounded-[1.6rem] border bg-white p-4 shadow-[0_8px_22px_rgba(69,43,94,.05)]">
+        <b className="block text-[11px]">Добавить фото</b>
+        <span className="mt-3 block rounded-xl border border-dashed border-[#cdbbe7] bg-[#fbf9fe] p-3 text-center text-[9px] font-black text-[#7549d0]">
+          Выбрать файлы
+        </span>
+        <div className="mt-3 flex gap-2">
+          <span className="h-10 grow rounded-xl border border-[#2c2036]/10 bg-[#fbf9fe] px-3 py-2.5 text-[10px] font-semibold text-[#5f5369]">
+            Публичные
+          </span>
+          <span className="inline-flex h-10 items-center gap-2 rounded-xl bg-gradient-to-r from-[#ff5d9a] to-[#8254ed] px-4 text-[10px] font-black text-white">
+            <ImagePlus className="size-3.5" /> Добавить
+          </span>
+        </div>
+      </section>
+      <section className="mt-4 grid grid-cols-2 gap-2.5">
+        {[
+          { label: "Обложка", tint: "from-[#e8d5ff] to-[#ffd9ec]", locked: false },
+          { label: "#2", tint: "from-[#d5ecff] to-[#e8f5ff]", locked: false },
+          { label: "#3", tint: "from-[#ffe8d5] to-[#fff5e8]", locked: true },
+          { label: "#4", tint: "from-[#e5ffd9] to-[#f2ffea]", locked: false },
+        ].map((photo) => (
+          <div
+            className="border-[#2c2036]/9 relative overflow-hidden rounded-2xl border bg-white shadow-[0_6px_18px_rgba(69,43,94,.07)]"
+            key={photo.label}
+          >
+            <div
+              className={`grid aspect-[4/3] w-full place-items-center bg-gradient-to-br ${photo.tint} text-[#8753e6]`}
+            >
+              <Images className="size-6" />
+            </div>
+            <span className="absolute left-2 top-2 rounded-full bg-white/90 px-2 py-0.5 text-[9px] font-black text-[#5f5369]">
+              {photo.label}
+            </span>
+            {photo.locked && (
+              <span className="absolute right-2 top-2 grid size-6 place-items-center rounded-full bg-white/90 text-[#7549d0]">
+                <Lock className="size-3.5" />
+              </span>
+            )}
+            <span className="absolute bottom-2 right-2 grid size-8 place-items-center rounded-full bg-white/90 text-[#d84b81]">
+              <Trash2 className="size-4" />
+            </span>
+          </div>
+        ))}
+      </section>
+    </div>
+  );
+}
+
 function StoryScreen() {
   return (
     <div className="flex min-h-[730px] flex-col bg-[#0d0b12] text-white">
@@ -3131,6 +3215,7 @@ export default async function PreviewPage({
     shop: <ShopScreen />,
     battle: <BattleScreen />,
     "live-analytics": <LiveAnalyticsScreen />,
+    "profile-media": <ProfileMediaScreen />,
   };
 
   return (
