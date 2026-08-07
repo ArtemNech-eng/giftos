@@ -77,16 +77,16 @@ grant select on public.public_collectible_artifact_shelf to anon, authenticated;
 insert into public.collectible_artifact_series
   (slug, title, description, artwork_path, rarity, total_edition, remaining_edition, price_stars, sort_order)
 values
-  ('key', 'Ключ', 'Первый предмет серии ARTIFACTS 01.', '/collectibles/artifacts/key.jpg', 'limited', 300, 300, 39, 1),
-  ('relic', 'Реликвия', 'Огранённый предмет с красным ядром.', '/collectibles/artifacts/relic.jpg', 'limited', 250, 250, 59, 2),
-  ('compass', 'Компас', 'Предмет для тех, кто ищет своё направление.', '/collectibles/artifacts/compass.jpg', 'limited', 200, 200, 79, 3),
-  ('cube', 'Куб', 'Механический артефакт с внутренним светом.', '/collectibles/artifacts/cube.jpg', 'limited', 175, 175, 99, 4),
-  ('lantern', 'Фонарь', 'Светящийся предмет из первой десятки.', '/collectibles/artifacts/lantern.jpg', 'limited', 150, 150, 119, 5),
-  ('prism', 'Призма', 'Редкая грань серии.', '/collectibles/artifacts/prism.jpg', 'rare', 100, 100, 149, 6),
-  ('vial', 'Флакон', 'Редкий закрытый артефакт.', '/collectibles/artifacts/vial.jpg', 'rare', 80, 80, 179, 7),
-  ('seal', 'Печать', 'Знак принадлежности к первой серии.', '/collectibles/artifacts/seal.jpg', 'rare', 60, 60, 219, 8),
-  ('sphere', 'Сфера', 'Прозрачный редкий предмет.', '/collectibles/artifacts/sphere.jpg', 'iconic', 40, 40, 269, 9),
-  ('orbit', 'Орбита', 'Самый ограниченный предмет первой десятки.', '/collectibles/artifacts/orbit.jpg', 'iconic', 25, 25, 349, 10)
+  ('key', 'Ключ', 'Первая фигура серии: керамический ключ с золотой инкрустацией.', '/collectibles/artifacts/key.jpg', 'limited', 300, 300, 39, 1),
+  ('relic', 'Реликвия', 'Гранёная фигура с рубиновым ядром внутри тёмной глазури.', '/collectibles/artifacts/relic.jpg', 'limited', 250, 250, 59, 2),
+  ('compass', 'Компас', 'Фигура-компас для тех, кто ищет своё направление.', '/collectibles/artifacts/compass.jpg', 'limited', 200, 200, 79, 3),
+  ('cube', 'Куб', 'Керамический куб с тёплым светом, пробивающимся сквозь трещины.', '/collectibles/artifacts/cube.jpg', 'limited', 175, 175, 99, 4),
+  ('lantern', 'Фонарь', 'Светящаяся фигура из первой десятки.', '/collectibles/artifacts/lantern.jpg', 'limited', 150, 150, 119, 5),
+  ('prism', 'Призма', 'Редкая фигура, преломляющая луч в мягкий спектр.', '/collectibles/artifacts/prism.jpg', 'rare', 100, 100, 149, 6),
+  ('vial', 'Флакон', 'Редкая фигура-флакон с горящей каплей внутри.', '/collectibles/artifacts/vial.jpg', 'rare', 80, 80, 179, 7),
+  ('seal', 'Печать', 'Фигура-эмблема первой серии.', '/collectibles/artifacts/seal.jpg', 'rare', 60, 60, 219, 8),
+  ('sphere', 'Сфера', 'Полупрозрачная фигура с миниатюрной галактикой внутри.', '/collectibles/artifacts/sphere.jpg', 'iconic', 40, 40, 269, 9),
+  ('orbit', 'Орбита', 'Самая редкая фигура: сфера с золотым кольцом на орбите.', '/collectibles/artifacts/orbit.jpg', 'iconic', 25, 25, 349, 10)
 on conflict (slug) do update set
   title = excluded.title,
   description = excluded.description,
