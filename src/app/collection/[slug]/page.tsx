@@ -1,5 +1,4 @@
 import Link from "next/link";
-/* eslint-disable @next/next/no-img-element -- generated static pre-production artifact art */
 import {
   ArrowLeft,
   Check,
@@ -11,6 +10,7 @@ import {
 import { notFound } from "next/navigation";
 
 import { requireUser } from "@/lib/auth";
+import { AnimatedArtifact } from "@/components/animated-artifact";
 
 export const metadata = {
   title: "Артефакт",
@@ -92,11 +92,11 @@ export default async function ArtifactDetailPage({
       </header>
 
       <section className="mt-5 overflow-hidden rounded-[1.8rem] border border-white/80 bg-gradient-to-br from-[#fffaff] via-[#f4effd] to-[#eaf5ff] p-3 shadow-[0_14px_32px_rgba(69,43,94,.1)]">
-        <img
-          loading="lazy"
-          decoding="async"
+        <AnimatedArtifact
           alt={artifact.title}
-          className="aspect-square w-full rounded-[1.45rem] object-cover"
+          className="aspect-square w-full rounded-[1.45rem]"
+          orbit={artifact.rarity === "iconic"}
+          rarity={artifact.rarity}
           src={artifact.artwork_path}
         />
       </section>

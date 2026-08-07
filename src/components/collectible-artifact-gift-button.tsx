@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Gem, Sparkles } from "lucide-react";
 
 import { sendCollectibleArtifact } from "@/app/collection/actions";
+import { AnimatedArtifact } from "@/components/animated-artifact";
 
 type Artifact = {
   id: string;
@@ -74,12 +75,10 @@ export function CollectibleArtifactGiftButton({
                 onClick={() => void send(artifact.id)}
                 type="button"
               >
-                {/* eslint-disable-next-line @next/next/no-img-element -- generated static pre-production artifact art */}
-                <img
-                  loading="lazy"
-                  decoding="async"
-                  alt=""
-                  className="aspect-square w-full object-cover"
+                <AnimatedArtifact
+                  className="aspect-square w-full"
+                  orbit={artifact.rarity === "iconic"}
+                  rarity={artifact.rarity}
                   src={artifact.artworkPath}
                 />
                 <span className="block p-2">

@@ -1,5 +1,6 @@
 "use client";
 
+import { AnimatedArtifact } from "@/components/animated-artifact";
 import { useState } from "react";
 import Link from "next/link";
 import type { Route } from "next";
@@ -64,14 +65,13 @@ export function ArtifactUnboxing({
               : "rotate-[-3deg] scale-90 opacity-70"
           }`}
         >
-          {/* eslint-disable-next-line @next/next/no-img-element -- generated static pre-production artifact art */}
-          <img
-            loading="lazy"
-            decoding="async"
+          <AnimatedArtifact
             alt={opened ? artifact.title : "Артефакт ждёт распаковки"}
-            className={`aspect-square w-full rounded-[1.2rem] object-cover transition duration-700 ${
+            className={`aspect-square w-full rounded-[1.2rem] transition duration-700 ${
               opened ? "blur-0" : "blur-sm"
             }`}
+            orbit={opened && artifact.rarity === "iconic"}
+            rarity={artifact.rarity}
             src={artifact.artworkPath}
           />
           {!opened && (

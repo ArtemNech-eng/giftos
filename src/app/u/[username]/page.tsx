@@ -42,6 +42,7 @@ import {
 import { promoteTarget } from "@/app/shop/actions";
 import { BrandGiftIcon } from "@/components/brand-gift-icon";
 import { CreatorArtifactRequestButton } from "@/components/creator-artifact-request-button";
+import { AnimatedArtifact } from "@/components/animated-artifact";
 import { CreatorShareLink } from "@/components/creator-share-link";
 import { LocalRoleIcon } from "@/components/local-role-icon";
 import { CollectibleArtifactGiftButton } from "@/components/collectible-artifact-gift-button";
@@ -790,11 +791,10 @@ export default async function ProfilePage({
                 className="overflow-hidden rounded-xl border border-white/80 bg-white shadow-[0_4px_12px_rgba(69,43,94,.05)]"
                 key={artifact.id}
               >
-                <img
-                  loading="lazy"
-                  decoding="async"
-                  alt=""
-                  className="aspect-square w-full object-cover"
+                <AnimatedArtifact
+                  className="aspect-square w-full"
+                  orbit={artifact.rarity === "iconic"}
+                  rarity={artifact.rarity}
                   src={artifact.artwork_path}
                 />
                 <span className="block p-2">

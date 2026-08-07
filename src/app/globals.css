@@ -142,3 +142,117 @@
     opacity: 0;
   }
 }
+
+/* ---------- Animated artifacts (gift figures) ---------- */
+@keyframes artifact-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+@keyframes artifact-glow {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 0.9;
+  }
+}
+@keyframes artifact-spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes artifact-sparkle {
+  0%,
+  100% {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@keyframes artifact-shine {
+  0% {
+    transform: translateX(-120%) skewX(-18deg);
+  }
+  60%,
+  100% {
+    transform: translateX(220%) skewX(-18deg);
+  }
+}
+
+.artifact-animated {
+  position: relative;
+  animation: artifact-float 3.2s ease-in-out infinite;
+  will-change: transform;
+}
+.artifact-animated::after {
+  content: "";
+  position: absolute;
+  inset: -14%;
+  background: radial-gradient(
+    circle at 50% 35%,
+    var(--artifact-glow, rgba(167, 122, 231, 0.55)),
+    transparent 62%
+  );
+  animation: artifact-glow 2.8s ease-in-out infinite;
+  pointer-events: none;
+}
+.artifact-sparkles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: visible;
+}
+.artifact-sparkles i {
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  border-radius: 9999px;
+  background: radial-gradient(circle, #ffe9a8, #d9a6ff 70%);
+  box-shadow: 0 0 8px 2px rgba(255, 220, 140, 0.65);
+  animation: artifact-sparkle 2.2s ease-in-out infinite;
+  opacity: 0;
+}
+.artifact-ring {
+  position: absolute;
+  inset: -6%;
+  border-radius: 9999px;
+  border: 2px solid rgba(255, 200, 120, 0.55);
+  animation: artifact-spin-slow 7s linear infinite;
+  pointer-events: none;
+}
+.artifact-shine {
+  position: absolute;
+  top: 6%;
+  bottom: 6%;
+  width: 34%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.35),
+    transparent
+  );
+  animation: artifact-shine 3.6s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .artifact-animated,
+  .artifact-animated::after,
+  .artifact-sparkles i,
+  .artifact-ring,
+  .artifact-shine {
+    animation: none !important;
+  }
+}

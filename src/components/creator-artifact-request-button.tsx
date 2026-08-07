@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Gem, HandCoins } from "lucide-react";
 
 import { requestCreatorArtifact } from "@/app/creator/artifact-requests/actions";
+import { AnimatedArtifact } from "@/components/animated-artifact";
 
 type Artifact = {
   id: string;
@@ -94,12 +95,9 @@ export function CreatorArtifactRequestButton({
                 onClick={() => void send(artifact.id)}
                 type="button"
               >
-                {/* eslint-disable-next-line @next/next/no-img-element -- generated static pre-production artifact art */}
-                <img
-                  loading="lazy"
-                  decoding="async"
-                  alt=""
-                  className="aspect-square w-full object-cover"
+                <AnimatedArtifact
+                  className="aspect-square w-full"
+                  rarity="limited"
                   src={artifact.artworkPath}
                 />
                 <span className="block p-2">

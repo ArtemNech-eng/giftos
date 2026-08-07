@@ -16,6 +16,7 @@ import {
 import { PlaceIcon } from "@/components/place-icon";
 import { WishCategoryIcon } from "@/components/wish-category-icon";
 import { requireUser } from "@/lib/auth";
+import { AnimatedArtifact } from "@/components/animated-artifact";
 import { getSignedImageUrl } from "@/lib/media";
 import { formatRubles } from "@/lib/money";
 
@@ -561,11 +562,10 @@ export default async function SearchPage({
                     href={`/collection/${artifact.slug}` as Route}
                     key={artifact.slug}
                   >
-                    <img
-                      loading="lazy"
-                      decoding="async"
-                      alt=""
-                      className="aspect-square w-full object-cover"
+                    <AnimatedArtifact
+                      className="aspect-square w-full"
+                      orbit={artifact.rarity === "iconic"}
+                      rarity={artifact.rarity}
                       src={artifact.artwork_path}
                     />
                     <span className="block p-2.5">
