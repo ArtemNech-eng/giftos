@@ -40,6 +40,9 @@ export function LivePlaceChat({
   const namesRef = useRef(names);
   const seenIds = useRef(new Set(initialMessages.map((message) => message.id)));
   const scrollRef = useRef<HTMLDivElement>(null);
+  // Render window: keep the full list in state for realtime, but only render
+  // the latest chunk so the DOM never grows unbounded.
+  const [renderCount, setRenderCount] = useState(100);
 
   const supabaseEnabled =
     Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL) &&
@@ -51,8 +54,11 @@ export function LivePlaceChat({
 
   useEffect(() => {
     const element = scrollRef.current;
-    if (element) element.scrollTop = element.scrollHeight;
-  }, [messages]);
+    if (!element) return;
+    const nearBottom =
+      element.scrollHeight - element.scrollTop - element.clientHeight < 120;
+    if (nearBottom) element.scrollTop = element.scrollHeight;
+  }, [messages, renderCount]);
 
   useEffect(() => {
     if (!supabaseEnabled) return;
@@ -128,13 +134,22 @@ export function LivePlaceChat({
 
   return (
     <div className="mt-3">
-      <div ref={scrollRef} className="max-h-72 space-y-3 overflow-y-auto pr-1">
+      <div
+        className="max-h-72 space-y-3 overflow-y-auto pr-1"
+        onScroll={(event) => {
+          const element = event.currentTarget;
+          if (element.scrollTop < 60 && messages.length > renderCount) {
+            setRenderCount((value) => Math.min(messages.length, value + 100));
+          }
+        }}
+        ref={scrollRef}
+      >
         {messages.length === 0 ? (
           <p className="text-sm text-[#81748a]">
             Пока тихо — напишите первым, кто здесь.
           </p>
         ) : (
-          messages.map((message) => (
+          messages.slice(-renderCount).map((message) => (
             <div className="flex items-start gap-2" key={message.id}>
               <p className="min-w-0 grow text-sm">
                 <b className="mr-2">

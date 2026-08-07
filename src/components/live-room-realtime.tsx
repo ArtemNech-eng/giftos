@@ -68,6 +68,9 @@ export function LiveRoomRealtime({
   const seenReactionIds = useRef(new Set<string>());
   const authorNamesRef = useRef(authorNames);
   const scrollRef = useRef<HTMLDivElement>(null);
+  // Render window: keep the full list in state for realtime, but only render
+  // the latest chunk so the DOM never grows unbounded.
+  const [renderCount, setRenderCount] = useState(100);
 
   const supabaseEnabled =
     Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL) &&
@@ -79,8 +82,11 @@ export function LiveRoomRealtime({
 
   useEffect(() => {
     const element = scrollRef.current;
-    if (element) element.scrollTop = element.scrollHeight;
-  }, [messages]);
+    if (!element) return;
+    const nearBottom =
+      element.scrollHeight - element.scrollTop - element.clientHeight < 120;
+    if (nearBottom) element.scrollTop = element.scrollHeight;
+  }, [messages, renderCount]);
 
   useEffect(() => {
     if (!supabaseEnabled) return;
@@ -213,13 +219,22 @@ export function LiveRoomRealtime({
 
   return (
     <div className="relative">
-      <div ref={scrollRef} className="mt-4 max-h-64 space-y-3 overflow-y-auto pr-1">
+      <div
+        className="mt-4 max-h-64 space-y-3 overflow-y-auto pr-1"
+        onScroll={(event) => {
+          const element = event.currentTarget;
+          if (element.scrollTop < 60 && messages.length > renderCount) {
+            setRenderCount((value) => Math.min(messages.length, value + 100));
+          }
+        }}
+        ref={scrollRef}
+      >
         {messages.length === 0 ? (
           <p className="text-sm text-[#a9a1b4]">
             Пока тихо — напишите первое сообщение или отправьте реакцию.
           </p>
         ) : (
-          messages.map((message) => (
+          messages.slice(-renderCount).map((message) => (
             <div className="flex items-start gap-1.5" key={message.id}>
               <p className="min-w-0 grow text-sm">
                 <b className="mr-2">
