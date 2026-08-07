@@ -3,8 +3,12 @@ import type { Route } from "next";
 import {
   Activity,
   ArrowRight,
+  BarChart3,
+  Building2,
   ClipboardList,
   Coins,
+  MessageCircle,
+  Radio,
   ShieldAlert,
   Users,
   WalletCards,
@@ -30,6 +34,8 @@ export default async function AdminDashboardPage() {
     { count: activeVip },
     { data: recentReports },
     { data: recentActions },
+    { data: rawProfiles },
+    { data: rawDaily },
   ] = await Promise.all([
     supabase
       .from("reports")
@@ -60,6 +66,11 @@ export default async function AdminDashboardPage() {
       .select("id, action, target_type, created_at")
       .order("created_at", { ascending: false })
       .limit(5),
+    supabase
+      .from("profiles")
+      .select("id, city_id, created_at, is_suspended")
+      .limit(10000),
+    supabase.from("admin_city_activity_daily").select("*").limit(30),
   ]);
 
   const kpis: Array<{
@@ -100,6 +111,75 @@ export default async function AdminDashboardPage() {
       tint: "bg-amber-50 text-[#b8860b]",
     },
   ];
+
+  // City analytics: registrations over the last 7 days and top cities.
+  const profiles = (rawProfiles ?? []) as Array<{
+    city_id: string | null;
+    created_at: string;
+  }>;
+  const dayKey = (iso: string) =>
+    new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Moscow" }).format(
+      new Date(iso),
+    );
+  const registrationsByDay = new Map<string, number>();
+  for (const profile of profiles) {
+    const key = dayKey(profile.created_at);
+    registrationsByDay.set(key, (registrationsByDay.get(key) ?? 0) + 1);
+  }
+  const registrationBars: { key: string; label: string; count: number }[] = [];
+  for (let offset = 6; offset >= 0; offset -= 1) {
+    const date = new Date(Date.now() - offset * 86_400_000);
+    const key = dayKey(date.toISOString());
+    registrationBars.push({
+      key,
+      label: new Intl.DateTimeFormat("ru-RU", {
+        timeZone: "Europe/Moscow",
+        day: "numeric",
+        month: "short",
+      }).format(date),
+      count: registrationsByDay.get(key) ?? 0,
+    });
+  }
+  const maxRegistrations = Math.max(1, ...registrationBars.map((bar) => bar.count));
+
+  const cityCounts = new Map<string, number>();
+  const cityIds = new Set<string>();
+  for (const profile of profiles) {
+    if (!profile.city_id) continue;
+    cityIds.add(profile.city_id);
+    cityCounts.set(profile.city_id, (cityCounts.get(profile.city_id) ?? 0) + 1);
+  }
+  const cityNames = new Map<string, string>();
+  if (cityIds.size > 0) {
+    const { data: cityRows } = await supabase
+      .from("cities")
+      .select("id, name")
+      .in("id", [...cityIds]);
+    for (const row of cityRows ?? []) cityNames.set(row.id, row.name);
+  }
+  const topCities = [...cityCounts.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5)
+    .map(([id, count]) => ({ name: cityNames.get(id) ?? "Город", count }));
+  const maxCityCount = Math.max(1, ...topCities.map((city) => city.count));
+
+  const daily = (rawDaily ?? []) as Array<{
+    day: string;
+    dau: number;
+    messages: number;
+    streams_started: number;
+    events_created: number;
+  }>;
+  const last7 = daily.slice(0, 7).reverse();
+  const totals7 = last7.reduce(
+    (acc, row) => ({
+      dau: Math.max(acc.dau, Number(row.dau) || 0),
+      messages: acc.messages + (Number(row.messages) || 0),
+      streams: acc.streams + (Number(row.streams_started) || 0),
+      events: acc.events + (Number(row.events_created) || 0),
+    }),
+    { dau: 0, messages: 0, streams: 0, events: 0 },
+  );
 
   return (
     <>
@@ -245,6 +325,104 @@ export default async function AdminDashboardPage() {
             <small className="text-xs text-[#9b858c]">Бонусы, лимиты, промо-цены</small>
           </span>
         </Link>
+      </section>
+
+      <section className="mt-8">
+        <div className="flex items-center gap-2">
+          <BarChart3 className="size-5 text-[#8b5cf6]" />
+          <h2 className="text-lg font-bold">Аналитика</h2>
+        </div>
+        <div className="mt-4 grid gap-6 lg:grid-cols-3">
+          <div className="surface rounded-2xl p-5">
+            <h3 className="text-sm font-bold">Регистрации · 7 дней</h3>
+            <p className="mt-1 text-xs text-[#9b858c]">
+              Всего за неделю:{" "}
+              <b className="text-[#bd3e66]">
+                {registrationBars.reduce((sum, bar) => sum + bar.count, 0)}
+              </b>
+            </p>
+            <div className="mt-4 flex h-24 items-end gap-1.5">
+              {registrationBars.map((bar) => (
+                <div
+                  className="flex h-full flex-1 flex-col items-center justify-end gap-1"
+                  key={bar.key}
+                >
+                  <span className="text-[9px] font-bold text-[#8e6a75]">
+                    {bar.count > 0 ? bar.count : ""}
+                  </span>
+                  <div
+                    className="w-full rounded-md bg-gradient-to-t from-[#df4f7d] to-[#8b5cf6]"
+                    style={{
+                      height: `${Math.max(4, (bar.count / maxRegistrations) * 100)}%`,
+                      opacity: bar.count > 0 ? 1 : 0.12,
+                    }}
+                  />
+                  <span className="text-[8px] text-[#9b858c]">{bar.label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="surface rounded-2xl p-5">
+            <h3 className="flex items-center gap-1.5 text-sm font-bold">
+              <Building2 className="size-4 text-[#8b5cf6]" /> Топ городов
+            </h3>
+            {topCities.length > 0 ? (
+              <div className="mt-4 space-y-2.5">
+                {topCities.map((city, index) => (
+                  <div key={city.name}>
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="font-semibold text-[#4a3a42]">
+                        {index + 1}. {city.name}
+                      </span>
+                      <b className="text-[#bd3e66]">{city.count}</b>
+                    </div>
+                    <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-[#f0e2e6]">
+                      <div
+                        className="h-full rounded-full bg-gradient-to-r from-[#df4f7d] to-[#8b5cf6]"
+                        style={{ width: `${(city.count / maxCityCount) * 100}%` }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="mt-4 text-sm text-[#9b858c]">
+                Городов пока нет — первые появятся после онбординга.
+              </p>
+            )}
+          </div>
+
+          <div className="surface rounded-2xl p-5">
+            <h3 className="text-sm font-bold">Активность · 7 дней</h3>
+            <div className="mt-4 grid grid-cols-2 gap-2.5">
+              <div className="rounded-xl bg-[#fbf5f7] p-3">
+                <Users className="size-4 text-[#8b5cf6]" />
+                <b className="mt-1.5 block text-lg">
+                  {totals7.dau.toLocaleString("ru-RU")}
+                </b>
+                <small className="text-[10px] text-[#9b858c]">Макс. DAU</small>
+              </div>
+              <div className="rounded-xl bg-[#fbf5f7] p-3">
+                <MessageCircle className="size-4 text-[#2d82bb]" />
+                <b className="mt-1.5 block text-lg">
+                  {totals7.messages.toLocaleString("ru-RU")}
+                </b>
+                <small className="text-[10px] text-[#9b858c]">Сообщений</small>
+              </div>
+              <div className="rounded-xl bg-[#fbf5f7] p-3">
+                <Radio className="size-4 text-[#df4f7d]" />
+                <b className="mt-1.5 block text-lg">{totals7.streams}</b>
+                <small className="text-[10px] text-[#9b858c]">Эфиров</small>
+              </div>
+              <div className="rounded-xl bg-[#fbf5f7] p-3">
+                <Activity className="size-4 text-[#b8860b]" />
+                <b className="mt-1.5 block text-lg">{totals7.events}</b>
+                <small className="text-[10px] text-[#9b858c]">Событий</small>
+              </div>
+            </div>
+          </div>
+        </div>
       </section>
     </>
   );
