@@ -41,6 +41,7 @@ import {
 } from "@/app/creator/subscriptions/actions";
 import { promoteTarget } from "@/app/shop/actions";
 import { BrandGiftIcon } from "@/components/brand-gift-icon";
+import { CreatorArtifactRequestButton } from "@/components/creator-artifact-request-button";
 import { CreatorShareLink } from "@/components/creator-share-link";
 import { LocalRoleIcon } from "@/components/local-role-icon";
 import { CollectibleArtifactGiftButton } from "@/components/collectible-artifact-gift-button";
@@ -428,21 +429,36 @@ export default async function ProfilePage({
           </span>
           {user && !isOwnProfile ? (
             <div className="flex flex-wrap justify-end gap-2">
-              {rawArtifactCatalog && rawArtifactCatalog.length > 0 && (
-                <CollectibleArtifactGiftButton
-                  artifacts={rawArtifactCatalog.map((artifact) => ({
-                    id: artifact.id,
-                    title: artifact.title,
-                    artworkPath: artifact.artwork_path,
-                    rarity: artifact.rarity,
-                    remainingEdition: artifact.remaining_edition,
-                    totalEdition: artifact.total_edition,
-                    priceStars: artifact.price_stars,
-                  }))}
-                  recipientId={profile.id}
-                  username={profile.username}
-                />
-              )}
+              {rawArtifactCatalog &&
+                rawArtifactCatalog.length > 0 &&
+                (profile.is_creator ? (
+                  <CreatorArtifactRequestButton
+                    artifacts={rawArtifactCatalog.map((artifact) => ({
+                      id: artifact.id,
+                      title: artifact.title,
+                      artworkPath: artifact.artwork_path,
+                      remainingEdition: artifact.remaining_edition,
+                      totalEdition: artifact.total_edition,
+                      priceStars: artifact.price_stars,
+                    }))}
+                    creatorId={profile.id}
+                    username={profile.username}
+                  />
+                ) : (
+                  <CollectibleArtifactGiftButton
+                    artifacts={rawArtifactCatalog.map((artifact) => ({
+                      id: artifact.id,
+                      title: artifact.title,
+                      artworkPath: artifact.artwork_path,
+                      rarity: artifact.rarity,
+                      remainingEdition: artifact.remaining_edition,
+                      totalEdition: artifact.total_edition,
+                      priceStars: artifact.price_stars,
+                    }))}
+                    recipientId={profile.id}
+                    username={profile.username}
+                  />
+                ))}
               <form action={toggleUserFollow}>
                 <input name="profile_id" type="hidden" value={profile.id} />
                 <input name="username" type="hidden" value={profile.username} />

@@ -5,6 +5,7 @@ import {
   Building2,
   CirclePlus,
   FileText,
+  Gem,
   Gift,
   MapPin,
   MessageCircle,
@@ -313,6 +314,15 @@ export default async function CreatorDashboardPage() {
               >
                 <span className="flex items-center gap-2">
                   <Gift className="size-5 text-[#ffd35e]" /> Запросы на действия
+                </span>
+                <span>›</span>
+              </Link>
+              <Link
+                className="flex items-center justify-between rounded-2xl border border-[#2c2036]/10 bg-white px-4 py-3"
+                href="/creator/artifact-requests"
+              >
+                <span className="flex items-center gap-2">
+                  <Gem className="size-5 text-[#8753e6]" /> Артефакты-поддержка
                 </span>
                 <span>›</span>
               </Link>
