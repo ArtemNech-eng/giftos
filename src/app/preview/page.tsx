@@ -59,6 +59,7 @@ const screens = [
   { id: "fundraiser-new", label: "Создать сбор", number: "21" },
   { id: "story-new", label: "Новая story", number: "22" },
   { id: "place-new", label: "Новое место", number: "23" },
+  { id: "search", label: "Поиск", number: "24" },
 ] as const;
 
 type ScreenId = (typeof screens)[number]["id"];
@@ -2396,6 +2397,126 @@ function NewPlaceScreen() {
   );
 }
 
+function SearchScreen() {
+  return (
+    <div className="min-h-[730px] bg-[#fbf9fe] px-4 pb-6 pt-5 text-[#251d31]">
+      <header className="flex items-center justify-between">
+        <span className="grid size-10 place-items-center rounded-full border border-[#2c2036]/10 bg-white text-[#5f5369]">
+          <ArrowUpRight className="size-4 rotate-[-135deg]" />
+        </span>
+        <span className="text-center">
+          <small className="block text-[9px] font-black uppercase tracking-[0.13em] text-[#8c7e94]">
+            Открыть сцену
+          </small>
+          <b className="block text-sm">Поиск</b>
+        </span>
+        <span className="grid size-10 place-items-center rounded-full bg-[#f0e9ff] text-[#8753e6]">
+          <Search className="size-4.5" />
+        </span>
+      </header>
+      <section className="mt-5 rounded-[1.7rem] bg-gradient-to-br from-[#fff0f7] via-[#f6edff] to-[#eaf5ff] p-5 shadow-[0_14px_30px_rgba(69,43,94,.1)]">
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-white/75 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.08em] text-[#8753e6]">
+          <MapPin className="size-3.5" /> Будённовск
+        </span>
+        <h1 className="mt-3 text-3xl font-black leading-[0.88] tracking-[-0.075em]">
+          НАЙДИ,
+          <br />
+          КУДА ЗАЙТИ.
+        </h1>
+        <p className="mt-3 max-w-64 text-[10px] leading-5 text-[#756a7d]">
+          Люди, места, желания, события и артефакты из доступных сцен.
+        </p>
+      </section>
+      <div className="mt-4 grid grid-cols-2 gap-1 rounded-2xl bg-[#ebe5f1] p-1 text-center text-[10px] font-black">
+        <span className="rounded-xl bg-white py-2.5 text-[#7549d0] shadow-[0_3px_10px_rgba(65,43,89,.08)]">
+          <MapPin className="mr-1 inline size-3" /> Мой город
+        </span>
+        <span className="py-2.5 text-[#82758a]">
+          <Compass className="mr-1 inline size-3" /> Вся платформа
+        </span>
+      </div>
+      <div className="border-[#2c2036]/9 mt-4 flex items-center gap-2 rounded-2xl border bg-white px-3 py-2.5 shadow-[0_5px_15px_rgba(69,43,94,.04)]">
+        <Search className="size-4 text-[#8d7f96]" />
+        <span className="grow text-[10px] font-medium text-[#5f5369]">музыка</span>
+        <span className="grid size-7 place-items-center rounded-xl bg-[#f2ecfa] text-[#7549d0]">
+          <Search className="size-3.5" />
+        </span>
+      </div>
+      <section className="mt-5">
+        <div className="mb-3 flex items-end justify-between">
+          <span>
+            <h2 className="text-sm font-black">Люди</h2>
+            <p className="mt-0.5 text-[9px] text-[#82758a]">Открытые профили</p>
+          </span>
+          <span className="rounded-full bg-[#efe9f6] px-2 py-1 text-[9px] font-black text-[#7a6688]">
+            2
+          </span>
+        </div>
+        <div className="space-y-2">
+          <div className="border-[#2c2036]/9 flex items-center gap-3 rounded-2xl border bg-white p-3 shadow-[0_6px_16px_rgba(69,43,94,.04)]">
+            <Avatar index={1} name="Макс" size="size-10" />
+            <span className="grow">
+              <b className="block text-[11px]">Макс</b>
+              <small className="block text-[9px] text-[#81748a]">
+                @max · Будённовск
+              </small>
+            </span>
+            <ChevronRightPreview />
+          </div>
+        </div>
+      </section>
+      <section className="mt-5">
+        <div className="mb-3 flex items-end justify-between">
+          <span>
+            <h2 className="text-sm font-black">Места</h2>
+            <p className="mt-0.5 text-[9px] text-[#82758a]">
+              Комнаты и точки притяжения
+            </p>
+          </span>
+          <span className="rounded-full bg-[#efe9f6] px-2 py-1 text-[9px] font-black text-[#7a6688]">
+            1
+          </span>
+        </div>
+        <div className="border-[#2c2036]/9 flex items-center gap-3 rounded-2xl border bg-white p-3 shadow-[0_6px_16px_rgba(69,43,94,.04)]">
+          <span className="grid size-10 place-items-center rounded-xl bg-[#f0e9ff] text-[#8753e6]">
+            <Music2 className="size-4.5" />
+          </span>
+          <span className="grow">
+            <b className="block text-[11px]">Музыка после восьми</b>
+            <small className="block text-[9px] text-[#81748a]">
+              Комната для музыки и разговоров
+            </small>
+          </span>
+          <ChevronRightPreview />
+        </div>
+      </section>
+      <section className="mt-5">
+        <div className="mb-3 flex items-end justify-between">
+          <span>
+            <h2 className="text-sm font-black">Желания</h2>
+            <p className="mt-0.5 text-[9px] text-[#82758a]">
+              Истории, которые можно продолжить
+            </p>
+          </span>
+          <span className="rounded-full bg-[#efe9f6] px-2 py-1 text-[9px] font-black text-[#7a6688]">
+            1
+          </span>
+        </div>
+        <div className="border-[#2c2036]/9 flex items-center gap-3 rounded-2xl border bg-white p-3 shadow-[0_6px_16px_rgba(69,43,94,.04)]">
+          <span className="grid size-10 place-items-center rounded-xl bg-gradient-to-br from-[#f3e8ff] to-[#fff0f6] text-[#8753e6]">
+            <Sparkles className="size-4" />
+          </span>
+          <span className="grow">
+            <b className="block text-[11px]">Собрать домашнюю студию</b>
+            <small className="block text-[9px] text-[#81748a]">Открыть историю</small>
+          </span>
+          <ChevronRightPreview />
+        </div>
+      </section>
+    </div>
+  );
+}
+
 function StoryScreen() {
   return (
     <div className="flex min-h-[730px] flex-col bg-[#0d0b12] text-white">
@@ -2598,6 +2719,7 @@ export default async function PreviewPage({
     "fundraiser-new": <NewFundraiserScreen />,
     "story-new": <NewStoryScreen />,
     "place-new": <NewPlaceScreen />,
+    search: <SearchScreen />,
   };
 
   return (
