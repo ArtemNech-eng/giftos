@@ -17,7 +17,7 @@ export function PlaceGiftButton({
 }: {
   placeId: string;
   recipientId: string;
-  gifts: Array<{ code: string; label: string; emoji: string; price_minor: number }>;
+  gifts: Array<{ code: string; label: string; price_minor: number }>;
 }) {
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);

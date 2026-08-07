@@ -360,7 +360,6 @@ export default async function PlacePage({
                           gifts={giftCatalog.map((gift) => ({
                             code: gift.code,
                             label: gift.label,
-                            emoji: gift.emoji,
                             price_minor: gift.price_minor,
                           }))}
                           placeId={place.id}

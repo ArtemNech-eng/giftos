@@ -21,7 +21,6 @@ export function ProfileGiftButton({
   gifts: Array<{
     code: string;
     label: string;
-    emoji: string;
     price_stars: number;
     requires_vip: boolean;
   }>;

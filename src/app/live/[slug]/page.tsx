@@ -237,7 +237,6 @@ export default async function LiveRoomPage({
             gifts={(gifts ?? []).map((gift) => ({
               code: gift.code,
               label: gift.label,
-              emoji: gift.emoji,
               price_minor: gift.price_minor,
             }))}
             roomId={room.id}

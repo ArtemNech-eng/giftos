@@ -8,7 +8,6 @@ import { createClient } from "@/lib/supabase/client";
 export type LiveGiftCatalogItem = {
   code: string;
   label: string;
-  emoji: string;
   price_minor: number;
 };
 

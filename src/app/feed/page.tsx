@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 
 import { FeedWishToggle } from "@/components/feed-wish-toggle";
+import { WishCategoryIcon } from "@/components/wish-category-icon";
 import { PlaceIcon } from "@/components/place-icon";
 import { APP_NAME, CATEGORIES } from "@/lib/constants";
 import { formatRubles } from "@/lib/money";
@@ -869,8 +870,9 @@ function WishLink({
         <Avatar index={index} name={wish.authorName} />
         <div className="min-w-0 grow">
           <p className="truncate text-sm font-bold">{wish.title}</p>
-          <p className="truncate text-xs text-[#756b80]">
-            {category.emoji} {wish.authorName}
+          <p className="flex items-center gap-1 truncate text-xs text-[#756b80]">
+            <WishCategoryIcon category={category.slug} className="size-3.5 shrink-0" />
+            {wish.authorName}
           </p>
         </div>
       </Link>
@@ -903,8 +905,9 @@ function FundraiserLink({
       <Avatar index={index} name={fundraiser.authorName} />
       <div className="min-w-0 grow">
         <p className="truncate text-sm font-bold">{fundraiser.authorName}</p>
-        <p className="truncate text-xs text-[#756b80]">
-          {category.emoji} {fundraiser.title}
+        <p className="flex items-center gap-1 truncate text-xs text-[#756b80]">
+          <WishCategoryIcon category={category.slug} className="size-3.5 shrink-0" />
+          {fundraiser.title}
         </p>
       </div>
       <span className="rounded-lg bg-gradient-to-r from-[#ff4c87] to-[#7d45ff] px-2.5 py-1.5 text-xs font-semibold">

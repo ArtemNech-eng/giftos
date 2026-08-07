@@ -4,6 +4,7 @@ import { Compass, Search } from "lucide-react";
 
 import { EmptyState } from "@/components/empty-state";
 import { SiteHeader } from "@/components/site-header";
+import { WishCategoryIcon } from "@/components/wish-category-icon";
 import { CATEGORIES } from "@/lib/constants";
 import { formatRubles } from "@/lib/money";
 import { hasSupabaseEnvironment } from "@/lib/supabase/env";
@@ -76,7 +77,8 @@ export default async function DiscoverPage({
               href={`/discover?category=${item.slug}` as Route}
               key={item.slug}
             >
-              {item.emoji} {item.label}
+              <WishCategoryIcon category={item.slug} className="mr-1.5 inline size-4" />{" "}
+              {item.label}
             </Link>
           ))}
         </div>
@@ -93,7 +95,10 @@ export default async function DiscoverPage({
                     href={`/wishes/${wish.id}` as Route}
                     key={wish.id}
                   >
-                    <span className="text-4xl">{item.emoji}</span>
+                    <WishCategoryIcon
+                      category={item.slug}
+                      className="size-8 text-[#8b5fbd]"
+                    />
                     <p className="mt-4 font-bold">{wish.title}</p>
                     {wish.description && (
                       <p className="mt-2 line-clamp-3 text-sm leading-6 text-[#826c73]">
