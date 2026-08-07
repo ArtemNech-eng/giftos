@@ -14,6 +14,7 @@ import {
   Compass,
   Crown,
   Flame,
+  Eye,
   Gamepad2,
   Gift,
   Hand,
@@ -80,6 +81,7 @@ const screens = [
   { id: "battle", label: "Битва городов", number: "27" },
   { id: "live-analytics", label: "Аналитика эфира", number: "28" },
   { id: "profile-media", label: "Мои фото", number: "29" },
+  { id: "story-analytics", label: "Аналитика story", number: "30" },
 ] as const;
 
 type ScreenId = (typeof screens)[number]["id"];
@@ -3008,6 +3010,86 @@ function ProfileMediaScreen() {
   );
 }
 
+function StoryAnalyticsScreen() {
+  return (
+    <div className="min-h-[730px] bg-[#fbf9fe] px-4 pb-6 pt-5 text-[#251d31]">
+      <header className="flex items-center justify-between">
+        <span className="grid size-10 place-items-center rounded-full border border-[#2c2036]/10 bg-white text-[#5f5369]">
+          <ArrowUpRight className="size-4 rotate-[-135deg]" />
+        </span>
+        <span className="text-center">
+          <small className="block text-[9px] font-black uppercase tracking-[0.13em] text-[#8c7e94]">
+            Сводка публикации
+          </small>
+          <b className="block text-sm">Аналитика story</b>
+        </span>
+        <span className="grid size-10 place-items-center rounded-full bg-[#f0e9ff] text-[#8753e6]">
+          <BarChart3 className="size-4.5" />
+        </span>
+      </header>
+      <section className="border-[#2c2036]/9 mt-5 rounded-[1.7rem] border bg-white p-4 shadow-[0_8px_22px_rgba(69,43,94,.05)]">
+        <b className="block text-xs leading-5">Вечерний город с крыши</b>
+        <p className="mt-1.5 text-[10px] text-[#81748a]">создана 6 авг, 21:02</p>
+      </section>
+      <section className="mt-4 grid grid-cols-2 gap-2.5">
+        {[
+          { icon: Eye, label: "Просмотры", value: "156", tint: "text-[#8753e6]" },
+          { icon: Heart, label: "Реакции", value: "34", tint: "text-[#d84b81]" },
+          { icon: Gift, label: "Подарки", value: "7", tint: "text-[#b8860b]" },
+          { icon: WalletCards, label: "Доход", value: "890 ₽", tint: "text-[#7549d0]" },
+        ].map((stat) => (
+          <div
+            className="border-[#2c2036]/9 rounded-2xl border bg-white p-3.5 shadow-[0_6px_18px_rgba(69,43,94,.05)]"
+            key={stat.label}
+          >
+            <stat.icon className={`size-4.5 ${stat.tint}`} />
+            <p className="mt-2 text-[9px] text-[#81748a]">{stat.label}</p>
+            <b className="mt-0.5 block text-xl font-black">{stat.value}</b>
+          </div>
+        ))}
+      </section>
+      <section className="mt-4">
+        <b className="text-[11px]">Реакции</b>
+        <div className="mt-2.5 grid grid-cols-3 gap-2">
+          {[
+            { icon: Heart, label: "Сердце", value: "18" },
+            { icon: Flame, label: "Огонь", value: "11" },
+            { icon: Sparkles, label: "Удивление", value: "5" },
+          ].map((reaction) => (
+            <div
+              className="border-[#2c2036]/9 rounded-2xl border bg-white p-2.5 text-center shadow-[0_6px_18px_rgba(69,43,94,.05)]"
+              key={reaction.label}
+            >
+              <reaction.icon className="size-4.5 mx-auto text-[#8753e6]" />
+              <b className="mt-1 block text-sm font-black">{reaction.value}</b>
+              <span className="mt-0.5 block text-[8px] text-[#81748a]">
+                {reaction.label}
+              </span>
+            </div>
+          ))}
+        </div>
+      </section>
+      <section className="mt-4">
+        <b className="text-[11px]">Открытия по дням</b>
+        <div className="border-[#2c2036]/9 mt-2.5 flex h-24 items-end gap-1.5 rounded-2xl border bg-white p-3">
+          {[4, 6, 2, 8, 5, 3, 7].map((value, index) => (
+            <div
+              className="flex h-full flex-1 flex-col items-center justify-end gap-1"
+              key={index}
+            >
+              <span className="text-[9px] font-black text-[#7549d0]">{value}</span>
+              <div
+                className="w-full rounded-md bg-gradient-to-t from-[#8254ed] to-[#ff5d9a]"
+                style={{ height: `${value * 10}%`, opacity: 1 }}
+              />
+            </div>
+          ))}
+        </div>
+      </section>
+    </div>
+  );
+}
+
 function StoryScreen() {
   return (
     <div className="flex min-h-[730px] flex-col bg-[#0d0b12] text-white">
@@ -3216,6 +3298,7 @@ export default async function PreviewPage({
     battle: <BattleScreen />,
     "live-analytics": <LiveAnalyticsScreen />,
     "profile-media": <ProfileMediaScreen />,
+    "story-analytics": <StoryAnalyticsScreen />,
   };
 
   return (

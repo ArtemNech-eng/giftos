@@ -1,5 +1,14 @@
 import Link from "next/link";
-import { ArrowLeft, BarChart3, Eye, Gift, Heart, WalletCards } from "lucide-react";
+import {
+  ArrowLeft,
+  BarChart3,
+  Eye,
+  Flame,
+  Gift,
+  Heart,
+  Sparkles,
+  WalletCards,
+} from "lucide-react";
 import { notFound } from "next/navigation";
 
 import { requireUser } from "@/lib/auth";
@@ -16,6 +25,12 @@ type Ledger = {
   source_type: string;
   source_id: string;
 };
+
+const REACTIONS: { code: string; label: string; icon: typeof Heart }[] = [
+  { code: "heart", label: "Сердце", icon: Heart },
+  { code: "fire", label: "Огонь", icon: Flame },
+  { code: "wow", label: "Удивление", icon: Sparkles },
+];
 
 export default async function StoryAnalyticsPage({
   params,
@@ -148,20 +163,29 @@ export default async function StoryAnalyticsPage({
   const sortedDays = [...timeline.entries()].sort((a, b) => (a[0] < b[0] ? 1 : -1));
 
   return (
-    <main className="mx-auto min-h-screen max-w-[430px] bg-[#0c0e14] px-4 py-5 text-white">
+    <main className="mx-auto min-h-screen max-w-[430px] bg-[#f7f4fb] px-4 pb-10 pt-5 text-[#251d31]">
       <header className="flex items-center justify-between">
         <Link
-          className="bg-white/8 grid size-9 place-items-center rounded-full"
+          aria-label="Вернуться к story"
+          className="border-[#2c2036]/9 grid size-10 place-items-center rounded-full border bg-white text-[#5f5369] shadow-[0_5px_15px_rgba(69,43,94,.05)]"
           href={`/stories/${story.id}`}
         >
-          <ArrowLeft className="size-5" />
+          <ArrowLeft className="size-4.5" />
         </Link>
-        <h1 className="text-lg font-bold">Аналитика story</h1>
-        <span className="w-9" />
+        <span className="text-center">
+          <small className="block text-[9px] font-black uppercase tracking-[0.13em] text-[#8c7e94]">
+            Сводка публикации
+          </small>
+          <h1 className="mt-0.5 text-sm font-black">Аналитика story</h1>
+        </span>
+        <span className="grid size-10 place-items-center rounded-full bg-[#f0e9ff] text-[#8753e6]">
+          <BarChart3 className="size-4.5" />
+        </span>
       </header>
-      <section className="mt-7 rounded-2xl border border-white/10 bg-[#171923] p-5">
-        <p className="text-sm text-[#b9b1c5]">{story.caption ?? "Video story"}</p>
-        <p className="mt-2 text-xs text-[#9991a3]">
+
+      <section className="border-[#2c2036]/9 mt-5 rounded-[1.7rem] border bg-white p-4 shadow-[0_8px_22px_rgba(69,43,94,.05)]">
+        <p className="text-xs font-black leading-5">{story.caption ?? "Video story"}</p>
+        <p className="mt-1.5 text-[10px] text-[#81748a]">
           Создана{" "}
           {new Intl.DateTimeFormat("ru-RU", {
             day: "numeric",
@@ -171,57 +195,65 @@ export default async function StoryAnalyticsPage({
           }).format(new Date(story.created_at))}
         </p>
       </section>
-      <section className="mt-5 grid grid-cols-2 gap-3">
-        <div className="border-white/8 rounded-2xl border bg-[#171923] p-4">
-          <Eye className="size-5 text-[#9e88ff]" />
-          <p className="mt-3 text-xs text-[#aaa2b4]">Просмотры</p>
-          <b className="mt-1 block text-2xl">{views ?? 0}</b>
+
+      <section className="mt-4 grid grid-cols-2 gap-3">
+        <div className="border-[#2c2036]/9 rounded-2xl border bg-white p-4 shadow-[0_6px_18px_rgba(69,43,94,.05)]">
+          <Eye className="size-5 text-[#8753e6]" />
+          <p className="mt-3 text-[10px] text-[#81748a]">Просмотры</p>
+          <b className="mt-1 block text-2xl font-black">{views ?? 0}</b>
         </div>
-        <div className="border-white/8 rounded-2xl border bg-[#171923] p-4">
-          <Heart className="size-5 text-[#ff79b5]" />
-          <p className="mt-3 text-xs text-[#aaa2b4]">Реакции</p>
-          <b className="mt-1 block text-2xl">{totalReactions}</b>
+        <div className="border-[#2c2036]/9 rounded-2xl border bg-white p-4 shadow-[0_6px_18px_rgba(69,43,94,.05)]">
+          <Heart className="size-5 text-[#d84b81]" />
+          <p className="mt-3 text-[10px] text-[#81748a]">Реакции</p>
+          <b className="mt-1 block text-2xl font-black">{totalReactions}</b>
         </div>
-        <div className="border-white/8 rounded-2xl border bg-[#171923] p-4">
-          <Gift className="size-5 text-[#ffd35e]" />
-          <p className="mt-3 text-xs text-[#aaa2b4]">Подарки</p>
-          <b className="mt-1 block text-2xl">{gifts?.length ?? 0}</b>
+        <div className="border-[#2c2036]/9 rounded-2xl border bg-white p-4 shadow-[0_6px_18px_rgba(69,43,94,.05)]">
+          <Gift className="size-5 text-[#b8860b]" />
+          <p className="mt-3 text-[10px] text-[#81748a]">Подарки</p>
+          <b className="mt-1 block text-2xl font-black">{gifts?.length ?? 0}</b>
         </div>
-        <div className="border-white/8 rounded-2xl border bg-[#171923] p-4">
-          <WalletCards className="size-5 text-[#e17dff]" />
-          <p className="mt-3 text-xs text-[#aaa2b4]">Доход</p>
-          <b className="mt-1 block text-lg">
+        <div className="border-[#2c2036]/9 rounded-2xl border bg-white p-4 shadow-[0_6px_18px_rgba(69,43,94,.05)]">
+          <WalletCards className="size-5 text-[#7549d0]" />
+          <p className="mt-3 text-[10px] text-[#81748a]">Доход</p>
+          <b className="mt-1 block text-lg font-black">
             {formatRubles(giftIncome + unlockIncome)}
           </b>
         </div>
       </section>
+
       <section className="mt-6">
-        <h2 className="font-bold">Реакции</h2>
+        <h2 className="text-sm font-black">Реакции</h2>
         <div className="mt-3 grid grid-cols-3 gap-2">
-          <div className="rounded-xl bg-white/5 p-3 text-center">
-            ❤️<b className="mt-1 block">{reactionCount("heart")}</b>
-          </div>
-          <div className="rounded-xl bg-white/5 p-3 text-center">
-            🔥<b className="mt-1 block">{reactionCount("fire")}</b>
-          </div>
-          <div className="rounded-xl bg-white/5 p-3 text-center">
-            😮<b className="mt-1 block">{reactionCount("wow")}</b>
-          </div>
+          {REACTIONS.map((reaction) => (
+            <div
+              className="border-[#2c2036]/9 rounded-2xl border bg-white p-3 text-center shadow-[0_6px_18px_rgba(69,43,94,.05)]"
+              key={reaction.code}
+            >
+              <reaction.icon className="mx-auto size-5 text-[#8753e6]" />
+              <b className="mt-1.5 block text-sm font-black">
+                {reactionCount(reaction.code)}
+              </b>
+              <span className="mt-0.5 block text-[9px] text-[#81748a]">
+                {reaction.label}
+              </span>
+            </div>
+          ))}
         </div>
       </section>
+
       {(rawViewers?.length ?? 0) > 0 && (
         <section className="mt-6">
-          <h2 className="font-bold">Зрители</h2>
+          <h2 className="text-sm font-black">Зрители</h2>
           <div className="mt-3 space-y-2">
             {(rawViewers ?? []).map((viewer) => (
               <div
-                className="border-white/8 flex items-center justify-between rounded-xl border bg-[#171923] p-3"
+                className="border-[#2c2036]/9 flex items-center justify-between rounded-2xl border bg-white px-4 py-3 shadow-[0_6px_18px_rgba(69,43,94,.05)]"
                 key={viewer.viewer_id}
               >
-                <span className="text-sm text-[#d6cede]">
+                <span className="text-xs font-black text-[#5f5369]">
                   {viewerNames.get(viewer.viewer_id) ?? "Пользователь"}
                 </span>
-                <span className="text-xs text-[#9991a3]">
+                <span className="text-[10px] text-[#81748a]">
                   {new Intl.DateTimeFormat("ru-RU", {
                     day: "numeric",
                     month: "short",
@@ -234,19 +266,20 @@ export default async function StoryAnalyticsPage({
           </div>
         </section>
       )}
+
       {(rawUnlockers?.length ?? 0) > 0 && (
         <section className="mt-6">
-          <h2 className="font-bold">Открыли платную</h2>
+          <h2 className="text-sm font-black">Открыли платную</h2>
           <div className="mt-3 space-y-2">
             {(rawUnlockers ?? []).map((unlocker) => (
               <div
-                className="border-white/8 flex items-center justify-between rounded-xl border bg-[#171923] p-3"
+                className="border-[#2c2036]/9 flex items-center justify-between rounded-2xl border bg-white px-4 py-3 shadow-[0_6px_18px_rgba(69,43,94,.05)]"
                 key={unlocker.viewer_id}
               >
-                <span className="text-sm text-[#d6cede]">
+                <span className="text-xs font-black text-[#5f5369]">
                   {viewerNames.get(unlocker.viewer_id) ?? "Пользователь"}
                 </span>
-                <span className="text-xs text-[#9991a3]">
+                <span className="text-[10px] text-[#81748a]">
                   {unlocker.unlocked_at
                     ? new Intl.DateTimeFormat("ru-RU", {
                         day: "numeric",
@@ -261,26 +294,27 @@ export default async function StoryAnalyticsPage({
           </div>
         </section>
       )}
+
       {unlockedCount > 0 && (
         <section className="mt-6">
-          <h2 className="font-bold">Открытия по дням</h2>
-          <p className="mt-1 text-xs text-[#9991a3]">
+          <h2 className="text-sm font-black">Открытия по дням</h2>
+          <p className="mt-1 text-[10px] text-[#81748a]">
             Последние 14 дней, время — Москва
           </p>
-          <div className="mt-3 flex h-28 items-end gap-1.5 rounded-2xl bg-white/5 p-3">
+          <div className="border-[#2c2036]/9 mt-3 flex h-28 items-end gap-1.5 rounded-2xl border bg-white p-3 shadow-[0_6px_18px_rgba(69,43,94,.05)]">
             {last14Days.map((day) => (
               <div
                 className="flex h-full flex-1 flex-col items-center justify-end gap-1"
                 key={day.key}
               >
-                <span className="text-[10px] font-semibold text-[#d6cede]">
+                <span className="text-[10px] font-black text-[#7549d0]">
                   {day.count > 0 ? day.count : ""}
                 </span>
                 <div
-                  className="w-full rounded-md bg-gradient-to-t from-[#7d45ff] to-[#ff4b8a]"
+                  className="w-full rounded-md bg-gradient-to-t from-[#8254ed] to-[#ff5d9a]"
                   style={{
                     height: `${Math.max(4, (day.count / maxDaily) * 100)}%`,
-                    opacity: day.count > 0 ? 1 : 0.15,
+                    opacity: day.count > 0 ? 1 : 0.12,
                   }}
                   title={`${day.label}: ${day.count} открытий`}
                 />
@@ -290,10 +324,10 @@ export default async function StoryAnalyticsPage({
           <div className="mt-3 space-y-2">
             {sortedDays.map(([key, bucket]) => (
               <div
-                className="border-white/8 flex items-center justify-between rounded-xl border bg-[#171923] px-4 py-3"
+                className="border-[#2c2036]/9 flex items-center justify-between rounded-2xl border bg-white px-4 py-3 shadow-[0_6px_18px_rgba(69,43,94,.05)]"
                 key={key}
               >
-                <span className="text-sm text-[#d6cede]">
+                <span className="text-xs font-black text-[#5f5369]">
                   {new Intl.DateTimeFormat("ru-RU", {
                     timeZone: "Europe/Moscow",
                     day: "numeric",
@@ -301,35 +335,40 @@ export default async function StoryAnalyticsPage({
                     year: "numeric",
                   }).format(new Date(`${key}T12:00:00`))}
                 </span>
-                <span className="flex items-center gap-3 text-sm">
-                  <span className="text-[#9991a3]">{bucket.count} откр.</span>
-                  <b>{formatRubles(bucket.income)}</b>
+                <span className="flex items-center gap-3 text-xs">
+                  <span className="text-[#81748a]">{bucket.count} откр.</span>
+                  <b className="font-black text-[#7549d0]">
+                    {formatRubles(bucket.income)}
+                  </b>
                 </span>
               </div>
             ))}
           </div>
         </section>
       )}
+
       <section className="mt-6">
-        <h2 className="font-bold">Монетизация</h2>
+        <h2 className="text-sm font-black">Монетизация</h2>
         <div className="mt-3 space-y-2">
-          <div className="border-white/8 flex justify-between rounded-xl border bg-[#171923] p-4">
-            <span className="text-[#d6cede]">Открытия платной story</span>
-            <b>{unlockedCount}</b>
-          </div>
-          <div className="border-white/8 flex justify-between rounded-xl border bg-[#171923] p-4">
-            <span className="text-[#d6cede]">Доход от открытий</span>
-            <b>{formatRubles(unlockIncome)}</b>
-          </div>
-          <div className="border-white/8 flex justify-between rounded-xl border bg-[#171923] p-4">
-            <span className="text-[#d6cede]">Доход от подарков</span>
-            <b>{formatRubles(giftIncome)}</b>
-          </div>
+          {[
+            { label: "Открытия платной story", value: String(unlockedCount) },
+            { label: "Доход от открытий", value: formatRubles(unlockIncome) },
+            { label: "Доход от подарков", value: formatRubles(giftIncome) },
+          ].map((row) => (
+            <div
+              className="border-[#2c2036]/9 flex items-center justify-between rounded-2xl border bg-white px-4 py-3 shadow-[0_6px_18px_rgba(69,43,94,.05)]"
+              key={row.label}
+            >
+              <span className="text-[10px] text-[#5f5369]">{row.label}</span>
+              <b className="text-xs font-black text-[#7549d0]">{row.value}</b>
+            </div>
+          ))}
         </div>
       </section>
-      <p className="mt-7 flex items-center gap-2 text-xs leading-5 text-[#9f97aa]">
-        <BarChart3 className="size-4" /> Все показатели и доход тестовые. Реальная
-        аналитика и выплаты подключаются после production payment stack.
+
+      <p className="mt-7 flex items-center gap-2 text-[10px] leading-5 text-[#8a7d91]">
+        <BarChart3 className="size-4 shrink-0" /> Все показатели и доход тестовые.
+        Реальная аналитика и выплаты подключаются после production payment stack.
       </p>
     </main>
   );
