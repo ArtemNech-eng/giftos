@@ -25,11 +25,11 @@ type LeaderPlace = {
 
 function RankMark({ rank }: { rank: number }) {
   return rank <= 3 ? (
-    <span className="grid size-7 place-items-center rounded-full bg-[#2a2215] text-[#ffd35e]">
+    <span className="grid size-7 place-items-center rounded-full bg-[#fff6d9] text-[#b8860b]">
       <Trophy className="size-3.5" />
     </span>
   ) : (
-    <span className="grid size-7 place-items-center text-xs font-semibold text-[#aaa4b7]">
+    <span className="grid size-7 place-items-center text-xs font-black text-[#81748a]">
       {rank}
     </span>
   );
@@ -90,22 +90,30 @@ export default async function PlacesLeaderboardPage() {
   const profileById = new Map((activeProfiles ?? []).map((row) => [row.id, row]));
 
   return (
-    <main className="mx-auto min-h-screen max-w-[430px] bg-[#0c0e14] px-4 py-5 text-white">
+    <main className="mx-auto min-h-screen max-w-[430px] bg-[#f7f4fb] px-4 pb-10 pt-5 text-[#251d31]">
       <header className="flex items-center justify-between">
         <Link
-          className="bg-white/8 grid size-9 place-items-center rounded-full"
+          aria-label="Вернуться к местам"
+          className="border-[#2c2036]/9 grid size-10 place-items-center rounded-full border bg-white text-[#5f5369] shadow-[0_5px_15px_rgba(69,43,94,.05)]"
           href="/places"
         >
-          <ArrowLeft className="size-5" />
+          <ArrowLeft className="size-4.5" />
         </Link>
-        <h1 className="text-lg font-bold">Рейтинги</h1>
-        <span className="w-9" />
+        <span className="text-center">
+          <small className="block text-[9px] font-black uppercase tracking-[0.13em] text-[#8c7e94]">
+            Жизнь мест
+          </small>
+          <h1 className="mt-0.5 text-sm font-black">Рейтинги</h1>
+        </span>
+        <span className="grid size-10 place-items-center rounded-full bg-[#fff0f6] text-[#d84b81]">
+          <Flame className="size-4.5" />
+        </span>
       </header>
 
       <section className="mt-6">
         <div className="flex items-center gap-2">
-          <Trophy className="size-5 text-[#ffd35e]" />
-          <h2 className="font-bold">Лидеры тусовок</h2>
+          <Trophy className="size-5 text-[#b8860b]" />
+          <h2 className="text-sm font-black">Лидеры тусовок</h2>
         </div>
         {topPlaces.length === 0 ? (
           <div className="mt-3">
@@ -120,17 +128,19 @@ export default async function PlacesLeaderboardPage() {
           <div className="mt-3 space-y-2">
             {topPlaces.map((place, index) => (
               <Link
-                className="border-white/8 flex items-center gap-3 rounded-2xl border bg-[#171923] p-3"
+                className="border-[#2c2036]/9 flex items-center gap-3 rounded-2xl border bg-white p-3 shadow-[0_6px_18px_rgba(69,43,94,.05)]"
                 href={`/places/${place.id}` as Route}
                 key={place.id}
               >
                 <RankMark rank={index + 1} />
-                <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-[#3b193d] to-[#1f1a38] text-[#e5c3ff]">
+                <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#f3ecff] text-[#8753e6]">
                   <PlaceIcon className="size-5" code={place.icon_code} />
                 </span>
                 <span className="min-w-0 grow">
-                  <span className="block truncate text-sm font-bold">{place.name}</span>
-                  <span className="mt-0.5 flex items-center gap-2 text-xs text-[#aaa4b7]">
+                  <span className="block truncate text-xs font-black">
+                    {place.name}
+                  </span>
+                  <span className="mt-0.5 flex items-center gap-2 text-[10px] text-[#81748a]">
                     <span className="inline-flex items-center gap-1">
                       <UsersRound className="size-3.5" /> {place.member_count}
                     </span>
@@ -138,7 +148,7 @@ export default async function PlacesLeaderboardPage() {
                       <Flame className="size-3.5" /> {place.popularity_score}
                     </span>
                     {place.online_count > 0 && (
-                      <span className="text-[#8df0b4]">
+                      <span className="text-[#258b82]">
                         {place.online_count} сейчас
                       </span>
                     )}
@@ -152,11 +162,13 @@ export default async function PlacesLeaderboardPage() {
 
       <section className="mt-7">
         <div className="flex items-center gap-2">
-          <Flame className="size-5 text-[#ff7b9c]" />
-          <h2 className="font-bold">Самые активные · {profile?.city ?? "город"}</h2>
+          <Flame className="size-5 text-[#e2574c]" />
+          <h2 className="text-sm font-black">
+            Самые активные · {profile?.city ?? "город"}
+          </h2>
         </div>
         {activeUsers.length === 0 ? (
-          <p className="mt-3 rounded-2xl border border-dashed border-white/15 p-5 text-sm text-[#aaa2b4]">
+          <p className="mt-3 rounded-2xl border border-dashed border-[#cdbbe7] bg-white p-5 text-xs text-[#756a7d]">
             Активность в местах вашего города появится здесь.
           </p>
         ) : (
@@ -166,21 +178,21 @@ export default async function PlacesLeaderboardPage() {
               if (!person) return null;
               return (
                 <Link
-                  className="border-white/8 flex items-center gap-3 rounded-2xl border bg-[#171923] p-3"
+                  className="border-[#2c2036]/9 flex items-center gap-3 rounded-2xl border bg-white p-3 shadow-[0_6px_18px_rgba(69,43,94,.05)]"
                   href={`/u/${person.username}` as Route}
                   key={row.profile_id}
                 >
                   <RankMark rank={index + 1} />
                   <span className="min-w-0 grow">
-                    <span className="block truncate text-sm font-bold">
+                    <span className="block truncate text-xs font-black">
                       {person.display_name}
                       {row.profile_id === user.id && (
-                        <span className="ml-2 text-xs font-normal text-[#ffd35e]">
+                        <span className="ml-2 rounded-full bg-[#f0e9ff] px-1.5 py-0.5 text-[8px] font-black text-[#7549d0]">
                           это вы
                         </span>
                       )}
                     </span>
-                    <span className="text-xs text-[#aaa4b7]">
+                    <span className="text-[10px] text-[#81748a]">
                       {row.messages} сообщений в местах
                     </span>
                   </span>

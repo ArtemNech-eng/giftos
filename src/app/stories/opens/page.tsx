@@ -48,16 +48,24 @@ export default async function MyStoryOpensPage() {
   );
 
   return (
-    <main className="mx-auto min-h-screen max-w-[430px] bg-[#0c0e14] px-4 py-5 text-white">
+    <main className="mx-auto min-h-screen max-w-[430px] bg-[#f7f4fb] px-4 pb-10 pt-5 text-[#251d31]">
       <header className="flex items-center justify-between">
         <Link
-          className="bg-white/8 grid size-9 place-items-center rounded-full"
+          aria-label="Вернуться в ленту"
+          className="border-[#2c2036]/9 grid size-10 place-items-center rounded-full border bg-white text-[#5f5369] shadow-[0_5px_15px_rgba(69,43,94,.05)]"
           href="/feed"
         >
-          <ArrowLeft className="size-5" />
+          <ArrowLeft className="size-4.5" />
         </Link>
-        <h1 className="text-lg font-bold">Мои открытия</h1>
-        <span className="w-9" />
+        <span className="text-center">
+          <small className="block text-[9px] font-black uppercase tracking-[0.13em] text-[#8c7e94]">
+            Ваши открытия
+          </small>
+          <h1 className="mt-0.5 text-sm font-black">Мои открытия</h1>
+        </span>
+        <span className="grid size-10 place-items-center rounded-full bg-[#f0e9ff] text-[#8753e6]">
+          <LockKeyhole className="size-4.5" />
+        </span>
       </header>
 
       <section className="mt-6">
@@ -72,7 +80,7 @@ export default async function MyStoryOpensPage() {
           <div className="space-y-2">
             {opens.map((open) => (
               <Link
-                className="border-white/8 flex items-center gap-3 rounded-2xl border bg-[#171923] p-3"
+                className="border-[#2c2036]/9 flex items-center gap-3 rounded-2xl border bg-white p-3 shadow-[0_6px_18px_rgba(69,43,94,.05)]"
                 href={`/stories/${open.story?.id}`}
                 key={open.id}
               >
@@ -80,10 +88,10 @@ export default async function MyStoryOpensPage() {
                   <LockKeyhole className="size-5 text-white" />
                 </span>
                 <span className="min-w-0 grow">
-                  <span className="block truncate text-sm font-bold">
+                  <span className="block truncate text-xs font-black">
                     {open.story?.caption ?? "Video story"}
                   </span>
-                  <span className="mt-0.5 block text-xs text-[#a9a1b4]">
+                  <span className="mt-0.5 block text-[10px] text-[#81748a]">
                     {open.story?.unlock_price_minor
                       ? `${formatRubles(open.story.unlock_price_minor)}`
                       : "Платная story"}
@@ -96,7 +104,7 @@ export default async function MyStoryOpensPage() {
                       : ""}
                   </span>
                 </span>
-                <span className="text-xs text-[#e17dff]">Открыто ›</span>
+                <span className="text-[10px] font-black text-[#7549d0]">Открыто ›</span>
               </Link>
             ))}
           </div>

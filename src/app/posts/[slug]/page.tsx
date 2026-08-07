@@ -75,28 +75,28 @@ export default async function CreatorPostPage({
   };
 
   return (
-    <main className="min-h-screen bg-[#0c0e14] px-4 py-8 text-white">
+    <main className="min-h-screen bg-[#f7f4fb] px-4 py-8 text-[#251d31]">
       <script
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         type="application/ld+json"
       />
       <article className="mx-auto max-w-2xl">
         <Link
-          className="inline-flex items-center gap-2 text-sm font-semibold text-[#e5a3d5]"
+          className="inline-flex items-center gap-2 text-sm font-black text-[#8753e6]"
           href={author?.username ? `/u/${author.username}` : "/feed"}
         >
           <ArrowLeft className="size-4" /> К автору
         </Link>
-        <p className="mt-8 inline-flex items-center gap-2 rounded-full bg-[#281633] px-3 py-1.5 text-xs font-semibold text-[#e3b7ff]">
+        <p className="mt-8 inline-flex items-center gap-2 rounded-full bg-[#f0e9ff] px-3 py-1.5 text-xs font-black text-[#7549d0]">
           <Sparkles className="size-3.5" /> Публикация автора
         </p>
         <h1 className="mt-5 text-balance text-4xl font-bold leading-tight">
           {post.title}
         </h1>
-        <p className="mt-4 text-sm text-[#aaa3b5]">
+        <p className="mt-4 text-xs text-[#81748a]">
           {author?.display_name ?? "Автор"} · {published}
         </p>
-        <div className="mt-8 whitespace-pre-wrap text-[17px] leading-8 text-[#ded6e6]">
+        <div className="mt-8 whitespace-pre-wrap text-[16px] leading-8 text-[#5f5369]">
           {post.body}
         </div>
       </article>
