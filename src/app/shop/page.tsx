@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowLeft, Crown, Gem, ShoppingBag, Sparkles, Star } from "lucide-react";
 
 import { buyItem, buyVip, equipItem } from "@/app/shop/actions";
+import { VirtualItemIcon } from "@/components/virtual-item-icon";
 import { requireUser } from "@/lib/auth";
 
 export const metadata = {
@@ -15,7 +16,7 @@ type ItemRow = {
   item_type: string;
   name: string;
   description: string | null;
-  emoji: string;
+  icon_code: string | null;
   price_stars: number;
   is_limited: boolean;
   remaining_edition: number | null;
@@ -35,7 +36,7 @@ export default async function ShopPage() {
       supabase
         .from("virtual_items")
         .select(
-          "id, item_type, name, description, emoji, price_stars, is_limited, remaining_edition, total_edition, requires_vip",
+          "id, item_type, name, description, icon_code, price_stars, is_limited, remaining_edition, total_edition, requires_vip",
         )
         .eq("is_active", true)
         .order("sort_order", { ascending: true }),
@@ -201,8 +202,12 @@ export default async function ShopPage() {
                   className="flex items-center gap-3 rounded-2xl border border-[#e5d5ff] bg-gradient-to-r from-[#f7f0ff] to-[#fff6fb] p-3 shadow-[0_6px_18px_rgba(117,73,208,.07)]"
                   key={item.id}
                 >
-                  <span className="grid size-12 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-[#e8d5ff] to-[#ffd9ec] text-2xl">
-                    {item.emoji}
+                  <span className="grid size-12 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-[#e8d5ff] to-[#ffd9ec] text-[#7549d0]">
+                    <VirtualItemIcon
+                      className="size-6"
+                      code={item.icon_code}
+                      itemType={item.item_type}
+                    />
                   </span>
                   <span className="min-w-0 grow">
                     <span className="flex items-center gap-2">
@@ -246,11 +251,15 @@ export default async function ShopPage() {
                         }
                         type="submit"
                       >
-                        {remaining <= 0
-                          ? "Раскуплено"
-                          : item.requires_vip && !vipActive
-                            ? "👑 VIP"
-                            : `${item.price_stars} ⭐`}
+                        {remaining <= 0 ? (
+                          "Раскуплено"
+                        ) : item.requires_vip && !vipActive ? (
+                          <span className="inline-flex items-center gap-1">
+                            <Crown className="size-3" /> VIP
+                          </span>
+                        ) : (
+                          `${item.price_stars} ⭐`
+                        )}
                       </button>
                     </form>
                   )}
@@ -274,8 +283,12 @@ export default async function ShopPage() {
                     className="border-[#2c2036]/9 flex items-center gap-3 rounded-2xl border bg-white p-3 shadow-[0_6px_18px_rgba(69,43,94,.05)]"
                     key={item.id}
                   >
-                    <span className="grid size-12 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-[#f3ecff] to-[#fff0f6] text-2xl">
-                      {item.emoji}
+                    <span className="grid size-12 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-[#f3ecff] to-[#fff0f6] text-[#8753e6]">
+                      <VirtualItemIcon
+                        className="size-6"
+                        code={item.icon_code}
+                        itemType={item.item_type}
+                      />
                     </span>
                     <span className="min-w-0 grow">
                       <b className="block truncate text-xs font-black">{item.name}</b>
@@ -313,9 +326,13 @@ export default async function ShopPage() {
                           }
                           type="submit"
                         >
-                          {item.requires_vip && !vipActive
-                            ? "👑 VIP"
-                            : `${item.price_stars} ⭐`}
+                          {item.requires_vip && !vipActive ? (
+                            <span className="inline-flex items-center gap-1">
+                              <Crown className="size-3" /> VIP
+                            </span>
+                          ) : (
+                            `${item.price_stars} ⭐`
+                          )}
                         </button>
                       </form>
                     )}

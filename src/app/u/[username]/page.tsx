@@ -249,7 +249,7 @@ export default async function ProfilePage({
       .limit(9),
     supabase
       .from("user_inventory")
-      .select("item_id, virtual_items!inner(id, item_type, emoji, name)")
+      .select("item_id, virtual_items!inner(id, item_type, icon_code, name)")
       .eq("profile_id", profile.id)
       .eq("is_equipped", true),
   ]);
@@ -346,7 +346,7 @@ export default async function ProfilePage({
       virtual_items: Array<{
         id: string;
         item_type: string;
-        emoji: string;
+        icon_code: string | null;
         name: string;
       }>;
     }>
@@ -355,7 +355,7 @@ export default async function ProfilePage({
       ? [
           {
             itemType: row.virtual_items[0].item_type,
-            emoji: row.virtual_items[0].emoji,
+            iconCode: row.virtual_items[0].icon_code,
           },
         ]
       : [],

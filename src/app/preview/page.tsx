@@ -4,6 +4,7 @@ import { LocalRoleIcon } from "@/components/local-role-icon";
 
 import {
   ArrowUpRight,
+  Award,
   CalendarDays,
   Check,
   CirclePlus,
@@ -29,6 +30,7 @@ import {
   Sparkles,
   Star,
   UserRound,
+  Waves,
   X,
 } from "lucide-react";
 
@@ -2664,15 +2666,22 @@ function ShopScreen() {
         </div>
         <div className="mt-2.5 space-y-2">
           {[
-            { emoji: "🌊", name: "Первая волна", rest: "97 / 100" },
-            { emoji: "🥇", name: "Золото", rest: "48 / 50" },
+            {
+              icon: Waves,
+              name: "Первая волна",
+              rest: "97 / 100",
+              tint: "text-[#2f9bb5]",
+            },
+            { icon: Award, name: "Золото", rest: "48 / 50", tint: "text-[#b8860b]" },
           ].map((item) => (
             <div
               className="flex items-center gap-3 rounded-2xl border border-[#e5d5ff] bg-gradient-to-r from-[#f7f0ff] to-[#fff6fb] p-3"
               key={item.name}
             >
-              <span className="grid size-11 place-items-center rounded-xl bg-gradient-to-br from-[#e8d5ff] to-[#ffd9ec] text-xl">
-                {item.emoji}
+              <span
+                className={`grid size-11 place-items-center rounded-xl bg-gradient-to-br from-[#e8d5ff] to-[#ffd9ec] ${item.tint}`}
+              >
+                <item.icon className="size-5" />
               </span>
               <span className="min-w-0 grow">
                 <span className="flex items-center gap-2">
@@ -2693,15 +2702,17 @@ function ShopScreen() {
         <b className="text-[11px]">Значки</b>
         <div className="mt-2.5 space-y-2">
           {[
-            { emoji: "🔥", name: "Огонёк", price: "120 ⭐" },
-            { emoji: "🎸", name: "Меломан", price: "200 ⭐" },
+            { icon: Flame, name: "Огонёк", price: "120 ⭐", tint: "text-[#e2574c]" },
+            { icon: Music2, name: "Меломан", price: "200 ⭐", tint: "text-[#8753e6]" },
           ].map((item) => (
             <div
               className="border-[#2c2036]/9 flex items-center gap-3 rounded-2xl border bg-white p-3"
               key={item.name}
             >
-              <span className="grid size-11 place-items-center rounded-xl bg-gradient-to-br from-[#f3ecff] to-[#fff0f6] text-xl">
-                {item.emoji}
+              <span
+                className={`grid size-11 place-items-center rounded-xl bg-gradient-to-br from-[#f3ecff] to-[#fff0f6] ${item.tint}`}
+              >
+                <item.icon className="size-5" />
               </span>
               <span className="min-w-0 grow">
                 <b className="block text-[10px]">{item.name}</b>
