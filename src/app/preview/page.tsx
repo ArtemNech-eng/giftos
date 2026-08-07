@@ -54,6 +54,7 @@ const screens = [
   { id: "collection", label: "Полка", number: "17" },
   { id: "unboxing", label: "Распаковка", number: "18" },
   { id: "wish", label: "Желание", number: "19" },
+  { id: "fundraiser", label: "Сбор", number: "20" },
 ] as const;
 
 type ScreenId = (typeof screens)[number]["id"];
@@ -1664,6 +1665,120 @@ function WishScreen() {
   );
 }
 
+function FundraiserScreen() {
+  return (
+    <div className="min-h-[730px] bg-[#fbf9fe] px-4 pb-6 pt-5 text-[#251d31]">
+      <header className="flex items-center justify-between">
+        <span className="grid size-10 place-items-center rounded-full border border-[#2c2036]/10 bg-white text-[#5f5369]">
+          <ArrowUpRight className="size-4 rotate-[-135deg]" />
+        </span>
+        <span className="text-center">
+          <small className="block text-[9px] font-black uppercase tracking-[0.13em] text-[#8c7e94]">
+            Общая цель
+          </small>
+          <b className="block text-sm">Сбор</b>
+        </span>
+        <span className="w-10" />
+      </header>
+      <article className="border-[#2c2036]/9 mt-5 rounded-[1.7rem] border bg-white p-4 shadow-[0_14px_32px_rgba(69,43,94,.08)]">
+        <div className="flex items-start gap-4">
+          <span className="grid size-28 shrink-0 overflow-hidden rounded-[1.5rem] bg-gradient-to-br from-[#fff0e3] to-[#f5e9ff]">
+            {/* eslint-disable-next-line @next/next/no-img-element -- generated synthetic preview media */}
+            <img
+              alt=""
+              className="size-full object-cover object-[center_42%]"
+              src="/preview/max-live.jpg"
+            />
+          </span>
+          <span className="min-w-0 grow">
+            <span className="inline-flex items-center gap-1 rounded-full bg-[#f0e9ff] px-2 py-1 text-[8px] font-black uppercase tracking-[0.08em] text-[#7549d0]">
+              <Sparkles className="size-3" /> Музыка
+            </span>
+            <h1 className="mt-3 text-xl font-black leading-[0.95] tracking-[-0.055em]">
+              Собрать домашнюю студию
+            </h1>
+          </span>
+        </div>
+        <div className="mt-4 flex items-center gap-2 rounded-2xl bg-[#fbf9fe] p-2.5">
+          <Avatar index={1} name="Макс" size="size-8" />
+          <span className="grow">
+            <b className="block text-[10px]">Макс</b>
+            <small className="block text-[9px] text-[#82758a]">
+              Автор цели · Будённовск
+            </small>
+          </span>
+          <ChevronRightPreview />
+        </div>
+        <p className="mt-4 text-[11px] leading-5 text-[#5f5369]">
+          Хочу собрать место для музыки, эфиров и первых живых записей.
+        </p>
+        <section className="mt-5 rounded-[1.35rem] bg-[#fbf9fe] p-4">
+          <div className="flex items-baseline justify-between">
+            <span>
+              <small className="block text-[8px] font-black uppercase tracking-[0.1em] text-[#93869d]">
+                Собрано
+              </small>
+              <b className="mt-1 block text-xl text-[#c34e79]">18 400 ₽</b>
+            </span>
+            <span className="text-right">
+              <small className="block text-[8px] font-black uppercase tracking-[0.1em] text-[#93869d]">
+                Цель
+              </small>
+              <b className="mt-1 block text-[11px]">65 000 ₽</b>
+            </span>
+          </div>
+          <div className="mt-3 h-2 overflow-hidden rounded-full bg-[#eee7f4]">
+            <span className="block h-full w-[28%] rounded-full bg-gradient-to-r from-[#ff5d9a] to-[#8254ed]" />
+          </div>
+          <div className="mt-3 flex gap-3 text-[9px] text-[#756a7d]">
+            <span className="inline-flex items-center gap-1">
+              <UsersRound className="size-3.5 text-[#8753e6]" /> 24 участвуют
+            </span>
+            <span>До 30 авг.</span>
+          </div>
+        </section>
+      </article>
+      <section className="mt-5 rounded-[1.45rem] border border-[#e5d5ea] bg-white p-3.5 shadow-[0_8px_22px_rgba(69,43,94,.05)]">
+        <div className="flex items-start gap-3">
+          <span className="grid size-9 place-items-center rounded-xl bg-[#fff0f6] text-[#d84b81]">
+            <Heart className="size-4" />
+          </span>
+          <span>
+            <h2 className="text-sm font-black">Поддержать цель</h2>
+            <p className="mt-1 text-[9px] leading-4 text-[#756a7d]">
+              Сумма и видимость участия — твой выбор.
+            </p>
+          </span>
+        </div>
+        <span className="mt-3 flex rounded-xl bg-[#fff7e8] p-2.5 text-[9px] leading-4 text-[#896a27]">
+          <Check className="mr-1.5 size-3.5 shrink-0" /> Тестовый режим: реальные деньги
+          не списываются.
+        </span>
+        <span className="mt-3 flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-[#ff5d9a] to-[#8254ed] py-3 text-[10px] font-black text-white">
+          <Heart className="mr-1.5 size-3.5" /> Перейти к тестовому подтверждению
+        </span>
+      </section>
+      <section className="border-[#2c2036]/9 mt-5 rounded-[1.45rem] border bg-white p-3.5 shadow-[0_8px_22px_rgba(69,43,94,.05)]">
+        <h2 className="flex items-center gap-2 text-sm font-black">
+          <MessageCircle className="size-4 text-[#8753e6]" /> Обсуждение
+        </h2>
+        <div className="mt-3 rounded-xl bg-[#fbf9fe] p-3">
+          <div className="flex items-center gap-2">
+            <Avatar index={2} name="Лера" size="size-7" />
+            <b className="text-[10px]">Лера</b>
+            <span className="ml-auto rounded-full bg-[#fff6e8] px-2 py-1 text-[8px] font-black text-[#9a7a20]">
+              Поддержка
+            </span>
+          </div>
+          <p className="mt-2 text-[10px] leading-4 text-[#5f5369]">
+            Очень хочу услышать первый эфир из этой студии.
+          </p>
+        </div>
+      </section>
+    </div>
+  );
+}
+
 function IncomeIcon({ kind }: { kind: string }) {
   if (kind === "gift") return <Gift className="size-4" />;
   if (kind === "message") return <MessageCircle className="size-4" />;
@@ -2169,6 +2284,7 @@ export default async function PreviewPage({
     collection: <CollectionScreen />,
     unboxing: <UnboxingScreen />,
     wish: <WishScreen />,
+    fundraiser: <FundraiserScreen />,
   };
 
   return (
