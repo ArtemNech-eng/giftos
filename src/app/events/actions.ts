@@ -28,6 +28,8 @@ export async function createEvent(formData: FormData) {
   if (!title) throw new Error("Укажите название события.");
   if (!startsAtRaw || Number.isNaN(startsAt.getTime()))
     throw new Error("Укажите дату и время начала.");
+  if (startsAt.getTime() <= Date.now())
+    throw new Error("Событие можно назначить только на будущее время.");
 
   const { data: profile } = await supabase
     .from("profiles")
@@ -35,12 +37,29 @@ export async function createEvent(formData: FormData) {
     .eq("id", user.id)
     .maybeSingle();
 
+  if (scope === "local" && !profile?.city_id)
+    throw new Error("Сначала выберите город для локального события.");
+
+  let verifiedPlaceId: string | null = null;
+  if (placeId) {
+    if (scope !== "local")
+      throw new Error("Место можно привязать только к городскому событию.");
+    const { data: place } = await supabase
+      .from("places")
+      .select("id, city_id, is_active")
+      .eq("id", placeId)
+      .maybeSingle();
+    if (!place || !place.is_active || place.city_id !== profile?.city_id)
+      throw new Error("Выберите действующее место из своего города.");
+    verifiedPlaceId = place.id;
+  }
+
   const { data: event, error } = await supabase
     .from("events")
     .insert({
       author_id: user.id,
-      city_id: scope === "local" ? (profile?.city_id ?? null) : null,
-      place_id: placeId || null,
+      city_id: scope === "local" ? profile?.city_id : null,
+      place_id: verifiedPlaceId,
       title,
       description,
       event_type: eventType,
@@ -63,6 +82,8 @@ export async function createEvent(formData: FormData) {
   });
 
   revalidatePath("/feed");
+  revalidatePath("/places");
+  if (verifiedPlaceId) revalidatePath(`/places/${verifiedPlaceId}`);
   revalidatePath("/events");
   redirect(`/events/${event.id}` as Route);
 }
@@ -80,6 +101,7 @@ export async function joinEvent(formData: FormData) {
 
   revalidatePath(`/events/${eventId}`);
   revalidatePath("/events");
+  revalidatePath("/places");
   redirect(`/events/${eventId}` as Route);
 }
 
@@ -96,6 +118,7 @@ export async function leaveEvent(formData: FormData) {
 
   revalidatePath(`/events/${eventId}`);
   revalidatePath("/events");
+  revalidatePath("/places");
   redirect(`/events/${eventId}` as Route);
 }
 
@@ -136,6 +159,7 @@ export async function cancelEvent(formData: FormData) {
 
   revalidatePath(`/events/${eventId}`);
   revalidatePath("/events");
+  revalidatePath("/places");
   redirect(`/events/${eventId}` as Route);
 }
 

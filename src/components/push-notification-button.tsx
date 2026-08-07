@@ -78,8 +78,8 @@ export function PushNotificationButton() {
       <button
         className={`inline-flex h-10 items-center gap-2 rounded-xl px-4 text-sm font-bold ${
           enabled
-            ? "border border-[#6fe3a1]/40 bg-[#15281d] text-[#8df0b4]"
-            : "bg-gradient-to-r from-[#ff4b8a] to-[#7d45ff] text-white"
+            ? "border border-[#bde6d4] bg-[#effaf4] text-[#258b82]"
+            : "bg-gradient-to-r from-[#ff5d9a] to-[#8254ed] text-white"
         }`}
         disabled={busy}
         onClick={() => void toggle()}

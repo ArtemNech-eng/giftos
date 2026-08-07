@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Gift } from "lucide-react";
 
 import { sendPlaceGift } from "@/app/places/actions";
+import { BrandGiftIcon } from "@/components/brand-gift-icon";
 
 /**
  * Gift button for a person in a place: opens a small picker with the
@@ -57,7 +58,9 @@ export function PlaceGiftButton({
                 onClick={() => void submit(gift.code)}
                 type="button"
               >
-                <span className="text-xl">{gift.emoji}</span>
+                <span className="grid size-8 place-items-center rounded-lg bg-gradient-to-br from-[#ff5d9a]/20 to-[#8254ed]/20 text-[#f4aed0]">
+                  <BrandGiftIcon className="size-5" code={gift.code} />
+                </span>
                 <span className="mt-0.5 text-[9px] text-[#ffb7dd]">
                   {gift.price_minor / 100} ₽
                 </span>

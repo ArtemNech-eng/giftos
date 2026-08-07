@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 
 import { requireUser } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { recordCitySocialMoment } from "@/lib/city-social-moments";
 import { optionalText, requiredText } from "@/lib/validation";
 
 /** Invite the live room host into one of my places. */
@@ -19,7 +20,7 @@ export async function inviteLiveHostToPlace(formData: FormData) {
 
   const { data: place } = await supabase
     .from("places")
-    .select("id, creator_id, name, emoji, kind")
+    .select("id, creator_id, name, icon_code, kind")
     .eq("id", placeId)
     .eq("is_active", true)
     .maybeSingle();
@@ -42,7 +43,7 @@ export async function inviteLiveHostToPlace(formData: FormData) {
     type: "place_invite",
     entity_type: "place",
     entity_id: place.id,
-    payload: { place_name: `${place.emoji} ${place.name}` },
+    payload: { place_name: place.name },
   });
 
   revalidatePath(`/places/${place.id}`);
@@ -60,7 +61,7 @@ export async function inviteProfileToPlace(formData: FormData) {
 
   const { data: place } = await supabase
     .from("places")
-    .select("id, creator_id, name, emoji, kind")
+    .select("id, creator_id, name, icon_code, kind")
     .eq("id", placeId)
     .eq("is_active", true)
     .maybeSingle();
@@ -83,7 +84,7 @@ export async function inviteProfileToPlace(formData: FormData) {
     type: "place_invite",
     entity_type: "place",
     entity_id: place.id,
-    payload: { place_name: `${place.emoji} ${place.name}` },
+    payload: { place_name: place.name },
   });
 
   revalidatePath(`/places/${place.id}`);
@@ -101,7 +102,7 @@ export async function inviteToPlace(formData: FormData) {
 
   const { data: place } = await supabase
     .from("places")
-    .select("id, creator_id, name, emoji, kind")
+    .select("id, creator_id, name, icon_code, kind")
     .eq("id", placeId)
     .eq("is_active", true)
     .maybeSingle();
@@ -132,7 +133,7 @@ export async function inviteToPlace(formData: FormData) {
     type: "place_invite",
     entity_type: "place",
     entity_id: place.id,
-    payload: { place_name: `${place.emoji} ${place.name}` },
+    payload: { place_name: place.name },
   });
 
   revalidatePath(`/places/${place.id}`);
@@ -164,6 +165,25 @@ export async function promotePlaceWithBonus(formData: FormData) {
   revalidatePath(`/places/${placeId}`);
   revalidatePath("/bonuses");
   redirect(`/places/${placeId}?promoted=1` as Route);
+}
+
+/** Use the earned one-time city ambassador credit: no ⭐ are spent. */
+export async function useCityAmbassadorPromotion(formData: FormData) {
+  const { supabase } = await requireUser();
+  const placeId = requiredText(formData.get("place_id"), 100);
+  if (!placeId) throw new Error("Место не найдено.");
+  const { error } = await supabase.rpc("use_city_ambassador_promotion", {
+    p_place_id: placeId,
+  });
+  if (error) {
+    if (error.message.includes("credit is unavailable"))
+      throw new Error("Нет доступного продвижения амбассадора.");
+    throw new Error(`Не удалось продвинуть тусовку: ${error.message}`);
+  }
+  revalidatePath("/places");
+  revalidatePath(`/places/${placeId}`);
+  revalidatePath("/creator/dashboard");
+  redirect(`/places/${placeId}?ambassador_promoted=1` as Route);
 }
 
 /** Pin the hangout: creator spends ⭐ to keep the place at the very top. */
@@ -263,6 +283,14 @@ export async function sendPlaceGift(formData: FormData) {
   if (ledgerError)
     throw new Error(`Не удалось начислить тестовый доход: ${ledgerError.message}`);
 
+  await recordCitySocialMoment({
+    kind: "place_gift",
+    actorId: user.id,
+    subjectId: recipientId,
+    placeId,
+    giftCode: gift.code,
+  });
+
   await admin.from("notifications").insert({
     recipient_id: recipientId,
     actor_id: user.id,
@@ -339,13 +367,27 @@ export async function joinPlace(formData: FormData) {
   const placeId = requiredText(formData.get("place_id"), 100);
   if (!placeId) return;
 
+  const { data: existing } = await supabase
+    .from("place_members")
+    .select("place_id")
+    .eq("place_id", placeId)
+    .eq("profile_id", user.id)
+    .maybeSingle();
   await supabase
     .from("place_members")
     .upsert(
       { place_id: placeId, profile_id: user.id, role: "member" },
       { onConflict: "place_id,profile_id" },
     );
+  if (!existing) {
+    await recordCitySocialMoment({
+      kind: "place_join",
+      actorId: user.id,
+      placeId,
+    });
+  }
   revalidatePath(`/places/${placeId}`);
+  revalidatePath("/places");
   redirect(`/places/${placeId}` as Route);
 }
 
@@ -353,9 +395,22 @@ export async function createPlace(formData: FormData) {
   const { supabase, user } = await requireUser();
   const name = requiredText(formData.get("name"), 60);
   const description = optionalText(formData.get("description"), 500);
-  const emoji = optionalText(formData.get("emoji"), 8) || "🏠";
+  const iconCode = optionalText(formData.get("icon_code"), 20) || "place";
+  const validIconCodes = new Set([
+    "center",
+    "music",
+    "gaming",
+    "night",
+    "meet",
+    "sport",
+    "coffee",
+    "event",
+    "home",
+    "place",
+  ]);
   const kind = formData.get("kind") === "temporary" ? "temporary" : "personal";
   if (!name) throw new Error("Укажите название места.");
+  if (!validIconCodes.has(iconCode)) throw new Error("Выберите иконку места.");
 
   const { data: profile } = await supabase
     .from("profiles")
@@ -371,7 +426,7 @@ export async function createPlace(formData: FormData) {
       creator_id: user.id,
       name,
       description,
-      emoji,
+      icon_code: iconCode,
       kind,
     })
     .select("id")
@@ -387,5 +442,7 @@ export async function createPlace(formData: FormData) {
   });
 
   revalidatePath("/places");
+  revalidatePath("/feed");
+  revalidatePath("/people");
   redirect(`/places/${place.id}` as Route);
 }

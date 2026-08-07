@@ -1,19 +1,31 @@
 import Link from "next/link";
-import type { Metadata } from "next";
-import { CalendarDays, Gift, Lock, Share2, UsersRound } from "lucide-react";
+import type { Metadata, Route } from "next";
+/* eslint-disable @next/next/no-img-element -- avatars and fundraiser media use signed Storage URLs */
+import {
+  ArrowLeft,
+  CalendarDays,
+  Check,
+  ChevronRight,
+  EyeOff,
+  Heart,
+  Lock,
+  MapPin,
+  MessageCircle,
+  ShieldCheck,
+  UsersRound,
+} from "lucide-react";
 import { notFound } from "next/navigation";
 
 import { invitePrivateFundraiserMember } from "@/app/fundraisers/actions";
-import { sendTestFundraiserGift } from "@/app/fundraisers/gifts/actions";
 import {
   postFundraiserComment,
   startFundraiserSupport,
 } from "@/app/fundraisers/support-actions";
 import { toggleFundraiserFollow } from "@/app/social/actions";
 import { CopyFundraiserLinkButton } from "@/components/copy-fundraiser-link-button";
-import { EmptyState } from "@/components/empty-state";
 import { LiveDiscussionRefresh } from "@/components/live-discussion-refresh";
 import { ReportForm } from "@/components/report-form";
+import { WishCategoryIcon } from "@/components/wish-category-icon";
 import { CATEGORIES } from "@/lib/constants";
 import { getSignedImageUrl } from "@/lib/media";
 import { formatRubles } from "@/lib/money";
@@ -58,6 +70,37 @@ export async function generateMetadata({
   };
 }
 
+type CommentRow = {
+  id: string;
+  display_author_id: string | null;
+  body: string;
+  support_id: string | null;
+  support_visibility: "exact" | "activity_only" | "anonymous" | null;
+  created_at: string;
+};
+type Person = {
+  id: string;
+  username: string;
+  displayName: string;
+  avatarUrl: string | null;
+};
+
+function PersonAvatar({ person, size = "size-8" }: { person: Person; size?: string }) {
+  return (
+    <span
+      className={`grid ${size} shrink-0 place-items-center overflow-hidden rounded-full bg-gradient-to-br from-[#ff83b0] to-[#815be8] p-px`}
+    >
+      <span className="grid size-full place-items-center overflow-hidden rounded-full bg-[#f8f4fc] text-[9px] font-black text-[#372c41]">
+        {person.avatarUrl ? (
+          <img alt="" className="size-full object-cover" src={person.avatarUrl} />
+        ) : (
+          person.displayName.slice(0, 1).toUpperCase()
+        )}
+      </span>
+    </span>
+  );
+}
+
 export default async function FundraiserPage({
   params,
   searchParams,
@@ -90,43 +133,47 @@ export default async function FundraiserPage({
           .maybeSingle()
       : { data: null };
 
-  const { data: author } = await supabase
-    .from("profiles")
-    .select("username, display_name, city, show_city")
-    .eq("id", fundraiser.author_id)
-    .maybeSingle();
-  const { data: comments } = await supabase
-    .from("fundraiser_comment_feed")
-    .select("id, display_author_id, body, support_id, support_visibility, created_at")
-    .eq("fundraiser_id", fundraiser.id)
-    .order("created_at", { ascending: true });
-  const commenterIds = [
+  const [{ data: rawAuthor }, { data: comments }] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("id, username, display_name, avatar_path, city, show_city")
+      .eq("id", fundraiser.author_id)
+      .maybeSingle(),
+    supabase
+      .from("fundraiser_comment_feed")
+      .select("id, display_author_id, body, support_id, support_visibility, created_at")
+      .eq("fundraiser_id", fundraiser.id)
+      .order("created_at", { ascending: true }),
+  ]);
+  const profileIds = [
     ...new Set(
-      (comments ?? [])
-        .map((comment) => comment.display_author_id)
-        .filter((authorId): authorId is string => Boolean(authorId)),
+      [
+        rawAuthor?.id ?? "",
+        ...(comments ?? [])
+          .map((comment) => comment.display_author_id)
+          .filter((authorId): authorId is string => Boolean(authorId)),
+      ].filter(Boolean),
     ),
   ];
-  const { data: commenterProfiles } = commenterIds.length
+  const { data: rawPeople } = profileIds.length
     ? await supabase
         .from("profiles")
-        .select("id, username, display_name")
-        .in("id", commenterIds)
+        .select("id, username, display_name, avatar_path")
+        .in("id", profileIds)
     : { data: [] };
-  const commenterById = new Map(
-    (commenterProfiles ?? []).map((profile) => [profile.id, profile]),
-  );
-  const [{ data: giftCatalog }, { count: giftCount }] = await Promise.all([
-    supabase
-      .from("virtual_gifts")
-      .select("code, label, emoji, price_minor")
-      .eq("is_active", true)
-      .order("sort_order", { ascending: true }),
-    supabase
-      .from("fundraiser_gifts")
-      .select("*", { count: "exact", head: true })
-      .eq("fundraiser_id", fundraiser.id),
-  ]);
+  const people = new Map<string, Person>();
+  for (const profile of rawPeople ?? []) {
+    people.set(profile.id, {
+      id: profile.id,
+      username: profile.username,
+      displayName: profile.display_name,
+      avatarUrl: await getSignedImageUrl({
+        bucket: "avatars",
+        path: profile.avatar_path,
+      }),
+    });
+  }
+  const author = rawAuthor ? (people.get(rawAuthor.id) ?? null) : null;
 
   const coverImageUrl = await getSignedImageUrl({
     bucket: "fundraiser-media",
@@ -152,388 +199,399 @@ export default async function FundraiserPage({
     : null;
 
   return (
-    <main className="mx-auto max-w-4xl px-4 py-8 sm:px-6 sm:py-12">
-      <Link className="text-sm font-semibold text-[#a13d5e]" href="/">
-        ← К ленте
-      </Link>
-      <section className="surface mt-5 overflow-hidden rounded-[2rem]">
-        <div className="relative grid min-h-44 place-items-center overflow-hidden bg-gradient-to-br from-[#fde3bc] to-[#f6b9aa] p-8 text-7xl">
-          {coverImageUrl ? (
-            // A signed URL is issued only after the fundraiser row passed RLS above.
-            // eslint-disable-next-line @next/next/no-img-element -- signed Supabase URL has no stable host for Image config
-            <img
-              alt=""
-              className="absolute inset-0 size-full object-cover"
-              src={coverImageUrl}
-            />
-          ) : (
-            category.emoji
-          )}
-        </div>
-        <div className="p-5 sm:p-8">
-          <div className="flex flex-wrap items-center gap-2 text-sm text-[#866e75]">
-            <span className="rounded-full bg-[#fce5ec] px-2.5 py-1 font-semibold text-[#bd3e66]">
+    <main className="mx-auto min-h-screen max-w-[430px] bg-[#f7f4fb] px-4 pb-12 pt-5 text-[#251d31]">
+      <header className="flex items-center justify-between">
+        <Link
+          aria-label="Вернуться к истории автора"
+          className="border-[#2c2036]/9 grid size-10 place-items-center rounded-full border bg-white text-[#5f5369] shadow-[0_5px_15px_rgba(69,43,94,.05)]"
+          href={author ? (`/u/${author.username}` as Route) : "/feed"}
+        >
+          <ArrowLeft className="size-4.5" />
+        </Link>
+        <span className="text-center">
+          <small className="block text-[9px] font-black uppercase tracking-[0.13em] text-[#8c7e94]">
+            Общая цель
+          </small>
+          <h1 className="mt-0.5 text-sm font-black">Сбор</h1>
+        </span>
+        {user && !isAuthor ? (
+          <ReportForm
+            returnTo={`/fundraisers/${fundraiser.slug}`}
+            targetId={fundraiser.id}
+            targetType="fundraiser"
+          />
+        ) : (
+          <span className="w-10" />
+        )}
+      </header>
+
+      <article className="border-[#2c2036]/9 mt-5 overflow-hidden rounded-[1.8rem] border bg-white p-4 shadow-[0_14px_32px_rgba(69,43,94,.08)]">
+        <div className="flex items-start gap-4">
+          <span className="grid size-28 shrink-0 place-items-center overflow-hidden rounded-[1.5rem] bg-gradient-to-br from-[#fff0e3] to-[#f5e9ff] text-[#8753e6]">
+            {coverImageUrl ? (
+              <img alt="" className="size-full object-cover" src={coverImageUrl} />
+            ) : (
+              <WishCategoryIcon
+                category={fundraiser.category_slug}
+                className="size-10"
+              />
+            )}
+          </span>
+          <span className="min-w-0 grow">
+            <span className="inline-flex items-center gap-1 rounded-full bg-[#f0e9ff] px-2 py-1 text-[8px] font-black uppercase tracking-[0.08em] text-[#7549d0]">
+              <WishCategoryIcon
+                category={fundraiser.category_slug}
+                className="size-3"
+              />{" "}
               {category.label}
             </span>
-            {fundraiser.visibility === "unlisted" && (
-              <span className="inline-flex items-center gap-1">
-                <Lock className="size-3.5" /> По ссылке
+            <h2 className="mt-3 text-xl font-black leading-[0.95] tracking-[-0.055em]">
+              {fundraiser.title}
+            </h2>
+            {fundraiser.visibility !== "public" && (
+              <span className="mt-3 inline-flex items-center gap-1 rounded-full bg-[#f3eef7] px-2 py-1 text-[8px] font-black text-[#756a7d]">
+                {fundraiser.visibility === "private" ? (
+                  <EyeOff className="size-3" />
+                ) : (
+                  <Lock className="size-3" />
+                )}
+                {fundraiser.visibility === "private" ? "Приватный" : "По ссылке"}
               </span>
             )}
-            {fundraiser.visibility === "private" && (
-              <span className="inline-flex items-center gap-1">
-                <Lock className="size-3.5" /> Приватный
-              </span>
-            )}
-          </div>
-          <h1 className="mt-4 text-balance text-3xl font-bold tracking-tight sm:text-4xl">
-            {fundraiser.title}
-          </h1>
-          {author && (
-            <p className="mt-3 text-sm text-[#765f66]">
-              Сбор{" "}
-              {author.username ? (
-                <Link
-                  className="font-semibold text-[#a13d5e]"
-                  href={`/u/${author.username}`}
-                >
-                  {author.display_name}
-                </Link>
-              ) : (
-                author.display_name
-              )}
-              {author.show_city && author.city ? ` · ${author.city}` : ""}
-            </p>
-          )}
-          {fundraiser.description && (
-            <p className="mt-5 max-w-2xl whitespace-pre-wrap text-[15px] leading-7 text-[#654e55]">
-              {fundraiser.description}
-            </p>
-          )}
-          <div className="mt-8 rounded-2xl bg-[#fff8f9] p-5">
-            <div className="flex flex-wrap items-baseline justify-between gap-2">
-              <p className="text-2xl font-bold text-[#c53d68]">
-                {formatRubles(fundraiser.current_amount_minor)}
-              </p>
-              <p className="text-sm text-[#826c73]">
-                из {formatRubles(fundraiser.target_amount_minor)}
-              </p>
-            </div>
-            <div className="mt-3 h-3 overflow-hidden rounded-full bg-[#f7e3e9]">
-              <div
-                className="h-full rounded-full bg-[#df4f7d]"
-                style={{ width: `${progress}%` }}
-              />
-            </div>
-            <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-sm text-[#816970]">
-              <span className="inline-flex items-center gap-1.5">
-                <UsersRound className="size-4" /> {fundraiser.participant_count}{" "}
-                участников
-              </span>
-              {endsAt && (
-                <span className="inline-flex items-center gap-1.5">
-                  <CalendarDays className="size-4" /> До {endsAt}
-                </span>
-              )}
-            </div>
-          </div>
-          {supported === "1" && (
-            <p className="mt-5 rounded-xl bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
-              Спасибо! Поддержка подтверждена, а ваше сообщение добавлено в обсуждение.
-            </p>
-          )}
-          <div className="mt-5 flex flex-wrap gap-3">
-            <button
-              className="inline-flex h-11 items-center gap-2 rounded-xl border border-[#ead9df] bg-white px-4 text-sm font-semibold text-[#765f66] transition hover:border-[#df4f7d]"
-              type="button"
-            >
-              <Share2 className="size-4" /> Поделиться
-            </button>
-            {user && !isAuthor && (
-              <>
-                <form action={toggleFundraiserFollow}>
-                  <input name="fundraiser_id" type="hidden" value={fundraiser.id} />
-                  <input name="fundraiser_slug" type="hidden" value={fundraiser.slug} />
-                  <button
-                    className={`inline-flex h-11 items-center rounded-xl px-4 text-sm font-semibold transition ${existingFundraiserFollow ? "border border-[#ead9df] bg-white text-[#765f66] hover:border-[#df4f7d]" : "bg-[#fce5ec] text-[#bd3e66] hover:bg-[#f8d9e4]"}`}
-                    type="submit"
-                  >
-                    {existingFundraiserFollow ? "Вы следите" : "Следить за сбором"}
-                  </button>
-                </form>
-                <CopyFundraiserLinkButton slug={fundraiser.slug} />
-                <ReportForm
-                  returnTo={`/fundraisers/${fundraiser.slug}`}
-                  targetId={fundraiser.id}
-                  targetType="fundraiser"
-                />
-              </>
-            )}
-          </div>
-          {user && fundraiser.status === "active" ? (
-            <form
-              action={startFundraiserSupport}
-              className="mt-6 rounded-2xl border border-[#f0e1e5] bg-[#fffafb] p-4 sm:p-5"
-            >
-              <input name="fundraiser_id" type="hidden" value={fundraiser.id} />
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
-                <div className="grow">
-                  <label
-                    className="mb-1.5 block text-sm font-semibold text-[#5c464d]"
-                    htmlFor="support-amount"
-                  >
-                    Поддержать на, ₽
-                  </label>
-                  <input
-                    className="h-11 w-full rounded-xl border border-[#e7d8dc] bg-white px-3.5 text-sm outline-none transition placeholder:text-[#b3a0a6] focus:border-[#df4f7d] focus:ring-4 focus:ring-[#df4f7d]/10"
-                    id="support-amount"
-                    inputMode="decimal"
-                    min="1"
-                    name="amount"
-                    placeholder="2000"
-                    required
-                    type="number"
-                  />
-                </div>
-                <button
-                  className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-[#df4f7d] px-5 text-sm font-bold text-white transition hover:bg-[#c93f6d]"
-                  type="submit"
-                >
-                  <Gift className="size-4" /> Поддержать
-                </button>
-              </div>
-              <label className="mt-4 block">
-                <span className="mb-1.5 block text-sm font-semibold text-[#5c464d]">
-                  Сообщение вместе с поддержкой
-                </span>
-                <textarea
-                  className="min-h-20 w-full rounded-xl border border-[#e7d8dc] bg-white px-3.5 py-3 text-sm outline-none transition placeholder:text-[#b3a0a6] focus:border-[#df4f7d] focus:ring-4 focus:ring-[#df4f7d]/10"
-                  maxLength={1000}
-                  name="message"
-                  placeholder="Например: С днём рождения! ❤️"
-                />
-              </label>
-              <fieldset className="mt-4">
-                <legend className="text-sm font-semibold text-[#5c464d]">
-                  Как показать поддержку?
-                </legend>
-                <div className="mt-2 flex flex-wrap gap-x-4 gap-y-2 text-sm text-[#725c63]">
-                  <label className="inline-flex items-center gap-1.5">
-                    <input
-                      defaultChecked
-                      name="visibility"
-                      type="radio"
-                      value="exact"
-                    />{" "}
-                    С суммой
-                  </label>
-                  <label className="inline-flex items-center gap-1.5">
-                    <input name="visibility" type="radio" value="activity_only" />{" "}
-                    Только факт участия
-                  </label>
-                  <label className="inline-flex items-center gap-1.5">
-                    <input name="visibility" type="radio" value="anonymous" /> Анонимно
-                  </label>
-                </div>
-              </fieldset>
-              <p className="mt-3 text-xs leading-5 text-[#9b858c]">
-                Сейчас используется тестовый платёжный режим: реальные деньги не
-                списываются.
-              </p>
-            </form>
-          ) : !user ? (
-            <Link
-              className="mt-6 inline-flex h-11 items-center gap-2 rounded-xl bg-[#df4f7d] px-5 text-sm font-bold text-white transition hover:bg-[#c93f6d]"
-              href="/auth/sign-in"
-            >
-              <Gift className="size-4" /> Войти, чтобы поддержать
-            </Link>
-          ) : null}
+          </span>
         </div>
-      </section>
-      {isAuthor && fundraiser.visibility === "private" && (
-        <section className="surface mt-6 rounded-2xl p-5 sm:p-6">
-          <p className="text-sm font-semibold text-[#bd3e66]">
-            Доступ к приватному сбору
-          </p>
-          <h2 className="mt-1 text-xl font-bold">Пригласить участника</h2>
-          <p className="mt-2 max-w-xl text-sm leading-6 text-[#826c73]">
-            Введите username пользователя. Он увидит приглашение в личном разделе и сам
-            подтвердит доступ.
-          </p>
-          <form
-            action={invitePrivateFundraiserMember}
-            className="mt-5 flex max-w-xl flex-col gap-2 sm:flex-row"
+
+        {author && (
+          <Link
+            className="mt-4 flex items-center gap-2 rounded-2xl bg-[#fbf9fe] p-2.5 transition hover:bg-[#f5effa]"
+            href={`/u/${author.username}` as Route}
           >
+            <PersonAvatar person={author} />
+            <span className="min-w-0 grow">
+              <b className="block truncate text-[10px]">{author.displayName}</b>
+              <small className="mt-0.5 flex items-center gap-1 text-[9px] text-[#82758a]">
+                <span>Автор цели</span>
+                {rawAuthor?.show_city && rawAuthor.city && (
+                  <>
+                    <span className="size-1 rounded-full bg-[#b0a5b7]" />
+                    <MapPin className="size-3" /> {rawAuthor.city}
+                  </>
+                )}
+              </small>
+            </span>
+            <ChevronRight className="size-3.5 text-[#a295a8]" />
+          </Link>
+        )}
+
+        {fundraiser.description && (
+          <p className="mt-4 whitespace-pre-wrap text-sm leading-6 text-[#5f5369]">
+            {fundraiser.description}
+          </p>
+        )}
+
+        <section className="mt-5 rounded-[1.35rem] bg-[#fbf9fe] p-4">
+          <div className="flex items-baseline justify-between gap-3">
+            <span>
+              <small className="block text-[9px] font-black uppercase tracking-[0.1em] text-[#93869d]">
+                Собрано
+              </small>
+              <b className="mt-1 block text-xl tracking-[-0.04em] text-[#c34e79]">
+                {formatRubles(fundraiser.current_amount_minor)}
+              </b>
+            </span>
+            <span className="text-right">
+              <small className="block text-[9px] font-black uppercase tracking-[0.1em] text-[#93869d]">
+                Цель
+              </small>
+              <b className="mt-1 block text-sm">
+                {formatRubles(fundraiser.target_amount_minor)}
+              </b>
+            </span>
+          </div>
+          <div className="mt-3 h-2 overflow-hidden rounded-full bg-[#eee7f4]">
+            <div
+              className="h-full rounded-full bg-gradient-to-r from-[#ff5d9a] to-[#8254ed]"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+          <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-[10px] text-[#756a7d]">
+            <span className="inline-flex items-center gap-1">
+              <UsersRound className="size-3.5 text-[#8753e6]" />{" "}
+              {fundraiser.participant_count} участвуют
+            </span>
+            {endsAt && (
+              <span className="inline-flex items-center gap-1">
+                <CalendarDays className="size-3.5 text-[#8753e6]" /> До {endsAt}
+              </span>
+            )}
+          </div>
+        </section>
+      </article>
+
+      {supported === "1" && (
+        <section className="mt-4 flex items-center gap-2 rounded-2xl border border-[#bde6d4] bg-[#effaf4] p-3.5 text-[#258b82]">
+          <Check className="size-4 shrink-0" />
+          <p className="text-[10px] font-black">
+            Поддержка подтверждена, а сообщение добавлено в обсуждение.
+          </p>
+        </section>
+      )}
+
+      <section className="mt-4 flex flex-wrap gap-2">
+        {user && !isAuthor && (
+          <form action={toggleFundraiserFollow}>
             <input name="fundraiser_id" type="hidden" value={fundraiser.id} />
             <input name="fundraiser_slug" type="hidden" value={fundraiser.slug} />
-            <label className="sr-only" htmlFor="invite-username">
-              Username пользователя
-            </label>
-            <div className="relative grow">
-              <span className="absolute left-3.5 top-2.5 text-sm text-[#9b858c]">
-                @
-              </span>
-              <input
-                className="h-11 w-full rounded-xl border border-[#e7d8dc] bg-white pl-7 pr-3.5 text-sm outline-none transition placeholder:text-[#b3a0a6] focus:border-[#df4f7d] focus:ring-4 focus:ring-[#df4f7d]/10"
-                id="invite-username"
-                maxLength={30}
-                name="username"
-                placeholder="username"
-                required
-              />
-            </div>
             <button
-              className="inline-flex h-11 items-center justify-center rounded-xl bg-[#df4f7d] px-4 text-sm font-semibold text-white transition hover:bg-[#c93f6d]"
+              className={`inline-flex h-10 items-center gap-1.5 rounded-xl px-3 text-[10px] font-black ${
+                existingFundraiserFollow
+                  ? "border border-[#dfd5e5] bg-white text-[#665a72]"
+                  : "bg-[#f0e9ff] text-[#7549d0]"
+              }`}
               type="submit"
             >
-              Пригласить
+              <Heart className="size-3.5" />{" "}
+              {existingFundraiserFollow ? "Ты следишь" : "Следить"}
+            </button>
+          </form>
+        )}
+        <CopyFundraiserLinkButton slug={fundraiser.slug} />
+      </section>
+
+      {user && fundraiser.status === "active" && !isAuthor ? (
+        <section className="mt-5 rounded-[1.55rem] border border-[#e5d5ea] bg-white p-4 shadow-[0_8px_22px_rgba(69,43,94,.05)]">
+          <div className="flex items-start gap-3">
+            <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-[#fff0f6] text-[#d84b81]">
+              <Heart className="size-4" />
+            </span>
+            <span>
+              <h2 className="text-sm font-black">Поддержать цель</h2>
+              <p className="mt-1 text-[10px] leading-4 text-[#756a7d]">
+                Ты сам(а) выбираешь сумму и как показать своё участие.
+              </p>
+            </span>
+          </div>
+          <form action={startFundraiserSupport} className="mt-4">
+            <input name="fundraiser_id" type="hidden" value={fundraiser.id} />
+            <label className="block" htmlFor="support-amount">
+              <span className="text-[10px] font-black text-[#65596e]">
+                Сумма поддержки, ₽
+              </span>
+              <input
+                className="mt-1.5 h-11 w-full rounded-xl border border-[#2c2036]/10 bg-[#fbf9fe] px-3 text-sm font-semibold outline-none placeholder:font-normal placeholder:text-[#aaa0ae] focus:border-[#b28be8]"
+                id="support-amount"
+                inputMode="decimal"
+                min="1"
+                name="amount"
+                placeholder="Например, 500"
+                required
+                type="number"
+              />
+            </label>
+            <label className="mt-3 block">
+              <span className="text-[10px] font-black text-[#65596e]">
+                Сообщение вместе с поддержкой
+              </span>
+              <textarea
+                className="mt-1.5 min-h-20 w-full resize-none rounded-xl border border-[#2c2036]/10 bg-[#fbf9fe] px-3 py-3 text-sm leading-5 outline-none placeholder:text-[#aaa0ae] focus:border-[#b28be8]"
+                maxLength={1000}
+                name="message"
+                placeholder="Поддержи автора несколькими словами…"
+              />
+            </label>
+            <fieldset className="mt-3">
+              <legend className="text-[10px] font-black text-[#65596e]">
+                Как показать участие?
+              </legend>
+              <div className="mt-2 grid grid-cols-3 gap-2 text-center text-[9px] font-bold text-[#665a72]">
+                <label className="border-[#2c2036]/9 rounded-xl border bg-[#fbf9fe] p-2">
+                  <input
+                    className="mr-1"
+                    defaultChecked
+                    name="visibility"
+                    type="radio"
+                    value="exact"
+                  />{" "}
+                  Сумма
+                </label>
+                <label className="border-[#2c2036]/9 rounded-xl border bg-[#fbf9fe] p-2">
+                  <input
+                    className="mr-1"
+                    name="visibility"
+                    type="radio"
+                    value="activity_only"
+                  />{" "}
+                  Участие
+                </label>
+                <label className="border-[#2c2036]/9 rounded-xl border bg-[#fbf9fe] p-2">
+                  <input
+                    className="mr-1"
+                    name="visibility"
+                    type="radio"
+                    value="anonymous"
+                  />{" "}
+                  Анонимно
+                </label>
+              </div>
+            </fieldset>
+            <p className="mt-3 flex gap-2 rounded-xl bg-[#fff7e8] p-3 text-[10px] leading-4 text-[#896a27]">
+              <ShieldCheck className="mt-0.5 size-3.5 shrink-0" />
+              Тестовый режим: форма проходит безопасный сценарий, но реальные деньги не
+              списываются.
+            </p>
+            <button
+              className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#ff5d9a] to-[#8254ed] py-3 text-xs font-black text-white"
+              type="submit"
+            >
+              <Heart className="size-3.5" /> Перейти к тестовому подтверждению
+            </button>
+          </form>
+        </section>
+      ) : !user ? (
+        <Link
+          className="mt-5 flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#ff5d9a] to-[#8254ed] py-3 text-xs font-black text-white"
+          href="/auth/sign-in"
+        >
+          <Heart className="size-3.5" /> Войти, чтобы поддержать
+        </Link>
+      ) : null}
+
+      {isAuthor && fundraiser.visibility === "private" && (
+        <section className="mt-5 rounded-[1.55rem] border border-[#d9c5f3] bg-gradient-to-r from-[#fffaff] to-[#f3edff] p-4 shadow-[0_8px_22px_rgba(69,43,94,.05)]">
+          <h2 className="flex items-center gap-2 text-sm font-black">
+            <Lock className="size-4 text-[#8753e6]" /> Доступ к приватному сбору
+          </h2>
+          <p className="mt-2 text-[10px] leading-4 text-[#756a7d]">
+            Пригласи человека по username. Он увидит приглашение и сам подтвердит
+            доступ.
+          </p>
+          <form action={invitePrivateFundraiserMember} className="mt-3 flex gap-2">
+            <input name="fundraiser_id" type="hidden" value={fundraiser.id} />
+            <input name="fundraiser_slug" type="hidden" value={fundraiser.slug} />
+            <input
+              className="min-w-0 grow rounded-xl border border-[#2c2036]/10 bg-white px-3 py-2.5 text-xs outline-none placeholder:text-[#aaa0ae]"
+              id="invite-username"
+              maxLength={30}
+              name="username"
+              placeholder="username"
+              required
+            />
+            <button
+              className="rounded-xl bg-[#f0e9ff] px-3 text-[10px] font-black text-[#7549d0]"
+              type="submit"
+            >
+              Позвать
             </button>
           </form>
           {invite === "already-member" && (
-            <p className="mt-3 text-sm text-emerald-700">
-              Этот пользователь уже принял приглашение.
+            <p className="mt-2 text-[10px] font-bold text-[#258b82]">
+              Этот человек уже участник.
             </p>
           )}
           {invite?.startsWith("invited-") && (
-            <p className="mt-3 text-sm text-emerald-700">
-              Приглашение для @{invite.slice("invited-".length)} отправлено.
+            <p className="mt-2 text-[10px] font-bold text-[#258b82]">
+              Приглашение отправлено.
             </p>
           )}
         </section>
       )}
-      <section className="mt-6" id="discussion">
+
+      <section
+        className="border-[#2c2036]/9 mt-5 rounded-[1.55rem] border bg-white p-4 shadow-[0_8px_22px_rgba(69,43,94,.05)]"
+        id="discussion"
+      >
         <LiveDiscussionRefresh fundraiserId={fundraiser.id} />
-        <div className="surface rounded-2xl p-5 sm:p-6">
-          <p className="text-sm font-semibold text-[#bd3e66]">Люди вокруг цели</p>
-          <h2 className="mt-1 text-2xl font-bold">Обсуждение</h2>
-          {user && !isAuthor && giftCatalog && giftCatalog.length > 0 && (
-            <div className="mt-5 rounded-xl bg-[#fff8f9] p-3">
-              <div className="mb-2 flex items-center justify-between">
-                <p className="text-sm font-semibold text-[#bd3e66]">
-                  Отправить подарок автору
-                </p>
-                <span className="text-xs text-[#9b858c]">
-                  {giftCount ?? 0} подарков
-                </span>
-              </div>
-              <div className="grid grid-cols-4 gap-2">
-                {giftCatalog.map((gift) => (
-                  <form action={sendTestFundraiserGift} key={gift.code}>
-                    <input name="fundraiser_id" type="hidden" value={fundraiser.id} />
-                    <input name="slug" type="hidden" value={fundraiser.slug} />
-                    <input name="gift_code" type="hidden" value={gift.code} />
-                    <button
-                      className="flex w-full flex-col items-center rounded-xl border border-[#ead9df] bg-white px-1 py-2 transition hover:border-[#df4f7d]"
-                      type="submit"
-                    >
-                      <span className="text-2xl">{gift.emoji}</span>
-                      <span className="mt-1 text-[10px] text-[#674f57]">
-                        {gift.label}
-                      </span>
-                      <span className="text-[10px] font-semibold text-[#c53d68]">
-                        {gift.price_minor / 100} ₽
-                      </span>
-                    </button>
-                  </form>
-                ))}
-              </div>
-              <p className="mt-2 text-xs text-[#9b858c]">
-                Подарки в тестовом режиме формируют test-доход автора.
-              </p>
-            </div>
-          )}
-          {user ? (
-            <form action={postFundraiserComment} className="mt-5">
-              <input name="fundraiser_id" type="hidden" value={fundraiser.id} />
-              <input name="fundraiser_slug" type="hidden" value={fundraiser.slug} />
-              <label className="sr-only" htmlFor="comment-body">
-                Новое сообщение
-              </label>
-              <div className="flex flex-col gap-2 sm:flex-row">
-                <textarea
-                  className="min-h-11 grow rounded-xl border border-[#e7d8dc] bg-white px-3.5 py-3 text-sm outline-none transition placeholder:text-[#b3a0a6] focus:border-[#df4f7d] focus:ring-4 focus:ring-[#df4f7d]/10"
-                  id="comment-body"
-                  maxLength={2000}
-                  name="body"
-                  placeholder="Поделитесь мыслью или поддержите автора…"
-                  required
-                />
-                <button
-                  className="inline-flex h-11 items-center justify-center rounded-xl bg-[#df4f7d] px-4 text-sm font-semibold text-white transition hover:bg-[#c93f6d]"
-                  type="submit"
-                >
-                  Отправить
-                </button>
-              </div>
-            </form>
-          ) : (
-            <p className="mt-5 text-sm text-[#826c73]">
-              Чтобы участвовать в обсуждении,{" "}
-              <Link className="font-semibold text-[#a13d5e]" href="/auth/sign-in">
-                войдите в «Хочу также»
-              </Link>
-              .
+        <div className="flex items-center justify-between">
+          <span>
+            <h2 className="flex items-center gap-2 text-sm font-black">
+              <MessageCircle className="size-4 text-[#8753e6]" /> Обсуждение
+            </h2>
+            <p className="mt-0.5 text-[10px] text-[#82758a]">Люди вокруг общей цели</p>
+          </span>
+          <ShieldCheck className="size-4 text-[#258b82]" />
+        </div>
+        {user ? (
+          <form action={postFundraiserComment} className="mt-4">
+            <input name="fundraiser_id" type="hidden" value={fundraiser.id} />
+            <input name="fundraiser_slug" type="hidden" value={fundraiser.slug} />
+            <textarea
+              className="min-h-20 w-full resize-none rounded-xl border border-[#2c2036]/10 bg-[#fbf9fe] px-3 py-3 text-sm leading-5 outline-none placeholder:text-[#aaa0ae] focus:border-[#b28be8]"
+              maxLength={2000}
+              name="body"
+              placeholder="Поделись мыслью или поддержи автора…"
+              required
+            />
+            <button
+              className="mt-2 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#ff5d9a] to-[#8254ed] px-4 py-2.5 text-[10px] font-black text-white"
+              type="submit"
+            >
+              <MessageCircle className="size-3.5" /> Отправить
+            </button>
+          </form>
+        ) : (
+          <p className="mt-4 rounded-xl bg-[#fbf9fe] p-3 text-[10px] leading-4 text-[#756a7d]">
+            <Link className="font-black text-[#7549d0]" href="/auth/sign-in">
+              Войди
+            </Link>
+            , чтобы участвовать в обсуждении.
+          </p>
+        )}
+        <div className="mt-4 space-y-2.5">
+          {(comments ?? []).length === 0 ? (
+            <p className="rounded-xl bg-[#fbf9fe] p-3 text-[10px] leading-4 text-[#82758a]">
+              Пока тихо. Первое тёплое сообщение может начать разговор.
             </p>
-          )}
-          {(comments?.length ?? 0) > 0 ? (
-            <div className="mt-6 space-y-4">
-              {comments!.map((comment) => {
-                const commenter = comment.display_author_id
-                  ? commenterById.get(comment.display_author_id)
-                  : null;
-                const isAnonymousSupport =
-                  comment.support_id && comment.support_visibility === "anonymous";
-                const createdAt = new Intl.DateTimeFormat("ru-RU", {
-                  day: "numeric",
-                  month: "short",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                }).format(new Date(comment.created_at));
-                const displayName = isAnonymousSupport
-                  ? "Анонимный участник"
-                  : (commenter?.display_name ?? "Участник «Хочу также»");
-                return (
-                  <article className="flex gap-3" key={comment.id}>
-                    <span className="grid size-9 shrink-0 place-items-center rounded-full bg-[#f5d9e2] text-sm font-bold text-[#a64c68]">
-                      {displayName.slice(0, 1).toUpperCase()}
-                    </span>
-                    <div className="min-w-0">
-                      <p className="text-sm">
-                        <span className="font-bold">{displayName}</span>
-                        {comment.support_id && (
-                          <span className="ml-2 rounded-full bg-[#fff0cf] px-2 py-0.5 text-xs font-semibold text-[#a76a22]">
-                            {isAnonymousSupport
-                              ? "Поддержал анонимно"
-                              : "Поддержал сбор"}
-                          </span>
-                        )}
-                        <span className="ml-2 text-xs text-[#9b858c]">{createdAt}</span>
-                      </p>
-                      <p className="mt-1 whitespace-pre-wrap text-sm leading-6 text-[#604a52]">
-                        {comment.body}
-                      </p>
-                      {user && comment.display_author_id !== user.id && (
-                        <div className="mt-1">
-                          <ReportForm
-                            returnTo={`/fundraisers/${fundraiser.slug}`}
-                            targetId={comment.id}
-                            targetType="comment"
-                          />
-                        </div>
-                      )}
-                    </div>
-                  </article>
-                );
-              })}
-            </div>
           ) : (
-            <div className="mt-6">
-              <EmptyState
-                description="Будьте первым, кто поддержит автора словами. Сообщение вместе с поддержкой тоже появится здесь."
-                title="Обсуждение только начинается"
-              />
-            </div>
+            (comments ?? []).map((comment: CommentRow) => {
+              const person = comment.display_author_id
+                ? people.get(comment.display_author_id)
+                : null;
+              const anonymous = Boolean(
+                comment.support_id && comment.support_visibility === "anonymous",
+              );
+              const displayName = anonymous
+                ? "Анонимный участник"
+                : (person?.displayName ?? "Участник");
+              return (
+                <article className="rounded-2xl bg-[#fbf9fe] p-3" key={comment.id}>
+                  <div className="flex items-center gap-2">
+                    {person && !anonymous ? (
+                      <PersonAvatar person={person} size="size-7" />
+                    ) : (
+                      <span className="grid size-7 place-items-center rounded-full bg-[#eee7f4] text-[9px] font-black text-[#756a7d]">
+                        ?
+                      </span>
+                    )}
+                    <span className="min-w-0 grow">
+                      <b className="block truncate text-[10px]">{displayName}</b>
+                      <small className="block text-[8px] text-[#93869d]">
+                        {new Intl.DateTimeFormat("ru-RU", {
+                          day: "numeric",
+                          month: "short",
+                        }).format(new Date(comment.created_at))}
+                      </small>
+                    </span>
+                    {comment.support_id && (
+                      <span className="rounded-full bg-[#fff6e8] px-2 py-1 text-[8px] font-black text-[#9a7a20]">
+                        Поддержка
+                      </span>
+                    )}
+                    {user &&
+                      comment.display_author_id &&
+                      comment.display_author_id !== user.id && (
+                        <ReportForm
+                          returnTo={`/fundraisers/${fundraiser.slug}#discussion`}
+                          targetId={comment.id}
+                          targetType="comment"
+                        />
+                      )}
+                  </div>
+                  <p className="mt-2 whitespace-pre-wrap text-[11px] leading-5 text-[#5f5369]">
+                    {comment.body}
+                  </p>
+                </article>
+              );
+            })
           )}
         </div>
       </section>

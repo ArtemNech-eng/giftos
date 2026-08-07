@@ -130,7 +130,7 @@ export function LivePlaceChat({
     <div className="mt-3">
       <div ref={scrollRef} className="max-h-72 space-y-3 overflow-y-auto pr-1">
         {messages.length === 0 ? (
-          <p className="text-sm text-[#a9a1b4]">
+          <p className="text-sm text-[#81748a]">
             Пока тихо — напишите первым, кто здесь.
           </p>
         ) : (
@@ -144,7 +144,7 @@ export function LivePlaceChat({
                 </b>
                 {(authorRoles[message.author_id] ?? []).slice(0, 1).map((role) => (
                   <span
-                    className="mr-1 rounded-full border border-[#ffd35e]/40 bg-[#2a2215] px-1.5 py-0.5 text-[9px] font-bold text-[#ffd35e]"
+                    className="mr-1 rounded-full border border-[#ffe0aa] bg-[#fff8e9] px-1.5 py-0.5 text-[9px] font-bold text-[#a87511]"
                     key={role}
                   >
                     {role}
@@ -166,14 +166,14 @@ export function LivePlaceChat({
       {supabaseEnabled && (
         <form className="mt-3 flex gap-2" onSubmit={sendMessage}>
           <input
-            className="grow rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-sm"
+            className="grow rounded-xl border border-[#2c2036]/10 bg-[#faf7fc] px-3 py-2 text-sm"
             maxLength={2000}
             onChange={(event) => setBody(event.target.value)}
             placeholder="Напишите сообщение"
             value={body}
           />
           <button
-            className="rounded-xl bg-gradient-to-r from-[#ff4b8a] to-[#7d45ff] px-4 text-sm font-bold disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded-xl bg-gradient-to-r from-[#ff5d9a] to-[#8254ed] px-4 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-50"
             disabled={sending || !body.trim()}
             type="submit"
           >

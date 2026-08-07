@@ -1,528 +1,578 @@
 import Link from "next/link";
 import type { Route } from "next";
+/* eslint-disable @next/next/no-img-element -- avatar paths use short-lived signed Storage URLs */
 import {
+  ArrowLeft,
   CalendarDays,
+  ChevronRight,
   Compass,
-  MessageSquareText,
+  Gem,
+  MapPin,
   Search as SearchIcon,
+  Sparkles,
   UsersRound,
 } from "lucide-react";
 
-import { EmptyState } from "@/components/empty-state";
-import { SiteHeader } from "@/components/site-header";
-import { CATEGORIES } from "@/lib/constants";
+import { PlaceIcon } from "@/components/place-icon";
+import { WishCategoryIcon } from "@/components/wish-category-icon";
+import { requireUser } from "@/lib/auth";
+import { getSignedImageUrl } from "@/lib/media";
 import { formatRubles } from "@/lib/money";
-import { hasSupabaseEnvironment } from "@/lib/supabase/env";
-import { createClient } from "@/lib/supabase/server";
 
-export const metadata = { title: "Поиск", robots: { index: false, follow: false } };
+export const metadata = {
+  title: "Поиск города",
+  robots: { index: false, follow: false },
+};
 export const dynamic = "force-dynamic";
 
-type FundraiserResult = {
+type PersonRow = {
   id: string;
-  slug: string;
-  title: string;
-  description: string | null;
-  category_slug: string | null;
-  current_amount_minor: number;
-  target_amount_minor: number;
+  username: string;
+  display_name: string;
+  avatar_path: string | null;
+  city: string | null;
+  show_city?: boolean;
 };
-
-type WishResult = {
+type PlaceRow = {
   id: string;
+  name: string;
+  description: string | null;
+  icon_code: string | null;
+};
+type WishRow = {
+  id: string;
+  author_id: string;
   title: string;
   description: string | null;
   category_slug: string | null;
   estimated_cost_minor: number | null;
 };
-
-type PersonResult = {
-  id: string;
-  username: string;
-  display_name: string;
-  bio: string | null;
-  city: string | null;
-  show_city: boolean;
+type EventRow = { id: string; title: string; starts_at: string; scope: string };
+type ArtifactRow = {
+  slug: string;
+  title: string;
+  artwork_path: string;
+  rarity: "limited" | "rare" | "iconic";
+  remaining_edition: number;
+  total_edition: number;
 };
+type ResultPerson = PersonRow & { avatarUrl: string | null };
 
-type CommentResult = {
-  id: string;
-  body: string;
-  created_at: string;
-  targetType: "fundraiser" | "wish";
-  targetTitle: string;
-  targetHref: string;
-  authorName: string;
-};
+const scopes = [
+  { key: "city", label: "Мой город", icon: MapPin },
+  { key: "platform", label: "Вся платформа", icon: Compass },
+] as const;
+
+function match(value: string | null | undefined, query: string) {
+  return (value ?? "").toLocaleLowerCase("ru-RU").includes(query);
+}
+
+function PersonAvatar({ person }: { person: ResultPerson }) {
+  return (
+    <span className="grid size-10 shrink-0 place-items-center overflow-hidden rounded-full bg-gradient-to-br from-[#ff83b0] to-[#815be8] p-px">
+      <span className="grid size-full place-items-center overflow-hidden rounded-full bg-[#f8f4fc] text-[10px] font-black text-[#372c41]">
+        {person.avatarUrl ? (
+          <img alt="" className="size-full object-cover" src={person.avatarUrl} />
+        ) : (
+          person.display_name.slice(0, 1).toUpperCase()
+        )}
+      </span>
+    </span>
+  );
+}
 
 export default async function SearchPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string }>;
+  searchParams: Promise<{ q?: string; scope?: string }>;
 }) {
-  const { q: rawQuery = "" } = await searchParams;
-  const query = rawQuery.trim().slice(0, 80);
-  const matchedCategory = CATEGORIES.find(
-    (category) =>
-      category.slug === query.toLowerCase() ||
-      category.label.toLowerCase() === query.toLowerCase(),
-  );
+  const { q: rawQuery = "", scope: rawScope = "city" } = await searchParams;
+  const query = rawQuery.trim().slice(0, 80).toLocaleLowerCase("ru-RU");
+  const scope = rawScope === "platform" ? "platform" : "city";
+  const { supabase, user } = await requireUser();
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("city_id, city")
+    .eq("id", user.id)
+    .maybeSingle();
+  const hasCity = Boolean(profile?.city_id);
 
-  let fundraisers: FundraiserResult[] = [];
-  let wishes: WishResult[] = [];
-  let people: PersonResult[] = [];
-  let interestPeople: PersonResult[] = [];
-  let comments: CommentResult[] = [];
-  let events: Array<{ id: string; title: string; starts_at: string; scope: string }> =
-    [];
+  let people: ResultPerson[] = [];
+  let places: PlaceRow[] = [];
+  let wishes: WishRow[] = [];
+  let events: EventRow[] = [];
+  let artifacts: ArtifactRow[] = [];
 
-  if (hasSupabaseEnvironment() && query.length >= 2) {
-    const supabase = await createClient();
-    const fundraiserQuery = supabase
-      .from("fundraisers")
-      .select(
-        "id, slug, title, description, category_slug, current_amount_minor, target_amount_minor",
-      )
-      .eq("visibility", "public")
-      .in("status", ["active", "goal_reached"])
-      .limit(12);
-    const wishQuery = supabase
-      .from("wishes")
-      .select("id, title, description, category_slug, estimated_cost_minor")
-      .eq("visibility", "public")
-      .eq("is_archived", false)
-      .limit(12);
-
-    const [
-      fundraiserResponse,
-      wishResponse,
-      personResponse,
-      interestResponse,
-      commentResponse,
-      eventResponse,
-    ] = await Promise.all([
-      matchedCategory
-        ? fundraiserQuery.eq("category_slug", matchedCategory.slug)
-        : fundraiserQuery.textSearch("search_document", query, {
-            config: "simple",
-            type: "websearch",
-          }),
-      matchedCategory
-        ? wishQuery.eq("category_slug", matchedCategory.slug)
-        : wishQuery.textSearch("search_document", query, {
-            config: "simple",
-            type: "websearch",
-          }),
-      supabase
-        .from("profiles")
-        .select("id, username, display_name, bio, city, show_city")
-        .eq("profile_visibility", "public")
-        .eq("is_suspended", false)
-        .or(
-          `username.ilike.%${query}%,display_name.ilike.%${query}%,and(city.ilike.%${query}%,show_city.is.true)`,
-        )
-        .limit(12),
-      matchedCategory
-        ? supabase
-            .from("profile_interests")
-            .select("profile_id")
-            .eq("category_slug", matchedCategory.slug)
-            .limit(30)
-        : Promise.resolve({ data: [] }),
-      Promise.all([
-        supabase
-          .from("fundraiser_comments")
-          .select(
-            "id, body, created_at, fundraisers!inner(id, slug, title), profiles!inner(display_name)",
+  if (query.length >= 2 && (scope === "platform" || hasCity)) {
+    if (scope === "city" && profile?.city_id) {
+      const [{ data: rawPeople }, { data: rawPlaces }, { data: rawEvents }] =
+        await Promise.all([
+          supabase
+            .from("public_city_people")
+            .select("id, username, display_name, avatar_path, city")
+            .eq("city_id", profile.city_id)
+            .limit(100),
+          supabase
+            .from("places")
+            .select("id, name, description, icon_code")
+            .eq("city_id", profile.city_id)
+            .eq("is_active", true)
+            .limit(100),
+          supabase
+            .from("events")
+            .select("id, title, starts_at, scope")
+            .eq("city_id", profile.city_id)
+            .eq("is_cancelled", false)
+            .gte("starts_at", new Date().toISOString())
+            .order("starts_at", { ascending: true })
+            .limit(100),
+        ]);
+      const cityPeople = (rawPeople ?? []) as PersonRow[];
+      const cityIds = cityPeople.map((person) => person.id);
+      const { data: rawWishes } = cityIds.length
+        ? await supabase
+            .from("wishes")
+            .select(
+              "id, author_id, title, description, category_slug, estimated_cost_minor",
+            )
+            .in("author_id", cityIds)
+            .eq("visibility", "public")
+            .eq("is_archived", false)
+            .order("created_at", { ascending: false })
+            .limit(100)
+        : { data: [] };
+      people = await Promise.all(
+        cityPeople
+          .filter(
+            (person) =>
+              match(person.username, query) || match(person.display_name, query),
           )
-          .ilike("body", `%${query}%`)
-          .order("created_at", { ascending: false })
-          .limit(8),
+          .slice(0, 12)
+          .map(async (person) => ({
+            ...person,
+            avatarUrl: await getSignedImageUrl({
+              bucket: "avatars",
+              path: person.avatar_path,
+            }),
+          })),
+      );
+      places = ((rawPlaces ?? []) as PlaceRow[])
+        .filter((place) => match(place.name, query) || match(place.description, query))
+        .slice(0, 12);
+      wishes = ((rawWishes ?? []) as WishRow[])
+        .filter((wish) => match(wish.title, query) || match(wish.description, query))
+        .slice(0, 12);
+      events = ((rawEvents ?? []) as EventRow[])
+        .filter((event) => match(event.title, query))
+        .slice(0, 12);
+    } else {
+      const [
+        { data: rawPeople },
+        { data: rawPlaces },
+        { data: rawWishes },
+        { data: rawEvents },
+      ] = await Promise.all([
         supabase
-          .from("wish_comments")
-          .select(
-            "id, body, created_at, wishes!inner(id, title), profiles!inner(display_name)",
-          )
-          .ilike("body", `%${query}%`)
+          .from("profiles")
+          .select("id, username, display_name, avatar_path, city, show_city")
+          .eq("profile_visibility", "public")
+          .eq("is_suspended", false)
           .order("created_at", { ascending: false })
-          .limit(8),
-      ]),
-      supabase
-        .from("events")
-        .select("id, title, starts_at, scope")
-        .eq("is_cancelled", false)
-        .ilike("title", `%${query}%`)
-        .order("starts_at", { ascending: true })
-        .limit(8),
-    ]);
-
-    fundraisers = (fundraiserResponse.data ?? []) as FundraiserResult[];
-    wishes = (wishResponse.data ?? []) as WishResult[];
-    people = (personResponse.data ?? []) as PersonResult[];
-
-    const interestProfileIds = (interestResponse.data ?? []).map(
-      (row: { profile_id: string }) => row.profile_id,
-    );
-    if (interestProfileIds.length > 0) {
-      const { data: interestProfiles } = await supabase
-        .from("profiles")
-        .select("id, username, display_name, bio, city, show_city")
-        .eq("profile_visibility", "public")
-        .eq("is_suspended", false)
-        .in("id", interestProfileIds)
-        .limit(12);
-      interestPeople = (interestProfiles ?? []) as PersonResult[];
+          .limit(100),
+        supabase
+          .from("places")
+          .select("id, name, description, icon_code")
+          .eq("is_active", true)
+          .limit(100),
+        supabase
+          .from("wishes")
+          .select(
+            "id, author_id, title, description, category_slug, estimated_cost_minor",
+          )
+          .eq("visibility", "public")
+          .eq("is_archived", false)
+          .order("created_at", { ascending: false })
+          .limit(100),
+        supabase
+          .from("events")
+          .select("id, title, starts_at, scope")
+          .eq("is_cancelled", false)
+          .gte("starts_at", new Date().toISOString())
+          .order("starts_at", { ascending: true })
+          .limit(100),
+      ]);
+      people = await Promise.all(
+        ((rawPeople ?? []) as PersonRow[])
+          .filter(
+            (person) =>
+              match(person.username, query) ||
+              match(person.display_name, query) ||
+              (Boolean(person.show_city) && match(person.city, query)),
+          )
+          .slice(0, 12)
+          .map(async (person) => ({
+            ...person,
+            city: person.show_city ? person.city : null,
+            avatarUrl: await getSignedImageUrl({
+              bucket: "avatars",
+              path: person.avatar_path,
+            }),
+          })),
+      );
+      places = ((rawPlaces ?? []) as PlaceRow[])
+        .filter((place) => match(place.name, query) || match(place.description, query))
+        .slice(0, 12);
+      wishes = ((rawWishes ?? []) as WishRow[])
+        .filter((wish) => match(wish.title, query) || match(wish.description, query))
+        .slice(0, 12);
+      events = ((rawEvents ?? []) as EventRow[])
+        .filter((event) => match(event.title, query))
+        .slice(0, 12);
     }
 
-    const [fundraiserComments, wishComments] = commentResponse;
-    events = (
-      (eventResponse.data ?? []) as Array<{
-        id: string;
-        title: string;
-        starts_at: string;
-        scope: string;
-      }>
-    ).map((event) => ({
-      id: event.id,
-      title: event.title,
-      starts_at: event.starts_at,
-      scope: event.scope,
-    }));
-    const rawComments: CommentResult[] = [
-      ...(fundraiserComments.data ?? []).flatMap((row) => {
-        const fundraiser = row.fundraisers?.[0];
-        const author = row.profiles?.[0];
-        return fundraiser && author
-          ? [
-              {
-                id: row.id,
-                body: row.body,
-                created_at: row.created_at,
-                targetType: "fundraiser" as const,
-                targetTitle: fundraiser.title,
-                targetHref: `/fundraisers/${fundraiser.slug}`,
-                authorName: author.display_name,
-              },
-            ]
-          : [];
-      }),
-      ...(wishComments.data ?? []).flatMap((row) => {
-        const wish = row.wishes?.[0];
-        const author = row.profiles?.[0];
-        return wish && author
-          ? [
-              {
-                id: row.id,
-                body: row.body,
-                created_at: row.created_at,
-                targetType: "wish" as const,
-                targetTitle: wish.title,
-                targetHref: `/wishes/${wish.id}`,
-                authorName: author.display_name,
-              },
-            ]
-          : [];
-      }),
-    ];
-    comments = rawComments
-      .sort(
-        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
-      )
-      .slice(0, 8);
+    const { data: rawArtifacts } = await supabase
+      .from("collectible_artifact_series")
+      .select("slug, title, artwork_path, rarity, remaining_edition, total_edition")
+      .eq("is_active", true)
+      .limit(20);
+    artifacts = ((rawArtifacts ?? []) as ArtifactRow[])
+      .filter((artifact) => match(artifact.title, query))
+      .slice(0, 10);
   }
 
   const total =
-    fundraisers.length +
-    wishes.length +
-    people.length +
-    comments.length +
-    events.length;
+    people.length + places.length + wishes.length + events.length + artifacts.length;
+  const quickLinks = [
+    { href: "/people", label: "Люди", icon: UsersRound },
+    { href: "/places", label: "Места", icon: MapPin },
+    { href: "/wishes", label: "Желания", icon: Sparkles },
+    { href: "/events", label: "События", icon: CalendarDays },
+    { href: "/collection", label: "Коллекция", icon: Gem },
+  ];
 
   return (
-    <>
-      <SiteHeader />
-      <main className="mx-auto max-w-5xl px-4 py-10 sm:px-6">
-        <div>
-          <p className="text-sm font-semibold text-[#bd3e66]">Открывайте новое</p>
-          <h1 className="mt-1 text-3xl font-bold tracking-tight">Поиск «Хочу также»</h1>
-          <p className="mt-3 max-w-xl text-sm leading-6 text-[#826c73]">
-            Ищите людей, желания, сборы и обсуждения по названию, интересу или городу.
+    <main className="mx-auto min-h-screen max-w-[430px] bg-[#f7f4fb] px-4 pb-12 pt-5 text-[#251d31]">
+      <header className="flex items-center justify-between">
+        <Link
+          aria-label="Вернуться в город"
+          className="border-[#2c2036]/9 grid size-10 place-items-center rounded-full border bg-white text-[#5f5369] shadow-[0_5px_15px_rgba(69,43,94,.05)]"
+          href="/feed"
+        >
+          <ArrowLeft className="size-4.5" />
+        </Link>
+        <span className="text-center">
+          <small className="block text-[9px] font-black uppercase tracking-[0.13em] text-[#8c7e94]">
+            Открыть сцену
+          </small>
+          <h1 className="mt-0.5 text-sm font-black">Поиск</h1>
+        </span>
+        <span className="grid size-10 place-items-center rounded-full bg-[#f0e9ff] text-[#8753e6]">
+          <SearchIcon className="size-4.5" />
+        </span>
+      </header>
+
+      <section className="mt-5 rounded-[1.75rem] bg-gradient-to-br from-[#fff0f7] via-[#f6edff] to-[#eaf5ff] p-5 shadow-[0_14px_30px_rgba(69,43,94,.1)]">
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-white/75 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.08em] text-[#8753e6]">
+          {scope === "city" ? (
+            <MapPin className="size-3.5" />
+          ) : (
+            <Compass className="size-3.5" />
+          )}
+          {scope === "city" ? (profile?.city ?? "Мой город") : "Вся платформа"}
+        </span>
+        <h2 className="mt-3 text-3xl font-black leading-[0.9] tracking-[-0.07em]">
+          Найди, куда зайти.
+        </h2>
+        <p className="max-w-70 mt-3 text-[11px] leading-5 text-[#756a7d]">
+          Люди, места, желания, события и артефакты — только из доступных публичных
+          сцен.
+        </p>
+      </section>
+
+      <nav className="mt-5 grid grid-cols-2 gap-1 rounded-2xl bg-[#ebe5f1] p-1 text-center text-[10px] font-black">
+        {scopes.map((item) => {
+          const Icon = item.icon;
+          const active = scope === item.key;
+          return (
+            <Link
+              className={`rounded-xl px-2 py-2.5 transition ${
+                active
+                  ? "bg-white text-[#7549d0] shadow-[0_3px_10px_rgba(65,43,89,.08)]"
+                  : "text-[#82758a]"
+              }`}
+              href={`/search?scope=${item.key}`}
+              key={item.key}
+            >
+              <Icon className="mr-1 inline size-3" />{" "}
+              {item.key === "city" && !hasCity ? "Мой город" : item.label}
+            </Link>
+          );
+        })}
+      </nav>
+
+      <form className="border-[#2c2036]/9 mt-4 flex items-center gap-2 rounded-2xl border bg-white px-3 py-1.5 shadow-[0_5px_15px_rgba(69,43,94,.04)]">
+        <SearchIcon className="size-4 shrink-0 text-[#8d7f96]" />
+        <input name="scope" type="hidden" value={scope} />
+        <input
+          aria-label="Поиск"
+          className="min-w-0 grow bg-transparent py-2 text-xs font-medium outline-none placeholder:text-[#a99eae]"
+          defaultValue={rawQuery}
+          maxLength={80}
+          name="q"
+          placeholder="Люди, места, желания, события…"
+          type="search"
+        />
+        <button
+          aria-label="Искать"
+          className="grid size-8 place-items-center rounded-xl bg-[#f2ecfa] text-[#7549d0]"
+          type="submit"
+        >
+          <SearchIcon className="size-3.5" />
+        </button>
+      </form>
+
+      {scope === "city" && !hasCity ? (
+        <section className="mt-6 rounded-[1.6rem] border border-dashed border-[#cdbbe7] bg-[#fffcff] p-5 text-center shadow-[0_8px_22px_rgba(69,43,94,.04)]">
+          <MapPin className="mx-auto size-7 text-[#8753e6]" />
+          <h2 className="mt-3 text-lg font-black tracking-[-0.045em]">
+            Сначала выбери город
+          </h2>
+          <p className="mt-2 text-xs leading-5 text-[#756a7d]">
+            Тогда поиск будет собирать доступные публичные сцены рядом с тобой.
           </p>
-        </div>
-
-        <form className="mt-7 flex gap-2" method="get">
-          <label className="sr-only" htmlFor="global-search">
-            Поисковый запрос
-          </label>
-          <div className="relative grow">
-            <SearchIcon className="absolute left-3.5 top-3 size-5 text-[#9b858c]" />
-            <input
-              className="h-12 w-full rounded-xl border border-[#e7d8dc] bg-white pl-11 pr-3.5 text-sm outline-none transition placeholder:text-[#b3a0a6] focus:border-[#df4f7d] focus:ring-4 focus:ring-[#df4f7d]/10"
-              defaultValue={query}
-              id="global-search"
-              maxLength={80}
-              name="q"
-              placeholder="Например: фотография, Москва, Настя"
-              type="search"
-            />
-          </div>
-          <button
-            className="h-12 rounded-xl bg-[#df4f7d] px-5 text-sm font-semibold text-white transition hover:bg-[#c93f6d]"
-            type="submit"
+          <Link
+            className="mt-4 inline-flex items-center gap-2 text-xs font-black text-[#8753e6]"
+            href="/settings"
           >
-            Найти
-          </button>
-        </form>
-
-        {!hasSupabaseEnvironment() ? (
-          <div className="mt-8">
-            <EmptyState
-              actionHref="/"
-              actionLabel="К ленте"
-              description="Поиск будет использовать реальные публичные данные после подключения self-hosted Supabase."
-              title="Подключите данные для поиска"
-            />
+            Выбрать город <ChevronRight className="size-4" />
+          </Link>
+        </section>
+      ) : query.length < 2 ? (
+        <section className="mt-6">
+          <div className="mb-3">
+            <h2 className="text-sm font-black">Начни с направления</h2>
+            <p className="mt-0.5 text-[10px] text-[#82758a]">
+              Поиск не показывает приватные объекты и личные сообщения.
+            </p>
           </div>
-        ) : query.length < 2 ? (
-          <section className="mt-8 rounded-2xl bg-[#fff8f9] p-5">
-            <p className="font-semibold">Попробуйте найти по интересу</p>
-            <div className="mt-4 flex flex-wrap gap-2">
+          <div className="grid grid-cols-2 gap-2">
+            {quickLinks.map(({ href, label, icon: Icon }) => (
               <Link
-                className="rounded-xl border border-[#f0e2e6] bg-white px-3 py-2 text-sm font-medium text-[#674f57] transition hover:border-[#efafc2] hover:bg-rose-50"
-                href="/events"
+                className="border-[#2c2036]/9 flex items-center gap-2 rounded-2xl border bg-white p-3 shadow-[0_6px_16px_rgba(69,43,94,.04)]"
+                href={href as Route}
+                key={label}
               >
-                📅 События города
+                <span className="grid size-8 place-items-center rounded-xl bg-[#f0e9ff] text-[#8753e6]">
+                  <Icon className="size-4" />
+                </span>
+                <span className="text-[10px] font-black">{label}</span>
               </Link>
-              {CATEGORIES.slice(0, 10).map((category) => (
-                <Link
-                  className="rounded-xl border border-[#f0e2e6] bg-white px-3 py-2 text-sm font-medium text-[#674f57] transition hover:border-[#efafc2] hover:bg-rose-50"
-                  href={`/search?q=${encodeURIComponent(category.label)}` as Route}
-                  key={category.slug}
-                >
-                  {category.emoji} {category.label}
-                </Link>
-              ))}
-            </div>
-          </section>
-        ) : total === 0 ? (
-          <div className="mt-8">
-            <EmptyState
-              actionHref="/discover"
-              actionLabel="Открыть желания"
-              description={`По запросу «${query}» пока ничего не найдено. Попробуйте другое слово или одну из категорий.`}
-              title="Нет совпадений"
-            />
+            ))}
           </div>
-        ) : (
-          <div className="mt-9 space-y-10">
-            {fundraisers.length > 0 && (
-              <section>
-                <div className="mb-4 flex items-center gap-2">
-                  <Compass className="size-5 text-[#d34872]" />
-                  <h2 className="text-xl font-bold">Сборы</h2>
-                </div>
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                  {fundraisers.map((item) => {
-                    const category =
-                      CATEGORIES.find((entry) => entry.slug === item.category_slug) ??
-                      CATEGORIES.at(-1)!;
-                    return (
-                      <Link
-                        className="surface rounded-2xl p-5 transition hover:-translate-y-0.5 hover:shadow-glow"
-                        href={`/fundraisers/${item.slug}` as Route}
-                        key={item.id}
-                      >
-                        <span className="text-3xl">{category.emoji}</span>
-                        <p className="mt-4 font-bold">{item.title}</p>
-                        {item.description && (
-                          <p className="mt-2 line-clamp-2 text-sm leading-6 text-[#826c73]">
-                            {item.description}
-                          </p>
-                        )}
-                        <p className="mt-4 text-sm font-semibold text-[#c53d68]">
-                          {formatRubles(item.current_amount_minor)}{" "}
-                          <span className="font-normal text-[#8e747c]">
-                            из {formatRubles(item.target_amount_minor)}
-                          </span>
-                        </p>
-                      </Link>
-                    );
-                  })}
-                </div>
-              </section>
-            )}
-            {wishes.length > 0 && (
-              <section>
-                <div className="mb-4 flex items-center gap-2">
-                  <SearchIcon className="size-5 text-[#d34872]" />
-                  <h2 className="text-xl font-bold">Желания</h2>
-                </div>
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                  {wishes.map((item) => {
-                    const category =
-                      CATEGORIES.find((entry) => entry.slug === item.category_slug) ??
-                      CATEGORIES.at(-1)!;
-                    return (
-                      <Link
-                        className="surface rounded-2xl p-5 transition hover:-translate-y-0.5 hover:shadow-glow"
-                        href={`/wishes/${item.id}` as Route}
-                        key={item.id}
-                      >
-                        <span className="text-3xl">{category.emoji}</span>
-                        <p className="mt-4 font-bold">{item.title}</p>
-                        {item.description && (
-                          <p className="mt-2 line-clamp-2 text-sm leading-6 text-[#826c73]">
-                            {item.description}
-                          </p>
-                        )}
-                        {item.estimated_cost_minor && (
-                          <p className="mt-4 text-sm font-semibold text-[#c53d68]">
-                            ~ {formatRubles(item.estimated_cost_minor)}
-                          </p>
-                        )}
-                      </Link>
-                    );
-                  })}
-                </div>
-              </section>
-            )}
-            {interestPeople.length > 0 && (
-              <section>
-                <div className="mb-4 flex items-center gap-2">
-                  <UsersRound className="size-5 text-[#d34872]" />
-                  <h2 className="text-xl font-bold">
-                    Люди по интересу: {matchedCategory?.label}
-                  </h2>
-                </div>
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                  {interestPeople.map((person, index) => (
-                    <Link
-                      className="surface flex items-center gap-3 rounded-2xl p-5 transition hover:-translate-y-0.5 hover:shadow-glow"
-                      href={`/u/${person.username}` as Route}
-                      key={person.id}
-                    >
-                      <span
-                        className={`grid size-11 place-items-center rounded-xl text-lg font-bold text-white ${["bg-[#e2a9a2]", "bg-[#9fc6b6]", "bg-[#b7a1d2]"][index % 3]}`}
-                      >
-                        {person.display_name.slice(0, 1).toUpperCase()}
-                      </span>
-                      <span className="min-w-0">
-                        <span className="block truncate font-bold">
-                          {person.display_name}
-                        </span>
-                        <span className="mt-1 block truncate text-sm text-[#8e747c]">
-                          @{person.username}
-                          {person.show_city && person.city ? ` · ${person.city}` : ""}
-                        </span>
-                        {person.bio && (
-                          <span className="mt-2 line-clamp-2 block text-sm leading-5 text-[#725c63]">
-                            {person.bio}
-                          </span>
-                        )}
-                      </span>
-                    </Link>
-                  ))}
-                </div>
-              </section>
-            )}
-            {people.length > 0 && (
-              <section>
-                <div className="mb-4 flex items-center gap-2">
-                  <UsersRound className="size-5 text-[#d34872]" />
-                  <h2 className="text-xl font-bold">Люди</h2>
-                </div>
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                  {people.map((person, index) => (
-                    <Link
-                      className="surface flex items-center gap-3 rounded-2xl p-5 transition hover:-translate-y-0.5 hover:shadow-glow"
-                      href={`/u/${person.username}` as Route}
-                      key={person.id}
-                    >
-                      <span
-                        className={`grid size-11 place-items-center rounded-xl text-lg font-bold text-white ${["bg-[#e2a9a2]", "bg-[#9fc6b6]", "bg-[#b7a1d2]"][index % 3]}`}
-                      >
-                        {person.display_name.slice(0, 1).toUpperCase()}
-                      </span>
-                      <span className="min-w-0">
-                        <span className="block truncate font-bold">
-                          {person.display_name}
-                        </span>
-                        <span className="mt-1 block truncate text-sm text-[#8e747c]">
-                          @{person.username}
-                          {person.show_city && person.city ? ` · ${person.city}` : ""}
-                        </span>
-                        {person.bio && (
-                          <span className="mt-2 line-clamp-2 block text-sm leading-5 text-[#725c63]">
-                            {person.bio}
-                          </span>
-                        )}
-                      </span>
-                    </Link>
-                  ))}
-                </div>
-              </section>
-            )}
-            {comments.length > 0 && (
-              <section>
-                <div className="mb-4 flex items-center gap-2">
-                  <MessageSquareText className="size-5 text-[#d34872]" />
-                  <h2 className="text-xl font-bold">Обсуждения</h2>
-                </div>
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                  {comments.map((comment) => (
-                    <Link
-                      className="surface rounded-2xl p-5 transition hover:-translate-y-0.5 hover:shadow-glow"
-                      href={comment.targetHref as Route}
-                      key={`${comment.targetType}-${comment.id}`}
-                    >
-                      <p className="text-xs font-semibold uppercase tracking-wide text-[#b08c97]">
-                        {comment.targetType === "fundraiser" ? "Сбор" : "Желание"} ·{" "}
-                        {comment.authorName}
-                      </p>
-                      <p className="mt-3 line-clamp-3 text-sm leading-6 text-[#654e55]">
-                        {comment.body}
-                      </p>
-                      <p className="mt-4 truncate text-sm font-bold text-[#bd3e66]">
-                        {comment.targetTitle}
-                      </p>
-                    </Link>
-                  ))}
-                </div>
-              </section>
-            )}
-            {events.length > 0 && (
-              <section>
-                <div className="mb-4 flex items-center gap-2">
-                  <CalendarDays className="size-5 text-[#d34872]" />
-                  <h2 className="text-xl font-bold">События</h2>
-                </div>
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                  {events.map((event) => (
-                    <Link
-                      className="surface rounded-2xl p-5 transition hover:-translate-y-0.5 hover:shadow-glow"
-                      href={`/events/${event.id}` as Route}
-                      key={event.id}
-                    >
-                      <span className="text-3xl">
-                        {event.scope === "open" ? "🌎" : "📍"}
-                      </span>
-                      <p className="mt-3 font-bold">{event.title}</p>
-                      <p className="mt-2 text-sm text-[#826c73]">
+        </section>
+      ) : total === 0 ? (
+        <section className="mt-6 rounded-[1.6rem] border border-dashed border-[#cdbbe7] bg-[#fffcff] p-5 text-center shadow-[0_8px_22px_rgba(69,43,94,.04)]">
+          <SearchIcon className="mx-auto size-7 text-[#8753e6]" />
+          <h2 className="mt-3 text-lg font-black tracking-[-0.045em]">
+            Пока ничего не нашли
+          </h2>
+          <p className="mt-2 text-xs leading-5 text-[#756a7d]">
+            По запросу «{rawQuery}» нет доступных публичных сцен.
+          </p>
+        </section>
+      ) : (
+        <div className="mt-6 space-y-6">
+          {people.length > 0 && (
+            <section>
+              <div className="mb-3 flex items-end justify-between">
+                <span>
+                  <h2 className="text-sm font-black">Люди</h2>
+                  <p className="mt-0.5 text-[10px] text-[#82758a]">Открытые профили</p>
+                </span>
+                <span className="rounded-full bg-[#efe9f6] px-2 py-1 text-[9px] font-black text-[#7a6688]">
+                  {people.length}
+                </span>
+              </div>
+              <div className="space-y-2">
+                {people.map((person) => (
+                  <Link
+                    className="border-[#2c2036]/9 flex items-center gap-3 rounded-2xl border bg-white p-3 shadow-[0_6px_16px_rgba(69,43,94,.04)]"
+                    href={`/u/${person.username}` as Route}
+                    key={person.id}
+                  >
+                    <PersonAvatar person={person} />
+                    <span className="min-w-0 grow">
+                      <b className="block truncate text-xs">{person.display_name}</b>
+                      <small className="mt-1 block truncate text-[10px] text-[#81748a]">
+                        @{person.username}
+                        {scope === "platform" && person.city ? ` · ${person.city}` : ""}
+                      </small>
+                    </span>
+                    <ChevronRight className="size-4 text-[#a295a8]" />
+                  </Link>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {places.length > 0 && (
+            <section>
+              <div className="mb-3 flex items-end justify-between">
+                <span>
+                  <h2 className="text-sm font-black">Места</h2>
+                  <p className="mt-0.5 text-[10px] text-[#82758a]">
+                    Комнаты и точки притяжения
+                  </p>
+                </span>
+                <span className="rounded-full bg-[#efe9f6] px-2 py-1 text-[9px] font-black text-[#7a6688]">
+                  {places.length}
+                </span>
+              </div>
+              <div className="space-y-2">
+                {places.map((place) => (
+                  <Link
+                    className="border-[#2c2036]/9 flex items-center gap-3 rounded-2xl border bg-white p-3 shadow-[0_6px_16px_rgba(69,43,94,.04)]"
+                    href={`/places/${place.id}` as Route}
+                    key={place.id}
+                  >
+                    <span className="grid size-10 place-items-center rounded-xl bg-[#f0e9ff] text-[#8753e6]">
+                      <PlaceIcon className="size-4.5" code={place.icon_code} />
+                    </span>
+                    <span className="min-w-0 grow">
+                      <b className="block truncate text-xs">{place.name}</b>
+                      {place.description && (
+                        <small className="mt-1 block truncate text-[10px] text-[#81748a]">
+                          {place.description}
+                        </small>
+                      )}
+                    </span>
+                    <ChevronRight className="size-4 text-[#a295a8]" />
+                  </Link>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {wishes.length > 0 && (
+            <section>
+              <div className="mb-3 flex items-end justify-between">
+                <span>
+                  <h2 className="text-sm font-black">Желания</h2>
+                  <p className="mt-0.5 text-[10px] text-[#82758a]">
+                    Истории, которые можно продолжить
+                  </p>
+                </span>
+                <span className="rounded-full bg-[#efe9f6] px-2 py-1 text-[9px] font-black text-[#7a6688]">
+                  {wishes.length}
+                </span>
+              </div>
+              <div className="space-y-2">
+                {wishes.map((wish) => (
+                  <Link
+                    className="border-[#2c2036]/9 flex items-center gap-3 rounded-2xl border bg-white p-3 shadow-[0_6px_16px_rgba(69,43,94,.04)]"
+                    href={`/wishes/${wish.id}` as Route}
+                    key={wish.id}
+                  >
+                    <span className="grid size-10 place-items-center rounded-xl bg-gradient-to-br from-[#f3e8ff] to-[#fff0f6] text-[#8753e6]">
+                      <WishCategoryIcon
+                        category={wish.category_slug}
+                        className="size-4.5"
+                      />
+                    </span>
+                    <span className="min-w-0 grow">
+                      <b className="block truncate text-xs">{wish.title}</b>
+                      <small className="mt-1 block truncate text-[10px] text-[#81748a]">
+                        {wish.description ?? "Открыть историю"}
+                      </small>
+                    </span>
+                    {wish.estimated_cost_minor && (
+                      <small className="shrink-0 text-[9px] font-black text-[#9a7a52]">
+                        ~ {formatRubles(wish.estimated_cost_minor)}
+                      </small>
+                    )}
+                  </Link>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {events.length > 0 && (
+            <section>
+              <div className="mb-3 flex items-end justify-between">
+                <span>
+                  <h2 className="text-sm font-black">События</h2>
+                  <p className="mt-0.5 text-[10px] text-[#82758a]">
+                    То, что скоро произойдёт
+                  </p>
+                </span>
+                <span className="rounded-full bg-[#efe9f6] px-2 py-1 text-[9px] font-black text-[#7a6688]">
+                  {events.length}
+                </span>
+              </div>
+              <div className="space-y-2">
+                {events.map((event) => (
+                  <Link
+                    className="border-[#2c2036]/9 flex items-center gap-3 rounded-2xl border bg-white p-3 shadow-[0_6px_16px_rgba(69,43,94,.04)]"
+                    href={`/events/${event.id}` as Route}
+                    key={event.id}
+                  >
+                    <span className="grid size-10 place-items-center rounded-xl bg-[#eaf7f5] text-[#258b82]">
+                      <CalendarDays className="size-4.5" />
+                    </span>
+                    <span className="min-w-0 grow">
+                      <b className="block truncate text-xs">{event.title}</b>
+                      <small className="mt-1 block text-[10px] text-[#81748a]">
                         {new Intl.DateTimeFormat("ru-RU", {
                           day: "numeric",
                           month: "short",
                           hour: "2-digit",
                           minute: "2-digit",
                         }).format(new Date(event.starts_at))}
-                      </p>
-                    </Link>
-                  ))}
-                </div>
-              </section>
-            )}
-          </div>
-        )}
-      </main>
-    </>
+                      </small>
+                    </span>
+                    <ChevronRight className="size-4 text-[#a295a8]" />
+                  </Link>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {artifacts.length > 0 && (
+            <section>
+              <div className="mb-3 flex items-end justify-between">
+                <span>
+                  <h2 className="text-sm font-black">Артефакты</h2>
+                  <p className="mt-0.5 text-[10px] text-[#82758a]">ARTIFACTS 01</p>
+                </span>
+                <span className="rounded-full bg-[#efe9f6] px-2 py-1 text-[9px] font-black text-[#7a6688]">
+                  {artifacts.length}
+                </span>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                {artifacts.map((artifact) => (
+                  <Link
+                    className="border-[#2c2036]/9 overflow-hidden rounded-2xl border bg-white shadow-[0_6px_16px_rgba(69,43,94,.04)]"
+                    href={`/collection/${artifact.slug}` as Route}
+                    key={artifact.slug}
+                  >
+                    <img
+                      alt=""
+                      className="aspect-[3/4] w-full object-cover"
+                      src={artifact.artwork_path}
+                    />
+                    <span className="block p-2.5">
+                      <b className="block text-[10px]">{artifact.title}</b>
+                      <small className="mt-1 block text-[8px] font-black text-[#8753e6]">
+                        {artifact.remaining_edition} / {artifact.total_edition}
+                      </small>
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            </section>
+          )}
+        </div>
+      )}
+    </main>
   );
 }

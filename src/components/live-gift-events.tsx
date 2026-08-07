@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 
+import { BrandGiftIcon } from "@/components/brand-gift-icon";
 import { createClient } from "@/lib/supabase/client";
 
 export type LiveGiftCatalogItem = {
@@ -14,7 +15,7 @@ export type LiveGiftCatalogItem = {
 type GiftEvent = {
   key: string;
   senderName: string;
-  emoji: string;
+  code: string;
   label: string;
   priceMinor: number;
   currency: string;
@@ -89,7 +90,7 @@ export function LiveGiftEvents({
             const event: GiftEvent = {
               key: record.id,
               senderName: senderName ?? "Зритель",
-              emoji: gift?.emoji ?? "🎁",
+              code: record.gift_code,
               label: gift?.label ?? record.gift_code,
               priceMinor: Number(record.price_minor) || 0,
               currency: record.currency ?? "RUB",
@@ -121,8 +122,8 @@ export function LiveGiftEvents({
           className="live-gift-event flex items-center gap-2 rounded-2xl border border-white/10 bg-black/70 px-3 py-2 shadow-glow backdrop-blur"
           key={event.key}
         >
-          <span className="grid size-9 place-items-center rounded-xl bg-gradient-to-br from-[#ff4b8a]/30 to-[#7d45ff]/30 text-xl">
-            {event.emoji}
+          <span className="grid size-9 place-items-center rounded-xl bg-gradient-to-br from-[#ff4b8a]/30 to-[#7d45ff]/30 text-[#ffc0da]">
+            <BrandGiftIcon className="size-6" code={event.code} />
           </span>
           <span className="text-xs leading-tight">
             <b className="block text-[13px]">{event.senderName}</b>

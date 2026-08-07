@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 
 import { requireUser } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { recordCitySocialMoment } from "@/lib/city-social-moments";
 import { requiredText } from "@/lib/validation";
 
 export async function sendTestStoryGift(formData: FormData) {
@@ -63,6 +64,14 @@ export async function sendTestStoryGift(formData: FormData) {
   });
   if (ledgerError)
     throw new Error(`Не удалось начислить тестовый доход: ${ledgerError.message}`);
+
+  await recordCitySocialMoment({
+    kind: "story_gift",
+    actorId: user.id,
+    subjectId: story.author_id,
+    storyId: story.id,
+    giftCode: gift.code,
+  });
 
   revalidatePath(`/stories/${story.id}`);
   revalidatePath("/creator/earnings");

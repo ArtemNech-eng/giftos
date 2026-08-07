@@ -5,6 +5,7 @@ import type { Route } from "next";
 import { redirect } from "next/navigation";
 
 import { requireUser } from "@/lib/auth";
+import { recordCitySocialMoment } from "@/lib/city-social-moments";
 import { requiredText } from "@/lib/validation";
 
 export async function buyItem(formData: FormData) {
@@ -51,7 +52,7 @@ export async function equipItem(formData: FormData) {
 }
 
 export async function sendProfileGift(formData: FormData) {
-  const { supabase } = await requireUser();
+  const { supabase, user } = await requireUser();
   const recipientId = requiredText(formData.get("recipient_id"), 100);
   const giftCode = requiredText(formData.get("gift_code"), 40);
   const username = requiredText(formData.get("username"), 100);
@@ -61,6 +62,12 @@ export async function sendProfileGift(formData: FormData) {
     p_gift_code: giftCode,
   });
   if (error) throw new Error(`Не удалось отправить подарок: ${error.message}`);
+  await recordCitySocialMoment({
+    kind: "profile_gift",
+    actorId: user.id,
+    subjectId: recipientId,
+    giftCode,
+  });
   revalidatePath(`/u/${username}`);
   revalidatePath("/bonuses");
   redirect(`/u/${username}?gift=sent` as Route);

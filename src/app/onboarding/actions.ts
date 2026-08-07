@@ -56,6 +56,9 @@ export async function completeOnboarding(formData: FormData) {
     city,
     city_id: cityId,
     show_city: formData.get("show_city") === "on",
+    // City Moments are opt-in from the first session; they stay off unless
+    // the person explicitly chooses to share eligible public actions.
+    share_city_moments: formData.get("share_city_moments") === "on",
     allow_direct_messages: formData.get("allow_direct_messages") === "on",
     profile_visibility:
       formData.get("profile_visibility") === "private" ? "private" : "public",
@@ -93,7 +96,17 @@ export async function completeOnboarding(formData: FormData) {
   // City battle: qualified action (profile completed).
   await awardCityPoints(supabase, "profile_completed", user.id);
 
-  revalidatePath("/");
+  // Entering a city changes every city-first surface for this person.
+  for (const path of [
+    "/",
+    "/feed",
+    "/places",
+    "/people",
+    "/city/rankings",
+    "/settings",
+    "/local",
+  ])
+    revalidatePath(path);
   revalidatePath(`/u/${username}`);
   redirect("/feed");
 }

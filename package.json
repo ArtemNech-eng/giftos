@@ -12,7 +12,9 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "qa:migrations": "node scripts/qa/check-migrations.mjs",
+    "qa:selfhosted": "node scripts/qa/selfhosted-preflight.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.4",

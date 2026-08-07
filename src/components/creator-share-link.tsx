@@ -6,9 +6,13 @@ import { Check, Copy } from "lucide-react";
 export function CreatorShareLink({
   username,
   path,
+  label,
+  light = false,
 }: {
   username?: string;
   path?: string;
+  label?: string;
+  light?: boolean;
 }) {
   const [copied, setCopied] = useState(false);
   const targetPath = path ?? (username ? `/u/${username}` : "/");
@@ -21,7 +25,11 @@ export function CreatorShareLink({
 
   return (
     <button
-      className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm font-semibold text-[#e5ddea]"
+      className={`inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-sm font-semibold ${
+        light
+          ? "border-[#2c2036]/10 bg-white text-[#5d5067] shadow-[0_5px_14px_rgba(67,41,90,0.06)]"
+          : "border-white/15 bg-white/5 text-[#e5ddea]"
+      }`}
       onClick={copyLink}
       type="button"
     >
@@ -30,7 +38,7 @@ export function CreatorShareLink({
       ) : (
         <Copy className="size-4" />
       )}
-      {copied ? "Ссылка скопирована" : "Скопировать ссылку"}
+      {copied ? "Ссылка скопирована" : (label ?? "Скопировать ссылку")}
     </button>
   );
 }

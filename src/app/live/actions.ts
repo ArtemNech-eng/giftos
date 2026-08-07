@@ -18,13 +18,43 @@ export async function createLiveRoom(formData: FormData) {
   const category = optionalText(formData.get("category_slug"), 40);
   const wishId = optionalText(formData.get("wish_id"), 100);
   const placeId = optionalText(formData.get("place_id"), 100);
+  const visibilityValue = formData.get("visibility");
+  const visibility =
+    visibilityValue === "private" || visibilityValue === "unlisted"
+      ? visibilityValue
+      : "public";
   if (!title) throw new Error("Укажите название эфира.");
   const { data: profile } = await supabase
     .from("profiles")
-    .select("is_creator")
+    .select("is_creator, city_id")
     .eq("id", user.id)
     .maybeSingle();
   if (!profile?.is_creator) throw new Error("Сначала создайте страницу автора.");
+
+  if (wishId) {
+    const { data: wish } = await supabase
+      .from("wishes")
+      .select("id")
+      .eq("id", wishId)
+      .eq("author_id", user.id)
+      .eq("is_archived", false)
+      .maybeSingle();
+    if (!wish) throw new Error("Можно выбрать только собственное активное желание.");
+  }
+
+  let verifiedPlaceId: string | null = null;
+  if (placeId) {
+    if (!profile.city_id)
+      throw new Error("Сначала выберите город для привязки к месту.");
+    const { data: place } = await supabase
+      .from("places")
+      .select("id, city_id, is_active")
+      .eq("id", placeId)
+      .maybeSingle();
+    if (!place || !place.is_active || place.city_id !== profile.city_id)
+      throw new Error("Выберите действующее публичное место своего города.");
+    verifiedPlaceId = place.id;
+  }
 
   const slug = `live-${randomUUID().replaceAll("-", "").slice(0, 12)}`;
   const { data: room, error } = await supabase
@@ -35,8 +65,9 @@ export async function createLiveRoom(formData: FormData) {
       title,
       description,
       category_slug: category,
-      wish_id: wishId,
-      place_id: placeId || null,
+      wish_id: wishId || null,
+      place_id: verifiedPlaceId,
+      visibility,
       status: "live",
     })
     .select("id")
@@ -48,12 +79,15 @@ export async function createLiveRoom(formData: FormData) {
   await supabase
     .from("live_room_participants")
     .insert({ room_id: room.id, profile_id: user.id, role: "host" });
-  await notifyFollowersAboutLiveRoom(user.id, room.id, slug, title);
+  if (visibility === "public")
+    await notifyFollowersAboutLiveRoom(user.id, room.id, slug, title);
 
   // City battle: qualified action (live room started).
   await awardCityPoints(supabase, "live_started", room.id);
 
   revalidatePath("/feed");
+  revalidatePath("/places");
+  if (verifiedPlaceId) revalidatePath(`/places/${verifiedPlaceId}`);
   redirect(`/live/${slug}` as Route);
 }
 

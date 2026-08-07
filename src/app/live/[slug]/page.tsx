@@ -1,11 +1,15 @@
+/* eslint-disable @next/next/no-img-element -- avatars use short-lived signed Storage URLs */
 import Link from "next/link";
+import type { Route } from "next";
 import { notFound } from "next/navigation";
 import {
   ArrowLeft,
   BarChart3,
+  Crown,
   Gift,
   HandCoins,
   MessageCircle,
+  Radio,
   Square,
   UsersRound,
 } from "lucide-react";
@@ -15,7 +19,10 @@ import { inviteLiveHostToPlace } from "@/app/places/actions";
 import { promoteTarget } from "@/app/shop/actions";
 import { sendTestLiveDonation } from "@/app/live/donations/actions";
 import { sendTestLiveGift } from "@/app/live/gifts/actions";
+import { BrandGiftIcon } from "@/components/brand-gift-icon";
 import { CopyLiveRoomLinkButton } from "@/components/copy-live-room-link-button";
+import { LocalRoleIcon } from "@/components/local-role-icon";
+import { PlaceIcon } from "@/components/place-icon";
 import { LiveDonationEvents } from "@/components/live-donation-events";
 import { LiveGiftCounter } from "@/components/live-gift-counter";
 import { LiveGiftEvents } from "@/components/live-gift-events";
@@ -24,6 +31,7 @@ import { LiveRoomPresence } from "@/components/live-room-presence";
 import { LiveRoomRealtime } from "@/components/live-room-realtime";
 import { ReportForm } from "@/components/report-form";
 import { requireUser } from "@/lib/auth";
+import { getSignedImageUrl } from "@/lib/media";
 
 export const metadata = { title: "Эфир", robots: { index: false, follow: false } };
 export const dynamic = "force-dynamic";
@@ -37,7 +45,7 @@ export default async function LiveRoomPage({
   const { supabase, user } = await requireUser();
   const { data: room } = await supabase
     .from("live_rooms")
-    .select("id, host_id, title, description, status, wish_id")
+    .select("id, host_id, title, description, status, wish_id, place_id")
     .eq("slug", slug)
     .maybeSingle();
   if (!room) notFound();
@@ -51,7 +59,7 @@ export default async function LiveRoomPage({
   ] = await Promise.all([
     supabase
       .from("profiles")
-      .select("username, display_name")
+      .select("username, display_name, avatar_path")
       .eq("id", room.host_id)
       .maybeSingle(),
     supabase
@@ -84,6 +92,35 @@ export default async function LiveRoomPage({
       .eq("is_active", true)
       .order("sort_order", { ascending: true }),
   ]);
+  const [{ data: roomPlace }, { data: hostLocalCreator }] = await Promise.all([
+    room.place_id
+      ? supabase
+          .from("places")
+          .select("id, name, icon_code, cities!inner(name)")
+          .eq("id", room.place_id)
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
+    supabase
+      .from("public_local_creators")
+      .select("role_code, city_label, headline")
+      .eq("id", room.host_id)
+      .maybeSingle(),
+  ]);
+  const hostAvatarUrl = await getSignedImageUrl({
+    bucket: "avatars",
+    path: host?.avatar_path,
+  });
+  const placeCity = roomPlace
+    ? (() => {
+        const city = (
+          roomPlace as unknown as {
+            cities?: { name: string } | Array<{ name: string }>;
+          }
+        ).cities;
+        return Array.isArray(city) ? (city[0]?.name ?? null) : (city?.name ?? null);
+      })()
+    : null;
+
   const [
     { count: giftCount },
     { count: donationCount },
@@ -103,7 +140,7 @@ export default async function LiveRoomPage({
     supabase.from("live_room_donations").select("amount_minor").eq("room_id", room.id),
     supabase
       .from("places")
-      .select("id, name, emoji, kind")
+      .select("id, name, icon_code, kind")
       .eq("creator_id", user.id)
       .eq("is_active", true)
       .neq("kind", "fixed")
@@ -177,8 +214,20 @@ export default async function LiveRoomPage({
           )}
         </div>
       </header>
+      {roomPlace && (
+        <Link
+          className="mt-4 flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.06] px-3 py-2 text-xs text-[#d9d1e2]"
+          href={`/places/${roomPlace.id}` as Route}
+        >
+          <PlaceIcon className="size-4 text-[#d9b7ff]" code={roomPlace.icon_code} />
+          <span className="font-semibold">
+            {placeCity ?? "Город"} · {roomPlace.name}
+          </span>
+          <span className="ml-auto text-[#ff9bc5]">В место ›</span>
+        </Link>
+      )}
       {room.status === "live" && <LiveRoomPresence roomId={room.id} slug={slug} />}
-      <section className="mt-5 overflow-hidden rounded-[2rem] border border-white/10 bg-[#171923]">
+      <section className="mt-4 overflow-hidden rounded-[2rem] border border-white/10 bg-[#171923]">
         <div className="relative">
           <LiveKitRoom isHost={room.host_id === user.id} slug={slug} />
           <LiveGiftEvents
@@ -194,28 +243,52 @@ export default async function LiveRoomPage({
           <LiveDonationEvents currentUserId={user.id} roomId={room.id} />
         </div>
         <div className="p-4">
-          <div className="flex items-start justify-between">
+          <div className="flex items-start justify-between gap-3">
             <div>
               {room.status === "live" ? (
-                <p className="text-xs text-[#ff7fb5]">🔴 В ЭФИРЕ</p>
+                <p className="flex items-center gap-1.5 text-[10px] font-black text-[#ff7fb5]">
+                  <Radio className="size-3" /> В эфире сейчас
+                </p>
               ) : (
-                <p className="text-xs text-[#9f97aa]">ЭФИР ЗАВЕРШЁН</p>
+                <p className="text-[10px] font-black text-[#9f97aa]">Эфир завершён</p>
               )}
-              <h1 className="mt-1 text-xl font-bold">{room.title}</h1>
-              <p className="mt-1 text-sm text-[#b9b1c5]">
-                {host?.display_name ?? "Автор"}
-              </p>
+              <h1 className="mt-1 text-xl font-black tracking-[-0.035em]">
+                {room.title}
+              </h1>
             </div>
-            {room.status === "live" ? (
-              <span className="flex items-center gap-1 text-xs text-[#cfc6d8]">
-                <UsersRound className="size-4" /> {viewers ?? 0}
-              </span>
-            ) : (
-              <span className="flex items-center gap-1 text-xs text-[#cfc6d8]">
-                <UsersRound className="size-4" /> {viewers ?? 0}
-              </span>
-            )}
+            <span className="flex shrink-0 items-center gap-1 text-xs text-[#cfc6d8]">
+              <UsersRound className="size-4" /> {viewers ?? 0}
+            </span>
           </div>
+          <Link
+            className="mt-4 flex items-center gap-3 rounded-xl bg-white/5 p-2.5 transition hover:bg-white/10"
+            href={host?.username ? (`/u/${host.username}` as Route) : "/feed"}
+          >
+            <span className="grid size-10 shrink-0 place-items-center overflow-hidden rounded-full bg-gradient-to-br from-[#ff78ad] to-[#8753ed] p-0.5">
+              <span className="grid size-full place-items-center overflow-hidden rounded-full bg-[#2b1d31] text-xs font-black">
+                {hostAvatarUrl ? (
+                  <img alt="" className="size-full object-cover" src={hostAvatarUrl} />
+                ) : (
+                  (host?.display_name ?? "А").slice(0, 1).toUpperCase()
+                )}
+              </span>
+            </span>
+            <span className="min-w-0 grow">
+              <b className="block truncate text-sm">{host?.display_name ?? "Автор"}</b>
+              <span className="mt-0.5 flex items-center gap-1.5 text-[10px] text-[#b9b1c5]">
+                {hostLocalCreator && (
+                  <LocalRoleIcon
+                    className="size-3.5 text-[#d9b7ff]"
+                    code={hostLocalCreator.role_code}
+                  />
+                )}
+                {hostLocalCreator?.city_label ??
+                  hostLocalCreator?.headline ??
+                  "Автор этого эфира"}
+              </span>
+            </span>
+            <span className="text-[10px] font-bold text-[#ffb7dd]">Профиль ›</span>
+          </Link>
           {room.description && (
             <p className="mt-4 text-sm leading-6 text-[#d8d0e0]">{room.description}</p>
           )}
@@ -225,7 +298,9 @@ export default async function LiveRoomPage({
               href={`/wishes/${wish.id}`}
             >
               <span>
-                <b className="block text-sm">🎯 {wish.title}</b>
+                <b className="flex items-center gap-1.5 text-sm">
+                  <HandCoins className="size-4 text-[#ffb7dd]" /> {wish.title}
+                </b>
                 <small className="text-xs text-[#b9b1c5]">
                   Поддержать желание автора
                 </small>
@@ -279,8 +354,8 @@ export default async function LiveRoomPage({
           </div>
           <div className="mt-3 space-y-2">
             <div className="flex items-center gap-3 rounded-xl bg-white/5 px-3 py-2">
-              <span className="grid size-9 shrink-0 place-items-center rounded-full bg-gradient-to-br from-[#ffd35e] to-[#ff9b3d] text-sm">
-                👑
+              <span className="grid size-9 shrink-0 place-items-center rounded-full bg-gradient-to-br from-[#ffd35e] to-[#ff9b3d] text-[#5a3410]">
+                <Crown className="size-4" />
               </span>
               <div className="min-w-0">
                 <p className="truncate text-sm font-semibold">
@@ -387,7 +462,9 @@ export default async function LiveRoomPage({
                     className="flex w-full flex-col items-center rounded-xl border border-white/10 bg-white/5 px-1 py-2 hover:border-[#ff77ba]"
                     type="submit"
                   >
-                    <span className="text-2xl">{gift.emoji}</span>
+                    <span className="grid size-9 place-items-center rounded-xl bg-gradient-to-br from-[#ff5d9a]/20 to-[#8254ed]/20 text-[#ffc0da]">
+                      <BrandGiftIcon className="size-6" code={gift.code} />
+                    </span>
                     <span className="mt-1 text-[10px]">{gift.label}</span>
                     <span className="text-[10px] text-[#ffb7dd]">
                       {gift.price_minor / 100} ₽
@@ -458,7 +535,7 @@ export default async function LiveRoomPage({
                 </option>
                 {(myPlaces ?? []).map((place) => (
                   <option key={place.id} value={place.id}>
-                    {place.emoji} {place.name}
+                    {place.name}
                   </option>
                 ))}
               </select>

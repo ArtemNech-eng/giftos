@@ -1,7 +1,21 @@
 import Link from "next/link";
 import type { Metadata, Route } from "next";
 /* eslint-disable @next/next/no-img-element -- profile and story media use signed Storage URLs */
-import { ArrowLeft, MoreHorizontal, Play, Radio } from "lucide-react";
+import {
+  ArrowLeft,
+  ChevronRight,
+  Crown,
+  Gem,
+  Gift,
+  MapPin,
+  MoreHorizontal,
+  Play,
+  Radio,
+  ShieldAlert,
+  Sparkles,
+  Trophy,
+  UsersRound,
+} from "lucide-react";
 import { notFound } from "next/navigation";
 
 import { blockUser, unblockUser } from "@/app/safety/actions";
@@ -19,9 +33,11 @@ import {
   updateCreatorSubscriptionSettings,
 } from "@/app/creator/subscriptions/actions";
 import { promoteTarget } from "@/app/shop/actions";
-import { createStory } from "@/app/stories/actions";
+import { BrandGiftIcon } from "@/components/brand-gift-icon";
 import { CreatorShareLink } from "@/components/creator-share-link";
-import { ProfileGiftButton } from "@/components/profile-gift-button";
+import { LocalRoleIcon } from "@/components/local-role-icon";
+import { CollectibleArtifactGiftButton } from "@/components/collectible-artifact-gift-button";
+import { WishCategoryIcon } from "@/components/wish-category-icon";
 import { ProfileQrCode } from "@/components/profile-qr-code";
 import { ReportForm } from "@/components/report-form";
 import { CATEGORIES } from "@/lib/constants";
@@ -108,7 +124,8 @@ export default async function ProfilePage({
     { data: activeLive },
     { data: vip },
     { data: rawReceivedGifts },
-    { data: giftCatalog },
+    { data: rawArtifactCatalog },
+    { data: rawArtifactShelf },
     { data: equippedItems },
   ] = await Promise.all([
     user && !isOwnProfile
@@ -142,14 +159,22 @@ export default async function ProfilePage({
       .select("id, storage_path, visibility, sort_order")
       .eq("profile_id", profile.id)
       .order("sort_order", { ascending: true }),
-    supabase
-      .from("wishes")
-      .select("id, title, category_slug")
-      .eq("author_id", profile.id)
-      .eq("visibility", "public")
-      .eq("is_archived", false)
-      .order("created_at", { ascending: false })
-      .limit(4),
+    isOwnProfile
+      ? supabase
+          .from("wishes")
+          .select("id, title, category_slug, visibility")
+          .eq("author_id", profile.id)
+          .eq("is_archived", false)
+          .order("created_at", { ascending: false })
+          .limit(4)
+      : supabase
+          .from("wishes")
+          .select("id, title, category_slug, visibility")
+          .eq("author_id", profile.id)
+          .eq("visibility", "public")
+          .eq("is_archived", false)
+          .order("created_at", { ascending: false })
+          .limit(4),
     supabase
       .from("fundraisers")
       .select(
@@ -205,12 +230,23 @@ export default async function ProfilePage({
       .eq("recipient_id", profile.id)
       .order("created_at", { ascending: false })
       .limit(20),
+    user && !isOwnProfile
+      ? supabase
+          .from("collectible_artifact_series")
+          .select(
+            "id, title, artwork_path, rarity, remaining_edition, total_edition, price_stars",
+          )
+          .eq("is_active", true)
+          .order("sort_order", { ascending: true })
+      : Promise.resolve({ data: [] }),
     supabase
-      .from("virtual_gifts")
-      .select("code, label, emoji, price_stars, requires_vip")
-      .eq("is_active", true)
-      .eq("economy", "platform")
-      .order("sort_order", { ascending: true }),
+      .from("public_collectible_artifact_shelf")
+      .select(
+        "id, serial_number, issued_at, series_slug, title, artwork_path, rarity, total_edition",
+      )
+      .eq("recipient_id", profile.id)
+      .order("issued_at", { ascending: false })
+      .limit(9),
     supabase
       .from("user_inventory")
       .select("item_id, virtual_items!inner(id, item_type, emoji, name)")
@@ -231,7 +267,6 @@ export default async function ProfilePage({
       }),
     })),
   );
-  const coverUrl = media[0]?.url ?? null;
   const activeStory = rawStories?.[0] ?? null;
   const interests = CATEGORIES.filter((category) =>
     rawWishes?.some((wish) => wish.category_slug === category.slug),
@@ -251,24 +286,43 @@ export default async function ProfilePage({
   const isCityChampion = Boolean(
     profile.city_id && lastCitySeason?.winner_city_id === profile.city_id,
   );
-  const { data: cityRank } = await supabase.rpc("city_rank", {
-    p_profile_id: profile.id,
-  });
-  const cityRankData = (cityRank ?? null) as {
-    rank: number;
-    city_size: number;
-    followers: number;
-  } | null;
+  const { data: cityRank } =
+    profile.city_id && profile.show_city
+      ? await supabase
+          .from("public_city_rankings")
+          .select("rank")
+          .eq("city_id", profile.city_id)
+          .eq("category", "top")
+          .eq("profile_id", profile.id)
+          .maybeSingle()
+      : { data: null };
+  const cityRankData = cityRank as { rank: number } | null;
   const { data: repRoles } = await supabase.rpc("reputation_roles", {
     p_profile_id: profile.id,
   });
   const reputationRoles = (repRoles ?? []) as string[];
+  const { data: cityAmbassadorCity } = await supabase.rpc("city_ambassador_badge", {
+    p_profile_id: profile.id,
+  });
+  const { data: localCreator } = await supabase
+    .from("public_local_creators")
+    .select(
+      "role_code, city_label, headline, live_slug, live_title, story_id, event_id, event_title",
+    )
+    .eq("id", profile.id)
+    .maybeSingle();
   const level = {
-    star: { label: "💎 Звезда", color: "text-[#e17dff] border-[#e17dff]/40" },
-    author: { label: "🎤 Автор", color: "text-[#7fd8ff] border-[#7fd8ff]/40" },
-    popular: { label: "🔥 Популярный", color: "text-[#ff9bc5] border-[#ff9bc5]/40" },
-    active: { label: "⭐ Активный", color: "text-[#8df0b4] border-[#8df0b4]/40" },
-    novice: { label: "🌱 Новичок", color: "text-[#aaa4b7] border-white/15" },
+    star: { label: "Звезда", color: "border-[#d9c5f3] bg-[#f5efff] text-[#7954c7]" },
+    author: { label: "Автор", color: "border-[#c7ddf7] bg-[#eff7ff] text-[#4b69a8]" },
+    popular: {
+      label: "Заметный",
+      color: "border-[#f2cbdc] bg-[#fff2f7] text-[#c75883]",
+    },
+    active: {
+      label: "Активный",
+      color: "border-[#c5e7dc] bg-[#effaf5] text-[#258b82]",
+    },
+    novice: { label: "Новичок", color: "border-[#e2d9e8] bg-[#faf7fc] text-[#756a7d]" },
   }[
     followerCount >= 5000
       ? "star"
@@ -280,21 +334,12 @@ export default async function ProfilePage({
             ? "active"
             : "novice"
   ];
-  // Progress to the next level (pure activity thresholds).
-  const levelThresholds = [5, 50, 500, 5000];
-  const currentLevelIndex = levelThresholds.findIndex((t) => followerCount < t);
-  const nextThreshold =
-    currentLevelIndex >= 0 ? levelThresholds[currentLevelIndex] : null;
-  const levelProgress = nextThreshold
-    ? Math.min(100, Math.round((followerCount / nextThreshold) * 100))
-    : 100;
   const receivedGifts = (rawReceivedGifts ?? []) as Array<{
     sender_id: string;
     gift_code: string;
     price_stars: number;
     created_at: string;
   }>;
-  const giftEmoji = new Map((giftCatalog ?? []).map((gift) => [gift.code, gift.emoji]));
   const equipped = (
     (equippedItems ?? []) as Array<{
       item_id: string;
@@ -320,14 +365,21 @@ export default async function ProfilePage({
   const equippedBadges = equipped.filter((item) => item.itemType === "badge");
 
   return (
-    <main className="mx-auto min-h-screen max-w-[430px] bg-[#0c0e14] pb-24 text-white">
-      <header className="absolute z-10 flex w-full max-w-[430px] items-center justify-between p-4">
+    <main className="mx-auto min-h-screen max-w-[430px] bg-[#f7f4fb] pb-24 pt-4 text-[#251d31]">
+      <header className="flex items-center justify-between px-4">
         <Link
-          className="grid size-9 place-items-center rounded-full bg-black/35 backdrop-blur"
-          href="/"
+          aria-label="Вернуться к людям"
+          className="border-[#2c2036]/9 grid size-10 place-items-center rounded-full border bg-white text-[#5f5369] shadow-[0_5px_15px_rgba(69,43,94,.05)]"
+          href="/people"
         >
-          <ArrowLeft className="size-5" />
+          <ArrowLeft className="size-4.5" />
         </Link>
+        <span className="text-center">
+          <small className="block text-[9px] font-black uppercase tracking-[0.13em] text-[#8c7e94]">
+            {profile.show_city && profile.city ? profile.city : "Профиль"}
+          </small>
+          <b className="mt-0.5 block text-sm">Своя история</b>
+        </span>
         <div className="flex items-center gap-2">
           {user && !isOwnProfile && (
             <ReportForm
@@ -336,62 +388,50 @@ export default async function ProfilePage({
               targetType="profile"
             />
           )}
-          <span className="grid size-9 place-items-center rounded-full bg-black/35 backdrop-blur">
-            <MoreHorizontal className="size-5" />
+          <span className="border-[#2c2036]/9 grid size-10 place-items-center rounded-full border bg-white text-[#74677d] shadow-[0_5px_15px_rgba(69,43,94,.05)]">
+            <MoreHorizontal className="size-4.5" />
           </span>
         </div>
       </header>
 
       <section
-        className={`relative h-64 overflow-hidden ${
+        className={`mx-4 mt-5 overflow-hidden rounded-[1.85rem] border border-white/70 p-5 shadow-[0_14px_32px_rgba(69,43,94,.09)] ${
           profileTheme
-            ? "bg-gradient-to-br from-[#0b1e3a] via-[#14255c] to-[#0d1030]"
-            : "bg-gradient-to-br from-[#3b183f] via-[#281831] to-[#171a2a]"
+            ? "bg-gradient-to-br from-[#e7edff] via-[#f8f4ff] to-[#fff0f7]"
+            : "bg-gradient-to-br from-[#f7ebff] via-[#fff8fc] to-[#eaf6ff]"
         }`}
       >
-        {coverUrl ? (
-          <img alt="" className="size-full object-cover opacity-80" src={coverUrl} />
-        ) : (
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_20%,rgba(236,68,154,0.48),transparent_25%),radial-gradient(circle_at_20%_90%,rgba(113,65,255,0.5),transparent_30%)]" />
-        )}
-      </section>
-
-      <section className="relative px-4 pb-5">
-        <div className="-mt-12 flex items-end justify-between">
+        <div className="flex items-start justify-between gap-4">
           <span
-            className={`grid size-24 place-items-center overflow-hidden rounded-[1.6rem] border-4 bg-[#32203a] text-3xl font-bold ${
-              avatarFrame
-                ? "border-[#ff77ba] shadow-[0_0_18px_rgba(255,119,186,0.5)]"
-                : "border-[#0c0e14]"
+            className={`grid size-20 shrink-0 place-items-center overflow-hidden rounded-full bg-gradient-to-br from-[#ff83b0] to-[#815be8] p-0.5 text-2xl font-black text-[#372c41] ${
+              avatarFrame ? "shadow-[0_0_0_4px_rgba(179,125,239,.22)]" : ""
             }`}
           >
-            {avatarUrl ? (
-              <img
-                alt={`Аватар ${profile.display_name}`}
-                className="size-full object-cover"
-                src={avatarUrl}
-              />
-            ) : (
-              profile.display_name.slice(0, 1).toUpperCase()
-            )}
-            {avatarFrame && (
-              <span className="absolute -bottom-1 -right-1 text-xl">
-                {avatarFrame.emoji}
-              </span>
-            )}
+            <span className="grid size-full place-items-center overflow-hidden rounded-full bg-[#f8f4fc]">
+              {avatarUrl ? (
+                <img
+                  alt={`Аватар ${profile.display_name}`}
+                  className="size-full object-cover"
+                  src={avatarUrl}
+                />
+              ) : (
+                profile.display_name.slice(0, 1).toUpperCase()
+              )}
+            </span>
           </span>
           {user && !isOwnProfile ? (
-            <div className="flex gap-2">
-              {giftCatalog && giftCatalog.length > 0 && (
-                <ProfileGiftButton
-                  gifts={giftCatalog.map((gift) => ({
-                    code: gift.code,
-                    label: gift.label,
-                    emoji: gift.emoji,
-                    price_stars: gift.price_stars ?? 0,
-                    requires_vip: Boolean(gift.requires_vip),
+            <div className="flex flex-wrap justify-end gap-2">
+              {rawArtifactCatalog && rawArtifactCatalog.length > 0 && (
+                <CollectibleArtifactGiftButton
+                  artifacts={rawArtifactCatalog.map((artifact) => ({
+                    id: artifact.id,
+                    title: artifact.title,
+                    artworkPath: artifact.artwork_path,
+                    rarity: artifact.rarity,
+                    remainingEdition: artifact.remaining_edition,
+                    totalEdition: artifact.total_edition,
+                    priceStars: artifact.price_stars,
                   }))}
-                  isVip={vipActive}
                   recipientId={profile.id}
                   username={profile.username}
                 />
@@ -400,10 +440,14 @@ export default async function ProfilePage({
                 <input name="profile_id" type="hidden" value={profile.id} />
                 <input name="username" type="hidden" value={profile.username} />
                 <button
-                  className={`h-10 rounded-xl px-4 text-sm font-bold ${existingFollow ? "border border-white/20 bg-white/5" : "bg-gradient-to-r from-[#ff4b8a] to-[#7d45ff]"}`}
+                  className={`h-10 rounded-xl px-3.5 text-xs font-black shadow-[0_5px_12px_rgba(69,43,94,.08)] ${
+                    existingFollow
+                      ? "border border-[#d9cde3] bg-white text-[#665a72]"
+                      : "bg-gradient-to-r from-[#ff5d9a] to-[#8254ed] text-white"
+                  }`}
                   type="submit"
                 >
-                  {existingFollow ? "Вы подписаны" : "Подписаться"}
+                  {existingFollow ? "Ты подписан(а)" : "Подписаться"}
                 </button>
               </form>
               <form action={existingBlock ? unblockUser : blockUser}>
@@ -414,175 +458,357 @@ export default async function ProfilePage({
                   value={`/u/${profile.username}`}
                 />
                 <button
-                  className="h-10 rounded-xl border border-white/10 px-3 text-xs text-[#c9c1d2]"
+                  aria-label={existingBlock ? "Разблокировать" : "Заблокировать"}
+                  className="grid size-10 place-items-center rounded-xl border border-[#ddcfdf] bg-white text-[#806d7f]"
                   type="submit"
                 >
-                  {existingBlock ? "Разблокировать" : "Блок"}
+                  <ShieldAlert className="size-4" />
                 </button>
               </form>
             </div>
           ) : isOwnProfile && !profile.is_creator ? (
             <Link
-              className="h-10 rounded-xl bg-gradient-to-r from-[#ff4b8a] to-[#7d45ff] px-4 py-2 text-sm font-bold"
+              className="inline-flex h-10 items-center gap-2 rounded-xl bg-gradient-to-r from-[#ff5d9a] to-[#8254ed] px-3.5 text-xs font-black text-white shadow-[0_5px_12px_rgba(160,75,213,.2)]"
               href="/creator/start"
             >
-              Хочу также
+              <Sparkles className="size-4" /> Начать создавать
             </Link>
           ) : null}
         </div>
-        <div className="mt-4 flex items-center gap-2">
-          <h1 className="text-2xl font-bold">{profile.display_name}</h1>
-          {profile.is_creator && (
-            <span className="rounded-full bg-gradient-to-r from-[#f94d96] to-[#8953ff] px-2 py-1 text-xs font-semibold">
-              Автор
-            </span>
-          )}
-          {vipActive && (
-            <span className="rounded-full border border-[#ffd35e]/50 bg-[#2a2215] px-2 py-1 text-xs font-bold text-[#ffd35e]">
-              👑 VIP
-            </span>
-          )}
-          <span
-            className={`rounded-full border px-2 py-1 text-xs font-semibold ${level.color}`}
-          >
-            {level.label}
-          </span>
-          {isCityChampion && (
+
+        <div className="mt-5">
+          <div className="flex flex-wrap items-center gap-2">
+            <h1 className="text-2xl font-black tracking-[-0.055em]">
+              {profile.display_name}
+            </h1>
+            {profile.is_creator && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-[#f0e9ff] px-2 py-1 text-[9px] font-black text-[#7549d0]">
+                <Sparkles className="size-3" /> Автор
+              </span>
+            )}
+            {vipActive && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-[#fff4d8] px-2 py-1 text-[9px] font-black text-[#a87511]">
+                <Crown className="size-3" /> VIP
+              </span>
+            )}
             <span
-              className="rounded-full border border-[#ffd35e]/50 bg-[#2a2215] px-2 py-1 text-xs font-bold text-[#ffd35e]"
-              title="Город выиграл сезон битвы городов"
+              className={`rounded-full border px-2 py-1 text-[9px] font-black ${level.color}`}
             >
-              🏆 Чемпион города
+              {level.label}
             </span>
-          )}
-          {equippedBadges.map((badge) => (
-            <span
-              className="rounded-full border border-white/15 bg-white/5 px-2 py-1 text-xs"
-              key={badge.emoji}
-              title="Значок из магазина"
-            >
-              {badge.emoji}
-            </span>
-          ))}
-          {activeLive && (
-            <Link
-              className="inline-flex items-center gap-1.5 rounded-full bg-[#ff2d55] px-2.5 py-1 text-xs font-bold text-white"
-              href={`/live/${activeLive.slug}` as Route}
-            >
-              <span className="size-1.5 animate-pulse rounded-full bg-white" />В эфире
-            </Link>
-          )}
+          </div>
+          <p className="mt-1 flex flex-wrap items-center gap-1.5 text-[11px] text-[#756a7d]">
+            <span>@{profile.username}</span>
+            {profile.show_city && profile.city && (
+              <>
+                <span className="size-1 rounded-full bg-[#b0a5b7]" />
+                <span className="inline-flex items-center gap-1">
+                  <MapPin className="size-3" /> {profile.city}
+                </span>
+              </>
+            )}
+          </p>
+          <p className="mt-4 max-w-[22rem] text-sm leading-6 text-[#5f5369]">
+            {profile.creator_headline ??
+              profile.bio ??
+              "Собираю свою историю и своих людей в «Хочу также»."}
+          </p>
         </div>
-        <p className="mt-1 text-sm text-[#b9b1c5]">
-          @{profile.username}
-          {profile.show_city && profile.city ? ` · ${profile.city}` : ""}
-        </p>
+
+        {activeLive && (
+          <Link
+            className="mt-4 flex items-center gap-3 rounded-2xl bg-white/75 p-3 text-[#5d4c6b] shadow-[0_5px_14px_rgba(69,43,94,.06)]"
+            href={`/live/${activeLive.slug}` as Route}
+          >
+            <span className="grid size-8 place-items-center rounded-xl bg-[#ff4d78] text-white">
+              <Radio className="size-4" />
+            </span>
+            <span className="min-w-0 grow">
+              <span className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-[0.1em] text-[#d84b81]">
+                <span className="size-1.5 animate-pulse rounded-full bg-[#ff4d78]" /> В
+                эфире
+              </span>
+              <b className="mt-0.5 block truncate text-[11px]">{activeLive.title}</b>
+            </span>
+            <ChevronRight className="size-4 shrink-0 text-[#9d90a4]" />
+          </Link>
+        )}
+
         {interests.length > 0 && (
-          <div className="mt-3 flex flex-wrap gap-2">
+          <div className="mt-4 flex flex-wrap gap-1.5">
             {interests.map((item) => (
               <span
-                className="bg-white/7 rounded-full px-2.5 py-1 text-xs text-[#e3dce9]"
+                className="rounded-full border border-[#dfd5e5] bg-white/75 px-2.5 py-1 text-[9px] font-bold text-[#6d6077]"
                 key={item.slug}
               >
-                {item.emoji} {item.label}
+                {item.label}
               </span>
             ))}
           </div>
         )}
-        <p className="mt-4 text-sm leading-6 text-[#ddd6e4]">
-          {profile.creator_headline ??
-            profile.bio ??
-            "Создаю свою страницу в «Хочу также»."}
-        </p>
-        <div className="mt-5 flex gap-7 text-center">
-          <span>
-            <b className="block text-lg">{followers ?? 0}</b>
-            <small className="text-xs text-[#aaa3b5]">Подписчики</small>
-          </span>
-          <span>
-            <b className="block text-lg">{rawWishes?.length ?? 0}</b>
-            <small className="text-xs text-[#aaa3b5]">Желания</small>
-          </span>
-          <span>
-            <b className="block text-lg">{media.length}</b>
-            <small className="text-xs text-[#aaa3b5]">Фото</small>
-          </span>
-        </div>
-        {cityRankData && profile.show_city && (
-          <div className="mt-5 rounded-2xl border border-[#8f48ff]/30 bg-gradient-to-r from-[#1f1631] to-[#171824] p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-bold">#{cityRankData.rank} в городе</p>
-                <p className="mt-0.5 text-xs text-[#aaa4b7]">
-                  {profile.city ?? "Город"} · среди {cityRankData.city_size} жителей
-                </p>
-              </div>
-              <span className="text-xl">🏆</span>
-            </div>
-            {nextThreshold ? (
-              <div className="mt-3">
-                <div className="h-1.5 overflow-hidden rounded-full bg-white/10">
-                  <div
-                    className="h-full rounded-full bg-gradient-to-r from-[#ff4b8a] to-[#7d45ff]"
-                    style={{ width: `${levelProgress}%` }}
-                  />
-                </div>
-                <p className="mt-2 text-xs text-[#aaa4b7]">
-                  До уровня «{level.label.split(" ")[1] ?? "следующий"}»: ещё{" "}
-                  {nextThreshold - followerCount} подписчиков
-                </p>
-              </div>
-            ) : (
-              <p className="mt-2 text-xs text-[#8df0b4]">
-                Максимальный уровень — вы звезда!
-              </p>
+
+        {(isCityChampion || cityAmbassadorCity || equippedBadges.length > 0) && (
+          <div className="mt-4 flex flex-wrap gap-2">
+            {isCityChampion && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-[#fff4d8] px-2.5 py-1 text-[9px] font-black text-[#a87511]">
+                <Trophy className="size-3" /> Чемпион города
+              </span>
             )}
-            {reputationRoles.length > 0 && (
-              <div className="mt-3 flex flex-wrap gap-1.5">
-                {reputationRoles.map((role) => (
-                  <span
-                    className="rounded-full border border-[#ffd35e]/40 bg-[#2a2215] px-2 py-0.5 text-[10px] font-bold text-[#ffd35e]"
-                    key={role}
-                  >
-                    {role}
-                  </span>
-                ))}
-              </div>
+            {cityAmbassadorCity && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-[#effaf5] px-2.5 py-1 text-[9px] font-black text-[#258b82]">
+                <UsersRound className="size-3" /> Первая волна
+              </span>
             )}
-          </div>
-        )}
-        {receivedGifts.length > 0 && (
-          <div className="mt-5 rounded-2xl border border-white/10 bg-[#171923] p-4">
-            <p className="text-sm font-bold">🎁 Подарки</p>
-            <div className="mt-2 flex flex-wrap gap-2">
-              {receivedGifts.slice(0, 10).map((gift, index) => (
-                <span
-                  className="grid size-10 place-items-center rounded-xl border border-white/10 bg-white/5 text-xl"
-                  key={`${gift.gift_code}-${index}`}
-                  title={`${gift.gift_code} · ${gift.price_stars} ⭐`}
-                >
-                  {giftEmoji.get(gift.gift_code) ?? "🎁"}
-                </span>
-              ))}
-              {receivedGifts.length > 10 && (
-                <span className="grid size-10 place-items-center rounded-xl border border-white/10 bg-white/5 text-xs text-[#aaa4b7]">
-                  +{receivedGifts.length - 10}
-                </span>
-              )}
-            </div>
+            {equippedBadges.length > 0 && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-white/75 px-2.5 py-1 text-[9px] font-black text-[#7549d0]">
+                <Sparkles className="size-3" /> Коллекция {equippedBadges.length}
+              </span>
+            )}
           </div>
         )}
       </section>
+
+      <section className="border-[#2c2036]/9 mx-4 mt-4 rounded-[1.55rem] border bg-white p-4 shadow-[0_8px_22px_rgba(69,43,94,.05)]">
+        {localCreator && (
+          <div className="flex items-start gap-3">
+            <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#f0e9ff] text-[#8753e6]">
+              <LocalRoleIcon className="size-5" code={localCreator.role_code} />
+            </span>
+            <span className="min-w-0 grow">
+              <span className="text-[9px] font-black uppercase tracking-[0.11em] text-[#8753e6]">
+                Создаёт в {profile.city ?? "городе"}
+              </span>
+              <b className="mt-0.5 block text-sm">
+                {localCreator.city_label ??
+                  localCreator.headline ??
+                  "Показывает себя и свои идеи среди своих"}
+              </b>
+              {(localCreator.live_slug ||
+                localCreator.story_id ||
+                localCreator.event_id) && (
+                <Link
+                  className="mt-2 inline-flex items-center gap-1 text-[10px] font-black text-[#7549d0]"
+                  href={
+                    localCreator.live_slug
+                      ? (`/live/${localCreator.live_slug}` as Route)
+                      : localCreator.story_id
+                        ? (`/stories/${localCreator.story_id}` as Route)
+                        : (`/events/${localCreator.event_id}` as Route)
+                  }
+                >
+                  {localCreator.live_slug
+                    ? "Сейчас в эфире"
+                    : localCreator.story_id
+                      ? "Новая story"
+                      : `Событие: ${localCreator.event_title ?? "открыть"}`}
+                  <ChevronRight className="size-3.5" />
+                </Link>
+              )}
+            </span>
+          </div>
+        )}
+        <div
+          className={`${localCreator ? "border-[#2c2036]/8 mt-4 border-t pt-4" : ""} flex gap-7 text-center`}
+        >
+          <span>
+            <b className="block text-lg">{followerCount}</b>
+            <small className="text-[10px] text-[#766b80]">Подписчики</small>
+          </span>
+          <span>
+            <b className="block text-lg">{rawWishes?.length ?? 0}</b>
+            <small className="text-[10px] text-[#766b80]">Желания</small>
+          </span>
+          <span>
+            <b className="block text-lg">{media.length}</b>
+            <small className="text-[10px] text-[#766b80]">Фото</small>
+          </span>
+        </div>
+      </section>
+
+      {cityRankData && profile.show_city && (
+        <section className="mx-4 mt-4 rounded-[1.55rem] border border-[#e3d4f5] bg-gradient-to-r from-[#fffaff] to-[#f2ecff] p-4 shadow-[0_8px_22px_rgba(69,43,94,.05)]">
+          <div className="flex items-start gap-3">
+            <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-white text-[#8753e6] shadow-[0_4px_12px_rgba(80,45,110,.08)]">
+              <Trophy className="size-5" />
+            </span>
+            <span className="min-w-0 grow">
+              <span className="text-[9px] font-black uppercase tracking-[0.11em] text-[#8753e6]">
+                Репутация города
+              </span>
+              <b className="mt-0.5 block text-sm">
+                #{cityRankData.rank} в {profile.city ?? "городе"}
+              </b>
+              <small className="mt-1 block text-[10px] leading-4 text-[#756a7d]">
+                Позиция следует за публичной активностью, её нельзя купить.
+              </small>
+            </span>
+          </div>
+          {reputationRoles.length > 0 && (
+            <div className="mt-3 flex flex-wrap gap-1.5">
+              {reputationRoles.map((role) => (
+                <span
+                  className="rounded-full bg-white px-2 py-1 text-[9px] font-bold text-[#6d5c7a]"
+                  key={role}
+                >
+                  {role}
+                </span>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
+
+      {receivedGifts.length > 0 && (
+        <section className="border-[#2c2036]/9 mx-4 mt-4 rounded-[1.55rem] border bg-white p-4 shadow-[0_8px_22px_rgba(69,43,94,.05)]">
+          <div className="flex items-center gap-2">
+            <span className="grid size-8 place-items-center rounded-xl bg-[#fff0f6] text-[#d84b81]">
+              <Gift className="size-4" />
+            </span>
+            <h2 className="text-xs font-black">Подарки</h2>
+          </div>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {receivedGifts.slice(0, 10).map((gift, index) => (
+              <span
+                className="grid size-10 place-items-center rounded-xl border border-[#eadfeb] bg-[#fbf8fd] text-[#8753e6]"
+                key={`${gift.gift_code}-${index}`}
+                title={`${gift.price_stars} Хочу-бонусов`}
+              >
+                <BrandGiftIcon className="size-5" code={gift.gift_code} />
+              </span>
+            ))}
+            {receivedGifts.length > 10 && (
+              <span className="grid size-10 place-items-center rounded-xl bg-[#f3eef7] text-[10px] font-black text-[#756a7d]">
+                +{receivedGifts.length - 10}
+              </span>
+            )}
+          </div>
+        </section>
+      )}
+
+      {rawWishes && rawWishes.length > 0 && (
+        <section className="border-[#2c2036]/9 mx-4 mt-4 rounded-[1.55rem] border bg-white p-4 shadow-[0_8px_22px_rgba(69,43,94,.05)]">
+          <div className="flex items-center justify-between">
+            <span>
+              <h2 className="text-sm font-black">Желания</h2>
+              <p className="mt-0.5 text-[10px] text-[#81748a]">
+                {isOwnProfile
+                  ? "Твои публичные и личные истории"
+                  : "То, что сейчас важно человеку"}
+              </p>
+            </span>
+            <Link
+              className="text-[10px] font-black text-[#8753e6]"
+              href={
+                isOwnProfile
+                  ? "/wishes"
+                  : (`/wishes?author=${profile.username}` as Route)
+              }
+            >
+              Все ›
+            </Link>
+          </div>
+          <div className="mt-3 space-y-2">
+            {rawWishes.slice(0, 3).map((wish) => (
+              <Link
+                className="flex items-center gap-3 rounded-2xl bg-[#fbf9fe] p-2.5 transition hover:bg-[#f5effa]"
+                href={
+                  isOwnProfile && wish.visibility === "private"
+                    ? (`/wishes/${wish.id}/edit` as Route)
+                    : (`/wishes/${wish.id}` as Route)
+                }
+                key={wish.id}
+              >
+                <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-[#f3e8ff] to-[#fff0f6] text-[#8753e6]">
+                  <WishCategoryIcon
+                    category={wish.category_slug}
+                    className="size-4.5"
+                  />
+                </span>
+                <span className="min-w-0 grow">
+                  <b className="block truncate text-[11px]">{wish.title}</b>
+                  {isOwnProfile && wish.visibility === "private" && (
+                    <small className="mt-0.5 block text-[9px] font-bold text-[#8a7d91]">
+                      Только ты
+                    </small>
+                  )}
+                </span>
+                <ChevronRight className="size-3.5 shrink-0 text-[#a295a8]" />
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {rawArtifactShelf && rawArtifactShelf.length > 0 && (
+        <section className="mx-4 mt-4 rounded-[1.55rem] border border-[#d9c5f3] bg-gradient-to-r from-[#fffaff] to-[#f3edff] p-4 shadow-[0_8px_22px_rgba(69,43,94,.05)]">
+          <div className="flex items-center justify-between">
+            <span>
+              <span className="flex items-center gap-2 text-sm font-black">
+                <Gem className="size-4 text-[#8753e6]" /> Коллекция
+              </span>
+              <small className="mt-0.5 block text-[10px] text-[#756a7d]">
+                ARTIFACTS 01
+              </small>
+            </span>
+            {isOwnProfile && (
+              <Link
+                className="text-[10px] font-black text-[#8753e6]"
+                href="/collection"
+              >
+                Моя полка ›
+              </Link>
+            )}
+          </div>
+          <div className="mt-3 grid grid-cols-3 gap-2">
+            {rawArtifactShelf.map((artifact) => (
+              <span
+                className="overflow-hidden rounded-xl border border-white/80 bg-white shadow-[0_4px_12px_rgba(69,43,94,.05)]"
+                key={artifact.id}
+              >
+                <img
+                  alt=""
+                  className="aspect-[3/4] w-full object-cover"
+                  src={artifact.artwork_path}
+                />
+                <span className="block p-2">
+                  <b className="block truncate text-[9px]">{artifact.title}</b>
+                  <small className="mt-0.5 block text-[8px] font-black text-[#8753e6]">
+                    #{artifact.serial_number} / {artifact.total_edition}
+                  </small>
+                </span>
+              </span>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {isOwnProfile && (!rawArtifactShelf || rawArtifactShelf.length === 0) && (
+        <Link
+          className="mx-4 mt-4 flex items-center gap-3 rounded-[1.55rem] border border-[#d9c5f3] bg-gradient-to-r from-[#fffaff] to-[#f3edff] p-4 shadow-[0_8px_22px_rgba(69,43,94,.05)]"
+          href="/collection"
+        >
+          <span className="grid size-10 place-items-center rounded-xl bg-white text-[#8753e6] shadow-[0_4px_12px_rgba(80,45,110,.08)]">
+            <Gem className="size-5" />
+          </span>
+          <span className="min-w-0 grow">
+            <b className="block text-xs">ARTIFACTS 01</b>
+            <span className="mt-1 block text-[10px] leading-4 text-[#756a7d]">
+              Первые десять лимитированных предметов уже можно посмотреть.
+            </span>
+          </span>
+          <ChevronRight className="size-4 shrink-0 text-[#8753e6]" />
+        </Link>
+      )}
 
       {user &&
         !isOwnProfile &&
         profile.subscriptions_enabled &&
         profile.subscription_price_minor && (
-          <div className="mx-4 mb-3 rounded-2xl border border-[#ff9ed0]/35 bg-gradient-to-r from-[#30182f] to-[#191827] p-4">
+          <div className="mx-4 mb-3 rounded-2xl border border-[#ff9ed0]/35 bg-gradient-to-r from-[#fff0f6] to-[#f3edff] p-4">
             <div className="flex items-center justify-between">
               <span>
                 <b className="block">Подписка на автора</b>
-                <small className="text-xs text-[#b9b1c5]">
+                <small className="text-xs text-[#766b80]">
                   Закрытые публикации и будущие бонусы
                 </small>
               </span>
@@ -592,7 +818,7 @@ export default async function ProfilePage({
             </div>
             {existingSubscription ? (
               <div className="mt-3 flex items-center justify-between gap-3">
-                <span className="text-xs text-[#b9b1c5]">
+                <span className="text-xs text-[#766b80]">
                   Активна до{" "}
                   {new Intl.DateTimeFormat("ru-RU", {
                     day: "numeric",
@@ -616,7 +842,7 @@ export default async function ProfilePage({
                 <input name="creator_id" type="hidden" value={profile.id} />
                 <input name="username" type="hidden" value={profile.username} />
                 <button
-                  className="rounded-xl bg-gradient-to-r from-[#ff4b8a] to-[#7d45ff] px-4 py-2 text-sm font-bold"
+                  className="rounded-xl bg-gradient-to-r from-[#ff4b8a] to-[#7d45ff] px-4 py-2 text-sm font-bold text-white"
                   type="submit"
                 >
                   Подписаться в тестовом режиме
@@ -632,14 +858,14 @@ export default async function ProfilePage({
         profile.paid_message_price_minor && (
           <form
             action={createPaidMessageRequest}
-            className="mx-4 mb-5 rounded-2xl border border-[#b550ff]/35 bg-gradient-to-r from-[#25152f] to-[#181927] p-4"
+            className="mx-4 mb-5 rounded-2xl border border-[#b550ff]/35 bg-gradient-to-r from-[#f4edff] to-[#fff7fb] p-4"
           >
             <input name="creator_id" type="hidden" value={profile.id} />
             <input name="username" type="hidden" value={profile.username} />
             <div className="flex items-center justify-between">
               <span>
                 <b className="block">Написать сообщение</b>
-                <small className="text-xs text-[#b9b1c5]">
+                <small className="text-xs text-[#766b80]">
                   Автор примет или отклонит запрос
                 </small>
               </span>
@@ -648,14 +874,14 @@ export default async function ProfilePage({
               </b>
             </div>
             <textarea
-              className="mt-3 min-h-20 w-full rounded-xl border border-white/10 bg-black/20 p-3 text-sm"
+              className="mt-3 min-h-20 w-full rounded-xl border border-[#2c2036]/10 bg-[#f8f4fb] p-3 text-sm"
               maxLength={2000}
               name="body"
               placeholder="Напишите первое сообщение"
               required
             />
             <button
-              className="mt-3 rounded-xl bg-gradient-to-r from-[#ff4b8a] to-[#7d45ff] px-4 py-2 text-sm font-bold"
+              className="mt-3 rounded-xl bg-gradient-to-r from-[#ff4b8a] to-[#7d45ff] px-4 py-2 text-sm font-bold text-white"
               type="submit"
             >
               Отправить запрос
@@ -663,14 +889,14 @@ export default async function ProfilePage({
           </form>
         )}
 
-      <nav className="flex border-y border-white/10 text-sm font-semibold">
+      <nav className="flex border-y border-[#2c2036]/10 text-sm font-semibold">
         {[
           ["about", "Обо мне"],
           ["stories", "Stories"],
           ["posts", "Посты"],
         ].map(([value, label]) => (
           <Link
-            className={`flex-1 py-3 text-center ${tab === value ? "border-b-2 border-[#ee4f9d] text-white" : "text-[#aaa3b5]"}`}
+            className={`flex-1 py-3 text-center ${tab === value ? "border-b-2 border-[#ee4f9d] text-[#7549d0]" : "text-[#766b80]"}`}
             href={
               `/u/${profile.username}${value === "about" ? "" : `?tab=${value}`}` as Route
             }
@@ -685,7 +911,7 @@ export default async function ProfilePage({
         <section className="space-y-3 p-4">
           {activeLive && (
             <Link
-              className="flex items-center gap-3 rounded-2xl border border-[#ff2d55]/50 bg-gradient-to-r from-[#2a1222] to-[#1b1528] p-3"
+              className="flex items-center gap-3 rounded-2xl border border-[#ff2d55]/50 bg-gradient-to-r from-[#fff0f6] to-[#f7efff] p-3"
               href={`/live/${activeLive.slug}` as Route}
             >
               <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#ff2d55]">
@@ -707,21 +933,21 @@ export default async function ProfilePage({
           )}
           {activeStory && (
             <Link
-              className="flex items-center gap-3 rounded-2xl border border-[#b550ff]/40 bg-gradient-to-r from-[#23142e] to-[#191827] p-3"
+              className="flex items-center gap-3 rounded-2xl border border-[#b550ff]/40 bg-gradient-to-r from-[#f4edff] to-[#fff8fc] p-3"
               href={`/stories/${activeStory.id}` as Route}
             >
-              <span className="grid size-10 place-items-center rounded-xl bg-gradient-to-br from-[#ff4b8a] to-[#7d45ff]">
+              <span className="grid size-10 place-items-center rounded-xl bg-gradient-to-br from-[#ff4b8a] to-[#7d45ff] text-white">
                 <Play className="size-5 fill-white" />
               </span>
               <span className="grow">
                 <b className="block text-sm">Новая video story</b>
-                <small className="text-xs text-[#b9b1c5]">Доступна сейчас</small>
+                <small className="text-xs text-[#766b80]">Доступна сейчас</small>
               </span>
               <span className="text-sm text-[#d8a1ff]">Смотреть ›</span>
             </Link>
           )}
           {rawOffers && rawOffers.length > 0 && (
-            <section className="border-white/8 rounded-2xl border bg-[#171923] p-4">
+            <section className="rounded-2xl border border-[#2c2036]/10 bg-white p-4">
               <h2 className="font-bold">Со мной можно</h2>
               <div className="divide-white/8 mt-3 divide-y">
                 {rawOffers.map((offer) => {
@@ -744,7 +970,7 @@ export default async function ProfilePage({
                         <span>
                           <b className="block text-sm">{offer.title}</b>
                           {offer.description && (
-                            <small className="block text-xs text-[#a9a1b4]">
+                            <small className="block text-xs text-[#766b80]">
                               {offer.description}
                             </small>
                           )}
@@ -759,7 +985,7 @@ export default async function ProfilePage({
                             value={profile.username}
                           />
                           <button
-                            className="rounded-lg bg-gradient-to-r from-[#ff4b8a] to-[#7d45ff] px-2.5 py-1.5 text-xs font-bold"
+                            className="rounded-lg bg-gradient-to-r from-[#ff4b8a] to-[#7d45ff] px-2.5 py-1.5 text-xs font-bold text-white"
                             type="submit"
                           >
                             {formatRubles(offer.price_minor)}
@@ -787,19 +1013,19 @@ export default async function ProfilePage({
             );
             return (
               <Link
-                className="border-white/8 block rounded-2xl border bg-[#181a24] p-4"
+                className="block rounded-2xl border border-[#2c2036]/10 bg-white p-4"
                 href={`/fundraisers/${fundraiser.slug}` as Route}
                 key={fundraiser.id}
               >
-                <p className="text-xs text-[#aaa3b5]">Активная цель</p>
+                <p className="text-xs text-[#766b80]">Активная цель</p>
                 <b className="mt-1 block">{fundraiser.title}</b>
-                <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-white/10">
+                <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-[#eee7f4]">
                   <div
-                    className="h-full rounded-full bg-gradient-to-r from-[#ff4b8a] to-[#7d45ff]"
+                    className="h-full rounded-full bg-gradient-to-r from-[#ff4b8a] to-[#7d45ff] text-white"
                     style={{ width: `${progress}%` }}
                   />
                 </div>
-                <p className="mt-2 text-xs text-[#d8d0e0]">
+                <p className="mt-2 text-xs text-[#665a72]">
                   {formatRubles(fundraiser.current_amount_minor)} из{" "}
                   {formatRubles(fundraiser.target_amount_minor)}
                 </p>
@@ -830,20 +1056,20 @@ export default async function ProfilePage({
         <section className="space-y-3 p-4">
           {activeStory ? (
             <Link
-              className="flex items-center gap-3 rounded-2xl border border-[#b550ff]/40 bg-gradient-to-r from-[#23142e] to-[#191827] p-4"
+              className="flex items-center gap-3 rounded-2xl border border-[#b550ff]/40 bg-gradient-to-r from-[#f4edff] to-[#fff8fc] p-4"
               href={`/stories/${activeStory.id}` as Route}
             >
-              <span className="grid size-12 place-items-center rounded-xl bg-gradient-to-br from-[#ff4b8a] to-[#7d45ff]">
+              <span className="grid size-12 place-items-center rounded-xl bg-gradient-to-br from-[#ff4b8a] to-[#7d45ff] text-white">
                 <Play className="size-6 fill-white" />
               </span>
               <span className="grow">
                 <b className="block">Новая video story</b>
-                <small className="text-xs text-[#b9b1c5]">Доступна сейчас</small>
+                <small className="text-xs text-[#766b80]">Доступна сейчас</small>
               </span>
               <span className="text-[#d8a1ff]">Смотреть ›</span>
             </Link>
           ) : (
-            <div className="rounded-2xl border border-dashed border-white/15 p-6 text-center text-sm text-[#aaa2b4]">
+            <div className="rounded-2xl border border-dashed border-[#2c2036]/15 p-6 text-center text-sm text-[#aaa2b4]">
               Активных stories пока нет.
             </div>
           )}
@@ -852,15 +1078,15 @@ export default async function ProfilePage({
 
       {tab === "posts" && rawPosts && rawPosts.length > 0 && (
         <section className="mx-4 mt-5 space-y-2">
-          <p className="text-sm font-bold text-[#e5ddea]">Посты автора</p>
+          <p className="text-sm font-bold text-[#54475e]">Посты автора</p>
           {rawPosts.map((post) => (
             <Link
-              className="border-white/8 block rounded-2xl border bg-[#171923] p-4"
+              className="block rounded-2xl border border-[#2c2036]/10 bg-white p-4"
               href={`/posts/${post.slug}` as Route}
               key={post.id}
             >
               <h2 className="font-bold">{post.title}</h2>
-              <p className="mt-2 line-clamp-2 text-sm leading-6 text-[#b9b1c5]">
+              <p className="mt-2 line-clamp-2 text-sm leading-6 text-[#766b80]">
                 {post.body}
               </p>
             </Link>
@@ -875,7 +1101,7 @@ export default async function ProfilePage({
             <input name="target_id" type="hidden" value={profile.id} />
             <input name="return_to" type="hidden" value={`/u/${profile.username}`} />
             <button
-              className="flex w-full items-center justify-center gap-2 rounded-2xl border border-[#ffd35e]/40 bg-[#2a2215] py-3 text-sm font-bold text-[#ffd35e]"
+              className="flex w-full items-center justify-center gap-2 rounded-2xl border border-[#ffd35e]/40 bg-[#fff6df] py-3 text-sm font-bold text-[#ffd35e]"
               type="submit"
             >
               🚀 Продвинуть профиль за 300 ⭐ (24 часа)
@@ -897,75 +1123,48 @@ export default async function ProfilePage({
       )}
 
       {isOwnProfile && profile.is_creator && (
-        <details className="mx-4 rounded-2xl border border-white/10 bg-[#171923] p-4">
-          <summary className="cursor-pointer text-sm font-bold">
-            Создать video story
-          </summary>
-          <form action={createStory} className="mt-4" encType="multipart/form-data">
-            <input name="username" type="hidden" value={profile.username} />
-            <input
-              accept="video/mp4,video/webm"
-              className="block w-full text-sm text-[#c5bdce] file:mr-3 file:rounded-lg file:border-0 file:bg-[#f24d98] file:px-3 file:py-2 file:text-sm file:font-semibold file:text-white"
-              name="video"
-              required
-              type="file"
-            />
-            <textarea
-              className="mt-3 min-h-16 w-full rounded-xl border border-white/10 bg-black/20 p-3 text-sm"
-              maxLength={500}
-              name="caption"
-              placeholder="Подпись"
-            />
-            <div className="mt-3 flex gap-2">
-              <select
-                className="rounded-xl bg-black/20 px-3 text-sm"
-                defaultValue="free"
-                name="access_type"
-              >
-                <option value="free">Бесплатно</option>
-                <option value="paid">Платно</option>
-              </select>
-              <input
-                className="w-24 rounded-xl bg-black/20 px-3 text-sm"
-                name="unlock_price"
-                placeholder="49 ₽"
-                type="number"
-              />
-              <button
-                className="rounded-xl bg-gradient-to-r from-[#ff4b8a] to-[#7d45ff] px-4 text-sm font-bold"
-                type="submit"
-              >
-                Опубликовать
-              </button>
-            </div>
-          </form>
-        </details>
+        <Link
+          className="mx-4 mt-4 flex items-center gap-3 rounded-[1.5rem] border border-[#d9c5f3] bg-gradient-to-r from-[#fffaff] to-[#f3edff] p-4 shadow-[0_8px_22px_rgba(69,43,94,.05)]"
+          href="/stories/new"
+        >
+          <span className="grid size-10 place-items-center rounded-xl bg-white text-[#8753e6] shadow-[0_4px_12px_rgba(80,45,110,.08)]">
+            <Play className="size-4 fill-current" />
+          </span>
+          <span className="min-w-0 grow">
+            <b className="block text-xs">Новая story</b>
+            <span className="mt-1 block text-[10px] leading-4 text-[#756a7d]">
+              Покажи короткий момент и продолжи свой сюжет в городе.
+            </span>
+          </span>
+          <ChevronRight className="size-4 shrink-0 text-[#8753e6]" />
+        </Link>
       )}
+
       {isOwnProfile && profile.is_creator && (
         <div className="mx-4 mt-5 grid grid-cols-2 gap-3">
           <Link
-            className="flex items-center justify-between rounded-2xl border border-white/10 bg-[#171923] px-4 py-3 text-sm font-bold"
+            className="flex items-center justify-between rounded-2xl border border-[#2c2036]/10 bg-white px-4 py-3 text-sm font-bold"
             href="/creator/earnings"
           >
             <span>Мой доход</span>
             <span className="text-[#df9cff]">›</span>
           </Link>
           <Link
-            className="flex items-center justify-between rounded-2xl border border-white/10 bg-[#171923] px-4 py-3 text-sm font-bold"
+            className="flex items-center justify-between rounded-2xl border border-[#2c2036]/10 bg-white px-4 py-3 text-sm font-bold"
             href="/creator/offer-requests"
           >
             <span>Запросы</span>
             <span className="text-[#df9cff]">›</span>
           </Link>
           <Link
-            className="flex items-center justify-between rounded-2xl border border-white/10 bg-[#171923] px-4 py-3 text-sm font-bold"
+            className="flex items-center justify-between rounded-2xl border border-[#2c2036]/10 bg-white px-4 py-3 text-sm font-bold"
             href="/settings"
           >
             <span>Настройки</span>
             <span className="text-[#df9cff]">›</span>
           </Link>
           <Link
-            className="flex items-center justify-between rounded-2xl border border-white/10 bg-[#171923] px-4 py-3 text-sm font-bold"
+            className="flex items-center justify-between rounded-2xl border border-[#2c2036]/10 bg-white px-4 py-3 text-sm font-bold"
             href="/profile/media"
           >
             <span>Мои фото</span>
@@ -976,14 +1175,14 @@ export default async function ProfilePage({
       {isOwnProfile && !profile.is_creator && (
         <div className="mx-4 mt-5">
           <Link
-            className="flex items-center justify-between rounded-2xl border border-white/10 bg-[#171923] px-4 py-3 text-sm font-bold"
+            className="flex items-center justify-between rounded-2xl border border-[#2c2036]/10 bg-white px-4 py-3 text-sm font-bold"
             href="/settings"
           >
             <span>Настройки</span>
             <span className="text-[#df9cff]">›</span>
           </Link>
           <Link
-            className="mt-3 flex items-center justify-between rounded-2xl border border-white/10 bg-[#171923] px-4 py-3 text-sm font-bold"
+            className="mt-3 flex items-center justify-between rounded-2xl border border-[#2c2036]/10 bg-white px-4 py-3 text-sm font-bold"
             href="/profile/media"
           >
             <span>Мои фото</span>
@@ -992,12 +1191,12 @@ export default async function ProfilePage({
         </div>
       )}
       {isOwnProfile && (
-        <details className="mx-4 mt-3 rounded-2xl border border-white/10 bg-[#171923] p-4">
+        <details className="mx-4 mt-3 rounded-2xl border border-[#2c2036]/10 bg-white p-4">
           <summary className="cursor-pointer text-sm font-bold">
             Поделиться профилем
           </summary>
           <div className="mt-4 flex flex-col items-center gap-3">
-            <CreatorShareLink username={profile.username} />
+            <CreatorShareLink light username={profile.username} />
             <ProfileQrCode
               name={profile.display_name}
               url={`${process.env.NEXT_PUBLIC_APP_URL ?? "https://hochutakzhe.ru"}/u/${profile.username}`}
@@ -1006,7 +1205,7 @@ export default async function ProfilePage({
         </details>
       )}
       {isOwnProfile && profile.is_creator && (
-        <details className="mx-4 mt-3 rounded-2xl border border-white/10 bg-[#171923] p-4">
+        <details className="mx-4 mt-3 rounded-2xl border border-[#2c2036]/10 bg-white p-4">
           <summary className="cursor-pointer text-sm font-bold">
             Настроить запросы на сообщения
           </summary>
@@ -1020,10 +1219,10 @@ export default async function ProfilePage({
               />{" "}
               Принимать платные запросы
             </label>
-            <label className="mt-3 block text-sm text-[#c9c1d2]">
+            <label className="mt-3 block text-sm text-[#665a72]">
               Тестовая цена, ₽
               <input
-                className="mt-2 block w-28 rounded-xl border border-white/10 bg-black/20 p-2 text-sm"
+                className="mt-2 block w-28 rounded-xl border border-[#2c2036]/10 bg-[#f8f4fb] p-2 text-sm"
                 defaultValue={
                   profile.paid_message_price_minor
                     ? Number(profile.paid_message_price_minor) / 100
@@ -1035,7 +1234,7 @@ export default async function ProfilePage({
               />
             </label>
             <button
-              className="mt-3 rounded-xl bg-gradient-to-r from-[#ff4b8a] to-[#7d45ff] px-4 py-2 text-sm font-bold"
+              className="mt-3 rounded-xl bg-gradient-to-r from-[#ff4b8a] to-[#7d45ff] px-4 py-2 text-sm font-bold text-white"
               type="submit"
             >
               Сохранить
@@ -1044,7 +1243,7 @@ export default async function ProfilePage({
         </details>
       )}
       {isOwnProfile && profile.is_creator && (
-        <details className="mx-4 mt-3 rounded-2xl border border-white/10 bg-[#171923] p-4">
+        <details className="mx-4 mt-3 rounded-2xl border border-[#2c2036]/10 bg-white p-4">
           <summary className="cursor-pointer text-sm font-bold">
             Настроить подписку автора
           </summary>
@@ -1058,10 +1257,10 @@ export default async function ProfilePage({
               />{" "}
               Включить тестовую подписку
             </label>
-            <label className="mt-3 block text-sm text-[#c9c1d2]">
+            <label className="mt-3 block text-sm text-[#665a72]">
               Цена в месяц, ₽
               <input
-                className="mt-2 block w-28 rounded-xl border border-white/10 bg-black/20 p-2 text-sm"
+                className="mt-2 block w-28 rounded-xl border border-[#2c2036]/10 bg-[#f8f4fb] p-2 text-sm"
                 defaultValue={
                   profile.subscription_price_minor
                     ? Number(profile.subscription_price_minor) / 100
@@ -1073,7 +1272,7 @@ export default async function ProfilePage({
               />
             </label>
             <button
-              className="mt-3 rounded-xl bg-gradient-to-r from-[#ff4b8a] to-[#7d45ff] px-4 py-2 text-sm font-bold"
+              className="mt-3 rounded-xl bg-gradient-to-r from-[#ff4b8a] to-[#7d45ff] px-4 py-2 text-sm font-bold text-white"
               type="submit"
             >
               Сохранить
@@ -1082,14 +1281,14 @@ export default async function ProfilePage({
         </details>
       )}
       {isOwnProfile && profile.is_creator && (
-        <details className="mx-4 mt-3 rounded-2xl border border-white/10 bg-[#171923] p-4">
+        <details className="mx-4 mt-3 rounded-2xl border border-[#2c2036]/10 bg-white p-4">
           <summary className="cursor-pointer text-sm font-bold">
             Добавить действие
           </summary>
           <form action={createCreatorOffer} className="mt-4">
             <input name="username" type="hidden" value={profile.username} />
             <select
-              className="w-full rounded-xl border border-white/10 bg-black/20 p-3 text-sm"
+              className="w-full rounded-xl border border-[#2c2036]/10 bg-[#f8f4fb] p-3 text-sm"
               defaultValue="message"
               name="kind"
             >
@@ -1102,21 +1301,21 @@ export default async function ProfilePage({
               <option value="custom">Другое</option>
             </select>
             <input
-              className="mt-3 w-full rounded-xl border border-white/10 bg-black/20 p-3 text-sm"
+              className="mt-3 w-full rounded-xl border border-[#2c2036]/10 bg-[#f8f4fb] p-3 text-sm"
               maxLength={80}
               name="title"
               placeholder="Например: Поговорить 15 минут"
               required
             />
             <textarea
-              className="mt-3 min-h-16 w-full rounded-xl border border-white/10 bg-black/20 p-3 text-sm"
+              className="mt-3 min-h-16 w-full rounded-xl border border-[#2c2036]/10 bg-[#f8f4fb] p-3 text-sm"
               maxLength={300}
               name="description"
               placeholder="Коротко опишите формат"
             />
             <div className="mt-3 flex gap-2">
               <input
-                className="w-28 rounded-xl border border-white/10 bg-black/20 p-3 text-sm"
+                className="w-28 rounded-xl border border-[#2c2036]/10 bg-[#f8f4fb] p-3 text-sm"
                 min="1"
                 name="price"
                 placeholder="299 ₽"
@@ -1124,7 +1323,7 @@ export default async function ProfilePage({
                 type="number"
               />
               <button
-                className="rounded-xl bg-gradient-to-r from-[#ff4b8a] to-[#7d45ff] px-4 text-sm font-bold"
+                className="rounded-xl bg-gradient-to-r from-[#ff4b8a] to-[#7d45ff] px-4 text-sm font-bold text-white"
                 type="submit"
               >
                 Добавить
@@ -1134,19 +1333,19 @@ export default async function ProfilePage({
         </details>
       )}
       {isOwnProfile && profile.is_creator && (
-        <details className="mx-4 mt-3 rounded-2xl border border-white/10 bg-[#171923] p-4">
+        <details className="mx-4 mt-3 rounded-2xl border border-[#2c2036]/10 bg-white p-4">
           <summary className="cursor-pointer text-sm font-bold">Создать пост</summary>
           <form action={createCreatorPost} className="mt-4">
             <input name="username" type="hidden" value={profile.username} />
             <input
-              className="w-full rounded-xl border border-white/10 bg-black/20 p-3 text-sm"
+              className="w-full rounded-xl border border-[#2c2036]/10 bg-[#f8f4fb] p-3 text-sm"
               maxLength={160}
               name="title"
               placeholder="Заголовок поста"
               required
             />
             <textarea
-              className="mt-3 min-h-32 w-full rounded-xl border border-white/10 bg-black/20 p-3 text-sm"
+              className="mt-3 min-h-32 w-full rounded-xl border border-[#2c2036]/10 bg-[#f8f4fb] p-3 text-sm"
               maxLength={10000}
               name="body"
               placeholder="Расскажите что-нибудь своей аудитории"
@@ -1154,7 +1353,7 @@ export default async function ProfilePage({
             />
             <div className="mt-3 flex gap-2">
               <select
-                className="rounded-xl bg-black/20 px-3 text-sm"
+                className="rounded-xl bg-[#f8f4fb] px-3 text-sm"
                 defaultValue="public"
                 name="visibility"
               >
@@ -1162,7 +1361,7 @@ export default async function ProfilePage({
                 <option value="private">Только я</option>
               </select>
               <button
-                className="rounded-xl bg-gradient-to-r from-[#ff4b8a] to-[#7d45ff] px-4 text-sm font-bold"
+                className="rounded-xl bg-gradient-to-r from-[#ff4b8a] to-[#7d45ff] px-4 text-sm font-bold text-white"
                 type="submit"
               >
                 Опубликовать

@@ -4,6 +4,7 @@ import { ArrowLeft, Flame, Trophy, UsersRound } from "lucide-react";
 
 import { requireUser } from "@/lib/auth";
 import { EmptyState } from "@/components/empty-state";
+import { PlaceIcon } from "@/components/place-icon";
 
 export const metadata = {
   title: "Рейтинги",
@@ -15,12 +16,24 @@ type LeaderPlace = {
   id: string;
   city_id: string;
   name: string;
-  emoji: string;
+  icon_code: string;
   kind: "fixed" | "personal" | "temporary";
   popularity_score: number;
   member_count: number;
   online_count: number;
 };
+
+function RankMark({ rank }: { rank: number }) {
+  return rank <= 3 ? (
+    <span className="grid size-7 place-items-center rounded-full bg-[#2a2215] text-[#ffd35e]">
+      <Trophy className="size-3.5" />
+    </span>
+  ) : (
+    <span className="grid size-7 place-items-center text-xs font-semibold text-[#aaa4b7]">
+      {rank}
+    </span>
+  );
+}
 
 export default async function PlacesLeaderboardPage() {
   const { supabase, user } = await requireUser();
@@ -33,9 +46,8 @@ export default async function PlacesLeaderboardPage() {
   const { data: rawLeaderboard } = await supabase
     .from("public_place_leaderboard")
     .select(
-      "id, city_id, name, emoji, kind, popularity_score, member_count, online_count",
+      "id, city_id, name, icon_code, kind, popularity_score, member_count, online_count",
     )
-    .eq("is_active", true)
     .limit(30);
   const leaderboard = (rawLeaderboard ?? []) as LeaderPlace[];
   const myCityPlaces = profile?.city_id
@@ -93,7 +105,7 @@ export default async function PlacesLeaderboardPage() {
       <section className="mt-6">
         <div className="flex items-center gap-2">
           <Trophy className="size-5 text-[#ffd35e]" />
-          <h2 className="font-bold">👑 Лидеры тусовок</h2>
+          <h2 className="font-bold">Лидеры тусовок</h2>
         </div>
         {topPlaces.length === 0 ? (
           <div className="mt-3">
@@ -112,17 +124,9 @@ export default async function PlacesLeaderboardPage() {
                 href={`/places/${place.id}` as Route}
                 key={place.id}
               >
-                <span className="w-7 text-center text-lg">
-                  {index === 0
-                    ? "🥇"
-                    : index === 1
-                      ? "🥈"
-                      : index === 2
-                        ? "🥉"
-                        : `${index + 1}`}
-                </span>
-                <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-[#3b193d] to-[#1f1a38] text-xl">
-                  {place.emoji}
+                <RankMark rank={index + 1} />
+                <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-[#3b193d] to-[#1f1a38] text-[#e5c3ff]">
+                  <PlaceIcon className="size-5" code={place.icon_code} />
                 </span>
                 <span className="min-w-0 grow">
                   <span className="block truncate text-sm font-bold">{place.name}</span>
@@ -149,7 +153,7 @@ export default async function PlacesLeaderboardPage() {
       <section className="mt-7">
         <div className="flex items-center gap-2">
           <Flame className="size-5 text-[#ff7b9c]" />
-          <h2 className="font-bold">🔥 Самые активные · {profile?.city ?? "город"}</h2>
+          <h2 className="font-bold">Самые активные · {profile?.city ?? "город"}</h2>
         </div>
         {activeUsers.length === 0 ? (
           <p className="mt-3 rounded-2xl border border-dashed border-white/15 p-5 text-sm text-[#aaa2b4]">
@@ -166,15 +170,7 @@ export default async function PlacesLeaderboardPage() {
                   href={`/u/${person.username}` as Route}
                   key={row.profile_id}
                 >
-                  <span className="w-7 text-center text-lg">
-                    {index === 0
-                      ? "🥇"
-                      : index === 1
-                        ? "🥈"
-                        : index === 2
-                          ? "🥉"
-                          : `${index + 1}`}
-                  </span>
+                  <RankMark rank={index + 1} />
                   <span className="min-w-0 grow">
                     <span className="block truncate text-sm font-bold">
                       {person.display_name}

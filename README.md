@@ -79,7 +79,21 @@ npm run typecheck
 npm run lint
 npm run build
 npm run format:check
+npm run qa:migrations
 ```
+
+## Staged QA self-hosted контура
+
+После развертывания self-hosted Supabase и заполнения `.env.local`:
+
+```bash
+npm run qa:migrations
+npm run qa:selfhosted
+```
+
+`qa:selfhosted` делает только read-only health/public-cities probes и не печатает
+ключи. Полная матрица синтетических аккаунтов, consent/privacy-проверок и
+stop conditions — в [docs/SELF_HOSTED_SCENARIO_QA.md](docs/SELF_HOSTED_SCENARIO_QA.md).
 
 ## Состояние этапа 0
 

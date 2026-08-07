@@ -4,6 +4,7 @@ import { useState } from "react";
 import { UserPlus } from "lucide-react";
 
 import { inviteProfileToPlace } from "@/app/places/actions";
+import { PlaceIcon } from "@/components/place-icon";
 
 /**
  * «Позвать в тусовку» button on a person's card inside a place: pick one
@@ -16,7 +17,7 @@ export function PlaceInviteButton({
 }: {
   profileId: string;
   returnTo: string;
-  places: Array<{ id: string; name: string; emoji: string }>;
+  places: Array<{ id: string; name: string; icon_code: string }>;
 }) {
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -39,25 +40,28 @@ export function PlaceInviteButton({
   return (
     <div className="relative">
       <button
-        className="inline-flex items-center gap-1 rounded-full border border-[#b550ff]/40 bg-[#1b1528] px-2.5 py-1 text-xs font-semibold text-[#e7c9f5] transition hover:border-[#b550ff]"
+        className="inline-flex items-center gap-1 rounded-full border border-[#d9c5f3] bg-[#f3edff] px-2.5 py-1 text-xs font-semibold text-[#7549d0] transition hover:border-[#ad7bf4]"
         onClick={() => setOpen((value) => !value)}
         type="button"
       >
         <UserPlus className="size-3.5" /> Позвать
       </button>
       {open && (
-        <div className="absolute right-0 z-20 mt-2 w-56 rounded-2xl border border-white/10 bg-[#1b1528] p-3 shadow-glow">
-          <p className="text-xs font-bold text-[#e7c9f5]">Позвать в тусовку</p>
+        <div className="absolute right-0 z-20 mt-2 w-56 rounded-2xl border border-[#2c2036]/10 bg-white p-3 shadow-[0_12px_28px_rgba(69,43,94,.14)]">
+          <p className="text-xs font-bold text-[#251d31]">Позвать в тусовку</p>
           <div className="mt-2 space-y-1.5">
             {places.map((place) => (
               <button
-                className="flex w-full items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-2 py-1.5 text-left text-xs transition hover:border-[#b550ff] disabled:opacity-50"
+                className="flex w-full items-center gap-2 rounded-xl border border-[#2c2036]/10 bg-[#faf7fc] px-2 py-1.5 text-left text-xs transition hover:border-[#ad7bf4] disabled:opacity-50"
                 disabled={busy}
                 key={place.id}
                 onClick={() => void submit(place.id)}
                 type="button"
               >
-                <span className="text-base">{place.emoji}</span>
+                <PlaceIcon
+                  className="size-4 shrink-0 text-[#8753e6]"
+                  code={place.icon_code}
+                />
                 <span className="truncate font-semibold">{place.name}</span>
               </button>
             ))}
