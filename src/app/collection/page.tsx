@@ -1,6 +1,5 @@
 import Link from "next/link";
 import type { Route } from "next";
-/* eslint-disable @next/next/no-img-element -- generated static pre-production artifact art */
 import {
   ArrowLeft,
   Check,
@@ -14,6 +13,7 @@ import {
 
 import { setCollectibleArtifactProfileDisplay } from "@/app/collection/actions";
 import { requireUser } from "@/lib/auth";
+import { AnimatedArtifact } from "@/components/animated-artifact";
 
 export const metadata = {
   title: "Коллекция артефактов",
@@ -140,11 +140,10 @@ export default async function CollectionPage() {
                       className="border-[#2c2036]/9 overflow-hidden rounded-2xl border bg-white shadow-[0_6px_16px_rgba(69,43,94,.05)]"
                       key={instance.id}
                     >
-                      <img
-                        loading="lazy"
-                        decoding="async"
-                        alt=""
-                        className="aspect-square w-full object-cover"
+                      <AnimatedArtifact
+                        className="aspect-square w-full"
+                        orbit={artifact.rarity === "iconic"}
+                        rarity={artifact.rarity}
                         src={artifact.artwork_path}
                       />
                       <span className="block p-2">
@@ -218,11 +217,11 @@ export default async function CollectionPage() {
                 key={artifact.id}
               >
                 <Link className="block" href={`/collection/${artifact.slug}` as Route}>
-                  <img
-                    loading="lazy"
-                    decoding="async"
+                  <AnimatedArtifact
                     alt={artifact.title}
-                    className="aspect-square w-full object-cover"
+                    className="aspect-square w-full"
+                    orbit={artifact.rarity === "iconic"}
+                    rarity={artifact.rarity}
                     src={artifact.artwork_path}
                   />
                   <div className="p-3">
