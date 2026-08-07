@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 
 import { FeedWishToggle } from "@/components/feed-wish-toggle";
+import { ShowMoreSection } from "@/components/show-more-section";
 import { WishCategoryIcon } from "@/components/wish-category-icon";
 import { PlaceIcon } from "@/components/place-icon";
 import { APP_NAME, CATEGORIES } from "@/lib/constants";
@@ -375,7 +376,7 @@ async function getHomeData(scope: "circle" | "city" | "global" = "circle") {
           "id, slug, title, category_slug, current_amount_minor, target_amount_minor, author_display_name, author_username",
         )
         .order("published_at", { ascending: false })
-        .limit(8),
+        .limit(12),
       supabase
         .from("wishes")
         .select(
@@ -392,13 +393,13 @@ async function getHomeData(scope: "circle" | "city" | "global" = "circle") {
         .eq("visibility", "public")
         .eq("is_archived", false)
         .order("created_at", { ascending: false })
-        .limit(6),
+        .limit(12),
       supabase
         .from("public_growing_wishes")
         .select(
           "id, author_id, title, category_slug, also_wants_count, weekly_also_wants",
         )
-        .limit(6),
+        .limit(12),
       supabase
         .from("live_rooms")
         .select("id, slug, title, host_id")
@@ -411,13 +412,13 @@ async function getHomeData(scope: "circle" | "city" | "global" = "circle") {
         .select(
           "id, slug, title, category_slug, current_amount_minor, target_amount_minor, author_display_name, author_username, activity_score",
         )
-        .limit(6),
+        .limit(12),
       supabase
         .from("public_growing_fundraisers")
         .select(
           "id, slug, title, category_slug, current_amount_minor, target_amount_minor, author_display_name, author_username, weekly_supports",
         )
-        .limit(6),
+        .limit(12),
       supabase
         .from("public_recommended_authors")
         .select("id, username, display_name, creator_headline, follower_count")
@@ -1585,14 +1586,16 @@ export default async function HomePage({
               </Link>
             </div>
             <div className="space-y-2.5">
-              {wishesToShow.slice(0, 3).map((wish, index) => (
-                <WishLink
-                  href={isDemo ? "/auth/sign-in" : (`/wishes/${wish.id}` as Route)}
-                  index={index}
-                  key={wish.id}
-                  wish={wish}
-                />
-              ))}
+              <ShowMoreSection empty={null}>
+                {wishesToShow.map((wish, index) => (
+                  <WishLink
+                    href={isDemo ? "/auth/sign-in" : (`/wishes/${wish.id}` as Route)}
+                    index={index}
+                    key={wish.id}
+                    wish={wish}
+                  />
+                ))}
+              </ShowMoreSection>
             </div>
           </section>
 
@@ -1606,14 +1609,16 @@ export default async function HomePage({
               </Link>
             </div>
             <div className="space-y-2.5">
-              {newWishesToShow.slice(0, 3).map((wish, index) => (
-                <WishLink
-                  href={isDemo ? "/auth/sign-in" : (`/wishes/${wish.id}` as Route)}
-                  index={index}
-                  key={wish.id}
-                  wish={wish}
-                />
-              ))}
+              <ShowMoreSection empty={null}>
+                {newWishesToShow.map((wish, index) => (
+                  <WishLink
+                    href={isDemo ? "/auth/sign-in" : (`/wishes/${wish.id}` as Route)}
+                    index={index}
+                    key={wish.id}
+                    wish={wish}
+                  />
+                ))}
+              </ShowMoreSection>
             </div>
           </section>
 
@@ -1627,14 +1632,16 @@ export default async function HomePage({
               </Link>
             </div>
             <div className="space-y-2.5">
-              {growingWishesToShow.slice(0, 3).map((wish, index) => (
-                <WishLink
-                  href={isDemo ? "/auth/sign-in" : (`/wishes/${wish.id}` as Route)}
-                  index={index}
-                  key={wish.id}
-                  wish={wish}
-                />
-              ))}
+              <ShowMoreSection empty={null}>
+                {growingWishesToShow.map((wish, index) => (
+                  <WishLink
+                    href={isDemo ? "/auth/sign-in" : (`/wishes/${wish.id}` as Route)}
+                    index={index}
+                    key={wish.id}
+                    wish={wish}
+                  />
+                ))}
+              </ShowMoreSection>
             </div>
           </section>
 
@@ -1754,26 +1761,28 @@ export default async function HomePage({
               </Link>
             </div>
             <div className="space-y-2.5">
-              {authorsToShow.slice(0, 3).map((author) => (
-                <Link
-                  className="flex items-center gap-3 rounded-2xl border border-[#2c2036]/10 bg-white p-3 transition hover:border-[#8f48ff]/60"
-                  href={isDemo ? "/auth/sign-in" : (`/u/${author.username}` as Route)}
-                  key={author.id}
-                >
-                  <span className="grid size-11 shrink-0 place-items-center rounded-full bg-gradient-to-br from-[#ff4b8a] to-[#7d45ff] text-sm font-bold text-white">
-                    {author.displayName.slice(0, 1).toUpperCase()}
-                  </span>
-                  <div className="min-w-0 grow">
-                    <p className="truncate text-sm font-bold">{author.displayName}</p>
-                    <p className="truncate text-xs text-[#756b80]">
-                      {author.headline ?? "Автор в «Хочу также»"}
-                    </p>
-                  </div>
-                  <span className="shrink-0 text-xs text-[#756b80]">
-                    {author.followerCount} подписчиков
-                  </span>
-                </Link>
-              ))}
+              <ShowMoreSection empty={null}>
+                {authorsToShow.map((author) => (
+                  <Link
+                    className="flex items-center gap-3 rounded-2xl border border-[#2c2036]/10 bg-white p-3 transition hover:border-[#8f48ff]/60"
+                    href={isDemo ? "/auth/sign-in" : (`/u/${author.username}` as Route)}
+                    key={author.id}
+                  >
+                    <span className="grid size-11 shrink-0 place-items-center rounded-full bg-gradient-to-br from-[#ff4b8a] to-[#7d45ff] text-sm font-bold text-white">
+                      {author.displayName.slice(0, 1).toUpperCase()}
+                    </span>
+                    <div className="min-w-0 grow">
+                      <p className="truncate text-sm font-bold">{author.displayName}</p>
+                      <p className="truncate text-xs text-[#756b80]">
+                        {author.headline ?? "Автор в «Хочу также»"}
+                      </p>
+                    </div>
+                    <span className="shrink-0 text-xs text-[#756b80]">
+                      {author.followerCount} подписчиков
+                    </span>
+                  </Link>
+                ))}
+              </ShowMoreSection>
             </div>
           </section>
 
