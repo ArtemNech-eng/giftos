@@ -64,15 +64,17 @@ export default async function AdminUsersPage({
           <p className="text-sm font-semibold text-[#bd3e66]">
             {role === "admin" ? "Администратор" : "Модератор"}
           </p>
-          <h1 className="mt-1 text-3xl font-bold tracking-tight">Пользователи</h1>
+          <h1 className="mt-1 text-2xl font-bold tracking-tight sm:text-3xl">
+            Пользователи
+          </h1>
         </div>
         <ShieldCheck className="mb-2 hidden size-8 text-[#d34872] sm:block" />
       </div>
 
       <AdminNav active="/admin/users" />
 
-      <form className="mt-8 flex flex-wrap items-center gap-2" method="get">
-        <div className="relative min-w-60 grow">
+      <form className="mt-6 flex flex-wrap items-center gap-2" method="get">
+        <div className="relative w-full min-w-0 grow sm:w-auto sm:min-w-60">
           <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[#9b858c]" />
           <input
             className="h-10 w-full rounded-xl border border-[#ead9df] bg-white pl-9 pr-3 text-sm outline-none focus:border-[#df4f7d]"

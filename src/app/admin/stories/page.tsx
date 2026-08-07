@@ -90,13 +90,15 @@ export default async function AdminStoriesPage() {
   );
 
   return (
-    <main className="mx-auto max-w-5xl px-4 py-10 sm:px-6">
+    <main className="mx-auto max-w-5xl px-4 py-6 sm:px-6 sm:py-10">
       <div className="flex items-end justify-between gap-4">
         <div>
           <p className="text-sm font-semibold text-[#bd3e66]">
             {role === "admin" ? "Администратор" : "Модератор"}
           </p>
-          <h1 className="mt-1 text-3xl font-bold tracking-tight">Модерация видео</h1>
+          <h1 className="mt-1 text-2xl font-bold tracking-tight sm:text-3xl">
+            Модерация видео
+          </h1>
           <p className="mt-1 text-sm text-[#8e6a75]">
             Stories публикуются сразу; сюда попадают только те, на которые поступили
             жалобы.

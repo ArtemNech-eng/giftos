@@ -188,7 +188,7 @@ export default async function AdminDashboardPage() {
           <p className="text-sm font-semibold text-[#bd3e66]">
             {role === "admin" ? "Администратор" : "Модератор"}
           </p>
-          <h1 className="mt-1 text-3xl font-bold tracking-tight">Обзор</h1>
+          <h1 className="mt-1 text-2xl font-bold tracking-tight sm:text-3xl">Обзор</h1>
           <p className="mt-1 text-sm text-[#8e6a75]">
             Текущее состояние платформы и очереди на модерацию
           </p>
@@ -197,7 +197,7 @@ export default async function AdminDashboardPage() {
 
       <AdminNav active="/admin" />
 
-      <section className="mt-8 grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <section className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
         {kpis.map((kpi) => (
           <Link
             className="surface rounded-2xl p-4 transition hover:-translate-y-0.5"
@@ -214,7 +214,7 @@ export default async function AdminDashboardPage() {
         ))}
       </section>
 
-      <section className="mt-8 grid gap-6 lg:grid-cols-2">
+      <section className="mt-8 grid gap-6 md:grid-cols-2">
         <div>
           <div className="flex items-center justify-between">
             <h2 className="flex items-center gap-2 text-lg font-bold">
@@ -332,7 +332,7 @@ export default async function AdminDashboardPage() {
           <BarChart3 className="size-5 text-[#8b5cf6]" />
           <h2 className="text-lg font-bold">Аналитика</h2>
         </div>
-        <div className="mt-4 grid gap-6 lg:grid-cols-3">
+        <div className="mt-4 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
           <div className="surface rounded-2xl p-5">
             <h3 className="text-sm font-bold">Регистрации · 7 дней</h3>
             <p className="mt-1 text-xs text-[#9b858c]">

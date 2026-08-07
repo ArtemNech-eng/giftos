@@ -190,22 +190,24 @@ export default async function AdminReportsPage({
   }
 
   return (
-    <main className="mx-auto max-w-5xl px-4 py-10 sm:px-6">
+    <main className="mx-auto max-w-5xl px-4 py-6 sm:px-6 sm:py-10">
       <div className="flex items-end justify-between gap-4">
         <div>
           <p className="text-sm font-semibold text-[#bd3e66]">
             {role === "admin" ? "Администратор" : "Модератор"}
           </p>
-          <h1 className="mt-1 text-3xl font-bold tracking-tight">Модерация</h1>
+          <h1 className="mt-1 text-2xl font-bold tracking-tight sm:text-3xl">
+            Модерация
+          </h1>
         </div>
         <ShieldAlert className="mb-2 hidden size-8 text-[#d34872] sm:block" />
       </div>
 
       <AdminNav active="/admin/reports" />
 
-      <nav className="mt-4 flex gap-1 rounded-xl bg-[#f5e9ed] p-1">
+      <nav className="mt-4 flex gap-1 overflow-x-auto rounded-xl bg-[#f5e9ed] p-1">
         <Link
-          className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold ${
+          className={`flex flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-lg px-4 py-2 text-sm font-semibold ${
             tab === "queue"
               ? "bg-white text-[#bd3e66] shadow-sm"
               : "text-[#8e6a75] hover:text-[#bd3e66]"
@@ -220,7 +222,7 @@ export default async function AdminReportsPage({
           ) : null}
         </Link>
         <Link
-          className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold ${
+          className={`flex flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-lg px-4 py-2 text-sm font-semibold ${
             tab === "archive"
               ? "bg-white text-[#bd3e66] shadow-sm"
               : "text-[#8e6a75] hover:text-[#bd3e66]"

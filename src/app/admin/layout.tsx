@@ -9,7 +9,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   return (
     <div className="min-h-screen bg-[#fbf7f9]">
       <header className="border-b border-[#f0e2e6] bg-white">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:px-6">
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:px-6 sm:py-4">
           <Link className="flex items-center gap-2.5" href="/admin">
             <span className="grid size-9 place-items-center rounded-xl bg-gradient-to-br from-[#ff5d9a] to-[#8254ed] text-white">
               <ShieldCheck className="size-5" />

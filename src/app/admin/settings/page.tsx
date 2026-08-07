@@ -91,7 +91,7 @@ export default async function AdminSettingsPage({
           <p className="text-sm font-semibold text-[#bd3e66]">
             {role === "admin" ? "Администратор" : "Модератор"}
           </p>
-          <h1 className="mt-1 text-3xl font-bold tracking-tight">
+          <h1 className="mt-1 text-2xl font-bold tracking-tight sm:text-3xl">
             Настройки платформы
           </h1>
         </div>

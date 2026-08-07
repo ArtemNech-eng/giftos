@@ -32,13 +32,15 @@ export default async function AdminEconomyPage() {
   const daily = (rawDaily ?? []) as DailyRow[];
 
   return (
-    <main className="mx-auto max-w-5xl px-4 py-10 sm:px-6">
+    <main className="mx-auto max-w-5xl px-4 py-6 sm:px-6 sm:py-10">
       <div className="flex items-end justify-between gap-4">
         <div>
           <p className="text-sm font-semibold text-[#bd3e66]">
             {role === "admin" ? "Администратор" : "Модератор"}
           </p>
-          <h1 className="mt-1 text-3xl font-bold tracking-tight">Экономика</h1>
+          <h1 className="mt-1 text-2xl font-bold tracking-tight sm:text-3xl">
+            Экономика
+          </h1>
         </div>
         <Coins className="mb-2 hidden size-8 text-[#d34872] sm:block" />
       </div>

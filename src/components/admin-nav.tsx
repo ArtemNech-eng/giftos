@@ -23,7 +23,7 @@ const LINKS = [
 
 export function AdminNav({ active }: { active: string }) {
   return (
-    <nav className="mt-6 flex gap-1 overflow-x-auto rounded-xl bg-[#f5e9ed] p-1">
+    <nav className="sticky top-0 z-20 -mx-4 mt-6 flex gap-1 overflow-x-auto bg-[#f5e9ed] px-4 py-1 sm:mx-0 sm:rounded-xl sm:px-1">
       {LINKS.map((link) => {
         const isActive = link.href === active;
         return (
