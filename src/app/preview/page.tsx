@@ -25,7 +25,9 @@ import {
   Radio,
   Search,
   Send,
+  ShoppingBag,
   Sparkles,
+  Star,
   UserRound,
   X,
 } from "lucide-react";
@@ -61,6 +63,7 @@ const screens = [
   { id: "place-new", label: "Новое место", number: "23" },
   { id: "search", label: "Поиск", number: "24" },
   { id: "wish-new", label: "Новое желание", number: "25" },
+  { id: "shop", label: "Магазин", number: "26" },
 ] as const;
 
 type ScreenId = (typeof screens)[number]["id"];
@@ -2592,6 +2595,128 @@ function NewWishScreen() {
   );
 }
 
+function ShopScreen() {
+  return (
+    <div className="min-h-[730px] bg-[#fbf9fe] px-4 pb-6 pt-5 text-[#251d31]">
+      <header className="flex items-center justify-between">
+        <span className="grid size-10 place-items-center rounded-full border border-[#2c2036]/10 bg-white text-[#5f5369]">
+          <ArrowUpRight className="size-4 rotate-[-135deg]" />
+        </span>
+        <span className="text-center">
+          <small className="block text-[9px] font-black uppercase tracking-[0.13em] text-[#8c7e94]">
+            Бонусы и стиль
+          </small>
+          <b className="block text-sm">Магазин ⭐</b>
+        </span>
+        <span className="inline-flex items-center gap-1 rounded-full border border-[#ffd35e]/50 bg-[#fff6d9] px-2.5 py-1.5 text-xs font-black text-[#a57513]">
+          <Star className="size-3.5 fill-current" /> 1 240
+        </span>
+      </header>
+      <section className="mt-5 rounded-[1.7rem] bg-gradient-to-br from-[#2a1a4d] via-[#4b2f7a] to-[#7a4fd0] p-5 text-white shadow-[0_14px_30px_rgba(63,37,98,.2)]">
+        <span className="bg-white/14 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.08em] text-[#fbd7e7]">
+          <ShoppingBag className="size-3.5" /> Твой баланс
+        </span>
+        <p className="mt-3 text-4xl font-black tracking-[-0.04em]">
+          1 240 <span className="text-xl text-white/70">⭐</span>
+        </p>
+        <p className="mt-2 text-[10px] leading-5 text-white/75">
+          ⭐ — внутренние бонусы платформы: за активность, приглашения и участие в жизни
+          города.
+        </p>
+        <div className="mt-4 rounded-2xl bg-black/20 p-3">
+          <div className="flex items-center justify-between text-[10px] font-black">
+            <span>Лимит трат сегодня</span>
+            <span className="text-white/85">120 / 500 ⭐</span>
+          </div>
+          <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/15">
+            <div
+              className="h-full rounded-full bg-gradient-to-r from-[#ff5c99] to-[#ffd35e]"
+              style={{ width: "24%" }}
+            />
+          </div>
+        </div>
+      </section>
+      <section className="mt-4 rounded-[1.6rem] border border-[#ffd35e]/40 bg-gradient-to-br from-[#fff8e1] to-[#fdf0ff] p-4 shadow-[0_10px_26px_rgba(161,122,55,.1)]">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <span className="grid size-11 place-items-center rounded-2xl bg-[#ffd35e]/25 text-[#b8860b]">
+              <Crown className="size-5" />
+            </span>
+            <div>
+              <b className="block text-[11px]">VIP · 149 ⭐ / месяц</b>
+              <small className="mt-0.5 block text-[9px] leading-4 text-[#756a7d]">
+                Значок VIP, рамка профиля и эксклюзивные предметы
+              </small>
+            </div>
+          </div>
+        </div>
+        <span className="mt-3 block rounded-xl bg-gradient-to-r from-[#ffb347] to-[#ff8c42] py-2.5 text-center text-[10px] font-black text-[#4a2c05]">
+          Оформить VIP за 149 ⭐
+        </span>
+      </section>
+      <section className="mt-4">
+        <div className="flex items-center gap-2">
+          <Sparkles className="size-4 text-[#8753e6]" />
+          <b className="text-[11px]">Коллекция</b>
+          <span className="rounded-full bg-[#f0e9ff] px-2 py-0.5 text-[9px] font-black text-[#7549d0]">
+            ЛИМИТИРОВАННО
+          </span>
+        </div>
+        <div className="mt-2.5 space-y-2">
+          {[
+            { emoji: "🌊", name: "Первая волна", rest: "97 / 100" },
+            { emoji: "🥇", name: "Золото", rest: "48 / 50" },
+          ].map((item) => (
+            <div
+              className="flex items-center gap-3 rounded-2xl border border-[#e5d5ff] bg-gradient-to-r from-[#f7f0ff] to-[#fff6fb] p-3"
+              key={item.name}
+            >
+              <span className="grid size-11 place-items-center rounded-xl bg-gradient-to-br from-[#e8d5ff] to-[#ffd9ec] text-xl">
+                {item.emoji}
+              </span>
+              <span className="min-w-0 grow">
+                <span className="flex items-center gap-2">
+                  <b className="text-[10px]">{item.name}</b>
+                  <span className="rounded-full bg-[#f0e9ff] px-1.5 py-0.5 text-[8px] font-black text-[#7549d0]">
+                    {item.rest}
+                  </span>
+                </span>
+              </span>
+              <span className="rounded-xl bg-gradient-to-r from-[#a67ae7] to-[#7a4fd0] px-2.5 py-1.5 text-[9px] font-black text-white">
+                499 ⭐
+              </span>
+            </div>
+          ))}
+        </div>
+      </section>
+      <section className="mt-4">
+        <b className="text-[11px]">Значки</b>
+        <div className="mt-2.5 space-y-2">
+          {[
+            { emoji: "🔥", name: "Огонёк", price: "120 ⭐" },
+            { emoji: "🎸", name: "Меломан", price: "200 ⭐" },
+          ].map((item) => (
+            <div
+              className="border-[#2c2036]/9 flex items-center gap-3 rounded-2xl border bg-white p-3"
+              key={item.name}
+            >
+              <span className="grid size-11 place-items-center rounded-xl bg-gradient-to-br from-[#f3ecff] to-[#fff0f6] text-xl">
+                {item.emoji}
+              </span>
+              <span className="min-w-0 grow">
+                <b className="block text-[10px]">{item.name}</b>
+              </span>
+              <span className="rounded-xl bg-gradient-to-r from-[#ff5c99] to-[#8c58ff] px-2.5 py-1.5 text-[9px] font-black text-white">
+                {item.price}
+              </span>
+            </div>
+          ))}
+        </div>
+      </section>
+    </div>
+  );
+}
+
 function StoryScreen() {
   return (
     <div className="flex min-h-[730px] flex-col bg-[#0d0b12] text-white">
@@ -2796,6 +2921,7 @@ export default async function PreviewPage({
     "place-new": <NewPlaceScreen />,
     search: <SearchScreen />,
     "wish-new": <NewWishScreen />,
+    shop: <ShopScreen />,
   };
 
   return (
