@@ -9,6 +9,7 @@ import {
   ShoppingBag,
   Sparkles,
   UsersRound,
+  Waves,
 } from "lucide-react";
 
 import { CreatorShareLink } from "@/components/creator-share-link";
@@ -288,8 +289,9 @@ export default async function BonusesPage() {
             <p className="text-xs font-bold uppercase tracking-[0.12em] text-[#cda6ff]">
               Вместе, не в одиночку
             </p>
-            <h2 className="mt-1 font-bold">
-              🌊 Первая волна{firstWave?.city_name ? ` · ${firstWave.city_name}` : ""}
+            <h2 className="mt-1 flex items-center gap-1.5 font-bold">
+              <Waves className="size-4 text-[#2f9bb5]" />
+              Первая волна{firstWave?.city_name ? ` · ${firstWave.city_name}` : ""}
             </h2>
           </div>
           {firstWaveReached && (
@@ -400,7 +402,7 @@ export default async function BonusesPage() {
                     {entry.type === "referral_reward"
                       ? "Активный приглашённый"
                       : entry.type === "city_first_wave"
-                        ? "🌊 Первая волна города"
+                        ? "Первая волна города"
                         : entry.type}
                   </b>
                   <small className="text-xs text-[#7b7083]">

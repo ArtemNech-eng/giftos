@@ -9,6 +9,7 @@ import {
   MapPin,
   MessageCircle,
   Radio,
+  Sparkles,
   UsersRound,
 } from "lucide-react";
 import { redirect } from "next/navigation";
@@ -496,8 +497,8 @@ export default async function SeoLandingPage({
               </div>
             </div>
             <div className="absolute -left-4 bottom-14 flex items-center gap-3 rounded-2xl border border-white/75 bg-[#201827] px-3.5 py-3 text-white shadow-2xl">
-              <span className="grid size-8 place-items-center rounded-full bg-gradient-to-br from-[#ff8366] to-[#da4cff] text-xs font-black">
-                ♡
+              <span className="grid size-8 place-items-center rounded-full bg-gradient-to-br from-[#ff8366] to-[#da4cff] text-white">
+                <Heart className="size-4 fill-current" />
               </span>
               <span>
                 <span className="block text-[9px] font-black uppercase tracking-[0.12em] text-white/45">
@@ -776,8 +777,8 @@ export default async function SeoLandingPage({
                         )}
                       </span>
                       {member.isCreator && (
-                        <span className="absolute -bottom-1 -right-1 grid size-5 place-items-center rounded-full border-2 border-white bg-[#201827] text-[9px] text-white">
-                          ✦
+                        <span className="absolute -bottom-1 -right-1 grid size-5 place-items-center rounded-full border-2 border-white bg-[#201827] text-white">
+                          <Sparkles className="size-3" />
                         </span>
                       )}
                     </span>

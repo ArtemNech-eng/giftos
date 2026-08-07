@@ -7,6 +7,7 @@ import {
   Camera,
   CheckCircle2,
   ChevronRight,
+  Heart,
   LockKeyhole,
   MapPin,
   MessageCircle,
@@ -143,8 +144,8 @@ export function OnboardingFlow({
   return (
     <main className="mx-auto min-h-screen max-w-[430px] bg-[#f7f4fb] px-4 pb-10 pt-5 text-[#251d31]">
       <header className="flex items-center justify-between">
-        <span className="grid size-10 place-items-center rounded-[14px] bg-gradient-to-br from-[#ff5d9a] via-[#dc67db] to-[#7559ec] text-xl font-black text-white shadow-[0_6px_16px_rgba(163,80,207,.28)]">
-          ♡
+        <span className="grid size-10 place-items-center rounded-[14px] bg-gradient-to-br from-[#ff5d9a] via-[#dc67db] to-[#7559ec] text-white shadow-[0_6px_16px_rgba(163,80,207,.28)]">
+          <Heart className="size-5 fill-current" />
         </span>
         <span className="text-center">
           <small className="block text-[9px] font-black uppercase tracking-[0.13em] text-[#8c7e94]">

@@ -3,7 +3,14 @@ import {
   ArrowLeft,
   ChevronRight,
   CircleDollarSign,
+  Gift,
+  HandCoins,
+  Heart,
   LockKeyhole,
+  MessageCircle,
+  Play,
+  Repeat,
+  Sparkles,
   TrendingUp,
   WalletCards,
 } from "lucide-react";
@@ -28,23 +35,31 @@ type LedgerEntry = {
   created_at: string;
 };
 
-const labels: Record<string, { label: string; emoji: string; color: string }> = {
+const labels: Record<string, { label: string; icon: typeof Gift; color: string }> = {
   story_unlock: {
     label: "Платные stories",
-    emoji: "▶",
+    icon: Play,
     color: "bg-[#f2e5ff] text-[#8b4ce5]",
   },
   message_request: {
     label: "Платные сообщения",
-    emoji: "✦",
+    icon: MessageCircle,
     color: "bg-[#ffe6f0] text-[#dc3f79]",
   },
-  support: { label: "Поддержка", emoji: "♡", color: "bg-[#fff1cd] text-[#ae7914]" },
-  subscription: { label: "Подписки", emoji: "♛", color: "bg-[#e8f5ff] text-[#2d82bb]" },
-  gift: { label: "Подарки", emoji: "✦", color: "bg-[#e8f8f1] text-[#19885e]" },
+  support: {
+    label: "Поддержка",
+    icon: Heart,
+    color: "bg-[#fff1cd] text-[#ae7914]",
+  },
+  subscription: {
+    label: "Подписки",
+    icon: Repeat,
+    color: "bg-[#e8f5ff] text-[#2d82bb]",
+  },
+  gift: { label: "Подарки", icon: Gift, color: "bg-[#e8f8f1] text-[#19885e]" },
   live_donation: {
     label: "Донаты эфира",
-    emoji: "●",
+    icon: HandCoins,
     color: "bg-[#ffe8da] text-[#c55a25]",
   },
 };
@@ -104,8 +119,8 @@ export default async function CreatorEarningsPage() {
 
       {!profile?.is_creator ? (
         <section className="mt-14 rounded-[2rem] border border-[#2c2036]/10 bg-white p-7 text-center shadow-[0_18px_45px_rgba(69,43,94,0.08)]">
-          <span className="mx-auto grid size-14 place-items-center rounded-2xl bg-[#f0e4ff] text-2xl">
-            ✦
+          <span className="mx-auto grid size-14 place-items-center rounded-2xl bg-[#f0e4ff] text-[#8b4ce5]">
+            <Sparkles className="size-6" />
           </span>
           <h2 className="mt-5 text-xl font-black">Сначала — страница автора</h2>
           <p className="mt-2 text-sm leading-6 text-[#776c80]">
@@ -178,7 +193,7 @@ export default async function CreatorEarningsPage() {
                       <span
                         className={`grid size-8 shrink-0 place-items-center rounded-xl text-sm font-black ${source.color}`}
                       >
-                        {source.emoji}
+                        <source.icon className="size-4" />
                       </span>
                       <span className="truncate text-sm font-semibold">
                         {source.label}
@@ -209,7 +224,7 @@ export default async function CreatorEarningsPage() {
                 {entries.slice(0, 12).map((entry) => {
                   const source = labels[entry.source_type] ?? {
                     label: entry.source_type,
-                    emoji: "✦",
+                    icon: Sparkles,
                     color: "bg-[#f0e4ff] text-[#8b4ce5]",
                   };
                   return (
@@ -221,7 +236,7 @@ export default async function CreatorEarningsPage() {
                         <span
                           className={`grid size-9 shrink-0 place-items-center rounded-xl text-sm ${source.color}`}
                         >
-                          {source.emoji}
+                          <source.icon className="size-4" />
                         </span>
                         <span className="min-w-0">
                           <b className="block truncate text-sm">{source.label}</b>

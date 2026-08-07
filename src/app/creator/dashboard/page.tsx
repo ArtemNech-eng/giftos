@@ -2,6 +2,7 @@ import Link from "next/link";
 import {
   BarChart3,
   Bell,
+  Building2,
   CirclePlus,
   FileText,
   Gift,
@@ -140,8 +141,8 @@ export default async function CreatorDashboardPage() {
                       : "Собери свой город"}
                   </h2>
                 </div>
-                <span className="grid size-11 place-items-center rounded-2xl bg-[#ffd35e]/15 text-xl">
-                  🌆
+                <span className="grid size-11 place-items-center rounded-2xl bg-[#ffd35e]/15 text-[#b8860b]">
+                  <Building2 className="size-6" />
                 </span>
               </div>
 
@@ -217,7 +218,9 @@ export default async function CreatorDashboardPage() {
             <section className="mt-5 overflow-hidden rounded-2xl border border-[#ff5b99]/40 bg-gradient-to-br from-[#fff0f6] to-[#f3ecff] p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs font-bold text-[#ff7fb5]">🔴 Сейчас в эфире</p>
+                  <p className="flex items-center gap-1.5 text-xs font-bold text-[#d84b81]">
+                    <Radio className="size-3.5" /> Сейчас в эфире
+                  </p>
                   <p className="mt-1 font-bold">{activeLive.title}</p>
                 </div>
                 <Link

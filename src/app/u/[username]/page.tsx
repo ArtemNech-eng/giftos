@@ -7,14 +7,21 @@ import {
   Crown,
   Gem,
   Gift,
+  Gamepad2,
   MapPin,
+  MessageCircle,
+  MonitorPlay,
   MoreHorizontal,
+  Phone,
   Play,
   Radio,
+  Rocket,
   ShieldAlert,
   Sparkles,
+  Star,
   Trophy,
   UsersRound,
+  Video,
 } from "lucide-react";
 import { notFound } from "next/navigation";
 
@@ -951,22 +958,25 @@ export default async function ProfilePage({
               <h2 className="font-bold">Со мной можно</h2>
               <div className="divide-white/8 mt-3 divide-y">
                 {rawOffers.map((offer) => {
-                  const icons: Record<string, string> = {
-                    message: "💬",
-                    voice_call: "📞",
-                    video_call: "🎥",
-                    game: "🎮",
-                    activity: "✨",
-                    co_stream: "📺",
-                    custom: "⭐",
+                  const offerIcons: Record<string, typeof MessageCircle> = {
+                    message: MessageCircle,
+                    voice_call: Phone,
+                    video_call: Video,
+                    game: Gamepad2,
+                    activity: Sparkles,
+                    co_stream: MonitorPlay,
+                    custom: Star,
                   };
+                  const OfferIcon = offerIcons[offer.kind] ?? Star;
                   return (
                     <div
                       className="flex items-center justify-between py-3"
                       key={offer.id}
                     >
                       <span className="flex items-center gap-3">
-                        <span className="text-lg">{icons[offer.kind] ?? "⭐"}</span>
+                        <span className="grid size-9 place-items-center rounded-xl bg-[#f3ecff] text-[#8753e6]">
+                          <OfferIcon className="size-4" />
+                        </span>
                         <span>
                           <b className="block text-sm">{offer.title}</b>
                           {offer.description && (
@@ -1104,7 +1114,7 @@ export default async function ProfilePage({
               className="flex w-full items-center justify-center gap-2 rounded-2xl border border-[#ffd35e]/40 bg-[#fff6df] py-3 text-sm font-bold text-[#ffd35e]"
               type="submit"
             >
-              🚀 Продвинуть профиль за 300 ⭐ (24 часа)
+              <Rocket className="size-4" /> Продвинуть профиль за 300 ⭐ (24 часа)
             </button>
           </form>
           {profile.promoted_until &&

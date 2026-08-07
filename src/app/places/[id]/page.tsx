@@ -3,6 +3,7 @@ import Link from "next/link";
 import type { Route } from "next";
 import {
   ArrowLeft,
+  Building2,
   CalendarDays,
   CircleDot,
   Radio,
@@ -28,6 +29,7 @@ import { BrandGiftIcon } from "@/components/brand-gift-icon";
 import { LivePlaceChat } from "@/components/live-place-chat";
 import { PlaceGiftButton } from "@/components/place-gift-button";
 import { PlaceRoomRefresh } from "@/components/place-room-refresh";
+import { PlaceEmblemIcon } from "@/components/place-emblem-icon";
 import { PlaceIcon } from "@/components/place-icon";
 import { PlaceInviteButton } from "@/components/place-invite-button";
 import { ReportForm } from "@/components/report-form";
@@ -52,7 +54,7 @@ export default async function PlacePage({
   const { data: place } = await supabase
     .from("places")
     .select(
-      "id, city_id, creator_id, name, description, icon_code, kind, created_at, popularity_score, theme_id, emblem_id, place_themes!left(gradient), place_emblems!left(emoji)",
+      "id, city_id, creator_id, name, description, icon_code, kind, created_at, popularity_score, theme_id, emblem_id, place_themes!left(gradient), place_emblems!left(icon_code)",
     )
     .eq("id", id)
     .eq("is_active", true)
@@ -62,7 +64,7 @@ export default async function PlacePage({
     ? (place.place_themes[0]?.gradient ?? null)
     : null;
   const placeEmblem = Array.isArray(place.place_emblems)
-    ? (place.place_emblems[0]?.emoji ?? null)
+    ? (place.place_emblems[0]?.icon_code ?? null)
     : null;
 
   const cutoff = new Date(Date.now() - ONLINE_WINDOW).toISOString();
@@ -133,7 +135,7 @@ export default async function PlacePage({
       .order("sort_order", { ascending: true }),
     supabase
       .from("place_emblems")
-      .select("id, name, emoji, price_stars")
+      .select("id, name, icon_code, price_stars")
       .eq("is_active", true)
       .order("sort_order", { ascending: true }),
   ]);
@@ -262,7 +264,9 @@ export default async function PlacePage({
         <h1 className="flex items-center gap-2 text-lg font-black tracking-[-0.03em]">
           <PlaceIcon className="size-5 text-[#8753e6]" code={place.icon_code} />
           {place.name}
-          {placeEmblem ?? ""}
+          {placeEmblem && (
+            <PlaceEmblemIcon className="size-5 text-[#b8860b]" code={placeEmblem} />
+          )}
         </h1>
         <ReportForm
           returnTo={`/places/${place.id}`}
@@ -422,7 +426,7 @@ export default async function PlacePage({
                   className="mb-2 flex w-full items-center justify-center gap-2 rounded-xl border border-[#ffbd5e]/50 bg-gradient-to-r from-[#3b2a16] to-[#2a1d2a] py-2.5 text-sm font-bold text-[#ffdc8a]"
                   type="submit"
                 >
-                  🌆 Продвинуть как амбассадор — бесплатно
+                  <Building2 className="size-4" /> Продвинуть как амбассадор — бесплатно
                 </button>
               </form>
             )}
@@ -489,7 +493,11 @@ export default async function PlacePage({
                         }`}
                         type="submit"
                       >
-                        {emblem.emoji} {emblem.name} · {emblem.price_stars} ⭐
+                        <PlaceEmblemIcon
+                          className="mr-1 inline size-3.5"
+                          code={emblem.icon_code}
+                        />
+                        {emblem.name} · {emblem.price_stars} ⭐
                       </button>
                     </form>
                   ))}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
+import { Flame, Hand, Heart, Sparkles, ThumbsUp } from "lucide-react";
 
 import { hideLiveMessage } from "@/app/live/actions";
 import { createClient } from "@/lib/supabase/client";
@@ -14,18 +15,22 @@ export type LiveRoomMessageView = {
   author_name: string;
 };
 
-const REACTION_BUTTONS: { code: string; emoji: string; label: string }[] = [
-  { code: "fire", emoji: "🔥", label: "Огонь" },
-  { code: "heart", emoji: "❤️", label: "Сердце" },
-  { code: "like", emoji: "👍", label: "Нравится" },
-  { code: "clap", emoji: "👏", label: "Аплодисменты" },
+const REACTION_BUTTONS: {
+  code: string;
+  icon: typeof Flame;
+  label: string;
+}[] = [
+  { code: "fire", icon: Flame, label: "Огонь" },
+  { code: "heart", icon: Heart, label: "Сердце" },
+  { code: "like", icon: ThumbsUp, label: "Нравится" },
+  { code: "clap", icon: Hand, label: "Аплодисменты" },
 ];
 
-const REACTION_EMOJI: Record<string, string> = Object.fromEntries(
-  REACTION_BUTTONS.map((reaction) => [reaction.code, reaction.emoji]),
+const REACTION_ICONS: Record<string, typeof Flame> = Object.fromEntries(
+  REACTION_BUTTONS.map((reaction) => [reaction.code, reaction.icon]),
 );
 
-type FloatingReaction = { id: string; emoji: string; left: number };
+type FloatingReaction = { id: string; icon: typeof Flame; left: number };
 
 /**
  * Realtime live room chat and reactions.
@@ -155,7 +160,7 @@ export function LiveRoomRealtime({
           seenReactionIds.current.add(record.id);
           const item: FloatingReaction = {
             id: record.id,
-            emoji: REACTION_EMOJI[record.reaction_code] ?? "✨",
+            icon: REACTION_ICONS[record.reaction_code] ?? Sparkles,
             left: 10 + Math.random() * 70,
           };
           setFloating((prev) => [...prev.slice(-14), item]);
@@ -262,7 +267,7 @@ export function LiveRoomRealtime({
               key={reaction.id}
               style={{ left: `${reaction.left}%` }}
             >
-              {reaction.emoji}
+              <reaction.icon className="size-7" />
             </span>
           ))}
         </div>
@@ -279,7 +284,7 @@ export function LiveRoomRealtime({
               title={reaction.label}
               type="button"
             >
-              {reaction.emoji}
+              <reaction.icon className="size-5" />
             </button>
           ))}
         </div>

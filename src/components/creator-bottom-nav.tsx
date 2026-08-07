@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CirclePlus, House, Search, UserRound } from "lucide-react";
+import { CirclePlus, Heart, House, Search, UserRound } from "lucide-react";
 
 export function CreatorBottomNav() {
   return (
@@ -32,7 +32,8 @@ export function CreatorBottomNav() {
         className="grid place-items-center gap-1 text-xs hover:text-white"
         href="/notifications"
       >
-        <span className="text-lg">♡</span>Активность
+        <Heart className="size-5" />
+        Активность
       </Link>
       <Link
         className="grid place-items-center gap-1 text-xs hover:text-white"

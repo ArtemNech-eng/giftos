@@ -1,5 +1,18 @@
 import Link from "next/link";
-import { Activity, Coins, MapPin, ShieldAlert, Trophy } from "lucide-react";
+import {
+  Activity,
+  Coins,
+  Gift,
+  Handshake,
+  Home,
+  MapPin,
+  MessageCircle,
+  PartyPopper,
+  Radio,
+  ShieldAlert,
+  Trophy,
+  Users,
+} from "lucide-react";
 
 import { finishSeason, startSeason } from "@/app/admin/city/actions";
 import { requireModerator } from "@/lib/auth";
@@ -164,14 +177,31 @@ export default async function AdminCityPage() {
                   }).format(new Date(row.day))}
                 </span>
                 <span className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
-                  <span>👥 {row.dau}</span>
-                  <span>📍 {row.place_visits}</span>
-                  <span>🏠 {row.hangouts_created}</span>
-                  <span>💬 {row.messages}</span>
-                  <span>🔴 {row.streams_started}</span>
-                  <span>🎉 {row.events_created}</span>
-                  <span>🤝 {row.referrals}</span>
-                  <span>🎁 {row.gifts_sent}</span>
+                  <span className="inline-flex items-center gap-1">
+                    <Users className="size-3.5 text-[#a13d5e]" /> {row.dau}
+                  </span>
+                  <span className="inline-flex items-center gap-1">
+                    <MapPin className="size-3.5 text-[#a13d5e]" /> {row.place_visits}
+                  </span>
+                  <span className="inline-flex items-center gap-1">
+                    <Home className="size-3.5 text-[#a13d5e]" /> {row.hangouts_created}
+                  </span>
+                  <span className="inline-flex items-center gap-1">
+                    <MessageCircle className="size-3.5 text-[#a13d5e]" /> {row.messages}
+                  </span>
+                  <span className="inline-flex items-center gap-1">
+                    <Radio className="size-3.5 text-[#a13d5e]" /> {row.streams_started}
+                  </span>
+                  <span className="inline-flex items-center gap-1">
+                    <PartyPopper className="size-3.5 text-[#a13d5e]" />{" "}
+                    {row.events_created}
+                  </span>
+                  <span className="inline-flex items-center gap-1">
+                    <Handshake className="size-3.5 text-[#a13d5e]" /> {row.referrals}
+                  </span>
+                  <span className="inline-flex items-center gap-1">
+                    <Gift className="size-3.5 text-[#a13d5e]" /> {row.gifts_sent}
+                  </span>
                 </span>
               </div>
             ))}
@@ -207,7 +237,7 @@ export default async function AdminCityPage() {
               </div>
               <p className="mt-3 text-xs leading-5 text-[#9b858c]">
                 Город с наибольшим числом баллов получает «Кубок города» — жители
-                получают статус «🏆 Чемпион города».
+                получают статус «Чемпион города».
               </p>
             </>
           ) : (
@@ -239,8 +269,9 @@ export default async function AdminCityPage() {
               className="surface flex flex-wrap items-center justify-between gap-2 rounded-2xl px-4 py-3"
               key={season.name + (season.finished_at ?? "")}
             >
-              <span className="text-sm font-semibold">
-                🏆 {season.name} — {season.winner_city_name}
+              <span className="inline-flex items-center gap-1.5 text-sm font-semibold">
+                <Trophy className="size-4 text-[#b8860b]" /> {season.name} —{" "}
+                {season.winner_city_name}
               </span>
               <span className="text-xs text-[#8e747c]">
                 {Number(season.winner_points ?? 0).toLocaleString("ru-RU")} баллов ·{" "}

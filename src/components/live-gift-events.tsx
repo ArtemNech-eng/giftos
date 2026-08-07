@@ -25,7 +25,7 @@ type GiftEvent = {
  * Story-like gift events over the live room media area.
  *
  * Streams `live_room_gifts` INSERTs and renders animated banners:
- * «Имя подарил 💎 Алмаз — 500 ₽». Every participant sees the event in
+ * «Имя подарил Алмаз — 500 ₽». Every participant sees the event in
  * real time, including the sender — no page reload is needed.
  */
 export function LiveGiftEvents({

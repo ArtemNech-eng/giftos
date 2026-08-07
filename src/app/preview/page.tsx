@@ -34,6 +34,7 @@ import {
   Radio,
   Search,
   Send,
+  Settings,
   ShoppingBag,
   Sparkles,
   Star,
@@ -95,8 +96,8 @@ const people = [
 
 function Mark() {
   return (
-    <span className="grid size-10 place-items-center rounded-[14px] bg-gradient-to-br from-[#ff5d9a] via-[#dc67db] to-[#7559ec] text-xl font-black text-white shadow-[0_6px_16px_rgba(163,80,207,.28)]">
-      ♡
+    <span className="grid size-10 place-items-center rounded-[14px] bg-gradient-to-br from-[#ff5d9a] via-[#dc67db] to-[#7559ec] text-white shadow-[0_6px_16px_rgba(163,80,207,.28)]">
+      <Heart className="size-5 fill-current" />
     </span>
   );
 }
@@ -1945,7 +1946,7 @@ function EarningsScreen() {
         </span>
         <h1 className="text-sm font-black">Мой заработок</h1>
         <span className="grid size-9 place-items-center rounded-full border border-[#2c2036]/10 bg-white text-[#8753e6]">
-          ⚙
+          <Settings className="size-4.5" />
         </span>
       </header>
       <section className="mt-6 rounded-[1.7rem] border border-[#2c2036]/10 bg-white p-5 shadow-[0_12px_30px_rgba(65,43,89,.08)]">
@@ -2117,7 +2118,7 @@ function MessagesScreen() {
       </div>
       <section className="px-4 pt-5">
         {[
-          { name: "Настя", message: "Привет! Спасибо за поддержку 💗", unread: "1" },
+          { name: "Настя", message: "Привет! Спасибо за поддержку!", unread: "1" },
           { name: "Алина", message: "Конечно, погнали вместе!", unread: "2" },
           { name: "Макс", message: "Отправляй идеи для эфира", unread: "" },
           { name: "Дима", message: "Спасибо за эфир, было круто", unread: "" },

@@ -9,7 +9,9 @@ import {
   Gift,
   HandCoins,
   MessageCircle,
+  Mic,
   Radio,
+  Rocket,
   Square,
   UsersRound,
 } from "lucide-react";
@@ -379,8 +381,8 @@ export default async function LiveRoomPage({
                   className="flex items-center gap-3 rounded-xl bg-white/5 px-3 py-2"
                   key={cohost.profile_id}
                 >
-                  <span className="grid size-9 shrink-0 place-items-center rounded-full bg-gradient-to-br from-[#e17dff] to-[#9e88ff] text-sm">
-                    🎙
+                  <span className="grid size-9 shrink-0 place-items-center rounded-full bg-gradient-to-br from-[#e17dff] to-[#9e88ff] text-white">
+                    <Mic className="size-4" />
                   </span>
                   <div className="min-w-0 grow">
                     <p className="truncate text-sm font-semibold">
@@ -432,7 +434,7 @@ export default async function LiveRoomPage({
               className="flex w-full items-center justify-center gap-2 rounded-2xl border border-[#ffd35e]/40 bg-[#2a2215] py-3 text-sm font-bold text-[#ffd35e]"
               type="submit"
             >
-              🚀 Продвинуть эфир за 150 ⭐
+              <Rocket className="size-4" /> Продвинуть эфир за 150 ⭐
             </button>
           </form>
           <form action={endLiveRoom}>

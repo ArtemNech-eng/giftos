@@ -2,19 +2,27 @@ import Link from "next/link";
 import type { Route } from "next";
 import {
   Bell,
+  Building2,
+  CalendarDays,
   ChevronRight,
   CirclePlus,
   Compass,
+  Crown,
+  Flame,
   Gamepad2,
+  Heart,
   MessageCircle,
   MapPin,
   Music2,
   Plane,
   Radio,
   Sparkles,
+  TrendingUp,
+  Trophy,
   UserRound,
   UsersRound,
   WalletCards,
+  Waves,
 } from "lucide-react";
 
 import { FeedWishToggle } from "@/components/feed-wish-toggle";
@@ -1044,7 +1052,7 @@ export default async function HomePage({
           href="/"
         >
           <span className="grid size-8 place-items-center rounded-xl bg-gradient-to-br from-[#ff4b8a] to-[#7d45ff] text-sm">
-            ♡
+            <Heart className="size-4 fill-current text-white" />
           </span>
           {APP_NAME}
         </Link>
@@ -1271,15 +1279,15 @@ export default async function HomePage({
           className="mb-5 flex items-center gap-3 rounded-2xl border border-[#7fd8ff]/50 bg-gradient-to-r from-[#e7f8f8] to-[#f2efff] p-4 shadow-[0_10px_26px_rgba(71,132,154,0.08)]"
           href="/places"
         >
-          <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-[#7fd8ff]/15 text-2xl">
-            🏙
+          <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-[#7fd8ff]/15 text-[#2f9bb5]">
+            <Building2 className="size-6" />
           </span>
           <span className="min-w-0 grow">
             <span className="flex flex-wrap items-center gap-2">
               <span className="block text-sm font-bold">Цифровой город {cityName}</span>
               {cityFirstWave && (
-                <span className="rounded-full bg-gradient-to-r from-[#6bdbab] to-[#3fb98a] px-2 py-0.5 text-[10px] font-black text-[#0f2b1f]">
-                  🌊 Первая волна
+                <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-[#6bdbab] to-[#3fb98a] px-2 py-0.5 text-[10px] font-black text-[#0f2b1f]">
+                  <Waves className="size-3" /> Первая волна
                 </span>
               )}
             </span>
@@ -1296,14 +1304,14 @@ export default async function HomePage({
           className="mb-5 flex items-center gap-3 rounded-2xl border border-[#ffd35e]/45 bg-gradient-to-r from-[#fff7d9] to-[#f7ebff] p-4 shadow-[0_10px_26px_rgba(161,122,55,0.08)]"
           href="/cities/battle"
         >
-          <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-[#ffd35e]/15 text-2xl">
-            🏆
+          <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-[#ffd35e]/15 text-[#b8860b]">
+            <Trophy className="size-6" />
           </span>
           <span className="min-w-0 grow">
             <span className="block text-sm font-bold">Битва городов</span>
             <span className="mt-0.5 block text-xs text-[#756b80]">
               {cityChampion
-                ? `🏆 ${cityChampion.cityName} — чемпион сезона «${cityChampion.seasonName}»! Поможем защитить кубок`
+                ? `${cityChampion.cityName} — чемпион сезона «${cityChampion.seasonName}»! Поможем защитить кубок`
                 : `Помоги ${cityName} стать первым — приглашай друзей и зарабатывай баллы`}
             </span>
           </span>
@@ -1337,8 +1345,8 @@ export default async function HomePage({
                         </span>
                       )}
                       {"isVip" in person && person.isVip && (
-                        <span className="ml-1 rounded-full border border-[#ffd35e]/50 bg-[#2a2215] px-1.5 py-0.5 text-[10px] font-bold text-[#ffd35e]">
-                          👑 VIP
+                        <span className="ml-1 inline-flex items-center gap-1 rounded-full border border-[#ffd35e]/50 bg-[#2a2215] px-1.5 py-0.5 text-[10px] font-bold text-[#ffd35e]">
+                          <Crown className="size-3" /> VIP
                         </span>
                       )}
                     </p>
@@ -1447,8 +1455,8 @@ export default async function HomePage({
             className="mt-7 flex items-center gap-3 rounded-2xl border border-[#7fd8ff]/25 bg-gradient-to-r from-[#14222b] to-[#181a2b] p-4"
             href="/events"
           >
-            <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-[#7fd8ff]/15 text-2xl">
-              📅
+            <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-[#7fd8ff]/15 text-[#2f9bb5]">
+              <CalendarDays className="size-6" />
             </span>
             <span className="min-w-0 grow">
               <span className="block text-sm font-bold">События города</span>
@@ -1560,7 +1568,9 @@ export default async function HomePage({
 
           <section className="mt-7">
             <div className="mb-3 flex items-center justify-between">
-              <h2 className="text-base font-bold">✨ Популярные желания</h2>
+              <h2 className="flex items-center gap-1.5 text-base font-bold">
+                <Flame className="size-4 text-[#e2574c]" /> Популярные желания
+              </h2>
               <Link className="text-xs font-medium text-[#b26fff]" href="/discover">
                 Смотреть все ›
               </Link>
@@ -1579,7 +1589,9 @@ export default async function HomePage({
 
           <section className="mt-7">
             <div className="mb-3 flex items-center justify-between">
-              <h2 className="text-base font-bold">🆕 Новые желания</h2>
+              <h2 className="flex items-center gap-1.5 text-base font-bold">
+                <Sparkles className="size-4 text-[#8753e6]" /> Новые желания
+              </h2>
               <Link className="text-xs font-medium text-[#b26fff]" href="/discover">
                 Смотреть все ›
               </Link>
@@ -1598,7 +1610,9 @@ export default async function HomePage({
 
           <section className="mt-7">
             <div className="mb-3 flex items-center justify-between">
-              <h2 className="text-base font-bold">🚀 Желания растут</h2>
+              <h2 className="flex items-center gap-1.5 text-base font-bold">
+                <TrendingUp className="size-4 text-[#2f9bb5]" /> Желания растут
+              </h2>
               <Link className="text-xs font-medium text-[#b26fff]" href="/discover">
                 Смотреть все ›
               </Link>
@@ -1640,7 +1654,9 @@ export default async function HomePage({
 
           <section className="mt-7">
             <div className="mb-3 flex items-center justify-between">
-              <h2 className="text-base font-bold">🔥 Популярные сборы</h2>
+              <h2 className="flex items-center gap-1.5 text-base font-bold">
+                <Flame className="size-4 text-[#e2574c]" /> Популярные сборы
+              </h2>
               <Link className="text-xs font-medium text-[#b26fff]" href="/discover">
                 Смотреть все ›
               </Link>
@@ -1663,7 +1679,9 @@ export default async function HomePage({
 
           <section className="mt-7">
             <div className="mb-3 flex items-center justify-between">
-              <h2 className="text-base font-bold">🚀 Быстро растут</h2>
+              <h2 className="flex items-center gap-1.5 text-base font-bold">
+                <TrendingUp className="size-4 text-[#2f9bb5]" /> Быстро растут
+              </h2>
               <Link className="text-xs font-medium text-[#b26fff]" href="/discover">
                 Смотреть все ›
               </Link>
@@ -1687,7 +1705,9 @@ export default async function HomePage({
           {personalAuthors.length > 0 && (
             <section className="mt-7">
               <div className="mb-3 flex items-center justify-between">
-                <h2 className="text-base font-bold">💜 Для вас</h2>
+                <h2 className="flex items-center gap-1.5 text-base font-bold">
+                  <Heart className="size-4 text-[#d84b81]" /> Для вас
+                </h2>
                 <Link className="text-xs font-medium text-[#b26fff]" href="/discover">
                   Смотреть все ›
                 </Link>
@@ -1757,7 +1777,7 @@ export default async function HomePage({
               className="mt-3 inline-flex h-9 items-center rounded-xl bg-white px-3.5 text-xs font-bold text-[#3a1a49]"
               href="/creator/start"
             >
-              ✨ Хочу также
+              <Sparkles className="size-4" /> Хочу также
             </Link>
           </section>
 
