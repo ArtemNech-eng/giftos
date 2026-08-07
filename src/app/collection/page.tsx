@@ -94,7 +94,7 @@ export default async function CollectionPage() {
         </Link>
         <span className="text-center">
           <small className="block text-[9px] font-black uppercase tracking-[0.13em] text-[#8c7e94]">
-            ARTIFACTS 01
+            ХОЧУ · КОЛЛЕКЦИЯ
           </small>
           <h1 className="mt-0.5 text-sm font-black">Коллекция</h1>
         </span>

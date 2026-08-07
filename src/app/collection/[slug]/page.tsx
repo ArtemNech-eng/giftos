@@ -82,7 +82,7 @@ export default async function ArtifactDetailPage({
         </Link>
         <span className="text-center">
           <small className="block text-[9px] font-black uppercase tracking-[0.13em] text-[#8c7e94]">
-            ARTIFACTS 01
+            ХОЧУ · КОЛЛЕКЦИЯ
           </small>
           <h1 className="mt-0.5 text-sm font-black">Предмет</h1>
         </span>
@@ -109,8 +109,7 @@ export default async function ArtifactDetailPage({
           {artifact.title}
         </h2>
         <p className="mt-3 text-sm leading-6 text-[#5f5369]">
-          {artifact.description ??
-            "Лимитированный предмет из первой десятки ARTIFACTS 01."}
+          {artifact.description ?? "Лимитированный предмет коллекции «ХОЧУ»."}
         </p>
         <div className="mt-5 grid grid-cols-2 gap-2">
           <span className="rounded-xl bg-[#fbf9fe] p-3">

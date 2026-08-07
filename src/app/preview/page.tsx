@@ -1443,6 +1443,16 @@ function CollectionScreen() {
     ["seal", "Печать", "60", "219"],
     ["sphere", "Сфера", "40", "269"],
     ["orbit", "Орбита", "25", "349"],
+    ["bear", "Мишка", "300", "49"],
+    ["rose", "Роза", "250", "59"],
+    ["heart", "Сердце", "200", "69"],
+    ["butterfly", "Бабочка", "180", "79"],
+    ["skate", "Скейт", "150", "89"],
+    ["ring", "Кольцо", "100", "119"],
+    ["car", "Машина", "80", "149"],
+    ["star", "Звезда", "60", "179"],
+    ["shell", "Ракушка", "40", "249"],
+    ["crown", "Корона", "25", "329"],
   ] as const;
   return (
     <div className="min-h-[730px] bg-[#fbf9fe] px-4 pb-6 pt-5 text-[#251d31]">
@@ -1452,7 +1462,7 @@ function CollectionScreen() {
         </span>
         <span className="text-center">
           <small className="block text-[9px] font-black uppercase tracking-[0.13em] text-[#8c7e94]">
-            ARTIFACTS 01
+            ХОЧУ · КОЛЛЕКЦИЯ
           </small>
           <b className="block text-sm">Коллекция</b>
         </span>
@@ -1476,13 +1486,13 @@ function CollectionScreen() {
       <section className="mt-5">
         <div className="mb-3 flex items-end justify-between">
           <span>
-            <h2 className="text-sm font-black">Первая десятка</h2>
+            <h2 className="text-sm font-black">Коллекция</h2>
             <p className="mt-0.5 text-[10px] text-[#82758a]">
               Выбери предмет на профиле человека
             </p>
           </span>
           <span className="rounded-full bg-[#efe9f6] px-2 py-1 text-[9px] font-black text-[#7a6688]">
-            10
+            20
           </span>
         </div>
         <div className="grid grid-cols-2 gap-3">
@@ -1496,8 +1506,8 @@ function CollectionScreen() {
                 loading="lazy"
                 decoding="async"
                 alt=""
-                className="aspect-[3/2] w-full object-cover"
-                src={`/collectibles/artifacts/${slug}.jpg`}
+                className="aspect-square w-full object-cover"
+                src={`/collectibles/artifacts/png/${slug}.png`}
               />
               <div className="p-3">
                 <span className="inline-flex rounded-full bg-[#f0e9ff] px-1.5 py-0.5 text-[8px] font-black text-[#7549d0]">
@@ -1563,7 +1573,7 @@ function UnboxingScreen() {
   return (
     <div className="flex min-h-[730px] flex-col bg-[#17131f] p-4 text-white">
       <header className="flex items-center justify-between text-[9px] font-black uppercase tracking-[0.14em] text-white/55">
-        <span>ARTIFACTS 01</span>
+        <span>ХОЧУ · КОЛЛЕКЦИЯ</span>
         <span>В КОЛЛЕКЦИИ</span>
       </header>
       <section className="relative mt-5 flex grow flex-col items-center justify-center overflow-hidden rounded-[2rem] border border-white/10 bg-[radial-gradient(circle_at_50%_32%,rgba(181,139,242,.25),transparent_28%),radial-gradient(circle_at_50%_90%,rgba(231,71,133,.17),transparent_35%),#211a2b] px-5 py-10 text-center">
