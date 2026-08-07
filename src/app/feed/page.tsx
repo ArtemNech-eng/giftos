@@ -333,6 +333,7 @@ async function getHomeData(scope: "circle" | "city" | "global" = "circle") {
           : [],
       circleLiveRooms: scope === "circle" ? demoLiveRooms.slice(0, 2) : [],
       cityChampion: null,
+      cityFirstWave: false,
       isDemo: true,
     };
   }
@@ -587,6 +588,7 @@ async function getHomeData(scope: "circle" | "city" | "global" = "circle") {
     let circlePlaces: CirclePlace[] = [];
     let circleLiveRooms: LiveRoomPreview[] = [];
     let cityChampion: { seasonName: string; cityName: string } | null = null;
+    let cityFirstWave = false;
     if (scope !== "global" && user) {
       const { data: myProfile } = await supabase
         .from("profiles")
@@ -774,6 +776,15 @@ async function getHomeData(scope: "circle" | "city" | "global" = "circle") {
                 cityName: lastSeason.winner_city_name ?? cityName ?? "",
               }
             : null;
+
+        // City First Wave: the city «came alive» after 5 qualified referrals.
+        const { data: firstWave } = await supabase
+          .from("city_first_waves")
+          .select("milestone")
+          .eq("city_id", myProfile.city_id)
+          .eq("milestone", 5)
+          .maybeSingle();
+        cityFirstWave = Boolean(firstWave);
       }
     }
 
@@ -797,6 +808,7 @@ async function getHomeData(scope: "circle" | "city" | "global" = "circle") {
       circlePlaces,
       circleLiveRooms,
       cityChampion,
+      cityFirstWave,
       isDemo: false,
     };
   } catch {
@@ -820,6 +832,7 @@ async function getHomeData(scope: "circle" | "city" | "global" = "circle") {
       circlePlaces: [],
       circleLiveRooms: [],
       cityChampion: null,
+      cityFirstWave: false,
       isDemo: false,
     };
   }
@@ -992,6 +1005,7 @@ export default async function HomePage({
     circlePlaces,
     circleLiveRooms,
     cityChampion,
+    cityFirstWave,
     isDemo,
   } = await getHomeData(scope);
   // Demo data is visible only without a configured data service. Once Supabase
@@ -1261,7 +1275,14 @@ export default async function HomePage({
             🏙
           </span>
           <span className="min-w-0 grow">
-            <span className="block text-sm font-bold">Цифровой город {cityName}</span>
+            <span className="flex flex-wrap items-center gap-2">
+              <span className="block text-sm font-bold">Цифровой город {cityName}</span>
+              {cityFirstWave && (
+                <span className="rounded-full bg-gradient-to-r from-[#6bdbab] to-[#3fb98a] px-2 py-0.5 text-[10px] font-black text-[#0f2b1f]">
+                  🌊 Первая волна
+                </span>
+              )}
+            </span>
             <span className="mt-0.5 block text-xs text-[#756b80]">
               Посмотри, кто сейчас здесь — и заходи в место
             </span>

@@ -40,6 +40,17 @@ type ReferralProgress = {
   approved_at: string | null;
 };
 
+type FirstWaveProgress = {
+  city_id: string | null;
+  city_name: string | null;
+  qualified_referrals: number;
+  next_milestone: number | null;
+  achieved_milestones: number[];
+};
+
+const FIRST_WAVE_MILESTONES = [5, 15, 30];
+const FIRST_WAVE_BONUS: Record<number, number> = { 5: 100, 15: 250, 30: 500 };
+
 export default async function BonusesPage() {
   const { supabase, user } = await requireUser();
   const [
@@ -48,6 +59,7 @@ export default async function BonusesPage() {
     { data: referrals },
     { data: rawReferralProgress },
     { data: settings },
+    { data: firstWaveRaw },
   ] = await Promise.all([
     supabase
       .from("bonus_wallets")
@@ -71,9 +83,20 @@ export default async function BonusesPage() {
       .select("referral_reward, hold_days")
       .eq("id", true)
       .maybeSingle(),
+    supabase.rpc("city_first_wave_progress"),
   ]);
   const entries = (rawEntries ?? []) as BonusEntry[];
   const referralProgress = (rawReferralProgress ?? []) as ReferralProgress[];
+  const firstWave = (firstWaveRaw ?? null) as FirstWaveProgress | null;
+  const firstWaveCount = firstWave?.qualified_referrals ?? 0;
+  const firstWaveNext = firstWave?.next_milestone ?? null;
+  const firstWaveAchieved = firstWave?.achieved_milestones ?? [];
+  const firstWaveReached = firstWaveAchieved.length > 0;
+  const firstWaveProgressPercent = firstWaveNext
+    ? Math.min(100, Math.round((firstWaveCount / firstWaveNext) * 100))
+    : firstWaveCount > 0
+      ? 100
+      : 0;
   const reward = settings?.referral_reward ?? 200;
   const { data: referralLink } = await supabase.rpc("create_referral_link", {
     p_user_id: user.id,
@@ -260,6 +283,93 @@ export default async function BonusesPage() {
       </section>
 
       <section className="mt-6">
+        <div className="flex items-end justify-between gap-3">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.12em] text-[#cda6ff]">
+              Вместе, не в одиночку
+            </p>
+            <h2 className="mt-1 font-bold">
+              🌊 Первая волна{firstWave?.city_name ? ` · ${firstWave.city_name}` : ""}
+            </h2>
+          </div>
+          {firstWaveReached && (
+            <span className="rounded-full bg-gradient-to-r from-[#6bdbab] to-[#3fb98a] px-2.5 py-1 text-[10px] font-black text-[#0f2b1f]">
+              ГОРОД ОЖИЛ
+            </span>
+          )}
+        </div>
+
+        {firstWave?.city_id ? (
+          <>
+            <div className="mt-3 rounded-2xl border border-[#2c2036]/10 bg-white p-4">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-[#7b7083]">
+                  {firstWaveCount} из {firstWaveNext ?? 30} активных жителей по
+                  приглашениям
+                </span>
+                <b className="text-[#4e4258]">{firstWaveProgressPercent}%</b>
+              </div>
+              <div className="mt-2.5 h-2.5 overflow-hidden rounded-full bg-[#f0eaf5]">
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-[#ff5c99] to-[#8c58ff]"
+                  style={{ width: `${Math.max(3, firstWaveProgressPercent)}%` }}
+                />
+              </div>
+              <p className="mt-3 text-xs leading-5 text-[#7b7083]">
+                {firstWaveReached
+                  ? "Ваш город прошёл первую волну — теперь он живёт сам: новые жители приходят по приглашениям и остаются."
+                  : firstWaveNext
+                    ? `Когда в ${firstWave.city_name} станет ${firstWaveNext} активных жителей по приглашениям, город получит статус «Первая волна», а тот, кто приведёт последнего — бонус +${FIRST_WAVE_BONUS[firstWaveNext] ?? 0} ⭐.`
+                    : "Все вехи пройдены — город в первой волне навсегда."}
+              </p>
+            </div>
+            <div className="mt-3 grid grid-cols-3 gap-2">
+              {FIRST_WAVE_MILESTONES.map((milestone) => {
+                const done = firstWaveAchieved.includes(milestone);
+                return (
+                  <div
+                    className={`rounded-xl border p-3 text-center ${
+                      done
+                        ? "border-[#6bdbab]/50 bg-[#eefaf4]"
+                        : "border-[#2c2036]/10 bg-white"
+                    }`}
+                    key={milestone}
+                  >
+                    <span className="text-lg font-black text-[#4e4258]">
+                      {milestone}
+                    </span>
+                    <span className="mt-0.5 block text-[10px] text-[#7b7083]">
+                      жителей
+                    </span>
+                    <span
+                      className={`mt-1.5 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                        done
+                          ? "bg-[#6bdbab] text-[#10231a]"
+                          : "bg-[#f0eaf5] text-[#8e8797]"
+                      }`}
+                    >
+                      {done ? (
+                        <>
+                          <Check className="size-3" /> +{FIRST_WAVE_BONUS[milestone]} ⭐
+                        </>
+                      ) : (
+                        "+" + (FIRST_WAVE_BONUS[milestone] ?? 0) + " ⭐"
+                      )}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </>
+        ) : (
+          <div className="mt-3 rounded-2xl border border-dashed border-[#2c2036]/15 bg-white p-4 text-sm leading-6 text-[#7b7083]">
+            Укажите город в профиле — и «Первая волна» города будет расти вместе с
+            вашими приглашениями. Это общая победа, а не личный рейтинг.
+          </div>
+        )}
+      </section>
+
+      <section className="mt-6">
         <h2 className="font-bold">Как получить ⭐</h2>
         <div className="mt-3 space-y-2">
           <div className="flex items-center gap-3 rounded-xl bg-[#f7f2fa] p-3 text-sm">
@@ -289,7 +399,9 @@ export default async function BonusesPage() {
                   <b className="block text-sm">
                     {entry.type === "referral_reward"
                       ? "Активный приглашённый"
-                      : entry.type}
+                      : entry.type === "city_first_wave"
+                        ? "🌊 Первая волна города"
+                        : entry.type}
                   </b>
                   <small className="text-xs text-[#7b7083]">
                     {entry.status === "available" ? "Доступно" : "В обработке"}
