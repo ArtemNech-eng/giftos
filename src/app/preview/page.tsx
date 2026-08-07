@@ -55,6 +55,7 @@ const screens = [
   { id: "unboxing", label: "Распаковка", number: "18" },
   { id: "wish", label: "Желание", number: "19" },
   { id: "fundraiser", label: "Сбор", number: "20" },
+  { id: "fundraiser-new", label: "Создать сбор", number: "21" },
 ] as const;
 
 type ScreenId = (typeof screens)[number]["id"];
@@ -1779,6 +1780,103 @@ function FundraiserScreen() {
   );
 }
 
+function NewFundraiserScreen() {
+  return (
+    <div className="min-h-[730px] bg-[#fbf9fe] px-4 pb-6 pt-5 text-[#251d31]">
+      <header className="flex items-center justify-between">
+        <span className="grid size-10 place-items-center rounded-full border border-[#2c2036]/10 bg-white text-[#5f5369]">
+          <ArrowUpRight className="size-4 rotate-[-135deg]" />
+        </span>
+        <span className="text-center">
+          <small className="block text-[9px] font-black uppercase tracking-[0.13em] text-[#8c7e94]">
+            Общая цель
+          </small>
+          <b className="block text-sm">Новый сбор</b>
+        </span>
+        <span className="grid size-10 place-items-center rounded-full bg-[#fff0f6] text-[#d84b81]">
+          <TargetPreview />
+        </span>
+      </header>
+      <section className="mt-5 rounded-[1.7rem] bg-gradient-to-br from-[#fff0f7] via-[#f6edff] to-[#eaf5ff] p-5 shadow-[0_14px_30px_rgba(69,43,94,.1)]">
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-white/75 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.08em] text-[#8753e6]">
+          <Sparkles className="size-3.5" /> Добровольное продолжение
+        </span>
+        <h1 className="mt-3 text-3xl font-black leading-[0.88] tracking-[-0.075em]">
+          СОБЕРИ ЛЮДЕЙ
+          <br />
+          ВОКРУГ ЦЕЛИ.
+        </h1>
+        <p className="mt-3 max-w-64 text-[10px] leading-5 text-[#756a7d]">
+          Сбор не обязателен. Создай его, когда у желания появилась отдельная история.
+        </p>
+      </section>
+      <section className="border-[#2c2036]/9 mt-5 rounded-[1.5rem] border bg-white p-3.5 shadow-[0_8px_22px_rgba(69,43,94,.05)]">
+        <b className="block text-[11px]">Какая общая цель?</b>
+        <span className="mt-2 flex rounded-xl border border-[#2c2036]/10 bg-[#fbf9fe] px-3 py-3 text-[10px] font-semibold text-[#aaa0ae]">
+          Собрать домашнюю студию
+        </span>
+        <b className="mt-4 block text-[10px]">Почему это важно?</b>
+        <span className="mt-2 block min-h-20 rounded-xl border border-[#2c2036]/10 bg-[#fbf9fe] p-3 text-[10px] leading-4 text-[#aaa0ae]">
+          Расскажи историю цели и что изменится, когда она получится.
+        </span>
+      </section>
+      <section className="border-[#2c2036]/9 mt-3 rounded-[1.5rem] border bg-white p-3.5 shadow-[0_8px_22px_rgba(69,43,94,.05)]">
+        <div className="flex items-center gap-2">
+          <span className="grid size-8 place-items-center rounded-xl bg-[#fff0f6] text-[#d84b81]">
+            <Heart className="size-4" />
+          </span>
+          <span>
+            <b className="block text-[11px]">Цель и контекст</b>
+            <small className="block text-[9px] text-[#81748a]">
+              Связать с желанием — необязательно
+            </small>
+          </span>
+        </div>
+        <div className="mt-3 grid grid-cols-2 gap-2">
+          <span className="rounded-xl bg-[#fbf9fe] p-3">
+            <small className="block text-[8px] font-black text-[#93869d]">
+              ЦЕЛЬ, ₽
+            </small>
+            <b className="mt-1 block text-[11px]">65 000</b>
+          </span>
+          <span className="rounded-xl bg-[#fbf9fe] p-3">
+            <small className="block text-[8px] font-black text-[#93869d]">СРОК</small>
+            <b className="mt-1 block text-[11px]">Необязательно</b>
+          </span>
+        </div>
+      </section>
+      <section className="border-[#2c2036]/9 mt-3 rounded-[1.5rem] border bg-white p-3.5 shadow-[0_8px_22px_rgba(69,43,94,.05)]">
+        <b className="block text-[11px]">Кто увидит сбор?</b>
+        <div className="mt-3 space-y-2">
+          <span className="flex items-center gap-2 rounded-xl bg-[#fbf9fe] p-2.5 text-[9px] font-bold text-[#7549d0]">
+            <span className="size-2 rounded-full bg-[#7549d0]" /> Публичный · открытая
+            история
+          </span>
+          <span className="flex items-center gap-2 rounded-xl bg-[#fbf9fe] p-2.5 text-[9px] font-bold text-[#756a7d]">
+            <span className="size-2 rounded-full bg-[#d9d0df]" /> По ссылке · не в
+            выдаче
+          </span>
+          <span className="flex items-center gap-2 rounded-xl bg-[#fbf9fe] p-2.5 text-[9px] font-bold text-[#756a7d]">
+            <span className="size-2 rounded-full bg-[#d9d0df]" /> Приватный · для
+            приглашённых
+          </span>
+        </div>
+      </section>
+      <section className="mt-4 flex gap-2 rounded-xl bg-[#fff7e8] p-3 text-[9px] leading-4 text-[#896a27]">
+        <Check className="mt-0.5 size-3.5 shrink-0" /> Публикация создаёт безопасный
+        test-mode путь поддержки. Реальные деньги не списываются.
+      </section>
+      <span className="mt-4 flex w-full items-center justify-center rounded-2xl bg-gradient-to-r from-[#ff5d9a] to-[#8254ed] py-3.5 text-[11px] font-black text-white">
+        Опубликовать сбор
+      </span>
+    </div>
+  );
+}
+
+function TargetPreview() {
+  return <Sparkles className="size-4.5" />;
+}
+
 function IncomeIcon({ kind }: { kind: string }) {
   if (kind === "gift") return <Gift className="size-4" />;
   if (kind === "message") return <MessageCircle className="size-4" />;
@@ -2285,6 +2383,7 @@ export default async function PreviewPage({
     unboxing: <UnboxingScreen />,
     wish: <WishScreen />,
     fundraiser: <FundraiserScreen />,
+    "fundraiser-new": <NewFundraiserScreen />,
   };
 
   return (
