@@ -144,7 +144,7 @@ export default async function CollectionPage() {
                         loading="lazy"
                         decoding="async"
                         alt=""
-                        className="aspect-[3/4] w-full object-cover"
+                        className="aspect-square w-full object-cover"
                         src={artifact.artwork_path}
                       />
                       <span className="block p-2">
@@ -222,7 +222,7 @@ export default async function CollectionPage() {
                     loading="lazy"
                     decoding="async"
                     alt={artifact.title}
-                    className="aspect-[3/4] w-full object-cover"
+                    className="aspect-square w-full object-cover"
                     src={artifact.artwork_path}
                   />
                   <div className="p-3">

@@ -96,7 +96,7 @@ export default async function ArtifactDetailPage({
           loading="lazy"
           decoding="async"
           alt={artifact.title}
-          className="aspect-[3/4] w-full rounded-[1.45rem] object-cover"
+          className="aspect-square w-full rounded-[1.45rem] object-cover"
           src={artifact.artwork_path}
         />
       </section>

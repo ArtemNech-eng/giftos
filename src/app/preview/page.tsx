@@ -1578,7 +1578,7 @@ function UnboxingScreen() {
             loading="lazy"
             decoding="async"
             alt="Фонарь"
-            className="aspect-[3/4] w-full rounded-[1.2rem] object-cover"
+            className="aspect-square w-full rounded-[1.2rem] object-cover"
             src="/collectibles/artifacts/lantern.jpg"
           />
         </div>

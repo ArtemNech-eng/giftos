@@ -79,7 +79,7 @@ export function CollectibleArtifactGiftButton({
                   loading="lazy"
                   decoding="async"
                   alt=""
-                  className="aspect-[3/4] w-full object-cover"
+                  className="aspect-square w-full object-cover"
                   src={artifact.artworkPath}
                 />
                 <span className="block p-2">
