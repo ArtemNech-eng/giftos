@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowLeft, Eye, Film, MapPin, ShieldCheck, Sparkles } from "lucide-react";
 
 import { createStory } from "@/app/stories/actions";
+import { StoryVideoPicker } from "@/components/story-video-picker";
 import { requireUser } from "@/lib/auth";
 
 export const metadata = {
@@ -95,20 +96,11 @@ export default async function NewStoryPage({
               <span>
                 <h2 className="text-xs font-black">Видео</h2>
                 <p className="mt-0.5 text-[10px] text-[#81748a]">
-                  Короткий вертикальный момент для твоей истории
+                  Сними момент сейчас или выбери готовый клип
                 </p>
               </span>
             </div>
-            <input
-              accept="video/mp4,video/webm"
-              className="mt-4 block w-full rounded-xl border border-dashed border-[#cdbbe7] bg-[#fbf9fe] p-3 text-[10px] text-[#756a7d] file:mr-3 file:rounded-lg file:border-0 file:bg-[#f0e9ff] file:px-3 file:py-2 file:text-[10px] file:font-black file:text-[#7549d0]"
-              name="video"
-              required
-              type="file"
-            />
-            <small className="mt-1.5 block text-[9px] text-[#8a7d91]">
-              MP4 или WebM, до 50 МБ.
-            </small>
+            <StoryVideoPicker />
           </section>
 
           <section className="border-[#2c2036]/9 rounded-[1.6rem] border bg-white p-4 shadow-[0_8px_22px_rgba(69,43,94,.05)]">
