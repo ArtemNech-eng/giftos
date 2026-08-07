@@ -120,6 +120,17 @@ function notificationCopy(notification: Notification, actor: Actor | undefined) 
           ? ("/creator/offer-requests" as Route)
           : ("/creator/requests" as Route),
     };
+  if (notification.type === "creator_artifact_request") {
+    const seriesTitle =
+      typeof notification.payload.series_title === "string"
+        ? notification.payload.series_title
+        : "артефакт";
+    return {
+      icon: Gem,
+      title: `${actorName} хочет поддержать вас артефактом «${seriesTitle}»`,
+      href: "/creator/artifact-requests" as Route,
+    };
+  }
   if (notification.type === "live_cohost_invite") {
     const slug =
       typeof notification.payload.slug === "string" ? notification.payload.slug : null;
