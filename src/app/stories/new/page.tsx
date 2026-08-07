@@ -51,7 +51,7 @@ export default async function NewStoryPage({
       {created === "1" && (
         <section className="mt-4 flex items-center gap-2 rounded-2xl border border-[#bde6d4] bg-[#effaf4] p-3.5 text-[#258b82]">
           <ShieldCheck className="size-4 shrink-0" />
-          <p className="text-[10px] font-black">Story отправлена в обработку.</p>
+          <p className="text-[10px] font-black">Story опубликована.</p>
         </section>
       )}
 
@@ -133,7 +133,7 @@ export default async function NewStoryPage({
               className={`mt-3 rounded-xl p-3 text-[10px] leading-4 ${cityContext ? "bg-[#f0faf5] text-[#4c7169]" : "bg-[#fff7e8] text-[#896a27]"}`}
             >
               {cityContext
-                ? `После обработки публичная story может появиться в контексте ${profile?.city}.`
+                ? `Публичная story сразу появляется в контексте ${profile?.city}.`
                 : "Story останется в профиле автора. Чтобы участвовать в городской сцене, включи публичный профиль и город в настройках."}
             </p>
           </section>

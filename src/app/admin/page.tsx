@@ -24,7 +24,7 @@ export default async function AdminDashboardPage() {
 
   const [
     { count: openReports },
-    { count: pendingStories },
+    { count: reportedStories },
     { count: users },
     { count: suspended },
     { count: activeVip },
@@ -36,9 +36,10 @@ export default async function AdminDashboardPage() {
       .select("*", { count: "exact", head: true })
       .in("status", ["open", "in_review"]),
     supabase
-      .from("stories")
-      .select("*", { count: "exact", head: true })
-      .eq("moderation_status", "pending"),
+      .from("reports")
+      .select("target_id", { count: "exact", head: true })
+      .eq("target_type", "story")
+      .in("status", ["open", "in_review"]),
     supabase.from("profiles").select("*", { count: "exact", head: true }),
     supabase
       .from("profiles")
@@ -77,8 +78,8 @@ export default async function AdminDashboardPage() {
       tint: "bg-rose-50 text-[#df4f7d]",
     },
     {
-      label: "Видео на проверке",
-      value: pendingStories ?? 0,
+      label: "Видео с жалобами",
+      value: reportedStories ?? 0,
       href: "/admin/stories",
       icon: Activity,
       tint: "bg-violet-50 text-[#8b5cf6]",

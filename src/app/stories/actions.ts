@@ -35,6 +35,7 @@ export async function createStory(formData: FormData) {
       caption,
       access_type: "free",
       unlock_price_minor: null,
+      moderation_status: "approved",
     })
     .select("id")
     .single();

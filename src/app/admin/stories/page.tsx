@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { Route } from "next";
 import { Clapperboard, ShieldAlert } from "lucide-react";
 
-import { moderateStory } from "@/app/admin/stories/actions";
+import { dismissStoryReports, hideReportedStory } from "@/app/admin/stories/actions";
 import { EmptyState } from "@/components/empty-state";
 import { AdminNav } from "@/components/admin-nav";
 import { requireModerator } from "@/lib/auth";
@@ -14,7 +14,16 @@ export const metadata = {
 };
 export const dynamic = "force-dynamic";
 
-type PendingStory = {
+const REASON_LABELS: Record<string, string> = {
+  fraud: "Мошенничество",
+  prohibited_content: "Запрещённый контент",
+  false_information: "Ложная информация",
+  spam: "Спам",
+  inappropriate_content: "Неприемлемый контент",
+  other: "Другое",
+};
+
+type ReportedStory = {
   id: string;
   author_id: string;
   caption: string | null;
@@ -22,30 +31,53 @@ type PendingStory = {
   access_type: "free" | "paid";
   unlock_price_minor: number | null;
   created_at: string;
+  reports: Array<{ reason: string; created_at: string }>;
 };
 
 export default async function AdminStoriesPage() {
   const { supabase, role } = await requireModerator();
-  const { data: rawStories } = await supabase
-    .from("stories")
-    .select(
-      "id, author_id, caption, media_path, access_type, unlock_price_minor, created_at",
-    )
-    .eq("moderation_status", "pending")
-    .order("created_at", { ascending: true })
-    .limit(100);
-  const stories = (rawStories ?? []) as PendingStory[];
 
-  const authorIds = [...new Set(stories.map((story) => story.author_id))];
-  const { data: authorProfiles } = authorIds.length
-    ? await supabase
-        .from("profiles")
-        .select("id, username, display_name")
-        .in("id", authorIds)
-    : { data: [] };
-  const authors = new Map(
-    (authorProfiles ?? []).map((profile) => [profile.id, profile]),
-  );
+  // Reactive moderation: stories that have open reports.
+  const { data: rawReports } = await supabase
+    .from("reports")
+    .select("target_id, reason, created_at")
+    .eq("target_type", "story")
+    .in("status", ["open", "in_review"])
+    .order("created_at", { ascending: true });
+  const reportsByStory = new Map<
+    string,
+    Array<{ reason: string; created_at: string }>
+  >();
+  for (const report of rawReports ?? []) {
+    const list = reportsByStory.get(report.target_id) ?? [];
+    list.push({ reason: report.reason, created_at: report.created_at });
+    reportsByStory.set(report.target_id, list);
+  }
+  const storyIds = [...reportsByStory.keys()];
+
+  let stories: ReportedStory[] = [];
+  let authors = new Map<string, { username: string; display_name: string }>();
+  if (storyIds.length > 0) {
+    const { data: rawStories } = await supabase
+      .from("stories")
+      .select(
+        "id, author_id, caption, media_path, access_type, unlock_price_minor, created_at",
+      )
+      .in("id", storyIds)
+      .order("created_at", { ascending: false });
+    stories = ((rawStories ?? []) as Array<Omit<ReportedStory, "reports">>).map(
+      (story) => ({ ...story, reports: reportsByStory.get(story.id) ?? [] }),
+    );
+
+    const authorIds = [...new Set(stories.map((story) => story.author_id))];
+    const { data: authorProfiles } = authorIds.length
+      ? await supabase
+          .from("profiles")
+          .select("id, username, display_name")
+          .in("id", authorIds)
+      : { data: [] };
+    authors = new Map((authorProfiles ?? []).map((profile) => [profile.id, profile]));
+  }
 
   const storiesWithUrl = await Promise.all(
     stories.map(async (story) => ({
@@ -65,6 +97,10 @@ export default async function AdminStoriesPage() {
             {role === "admin" ? "Администратор" : "Модератор"}
           </p>
           <h1 className="mt-1 text-3xl font-bold tracking-tight">Модерация видео</h1>
+          <p className="mt-1 text-sm text-[#8e6a75]">
+            Stories публикуются сразу; сюда попадают только те, на которые поступили
+            жалобы.
+          </p>
         </div>
         <ShieldAlert className="mb-2 hidden size-8 text-[#d34872] sm:block" />
       </div>
@@ -76,8 +112,8 @@ export default async function AdminStoriesPage() {
           <EmptyState
             actionHref="/admin/reports"
             actionLabel="К жалобам"
-            description="Новых видео на проверке нет."
-            title="Очередь пуста"
+            description="Видео с открытыми жалобами появятся здесь."
+            title="Жалоб на видео нет"
           />
         ) : (
           <div className="space-y-4">
@@ -114,12 +150,22 @@ export default async function AdminStoriesPage() {
                             ? `Платная · ${(story.unlock_price_minor ?? 0) / 100} ₽`
                             : "Бесплатная"}
                         </span>
-                        <span className="rounded-full bg-[#f1e8f0] px-2.5 py-1 text-xs font-semibold text-[#7a4d6e]">
-                          Ожидает проверки
+                        <span className="rounded-full bg-[#fce5ec] px-2.5 py-1 text-xs font-semibold text-[#bd3e66]">
+                          {story.reports.length} жалоб
                         </span>
                         <span className="ml-auto text-xs text-[#9b858c]">
                           {createdAt}
                         </span>
+                      </div>
+                      <div className="mt-2 flex flex-wrap gap-1.5">
+                        {story.reports.map((report, index) => (
+                          <span
+                            className="rounded-full bg-[#f1e8f0] px-2 py-0.5 text-[10px] font-semibold text-[#7a4d6e]"
+                            key={index}
+                          >
+                            {REASON_LABELS[report.reason] ?? report.reason}
+                          </span>
+                        ))}
                       </div>
                       <h2 className="mt-3 font-bold">
                         {author?.display_name ?? "Автор"}
@@ -138,30 +184,28 @@ export default async function AdminStoriesPage() {
                         </p>
                       )}
                       <div className="mt-4 flex flex-wrap gap-2">
-                        <form action={moderateStory}>
+                        <form action={hideReportedStory}>
                           <input name="story_id" type="hidden" value={story.id} />
-                          <input name="decision" type="hidden" value="approved" />
-                          <button
-                            className="h-9 rounded-lg bg-[#df4f7d] px-4 text-sm font-semibold text-white"
-                            type="submit"
-                          >
-                            Одобрить
-                          </button>
-                        </form>
-                        <form action={moderateStory}>
-                          <input name="story_id" type="hidden" value={story.id} />
-                          <input name="decision" type="hidden" value="rejected" />
                           <input
                             className="h-9 w-44 rounded-lg border border-[#ead9df] bg-white px-3 text-sm text-[#765f66]"
                             maxLength={500}
                             name="moderation_note"
-                            placeholder="Причина отклонения"
+                            placeholder="Причина скрытия"
                           />
                           <button
-                            className="ml-1 h-9 rounded-lg border border-[#ead9df] bg-white px-3 text-sm font-semibold text-[#765f66]"
+                            className="ml-1 h-9 rounded-lg bg-[#df4f7d] px-4 text-sm font-semibold text-white"
                             type="submit"
                           >
-                            Отклонить
+                            Скрыть story
+                          </button>
+                        </form>
+                        <form action={dismissStoryReports}>
+                          <input name="story_id" type="hidden" value={story.id} />
+                          <button
+                            className="h-9 rounded-lg border border-[#ead9df] bg-white px-3 text-sm font-semibold text-[#765f66]"
+                            type="submit"
+                          >
+                            Жалобы ложные — оставить
                           </button>
                         </form>
                       </div>
