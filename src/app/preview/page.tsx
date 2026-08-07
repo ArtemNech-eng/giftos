@@ -5,6 +5,7 @@ import { LocalRoleIcon } from "@/components/local-role-icon";
 import {
   ArrowUpRight,
   Award,
+  BarChart3,
   CalendarDays,
   Check,
   CirclePlus,
@@ -15,6 +16,8 @@ import {
   Flame,
   Gamepad2,
   Gift,
+  Hand,
+  HandCoins,
   Heart,
   MapPin,
   Medal,
@@ -32,6 +35,8 @@ import {
   Star,
   UserRound,
   UserPlus,
+  ThumbsUp,
+  WalletCards,
   Waves,
   X,
 } from "lucide-react";
@@ -69,6 +74,7 @@ const screens = [
   { id: "wish-new", label: "Новое желание", number: "25" },
   { id: "shop", label: "Магазин", number: "26" },
   { id: "battle", label: "Битва городов", number: "27" },
+  { id: "live-analytics", label: "Аналитика эфира", number: "28" },
 ] as const;
 
 type ScreenId = (typeof screens)[number]["id"];
@@ -2837,6 +2843,87 @@ function BattleScreen() {
   );
 }
 
+function LiveAnalyticsScreen() {
+  return (
+    <div className="min-h-[730px] bg-[#fbf9fe] px-4 pb-6 pt-5 text-[#251d31]">
+      <header className="flex items-center justify-between">
+        <span className="grid size-10 place-items-center rounded-full border border-[#2c2036]/10 bg-white text-[#5f5369]">
+          <ArrowUpRight className="size-4 rotate-[-135deg]" />
+        </span>
+        <span className="text-center">
+          <small className="block text-[9px] font-black uppercase tracking-[0.13em] text-[#8c7e94]">
+            Сводка эфира
+          </small>
+          <b className="block text-sm">Аналитика эфира</b>
+        </span>
+        <span className="grid size-10 place-items-center rounded-full bg-[#f0e9ff] text-[#8753e6]">
+          <BarChart3 className="size-4.5" />
+        </span>
+      </header>
+      <section className="border-[#2c2036]/9 mt-5 rounded-[1.7rem] border bg-white p-4 shadow-[0_8px_22px_rgba(69,43,94,.05)]">
+        <b className="block text-xs leading-5">Вечерний джем-сет в «Музыке»</b>
+        <p className="mt-1.5 flex items-center gap-1.5 text-[10px] text-[#81748a]">
+          <span className="inline-flex items-center gap-1 rounded-full bg-[#fff0f6] px-2 py-0.5 text-[9px] font-black text-[#d84b81]">
+            <Radio className="size-3" /> В эфире
+          </span>
+          <span>создан 6 авг, 20:14</span>
+        </p>
+      </section>
+      <section className="mt-4 grid grid-cols-2 gap-2.5">
+        {[
+          { icon: UsersRound, label: "Зрители", value: "42", tint: "text-[#8753e6]" },
+          {
+            icon: MessageCircle,
+            label: "Сообщения",
+            value: "128",
+            tint: "text-[#2f9bb5]",
+          },
+          { icon: Heart, label: "Реакции", value: "96", tint: "text-[#d84b81]" },
+          { icon: Gift, label: "Подарки", value: "14", tint: "text-[#b8860b]" },
+          { icon: HandCoins, label: "Донаты", value: "9", tint: "text-[#258b82]" },
+          {
+            icon: WalletCards,
+            label: "Доход",
+            value: "2 340 ₽",
+            tint: "text-[#7549d0]",
+          },
+        ].map((stat) => (
+          <div
+            className="border-[#2c2036]/9 rounded-2xl border bg-white p-3.5 shadow-[0_6px_18px_rgba(69,43,94,.05)]"
+            key={stat.label}
+          >
+            <stat.icon className={`size-4.5 ${stat.tint}`} />
+            <p className="mt-2 text-[9px] text-[#81748a]">{stat.label}</p>
+            <b className="mt-0.5 block text-xl font-black">{stat.value}</b>
+          </div>
+        ))}
+      </section>
+      <section className="mt-4">
+        <b className="text-[11px]">Реакции</b>
+        <div className="mt-2.5 grid grid-cols-4 gap-2">
+          {[
+            { icon: Flame, label: "Огонь", value: "31" },
+            { icon: Heart, label: "Сердце", value: "27" },
+            { icon: ThumbsUp, label: "Нравится", value: "24" },
+            { icon: Hand, label: "Аплодисменты", value: "14" },
+          ].map((reaction) => (
+            <div
+              className="border-[#2c2036]/9 rounded-2xl border bg-white p-2.5 text-center shadow-[0_6px_18px_rgba(69,43,94,.05)]"
+              key={reaction.label}
+            >
+              <reaction.icon className="size-4.5 mx-auto text-[#8753e6]" />
+              <b className="mt-1 block text-sm font-black">{reaction.value}</b>
+              <span className="mt-0.5 block text-[8px] text-[#81748a]">
+                {reaction.label}
+              </span>
+            </div>
+          ))}
+        </div>
+      </section>
+    </div>
+  );
+}
+
 function StoryScreen() {
   return (
     <div className="flex min-h-[730px] flex-col bg-[#0d0b12] text-white">
@@ -3043,6 +3130,7 @@ export default async function PreviewPage({
     "wish-new": <NewWishScreen />,
     shop: <ShopScreen />,
     battle: <BattleScreen />,
+    "live-analytics": <LiveAnalyticsScreen />,
   };
 
   return (
