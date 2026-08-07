@@ -565,7 +565,7 @@ export default async function SearchPage({
                       loading="lazy"
                       decoding="async"
                       alt=""
-                      className="aspect-[3/4] w-full object-cover"
+                      className="aspect-square w-full object-cover"
                       src={artifact.artwork_path}
                     />
                     <span className="block p-2.5">
