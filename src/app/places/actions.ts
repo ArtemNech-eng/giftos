@@ -442,5 +442,7 @@ export async function createPlace(formData: FormData) {
   });
 
   revalidatePath("/places");
+  revalidatePath("/feed");
+  revalidatePath("/people");
   redirect(`/places/${place.id}` as Route);
 }
