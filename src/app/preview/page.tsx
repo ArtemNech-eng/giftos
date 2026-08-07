@@ -60,6 +60,7 @@ const screens = [
   { id: "story-new", label: "Новая story", number: "22" },
   { id: "place-new", label: "Новое место", number: "23" },
   { id: "search", label: "Поиск", number: "24" },
+  { id: "wish-new", label: "Новое желание", number: "25" },
 ] as const;
 
 type ScreenId = (typeof screens)[number]["id"];
@@ -2517,6 +2518,80 @@ function SearchScreen() {
   );
 }
 
+function NewWishScreen() {
+  return (
+    <div className="min-h-[730px] bg-[#fbf9fe] px-4 pb-6 pt-5 text-[#251d31]">
+      <header className="flex items-center justify-between">
+        <span className="grid size-10 place-items-center rounded-full border border-[#2c2036]/10 bg-white text-[#5f5369]">
+          <ArrowUpRight className="size-4 rotate-[-135deg]" />
+        </span>
+        <span className="text-center">
+          <small className="block text-[9px] font-black uppercase tracking-[0.13em] text-[#8c7e94]">
+            Личная история
+          </small>
+          <b className="block text-sm">Новое желание</b>
+        </span>
+        <span className="grid size-10 place-items-center rounded-full bg-[#fff0f6] text-[#d84b81]">
+          <Heart className="size-4.5" />
+        </span>
+      </header>
+      <section className="mt-5 rounded-[1.7rem] bg-gradient-to-br from-[#fff0f7] via-[#f6edff] to-[#eaf5ff] p-5 shadow-[0_14px_30px_rgba(69,43,94,.1)]">
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-white/75 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.08em] text-[#d84b81]">
+          <Heart className="size-3.5" /> С чего начинается «Хочу также»
+        </span>
+        <h1 className="mt-3 text-3xl font-black leading-[0.88] tracking-[-0.075em]">
+          Назови свою
+          <br />
+          мечту.
+        </h1>
+        <p className="mt-3 max-w-64 text-[10px] leading-5 text-[#756a7d]">
+          Желание можно оставить в профиле как историю или позже превратить в
+          коллективный сбор.
+        </p>
+      </section>
+      <section className="border-[#2c2036]/9 mt-5 rounded-[1.5rem] border bg-white p-3.5 shadow-[0_8px_22px_rgba(69,43,94,.05)]">
+        <b className="block text-[11px]">Что вы хотите?</b>
+        <span className="mt-2 flex rounded-xl border border-[#2c2036]/10 bg-[#fbf9fe] px-3 py-3 text-[10px] font-semibold text-[#aaa0ae]">
+          Например, Sony A7C II
+        </span>
+        <b className="mt-4 block text-[10px]">Расскажите о желании</b>
+        <span className="mt-2 block min-h-20 rounded-xl border border-[#2c2036]/10 bg-[#fbf9fe] p-3 text-[10px] leading-4 text-[#aaa0ae]">
+          Почему это важно для вас? Что вы планируете с этим делать?
+        </span>
+      </section>
+      <section className="border-[#2c2036]/9 mt-3 rounded-[1.5rem] border bg-white p-3.5 shadow-[0_8px_22px_rgba(69,43,94,.05)]">
+        <b className="block text-[11px]">Категория</b>
+        <div className="mt-3 grid grid-cols-4 gap-2">
+          {[Music2, Gamepad2, UsersRound, Sparkles].map((Icon, index) => (
+            <span
+              className={`grid min-h-14 place-items-center rounded-xl border text-[9px] font-black ${index === 0 ? "border-[#a67ae7] bg-[#f0e9ff] text-[#7549d0]" : "border-[#2c2036]/9 bg-[#fbf9fe] text-[#756a7d]"}`}
+              key={index}
+            >
+              <Icon className="size-4" />
+            </span>
+          ))}
+        </div>
+      </section>
+      <section className="border-[#2c2036]/9 mt-3 rounded-[1.5rem] border bg-white p-3.5 shadow-[0_8px_22px_rgba(69,43,94,.05)]">
+        <b className="block text-[11px]">Кто увидит желание?</b>
+        <span className="mt-2 flex items-center gap-2 rounded-xl bg-[#fbf9fe] p-2.5 text-[10px] font-black text-[#7549d0]">
+          <span className="grid size-4 place-items-center rounded-full bg-[#7549d0] text-white">
+            <Check className="size-3" />
+          </span>
+          Публично — видно в профиле и городе
+        </span>
+        <span className="mt-1.5 flex items-center gap-2 rounded-xl bg-[#fbf9fe] p-2.5 text-[10px] font-black text-[#756a7d]">
+          <span className="grid size-4 place-items-center rounded-full border border-[#2c2036]/15" />
+          Только я — скрыто от других
+        </span>
+      </section>
+      <span className="mt-4 block rounded-2xl bg-gradient-to-r from-[#ff5c99] to-[#8c58ff] px-4 py-3 text-center text-[11px] font-black text-white shadow-[0_8px_20px_rgba(205,82,231,.28)]">
+        Создать желание
+      </span>
+    </div>
+  );
+}
+
 function StoryScreen() {
   return (
     <div className="flex min-h-[730px] flex-col bg-[#0d0b12] text-white">
@@ -2720,6 +2795,7 @@ export default async function PreviewPage({
     "story-new": <NewStoryScreen />,
     "place-new": <NewPlaceScreen />,
     search: <SearchScreen />,
+    "wish-new": <NewWishScreen />,
   };
 
   return (
