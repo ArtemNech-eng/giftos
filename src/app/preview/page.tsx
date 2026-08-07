@@ -17,6 +17,7 @@ import {
   Gift,
   Heart,
   MapPin,
+  Medal,
   MessageCircle,
   Music2,
   Play,
@@ -30,6 +31,7 @@ import {
   Sparkles,
   Star,
   UserRound,
+  UserPlus,
   Waves,
   X,
 } from "lucide-react";
@@ -66,6 +68,7 @@ const screens = [
   { id: "search", label: "Поиск", number: "24" },
   { id: "wish-new", label: "Новое желание", number: "25" },
   { id: "shop", label: "Магазин", number: "26" },
+  { id: "battle", label: "Битва городов", number: "27" },
 ] as const;
 
 type ScreenId = (typeof screens)[number]["id"];
@@ -2728,6 +2731,112 @@ function ShopScreen() {
   );
 }
 
+function BattleScreen() {
+  const rows = [
+    { name: "Будённовск", points: "12 480", mine: true },
+    { name: "Ставрополь", points: "11 940", mine: false },
+    { name: "Пятигорск", points: "9 870", mine: false },
+    { name: "Кисловодск", points: "8 210", mine: false },
+    { name: "Невинномысск", points: "6 540", mine: false },
+  ];
+  return (
+    <div className="min-h-[730px] bg-[#fbf9fe] px-4 pb-6 pt-5 text-[#251d31]">
+      <header className="flex items-center justify-between">
+        <span className="grid size-10 place-items-center rounded-full border border-[#2c2036]/10 bg-white text-[#5f5369]">
+          <ArrowUpRight className="size-4 rotate-[-135deg]" />
+        </span>
+        <span className="text-center">
+          <small className="block text-[9px] font-black uppercase tracking-[0.13em] text-[#8c7e94]">
+            Сезонное соревнование
+          </small>
+          <b className="block text-sm">Битва городов</b>
+        </span>
+        <span className="grid size-10 place-items-center rounded-full bg-[#fff0f6] text-[#d84b81]">
+          <Trophy className="size-4.5" />
+        </span>
+      </header>
+      <section className="mt-5 rounded-[1.7rem] bg-gradient-to-br from-[#332452] via-[#58407f] to-[#8069d9] p-5 text-white shadow-[0_14px_30px_rgba(63,37,98,.2)]">
+        <span className="bg-white/14 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.08em] text-[#fbd7e7]">
+          <Trophy className="size-3.5" /> Сезон 2
+        </span>
+        <p className="mt-3 text-4xl font-black tracking-[-0.04em]">1-е место</p>
+        <p className="mt-1.5 text-[10px] text-white/75">Будённовск · 12 480 баллов</p>
+        <div className="mt-4 rounded-2xl bg-black/20 p-3 text-[10px] leading-5 text-white/85">
+          До первого места — <b className="text-[#ffd35e]">0 баллов</b>. Ваш город
+          лидирует — удержим первое место!
+        </div>
+      </section>
+      <section className="border-[#2c2036]/9 mt-4 rounded-[1.6rem] border bg-white p-4 shadow-[0_8px_22px_rgba(69,43,94,.05)]">
+        <div className="flex items-center gap-2">
+          <span className="grid size-8 place-items-center rounded-xl bg-[#f0e9ff] text-[#8753e6]">
+            <UsersRound className="size-4" />
+          </span>
+          <span>
+            <b className="block text-[11px]">Как заработать баллы городу</b>
+            <small className="block text-[9px] text-[#81748a]">
+              Только реальные действия жителей
+            </small>
+          </span>
+        </div>
+        <div className="mt-3 space-y-1.5">
+          {[
+            { icon: UserRound, label: "Заполнить профиль", points: 50 },
+            { icon: UserPlus, label: "Пригласить друга", points: 100 },
+            { icon: Radio, label: "Начать эфир", points: 30 },
+          ].map((rule) => (
+            <div
+              className="flex items-center gap-2.5 rounded-xl bg-[#fbf9fe] px-3 py-2 text-[10px] text-[#5f5369]"
+              key={rule.label}
+            >
+              <rule.icon className="size-3.5 shrink-0 text-[#8753e6]" />
+              <span className="min-w-0 grow">{rule.label}</span>
+              <b className="shrink-0 font-black text-[#7549d0]">+{rule.points}</b>
+            </div>
+          ))}
+        </div>
+      </section>
+      <section className="mt-4">
+        <b className="text-[11px]">Таблица лидеров</b>
+        <div className="mt-2.5 space-y-2">
+          {rows.map((row, index) => (
+            <div
+              className={`flex items-center gap-3 rounded-2xl border bg-white p-3 ${
+                row.mine
+                  ? "border-[#a67ae7] bg-gradient-to-r from-[#f6efff] to-[#fff6fb]"
+                  : "border-[#2c2036]/9"
+              }`}
+              key={row.name}
+            >
+              <span
+                className={`grid size-8 shrink-0 place-items-center rounded-xl ${
+                  index === 0
+                    ? "bg-[#fff6d9] text-[#b8860b]"
+                    : index === 1
+                      ? "bg-[#eef1f5] text-[#8a93a3]"
+                      : "bg-[#f7ede2] text-[#b0713a]"
+                }`}
+              >
+                <Medal className="size-4" />
+              </span>
+              <span className="min-w-0 grow truncate text-[10px] font-black">
+                {row.name}
+                {row.mine && (
+                  <span className="ml-2 rounded-full bg-[#f0e9ff] px-1.5 py-0.5 text-[8px] font-black text-[#7549d0]">
+                    ваш город
+                  </span>
+                )}
+              </span>
+              <b className="shrink-0 text-[10px] font-black text-[#8753e6]">
+                {row.points}
+              </b>
+            </div>
+          ))}
+        </div>
+      </section>
+    </div>
+  );
+}
+
 function StoryScreen() {
   return (
     <div className="flex min-h-[730px] flex-col bg-[#0d0b12] text-white">
@@ -2933,6 +3042,7 @@ export default async function PreviewPage({
     search: <SearchScreen />,
     "wish-new": <NewWishScreen />,
     shop: <ShopScreen />,
+    battle: <BattleScreen />,
   };
 
   return (
