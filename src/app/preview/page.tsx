@@ -1453,6 +1453,16 @@ function CollectionScreen() {
     ["star", "Звезда", "60", "179"],
     ["shell", "Ракушка", "40", "249"],
     ["crown", "Корона", "25", "329"],
+    ["amethyst", "Аметист", "300", "49"],
+    ["topaz", "Топаз", "250", "59"],
+    ["opal", "Опал", "200", "69"],
+    ["pearl", "Жемчуг", "180", "79"],
+    ["amber", "Янтарь", "150", "89"],
+    ["sapphire", "Сапфир", "100", "119"],
+    ["emerald", "Изумруд", "80", "149"],
+    ["moonstone", "Лунный камень", "60", "179"],
+    ["ruby", "Рубин", "40", "249"],
+    ["diamond", "Бриллиант", "25", "329"],
   ] as const;
   return (
     <div className="min-h-[730px] bg-[#fbf9fe] px-4 pb-6 pt-5 text-[#251d31]">
@@ -1492,7 +1502,7 @@ function CollectionScreen() {
             </p>
           </span>
           <span className="rounded-full bg-[#efe9f6] px-2 py-1 text-[9px] font-black text-[#7a6688]">
-            20
+            30
           </span>
         </div>
         <div className="grid grid-cols-2 gap-3">
