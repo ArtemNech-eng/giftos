@@ -180,12 +180,12 @@ export default async function LiveRoomPage({
   const isCohost = cohostIds.includes(user.id);
 
   return (
-    <main className="mx-auto min-h-screen max-w-[430px] bg-[#0c0e14] px-4 py-5 text-white">
+    <main className="mx-auto min-h-screen max-w-[430px] bg-[#f7f4fb] px-4 pb-10 pt-5 text-[#251d31]">
       <header className="flex items-center justify-between">
         {room.host_id === user.id ? (
           <Link
             aria-label="Назад"
-            className="bg-white/8 grid size-9 place-items-center rounded-full"
+            className="border-[#2c2036]/9 grid size-10 place-items-center rounded-full border bg-white text-[#5f5369] shadow-[0_5px_15px_rgba(69,43,94,.05)]"
             href="/creator/dashboard"
           >
             <ArrowLeft className="size-5" />
@@ -202,7 +202,7 @@ export default async function LiveRoomPage({
               {room.host_id === user.id && (
                 <Link
                   aria-label="Аналитика эфира"
-                  className="bg-white/8 grid size-9 place-items-center rounded-full"
+                  className="border-[#2c2036]/9 grid size-10 place-items-center rounded-full border bg-white text-[#5f5369] shadow-[0_5px_15px_rgba(69,43,94,.05)]"
                   href={`/live/${slug}/analytics`}
                   title="Аналитика эфира"
                 >
@@ -218,7 +218,7 @@ export default async function LiveRoomPage({
       </header>
       {roomPlace && (
         <Link
-          className="mt-4 flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.06] px-3 py-2 text-xs text-[#d9d1e2]"
+          className="mt-4 flex items-center gap-2 rounded-xl border border-[#2c2036]/10 bg-white/[0.06] px-3 py-2 text-xs text-[#d9d1e2]"
           href={`/places/${roomPlace.id}` as Route}
         >
           <PlaceIcon className="size-4 text-[#d9b7ff]" code={roomPlace.icon_code} />
@@ -229,7 +229,7 @@ export default async function LiveRoomPage({
         </Link>
       )}
       {room.status === "live" && <LiveRoomPresence roomId={room.id} slug={slug} />}
-      <section className="mt-4 overflow-hidden rounded-[2rem] border border-white/10 bg-[#171923]">
+      <section className="mt-4 overflow-hidden rounded-[2rem] border border-[#2c2036]/10 bg-[#171923]">
         <div className="relative">
           <LiveKitRoom isHost={room.host_id === user.id} slug={slug} />
           <LiveGiftEvents
@@ -252,7 +252,7 @@ export default async function LiveRoomPage({
                   <Radio className="size-3" /> В эфире сейчас
                 </p>
               ) : (
-                <p className="text-[10px] font-black text-[#9f97aa]">Эфир завершён</p>
+                <p className="text-[10px] font-black text-[#81748a]">Эфир завершён</p>
               )}
               <h1 className="mt-1 text-xl font-black tracking-[-0.035em]">
                 {room.title}
@@ -263,7 +263,7 @@ export default async function LiveRoomPage({
             </span>
           </div>
           <Link
-            className="mt-4 flex items-center gap-3 rounded-xl bg-white/5 p-2.5 transition hover:bg-white/10"
+            className="mt-4 flex items-center gap-3 rounded-xl bg-[#fbf9fe] p-2.5 transition hover:bg-[#f0e9ff]"
             href={host?.username ? (`/u/${host.username}` as Route) : "/feed"}
           >
             <span className="grid size-10 shrink-0 place-items-center overflow-hidden rounded-full bg-gradient-to-br from-[#ff78ad] to-[#8753ed] p-0.5">
@@ -315,8 +315,8 @@ export default async function LiveRoomPage({
             </Link>
           )}
           {room.status === "ended" && (
-            <div className="mt-4 rounded-xl bg-white/5 p-3">
-              <p className="text-xs text-[#9f97aa]">Итоги эфира</p>
+            <div className="mt-4 rounded-xl bg-[#fbf9fe] p-3">
+              <p className="text-xs text-[#81748a]">Итоги эфира</p>
               <div className="mt-2 flex items-center gap-4 text-sm">
                 <span className="flex items-center gap-1 text-[#d8d0e0]">
                   <MessageCircle className="size-4" /> {messages?.length ?? 0}
@@ -339,7 +339,7 @@ export default async function LiveRoomPage({
         </div>
       </section>
       {room.status === "live" && (
-        <section className="mt-5 rounded-2xl border border-white/10 bg-[#171923] p-4">
+        <section className="mt-5 rounded-2xl border border-[#2c2036]/10 bg-white p-4">
           <div className="flex items-center gap-2">
             <UsersRound className="size-5 text-[#9e88ff]" />
             <h2 className="font-bold">В эфире</h2>
@@ -350,12 +350,12 @@ export default async function LiveRoomPage({
                 targetType="live_room"
               />
             )}
-            <span className="ml-auto text-xs text-[#a9a1b4]">
+            <span className="ml-auto text-xs text-[#81748a]">
               {viewers ?? 0} зрителей
             </span>
           </div>
           <div className="mt-3 space-y-2">
-            <div className="flex items-center gap-3 rounded-xl bg-white/5 px-3 py-2">
+            <div className="flex items-center gap-3 rounded-xl bg-[#fbf9fe] px-3 py-2">
               <span className="grid size-9 shrink-0 place-items-center rounded-full bg-gradient-to-br from-[#ffd35e] to-[#ff9b3d] text-[#5a3410]">
                 <Crown className="size-4" />
               </span>
@@ -368,17 +368,17 @@ export default async function LiveRoomPage({
                     </span>
                   )}
                 </p>
-                <p className="text-xs text-[#a9a1b4]">Ведущий</p>
+                <p className="text-xs text-[#81748a]">Ведущий</p>
               </div>
             </div>
             {cohosts.length === 0 ? (
-              <p className="rounded-xl bg-white/5 px-3 py-2 text-xs text-[#a9a1b4]">
+              <p className="rounded-xl bg-[#fbf9fe] px-3 py-2 text-xs text-[#81748a]">
                 Со-ведущих пока нет — пригласите второго ведущего.
               </p>
             ) : (
               cohosts.map((cohost) => (
                 <div
-                  className="flex items-center gap-3 rounded-xl bg-white/5 px-3 py-2"
+                  className="flex items-center gap-3 rounded-xl bg-[#fbf9fe] px-3 py-2"
                   key={cohost.profile_id}
                 >
                   <span className="grid size-9 shrink-0 place-items-center rounded-full bg-gradient-to-br from-[#e17dff] to-[#9e88ff] text-white">
@@ -393,7 +393,7 @@ export default async function LiveRoomPage({
                         </span>
                       )}
                     </p>
-                    <p className="text-xs text-[#a9a1b4]">Со-ведущий</p>
+                    <p className="text-xs text-[#81748a]">Со-ведущий</p>
                   </div>
                   {room.host_id === user.id && cohost.profile_id !== user.id && (
                     <form action={removeLiveCohost} className="shrink-0">
@@ -418,7 +418,7 @@ export default async function LiveRoomPage({
             )}
           </div>
           {isCohost && (
-            <p className="mt-3 rounded-xl border border-[#e17dff]/30 bg-[#1b1528] px-3 py-2 text-xs text-[#e7c9f5]">
+            <p className="mt-3 rounded-xl border border-[#e5d5ff] bg-white px-3 py-2 text-xs text-[#7549d0]">
               Вы — со-ведущий: помогаете вести эфир вместе с ведущим.
             </p>
           )}
@@ -452,7 +452,7 @@ export default async function LiveRoomPage({
         room.host_id !== user.id &&
         gifts &&
         gifts.length > 0 && (
-          <section className="mt-5 rounded-2xl border border-white/10 bg-[#171923] p-4">
+          <section className="mt-5 rounded-2xl border border-[#2c2036]/10 bg-white p-4">
             <p className="font-bold">Отправить подарок в эфир</p>
             <div className="mt-3 grid grid-cols-4 gap-2">
               {gifts.map((gift) => (
@@ -461,7 +461,7 @@ export default async function LiveRoomPage({
                   <input name="slug" type="hidden" value={slug} />
                   <input name="gift_code" type="hidden" value={gift.code} />
                   <button
-                    className="flex w-full flex-col items-center rounded-xl border border-white/10 bg-white/5 px-1 py-2 hover:border-[#ff77ba]"
+                    className="flex w-full flex-col items-center rounded-xl border border-[#2c2036]/10 bg-[#fbf9fe] px-1 py-2 hover:border-[#ff77ba]"
                     type="submit"
                   >
                     <span className="grid size-9 place-items-center rounded-xl bg-gradient-to-br from-[#ff5d9a]/20 to-[#8254ed]/20 text-[#ffc0da]">
@@ -475,7 +475,7 @@ export default async function LiveRoomPage({
                 </form>
               ))}
             </div>
-            <p className="mt-3 text-xs text-[#a9a1b4]">
+            <p className="mt-3 text-xs text-[#81748a]">
               Подарки в тестовом режиме формируют test-доход автора.
             </p>
           </section>
@@ -483,7 +483,7 @@ export default async function LiveRoomPage({
       {room.status === "live" && room.host_id !== user.id && (
         <section className="mt-5 rounded-2xl border border-[#ff77ba]/25 bg-[#221522] p-4">
           <p className="font-bold">Поддержать эфир</p>
-          <p className="mt-1 text-xs text-[#a9a1b4]">
+          <p className="mt-1 text-xs text-[#81748a]">
             Донат с сообщением появится у всех зрителей поверх видео. Тестовый режим:
             деньги не списываются.
           </p>
@@ -492,7 +492,7 @@ export default async function LiveRoomPage({
             <input name="slug" type="hidden" value={slug} />
             <div className="flex gap-2">
               <input
-                className="w-32 rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-sm"
+                className="w-32 rounded-xl border border-[#2c2036]/10 bg-[#fbf9fe] px-3 py-2 text-sm"
                 inputMode="numeric"
                 maxLength={8}
                 min={1}
@@ -502,7 +502,7 @@ export default async function LiveRoomPage({
                 type="number"
               />
               <input
-                className="grow rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-sm"
+                className="grow rounded-xl border border-[#2c2036]/10 bg-[#fbf9fe] px-3 py-2 text-sm"
                 maxLength={500}
                 name="message"
                 placeholder="Сообщение (до 500 символов)"
@@ -521,13 +521,13 @@ export default async function LiveRoomPage({
       {room.status === "live" &&
         room.host_id !== user.id &&
         (myPlaces ?? []).length > 0 && (
-          <section className="mt-5 rounded-2xl border border-[#b550ff]/35 bg-[#1b1528] p-4">
+          <section className="mt-5 rounded-2xl border border-[#e5d5ff] bg-white p-4">
             <p className="text-sm font-bold">Позвать ведущего в тусовку</p>
             <form action={inviteLiveHostToPlace} className="mt-3 flex gap-2">
               <input name="host_id" type="hidden" value={room.host_id} />
               <input name="slug" type="hidden" value={slug} />
               <select
-                className="grow rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-sm"
+                className="grow rounded-xl border border-[#2c2036]/10 bg-[#fbf9fe] px-3 py-2 text-sm"
                 defaultValue=""
                 name="place_id"
                 required
@@ -553,14 +553,14 @@ export default async function LiveRoomPage({
       {room.status === "live" && room.host_id === user.id && (
         <form
           action={inviteLiveCohost}
-          className="mt-5 rounded-2xl border border-[#b550ff]/35 bg-[#1b1528] p-4"
+          className="mt-5 rounded-2xl border border-[#e5d5ff] bg-white p-4"
         >
           <input name="room_id" type="hidden" value={room.id} />
           <input name="slug" type="hidden" value={slug} />
           <p className="text-sm font-bold">Пригласить второго ведущего</p>
           <div className="mt-3 flex gap-2">
             <input
-              className="grow rounded-xl border border-white/10 bg-black/20 px-3 text-sm"
+              className="grow rounded-xl border border-[#2c2036]/10 bg-[#fbf9fe] px-3 text-sm"
               maxLength={30}
               name="username"
               placeholder="@username"
@@ -575,12 +575,12 @@ export default async function LiveRoomPage({
           </div>
         </form>
       )}
-      <section className="mt-5 rounded-2xl border border-white/10 bg-[#171923] p-4">
+      <section className="mt-5 rounded-2xl border border-[#2c2036]/10 bg-white p-4">
         <div className="flex items-center gap-2">
           <MessageCircle className="size-5 text-[#d68cff]" />
           <h2 className="font-bold">Чат эфира</h2>
           {room.status === "live" && (
-            <span className="ml-auto text-xs text-[#a9a1b4]">в реальном времени</span>
+            <span className="ml-auto text-xs text-[#81748a]">в реальном времени</span>
           )}
         </div>
         {room.status === "live" ? (

@@ -121,8 +121,8 @@ export default async function StoryPage({
     );
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-[430px] items-center bg-[#0d0b12] px-3 py-4 text-white">
-      <section className="w-full overflow-hidden rounded-[1.8rem] border border-white/10 bg-[#17131d] shadow-[0_20px_65px_rgba(0,0,0,.45)]">
+    <main className="mx-auto flex min-h-screen max-w-[430px] items-center bg-[#f7f4fb] px-3 py-4 text-[#251d31]">
+      <section className="w-full overflow-hidden rounded-[1.8rem] border border-[#2c2036]/10 bg-white shadow-[0_20px_65px_rgba(69,43,94,.18)]">
         <div className="relative aspect-[9/16] max-h-[72vh] bg-[#241a2a]">
           {canWatch && videoUrl ? (
             <video
@@ -133,11 +133,11 @@ export default async function StoryPage({
               src={videoUrl}
             />
           ) : (
-            <div className="grid size-full place-items-center bg-[radial-gradient(circle_at_50%_20%,rgba(176,103,240,.45),transparent_32%),linear-gradient(180deg,#2d1937,#15121d)] p-6 text-center text-white">
+            <div className="grid size-full place-items-center bg-[radial-gradient(circle_at_50%_20%,rgba(176,103,240,.25),transparent_32%),linear-gradient(180deg,#f3ecff,#eaf5ff)] p-6 text-center text-[#251d31]">
               <div>
-                <LockKeyhole className="mx-auto size-10 text-[#f5c2dd]" />
+                <LockKeyhole className="mx-auto size-10 text-[#7549d0]" />
                 <h1 className="mt-4 text-xl font-black">Закрытая story</h1>
-                <p className="mt-2 text-sm leading-6 text-white/75">
+                <p className="mt-2 text-sm leading-6 text-[#756a7d]">
                   Открой короткое видео автора и поддержи его первые публикации.
                 </p>
                 {story.unlock_price_minor && (
@@ -223,7 +223,7 @@ export default async function StoryPage({
 
         <section className="p-4">
           <div className="flex items-center justify-between gap-3">
-            <span className="flex items-center gap-1.5 text-[10px] font-black text-[#d9b7ff]">
+            <span className="flex items-center gap-1.5 text-[10px] font-black text-[#7549d0]">
               <Radio className="size-3.5" /> Story до {expiry}
             </span>
             {author?.show_city && author.city && (
@@ -236,11 +236,11 @@ export default async function StoryPage({
             )}
           </div>
           {story.caption && (
-            <p className="mt-3 text-sm leading-6 text-[#e1d9e7]">{story.caption}</p>
+            <p className="mt-3 text-sm leading-6 text-[#5f5369]">{story.caption}</p>
           )}
           {localCreator && (
             <Link
-              className="mt-4 flex items-center gap-2 rounded-xl bg-white/5 p-3"
+              className="mt-4 flex items-center gap-2 rounded-xl bg-[#fbf9fe] p-3"
               href={
                 localCreator.live_slug
                   ? (`/live/${localCreator.live_slug}` as Route)
@@ -251,24 +251,24 @@ export default async function StoryPage({
                       : "/feed"
               }
             >
-              <span className="grid size-8 place-items-center rounded-lg bg-[#f0e4ff]/15 text-[#d9b7ff]">
+              <span className="grid size-8 place-items-center rounded-lg bg-[#f0e9ff] text-[#8753e6]">
                 <LocalRoleIcon className="size-4" code={localCreator.role_code} />
               </span>
               <span className="min-w-0 grow">
-                <b className="block text-[11px]">
+                <b className="block text-[11px] text-[#4e4258]">
                   Создаёт в {author?.city ?? "городе"}
                 </b>
-                <small className="block truncate text-[10px] text-[#aaa0b3]">
+                <small className="block truncate text-[10px] text-[#81748a]">
                   {localCreator.headline ?? "Открыть автора"}
                 </small>
               </span>
-              <span className="text-[#d9b7ff]">›</span>
+              <span className="text-[#8753e6]">›</span>
             </Link>
           )}
         </section>
 
         {canWatch && (
-          <section className="border-t border-white/10 px-4 py-3">
+          <section className="border-t border-[#f0e8f5] px-4 py-3">
             <div className="flex gap-2">
               {reactionConfig.map((reaction) =>
                 user ? (
@@ -278,8 +278,8 @@ export default async function StoryPage({
                     <button
                       className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[10px] font-bold transition ${
                         hasReaction(reaction.code)
-                          ? "border-[#ff77ba] bg-[#3a1a35] text-[#ffc0da]"
-                          : "border-white/10 bg-white/5 text-[#ded6e5]"
+                          ? "border-[#ff77ba] bg-[#ffe6f0] text-[#d84b81]"
+                          : "border-[#2c2036]/10 bg-[#fbf9fe] text-[#5f5369]"
                       }`}
                       type="submit"
                     >
@@ -289,7 +289,7 @@ export default async function StoryPage({
                   </form>
                 ) : (
                   <Link
-                    className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[10px] font-bold text-[#ded6e5]"
+                    className="inline-flex items-center gap-1.5 rounded-full border border-[#2c2036]/10 bg-[#fbf9fe] px-3 py-1.5 text-[10px] font-bold text-[#5f5369]"
                     href="/auth/sign-in"
                     key={reaction.code}
                   >
@@ -303,10 +303,10 @@ export default async function StoryPage({
         )}
 
         {canWatch && user && !isAuthor && gifts && gifts.length > 0 && (
-          <section className="border-t border-white/10 p-4">
+          <section className="border-t border-[#f0e8f5] p-4">
             <div className="mb-3 flex items-center justify-between">
               <p className="text-sm font-black">Поддержать story</p>
-              <span className="text-xs text-[#b9b2c7]">
+              <span className="text-xs text-[#81748a]">
                 {storyGifts?.length ?? 0} подарков
               </span>
             </div>
@@ -316,23 +316,23 @@ export default async function StoryPage({
                   <input name="story_id" type="hidden" value={story.id} />
                   <input name="gift_code" type="hidden" value={gift.code} />
                   <button
-                    className="flex w-full flex-col items-center rounded-xl border border-white/10 bg-white/5 px-1 py-2 transition hover:border-[#ff77ba] hover:bg-[#2b1933]"
+                    className="flex w-full flex-col items-center rounded-xl border border-[#2c2036]/10 bg-[#fbf9fe] px-1 py-2 transition hover:border-[#ff77ba] hover:bg-[#fff0f6]"
                     type="submit"
                   >
-                    <span className="grid size-9 place-items-center rounded-xl bg-gradient-to-br from-[#ff5d9a]/20 to-[#8254ed]/20 text-[#ffc0da]">
+                    <span className="grid size-9 place-items-center rounded-xl bg-gradient-to-br from-[#ffe6f0] to-[#f0e9ff] text-[#8753e6]">
                       <BrandGiftIcon className="size-6" code={gift.code} />
                     </span>
-                    <span className="mt-1 text-[10px] text-[#d7cfdf]">
+                    <span className="mt-1 text-[10px] text-[#5f5369]">
                       {gift.label}
                     </span>
-                    <span className="text-[10px] text-[#ffb7dd]">
+                    <span className="text-[10px] text-[#7549d0]">
                       {formatRubles(gift.price_minor)}
                     </span>
                   </button>
                 </form>
               ))}
             </div>
-            <p className="mt-3 text-[10px] leading-5 text-[#9f97aa]">
+            <p className="mt-3 text-[10px] leading-5 text-[#8a7d91]">
               Подарки работают в тестовом режиме. Публичный городской момент появится
               только при opt-in участников.
             </p>
