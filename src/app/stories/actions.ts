@@ -8,22 +8,24 @@ import { requireUser } from "@/lib/auth";
 import { awardCityPoints } from "@/lib/city-battle";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isUploadedFile, uploadOwnedStoryVideo } from "@/lib/media";
-import { parseAmountToMinor } from "@/lib/money";
 import { optionalText, requiredText } from "@/lib/validation";
 
 export async function createStory(formData: FormData) {
   const { supabase, user } = await requireUser();
-  const username = requiredText(formData.get("username"), 100);
   const caption = optionalText(formData.get("caption"), 500);
-  const accessType = formData.get("access_type") === "paid" ? "paid" : "free";
-  const priceMinor = parseAmountToMinor(formData.get("unlock_price"));
   const video = formData.get("video");
+  if (!isUploadedFile(video)) throw new Error("Выберите видео для story.");
 
-  if (!username || !isUploadedFile(video)) throw new Error("Выберите видео для story.");
-  if (accessType === "paid" && (!priceMinor || priceMinor <= 0)) {
-    throw new Error("Укажите стоимость платной story.");
-  }
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("username, is_creator")
+    .eq("id", user.id)
+    .maybeSingle();
+  if (!profile?.is_creator || !profile.username)
+    throw new Error("Сначала создайте страницу автора.");
 
+  // New stories are deliberately free while paid unlocks and creator payouts
+  // are deferred. Legacy paid stories remain readable through testUnlockStory.
   const path = await uploadOwnedStoryVideo({ file: video, ownerId: user.id });
   const { data: story, error } = await supabase
     .from("stories")
@@ -31,8 +33,8 @@ export async function createStory(formData: FormData) {
       author_id: user.id,
       media_path: path,
       caption,
-      access_type: accessType,
-      unlock_price_minor: accessType === "paid" ? priceMinor : null,
+      access_type: "free",
+      unlock_price_minor: null,
     })
     .select("id")
     .single();
@@ -46,8 +48,11 @@ export async function createStory(formData: FormData) {
   await awardCityPoints(supabase, "story_published", story?.id);
 
   revalidatePath("/");
-  revalidatePath(`/u/${username}`);
-  redirect(`/u/${username}` as Route);
+  revalidatePath("/feed");
+  revalidatePath("/places");
+  revalidatePath("/stories/new");
+  revalidatePath(`/u/${profile.username}`);
+  redirect(`/u/${profile.username}?story=processing` as Route);
 }
 
 export async function testUnlockStory(formData: FormData) {

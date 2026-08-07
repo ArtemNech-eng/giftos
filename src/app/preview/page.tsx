@@ -18,6 +18,7 @@ import {
   MapPin,
   MessageCircle,
   Music2,
+  Play,
   Trophy,
   TrendingUp,
   UsersRound,
@@ -56,6 +57,7 @@ const screens = [
   { id: "wish", label: "Желание", number: "19" },
   { id: "fundraiser", label: "Сбор", number: "20" },
   { id: "fundraiser-new", label: "Создать сбор", number: "21" },
+  { id: "story-new", label: "Новая story", number: "22" },
 ] as const;
 
 type ScreenId = (typeof screens)[number]["id"];
@@ -2226,6 +2228,86 @@ function LiveScreen() {
   );
 }
 
+function NewStoryScreen() {
+  return (
+    <div className="min-h-[730px] bg-[#fbf9fe] px-4 pb-6 pt-5 text-[#251d31]">
+      <header className="flex items-center justify-between">
+        <span className="grid size-10 place-items-center rounded-full border border-[#2c2036]/10 bg-white text-[#5f5369]">
+          <ArrowUpRight className="size-4 rotate-[-135deg]" />
+        </span>
+        <span className="text-center">
+          <small className="block text-[9px] font-black uppercase tracking-[0.13em] text-[#8c7e94]">
+            Ежедневный пульс
+          </small>
+          <b className="block text-sm">Новая story</b>
+        </span>
+        <span className="grid size-10 place-items-center rounded-full bg-[#f0e9ff] text-[#8753e6]">
+          <Sparkles className="size-4.5" />
+        </span>
+      </header>
+      <section className="mt-5 rounded-[1.7rem] bg-gradient-to-br from-[#332452] via-[#58407f] to-[#8069d9] p-5 text-white shadow-[0_14px_30px_rgba(63,37,98,.2)]">
+        <span className="bg-white/14 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.08em] text-[#fbd7e7]">
+          <Sparkles className="size-3.5" /> Покажи момент
+        </span>
+        <h1 className="mt-3 text-3xl font-black leading-[0.88] tracking-[-0.075em]">
+          НЕ НУЖЕН ЭФИР,
+          <br />
+          ЧТОБЫ БЫТЬ В ГОРОДЕ.
+        </h1>
+        <p className="mt-3 max-w-64 text-[10px] leading-5 text-white/75">
+          Одна короткая story может продолжить твою историю и дать людям повод зайти к
+          тебе.
+        </p>
+      </section>
+      <section className="border-[#2c2036]/9 mt-5 rounded-[1.5rem] border bg-white p-3.5 shadow-[0_8px_22px_rgba(69,43,94,.05)]">
+        <div className="flex items-center gap-2">
+          <span className="grid size-8 place-items-center rounded-xl bg-[#fff0f6] text-[#d84b81]">
+            <Play className="size-4 fill-current" />
+          </span>
+          <span>
+            <b className="block text-[11px]">Видео</b>
+            <small className="block text-[9px] text-[#81748a]">
+              Короткий вертикальный момент
+            </small>
+          </span>
+        </div>
+        <span className="mt-3 flex h-24 items-center justify-center rounded-xl border border-dashed border-[#cdbbe7] bg-[#fbf9fe] text-[10px] font-bold text-[#8753e6]">
+          Выбрать видео MP4 / WebM
+        </span>
+      </section>
+      <section className="border-[#2c2036]/9 mt-3 rounded-[1.5rem] border bg-white p-3.5 shadow-[0_8px_22px_rgba(69,43,94,.05)]">
+        <b className="block text-[11px]">Подпись</b>
+        <span className="mt-2 block min-h-20 rounded-xl border border-[#2c2036]/10 bg-[#fbf9fe] p-3 text-[10px] leading-4 text-[#aaa0ae]">
+          Что происходит в этом моменте?
+        </span>
+      </section>
+      <section className="border-[#2c2036]/9 mt-3 rounded-[1.5rem] border bg-white p-3.5 shadow-[0_8px_22px_rgba(69,43,94,.05)]">
+        <div className="flex items-center gap-2">
+          <span className="grid size-8 place-items-center rounded-xl bg-[#eaf7f5] text-[#258b82]">
+            <MapPin className="size-4" />
+          </span>
+          <span>
+            <b className="block text-[11px]">Городской контекст</b>
+            <small className="block text-[9px] text-[#81748a]">
+              Точная геолокация не показывается
+            </small>
+          </span>
+        </div>
+        <span className="mt-3 flex rounded-xl bg-[#f0faf5] p-3 text-[9px] leading-4 text-[#4c7169]">
+          После обработки публичная story может появиться в контексте Будённовска.
+        </span>
+      </section>
+      <section className="mt-4 flex gap-2 rounded-xl bg-[#f0faf5] p-3 text-[9px] leading-4 text-[#4c7169]">
+        <Check className="mt-0.5 size-3.5 shrink-0 text-[#258b82]" /> Новые stories
+        бесплатны. Paid unlock и creator payout отложены.
+      </section>
+      <span className="mt-4 flex w-full items-center justify-center rounded-2xl bg-gradient-to-r from-[#ff5d9a] to-[#8254ed] py-3.5 text-[11px] font-black text-white">
+        Опубликовать story
+      </span>
+    </div>
+  );
+}
+
 function StoryScreen() {
   return (
     <div className="flex min-h-[730px] flex-col bg-[#0d0b12] text-white">
@@ -2426,6 +2508,7 @@ export default async function PreviewPage({
     wish: <WishScreen />,
     fundraiser: <FundraiserScreen />,
     "fundraiser-new": <NewFundraiserScreen />,
+    "story-new": <NewStoryScreen />,
   };
 
   return (

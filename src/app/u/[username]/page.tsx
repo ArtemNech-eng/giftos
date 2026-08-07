@@ -33,7 +33,6 @@ import {
   updateCreatorSubscriptionSettings,
 } from "@/app/creator/subscriptions/actions";
 import { promoteTarget } from "@/app/shop/actions";
-import { createStory } from "@/app/stories/actions";
 import { BrandGiftIcon } from "@/components/brand-gift-icon";
 import { CreatorShareLink } from "@/components/creator-share-link";
 import { LocalRoleIcon } from "@/components/local-role-icon";
@@ -1124,50 +1123,23 @@ export default async function ProfilePage({
       )}
 
       {isOwnProfile && profile.is_creator && (
-        <details className="mx-4 rounded-2xl border border-[#2c2036]/10 bg-white p-4">
-          <summary className="cursor-pointer text-sm font-bold">
-            Создать video story
-          </summary>
-          <form action={createStory} className="mt-4" encType="multipart/form-data">
-            <input name="username" type="hidden" value={profile.username} />
-            <input
-              accept="video/mp4,video/webm"
-              className="block w-full text-sm text-[#766b80] file:mr-3 file:rounded-lg file:border-0 file:bg-[#f24d98] file:px-3 file:py-2 file:text-sm file:font-semibold file:text-white"
-              name="video"
-              required
-              type="file"
-            />
-            <textarea
-              className="mt-3 min-h-16 w-full rounded-xl border border-[#2c2036]/10 bg-[#f8f4fb] p-3 text-sm"
-              maxLength={500}
-              name="caption"
-              placeholder="Подпись"
-            />
-            <div className="mt-3 flex gap-2">
-              <select
-                className="rounded-xl bg-[#f8f4fb] px-3 text-sm"
-                defaultValue="free"
-                name="access_type"
-              >
-                <option value="free">Бесплатно</option>
-                <option value="paid">Платно</option>
-              </select>
-              <input
-                className="w-24 rounded-xl bg-[#f8f4fb] px-3 text-sm"
-                name="unlock_price"
-                placeholder="49 ₽"
-                type="number"
-              />
-              <button
-                className="rounded-xl bg-gradient-to-r from-[#ff4b8a] to-[#7d45ff] px-4 text-sm font-bold text-white"
-                type="submit"
-              >
-                Опубликовать
-              </button>
-            </div>
-          </form>
-        </details>
+        <Link
+          className="mx-4 mt-4 flex items-center gap-3 rounded-[1.5rem] border border-[#d9c5f3] bg-gradient-to-r from-[#fffaff] to-[#f3edff] p-4 shadow-[0_8px_22px_rgba(69,43,94,.05)]"
+          href="/stories/new"
+        >
+          <span className="grid size-10 place-items-center rounded-xl bg-white text-[#8753e6] shadow-[0_4px_12px_rgba(80,45,110,.08)]">
+            <Play className="size-4 fill-current" />
+          </span>
+          <span className="min-w-0 grow">
+            <b className="block text-xs">Новая story</b>
+            <span className="mt-1 block text-[10px] leading-4 text-[#756a7d]">
+              Покажи короткий момент и продолжи свой сюжет в городе.
+            </span>
+          </span>
+          <ChevronRight className="size-4 shrink-0 text-[#8753e6]" />
+        </Link>
       )}
+
       {isOwnProfile && profile.is_creator && (
         <div className="mx-4 mt-5 grid grid-cols-2 gap-3">
           <Link
