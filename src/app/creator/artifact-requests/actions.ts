@@ -11,12 +11,14 @@ export async function requestCreatorArtifact(formData: FormData) {
   const creatorId = requiredText(formData.get("creator_id"), 100);
   const seriesId = requiredText(formData.get("series_id"), 100);
   const note = optionalText(formData.get("note"), 1000);
+  const reason = optionalText(formData.get("reason"), 40) || null;
   if (!creatorId || !seriesId) throw new Error("Выберите предмет и автора.");
 
   const { error } = await supabase.rpc("request_creator_artifact", {
     p_creator_id: creatorId,
     p_series_id: seriesId,
     p_note: note ?? "",
+    p_reason: reason,
   });
   if (error) throw new Error(`Не удалось отправить запрос: ${error.message}`);
 

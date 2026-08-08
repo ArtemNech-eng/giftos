@@ -6,7 +6,7 @@ import { redirect } from "next/navigation";
 
 import { requireUser } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { requiredText } from "@/lib/validation";
+import { optionalText, requiredText } from "@/lib/validation";
 
 /**
  * Sends a known, limited collectible artifact for ⭐. This is a platform
@@ -17,12 +17,14 @@ export async function sendCollectibleArtifact(formData: FormData) {
   const recipientId = requiredText(formData.get("recipient_id"), 100);
   const seriesId = requiredText(formData.get("series_id"), 100);
   const username = requiredText(formData.get("username"), 100);
+  const reason = optionalText(formData.get("reason"), 40) || null;
   if (!recipientId || !seriesId || !username)
     throw new Error("Выберите предмет и получателя.");
 
   const { data: instanceId, error } = await supabase.rpc("send_collectible_artifact", {
     p_recipient_id: recipientId,
     p_series_id: seriesId,
+    p_reason: reason,
   });
   if (error || !instanceId)
     throw new Error(
