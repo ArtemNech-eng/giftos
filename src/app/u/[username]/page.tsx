@@ -820,7 +820,7 @@ export default async function ProfilePage({
           <span className="min-w-0 grow">
             <b className="block text-xs">ARTIFACTS 01</b>
             <span className="mt-1 block text-[10px] leading-4 text-[#756a7d]">
-              Первые десять лимитированных предметов уже можно посмотреть.
+              Светящиеся камни драгоценной серии уже можно посмотреть.
             </span>
           </span>
           <ChevronRight className="size-4 shrink-0 text-[#8753e6]" />

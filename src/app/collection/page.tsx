@@ -53,10 +53,6 @@ const rarityTint: Record<string, string> = {
   iconic: "bg-[#fff6d9] text-[#b8860b]",
 };
 
-// Серия определяется по папке арта — как разные коллекции в Telegram.
-const seriesTag = (path: string) =>
-  path.includes("/gems/") ? "Драгоценная серия" : "Керамика";
-
 const soldPercent = (total: number, remaining: number) =>
   total > 0 ? Math.round(((total - remaining) / total) * 100) : 0;
 
@@ -118,7 +114,7 @@ export default async function CollectionPage() {
 
       <section className="mt-5 overflow-hidden rounded-[1.8rem] bg-gradient-to-br from-[#322452] via-[#543d7a] to-[#7b67d8] p-5 text-white shadow-[0_14px_30px_rgba(63,37,98,.2)]">
         <span className="bg-white/14 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.08em] text-[#fbd7e7]">
-          <Gem className="size-3.5" /> Первые десять
+          <Gem className="size-3.5" /> Драгоценная серия
         </span>
         <h2 className="mt-3 text-3xl font-black leading-[0.88] tracking-[-0.075em]">
           ДЕСЯТЬ
@@ -161,9 +157,6 @@ export default async function CollectionPage() {
                       />
                       <span className="block p-2">
                         <b className="block truncate text-[9px]">{artifact.title}</b>
-                        <small className="mt-0.5 block text-[7px] font-bold text-[#8b6a9c]">
-                          {seriesTag(artifact.artwork_path)}
-                        </small>
                         <small className="mt-0.5 block text-[8px] font-black text-[#8753e6]">
                           #{instance.serial_number} / {artifact.total_edition}
                         </small>
@@ -248,15 +241,10 @@ export default async function CollectionPage() {
                     src={artifact.artwork_path}
                   />
                   <div className="p-3">
-                    <span className="flex items-center justify-between gap-1">
-                      <span
-                        className={`inline-flex rounded-full px-1.5 py-0.5 text-[8px] font-black ${rarityTint[artifact.rarity]}`}
-                      >
-                        {rarityLabel[artifact.rarity]}
-                      </span>
-                      <span className="rounded-full bg-[#f5f0f7] px-1.5 py-0.5 text-[8px] font-black text-[#8b6a9c]">
-                        {seriesTag(artifact.artwork_path)}
-                      </span>
+                    <span
+                      className={`inline-flex rounded-full px-1.5 py-0.5 text-[8px] font-black ${rarityTint[artifact.rarity]}`}
+                    >
+                      {rarityLabel[artifact.rarity]}
                     </span>
                     <h3 className="mt-2 text-xs font-black">{artifact.title}</h3>
                     <p className="mt-1 line-clamp-2 text-[9px] leading-4 text-[#756a7d]">

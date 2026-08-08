@@ -1356,7 +1356,7 @@ function CollectiblesScreen() {
           <small className="block text-[9px] font-black uppercase tracking-[0.13em] text-[#8c7e94]">
             Флагманский дроп
           </small>
-          <b className="block text-sm">Первые десять</b>
+          <b className="block text-sm">Драгоценная серия</b>
         </span>
         <span className="grid size-10 place-items-center rounded-full bg-[#f0e9ff] text-[#8753e6]">
           <Sparkles className="size-4.5" />
@@ -1433,26 +1433,6 @@ function CollectiblesScreen() {
 
 function CollectionScreen() {
   const artifacts = [
-    ["key", "Ключ", "300", "39"],
-    ["relic", "Реликвия", "250", "59"],
-    ["compass", "Компас", "200", "79"],
-    ["cube", "Куб", "175", "99"],
-    ["lantern", "Фонарь", "150", "119"],
-    ["prism", "Призма", "100", "149"],
-    ["vial", "Флакон", "80", "179"],
-    ["seal", "Печать", "60", "219"],
-    ["sphere", "Сфера", "40", "269"],
-    ["orbit", "Орбита", "25", "349"],
-    ["bear", "Мишка", "300", "49"],
-    ["rose", "Роза", "250", "59"],
-    ["heart", "Сердце", "200", "69"],
-    ["butterfly", "Бабочка", "180", "79"],
-    ["skate", "Скейт", "150", "89"],
-    ["ring", "Кольцо", "100", "119"],
-    ["car", "Машина", "80", "149"],
-    ["star", "Звезда", "60", "179"],
-    ["shell", "Ракушка", "40", "249"],
-    ["crown", "Корона", "25", "329"],
     ["amethyst", "Аметист", "300", "49"],
     ["topaz", "Топаз", "250", "59"],
     ["opal", "Опал", "200", "69"],
@@ -1482,12 +1462,12 @@ function CollectionScreen() {
       </header>
       <section className="mt-5 rounded-[1.7rem] bg-gradient-to-br from-[#322452] via-[#543d7a] to-[#7b67d8] p-5 text-white shadow-[0_14px_30px_rgba(63,37,98,.2)]">
         <span className="bg-white/14 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.08em] text-[#fbd7e7]">
-          <Sparkles className="size-3.5" /> Первые десять
+          <Sparkles className="size-3.5" /> Драгоценная серия
         </span>
         <h1 className="mt-3 text-3xl font-black leading-[0.88] tracking-[-0.075em]">
-          ДЕСЯТЬ
+          СИЯЮЩИЕ
           <br />
-          АРТЕФАКТОВ.
+          КАМНИ.
         </h1>
         <p className="mt-3 max-w-64 text-[10px] leading-5 text-white/75">
           Лимитированные игровые предметы. Номер экземпляра появляется после вручения.
@@ -1502,7 +1482,7 @@ function CollectionScreen() {
             </p>
           </span>
           <span className="rounded-full bg-[#efe9f6] px-2 py-1 text-[9px] font-black text-[#7a6688]">
-            30
+            10
           </span>
         </div>
         <div className="grid grid-cols-2 gap-3">
@@ -1517,7 +1497,7 @@ function CollectionScreen() {
                 decoding="async"
                 alt=""
                 className="aspect-square w-full object-cover"
-                src={`/collectibles/${index >= 20 ? "gems" : "artifacts"}/png/${slug}.png`}
+                src={`/collectibles/gems/png/${slug}.png`}
               />
               <div className="p-3">
                 <span className="flex items-center justify-between gap-1">
@@ -1527,9 +1507,6 @@ function CollectionScreen() {
                       : index < 8
                         ? "РЕДКИЙ"
                         : "ИКОНИЧЕСКИЙ"}
-                  </span>
-                  <span className="rounded-full bg-[#f5f0f7] px-1.5 py-0.5 text-[8px] font-black text-[#8b6a9c]">
-                    {index >= 20 ? "Драгоценная" : "Керамика"}
                   </span>
                 </span>
                 <b className="mt-2 block text-[11px]">{name}</b>
@@ -1565,12 +1542,12 @@ function CollectionScreen() {
           <img
             loading="lazy"
             decoding="async"
-            alt="Фонарь"
+            alt="Бриллиант"
             className="h-24 w-[72px] rounded-xl object-cover"
-            src="/collectibles/artifacts/lantern.jpg"
+            src="/collectibles/gems/png/diamond.png"
           />
           <span className="grow">
-            <b className="block text-[11px]">Фонарь</b>
+            <b className="block text-[11px]">Бриллиант</b>
             <small className="mt-1 block text-[9px] font-black text-[#8753e6]">
               #047 / 150
             </small>
@@ -1612,16 +1589,16 @@ function UnboxingScreen() {
           <img
             loading="lazy"
             decoding="async"
-            alt="Фонарь"
+            alt="Бриллиант"
             className="aspect-square w-full rounded-[1.2rem] object-cover"
-            src="/collectibles/artifacts/lantern.jpg"
+            src="/collectibles/gems/png/diamond.png"
           />
         </div>
         <div className="relative z-10 mt-7">
           <span className="mx-auto grid size-10 place-items-center rounded-full bg-[#f0e9ff] text-[#7549d0]">
             <Check className="size-5" />
           </span>
-          <h1 className="mt-4 text-3xl font-black tracking-[-0.07em]">Фонарь</h1>
+          <h1 className="mt-4 text-3xl font-black tracking-[-0.07em]">Бриллиант</h1>
           <p className="mt-2 text-sm text-white/70">Теперь он на твоей полке.</p>
           <span className="bg-white/12 mt-5 inline-flex rounded-full px-4 py-2 text-sm font-black text-[#f3e9ff]">
             #047 / 150
