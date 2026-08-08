@@ -243,7 +243,7 @@ export default async function ProfilePage({
       ? supabase
           .from("collectible_artifact_series")
           .select(
-            "id, title, artwork_path, rarity, remaining_edition, total_edition, price_stars",
+            "id, title, artwork_path, collection_slug, rarity, remaining_edition, total_edition, price_stars",
           )
           .eq("is_active", true)
           .order("sort_order", { ascending: true })
@@ -440,6 +440,7 @@ export default async function ProfilePage({
                       id: artifact.id,
                       title: artifact.title,
                       artworkPath: artifact.artwork_path,
+                      collectionSlug: artifact.collection_slug,
                       remainingEdition: artifact.remaining_edition,
                       totalEdition: artifact.total_edition,
                       priceStars: artifact.price_stars,
@@ -453,6 +454,7 @@ export default async function ProfilePage({
                       id: artifact.id,
                       title: artifact.title,
                       artworkPath: artifact.artwork_path,
+                      collectionSlug: artifact.collection_slug,
                       rarity: artifact.rarity,
                       remainingEdition: artifact.remaining_edition,
                       totalEdition: artifact.total_edition,

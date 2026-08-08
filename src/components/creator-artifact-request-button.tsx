@@ -5,11 +5,13 @@ import { Gem, HandCoins } from "lucide-react";
 
 import { requestCreatorArtifact } from "@/app/creator/artifact-requests/actions";
 import { AnimatedArtifact } from "@/components/animated-artifact";
+import { GIFT_COLLECTIONS } from "@/lib/gift-collections";
 
 type Artifact = {
   id: string;
   title: string;
   artworkPath: string;
+  collectionSlug: string | null;
   remainingEdition: number;
   totalEdition: number;
   priceStars: number;
@@ -32,6 +34,12 @@ export function CreatorArtifactRequestButton({
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [sent, setSent] = useState(false);
+  const [tab, setTab] = useState<string>("all");
+
+  const visibleArtifacts =
+    tab === "all"
+      ? artifacts
+      : artifacts.filter((artifact) => artifact.collectionSlug === tab);
 
   async function send(seriesId: string) {
     if (busy) return;
@@ -86,33 +94,62 @@ export function CreatorArtifactRequestButton({
               </small>
             </span>
           </div>
-          <div className="mt-3 grid grid-cols-2 gap-2">
-            {artifacts.map((artifact) => (
+          <nav className="mt-3 flex gap-1 overflow-x-auto pb-1">
+            <button
+              className={`shrink-0 rounded-full px-2.5 py-1 text-[9px] font-black transition ${
+                tab === "all"
+                  ? "bg-gradient-to-r from-[#8254ed] to-[#ff5d9a] text-white"
+                  : "border border-[#2c2036]/10 bg-[#fbf9fe] text-[#756a7d]"
+              }`}
+              onClick={() => setTab("all")}
+              type="button"
+            >
+              Все
+            </button>
+            {GIFT_COLLECTIONS.map((collection) => (
               <button
-                className="overflow-hidden rounded-xl border border-[#e8dfea] bg-[#fbf9fe] text-left transition hover:border-[#bb91e5] disabled:cursor-not-allowed disabled:opacity-45"
-                disabled={busy || artifact.remainingEdition <= 0}
-                key={artifact.id}
-                onClick={() => void send(artifact.id)}
+                className={`shrink-0 rounded-full px-2.5 py-1 text-[9px] font-black transition ${
+                  tab === collection.slug
+                    ? "bg-gradient-to-r from-[#8254ed] to-[#ff5d9a] text-white"
+                    : "border border-[#2c2036]/10 bg-[#fbf9fe] text-[#756a7d]"
+                }`}
+                key={collection.slug}
+                onClick={() => setTab(collection.slug)}
                 type="button"
               >
-                <AnimatedArtifact
-                  className="aspect-square w-full"
-                  rarity="limited"
-                  src={artifact.artworkPath}
-                />
-                <span className="block p-2">
-                  <b className="block truncate text-[10px] text-[#51445b]">
-                    {artifact.title}
-                  </b>
-                  <small className="mt-0.5 flex items-center justify-between text-[8px] font-bold text-[#8b6a9c]">
-                    <span>
-                      {artifact.remainingEdition} / {artifact.totalEdition}
-                    </span>
-                    <span>{artifact.priceStars} ⭐</span>
-                  </small>
-                </span>
+                {collection.icon} {collection.label}
               </button>
             ))}
+          </nav>
+          <div className="mt-2 max-h-80 overflow-y-auto pr-0.5">
+            <div className="grid grid-cols-2 gap-2">
+              {visibleArtifacts.map((artifact) => (
+                <button
+                  className="overflow-hidden rounded-xl border border-[#e8dfea] bg-[#fbf9fe] text-left transition hover:border-[#bb91e5] disabled:cursor-not-allowed disabled:opacity-45"
+                  disabled={busy || artifact.remainingEdition <= 0}
+                  key={artifact.id}
+                  onClick={() => void send(artifact.id)}
+                  type="button"
+                >
+                  <AnimatedArtifact
+                    className="aspect-square w-full"
+                    rarity="limited"
+                    src={artifact.artworkPath}
+                  />
+                  <span className="block p-2">
+                    <b className="block truncate text-[10px] text-[#51445b]">
+                      {artifact.title}
+                    </b>
+                    <small className="mt-0.5 flex items-center justify-between text-[8px] font-bold text-[#8b6a9c]">
+                      <span>
+                        {artifact.remainingEdition} / {artifact.totalEdition}
+                      </span>
+                      <span>{artifact.priceStars} ⭐</span>
+                    </small>
+                  </span>
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       )}
