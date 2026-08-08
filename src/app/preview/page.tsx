@@ -1517,16 +1517,31 @@ function CollectionScreen() {
                 decoding="async"
                 alt=""
                 className="aspect-square w-full object-cover"
-                src={`/collectibles/artifacts/png/${slug}.png`}
+                src={`/collectibles/${index >= 20 ? "gems" : "artifacts"}/png/${slug}.png`}
               />
               <div className="p-3">
-                <span className="inline-flex rounded-full bg-[#f0e9ff] px-1.5 py-0.5 text-[8px] font-black text-[#7549d0]">
-                  {index < 5 ? "ЛИМИТИРОВАННЫЙ" : index < 8 ? "РЕДКИЙ" : "ИКОНИЧЕСКИЙ"}
+                <span className="flex items-center justify-between gap-1">
+                  <span className="inline-flex rounded-full bg-[#f0e9ff] px-1.5 py-0.5 text-[8px] font-black text-[#7549d0]">
+                    {index < 5
+                      ? "ЛИМИТИРОВАННЫЙ"
+                      : index < 8
+                        ? "РЕДКИЙ"
+                        : "ИКОНИЧЕСКИЙ"}
+                  </span>
+                  <span className="rounded-full bg-[#f5f0f7] px-1.5 py-0.5 text-[8px] font-black text-[#8b6a9c]">
+                    {index >= 20 ? "Драгоценная" : "Керамика"}
+                  </span>
                 </span>
                 <b className="mt-2 block text-[11px]">{name}</b>
                 <span className="mt-2 flex items-center justify-between text-[9px] font-black">
                   <span className="text-[#8b6a9c]">{left} шт.</span>
                   <span className="text-[#7549d0]">{price} ⭐</span>
+                </span>
+                <span className="mt-1.5 block h-1 overflow-hidden rounded-full bg-[#f0eaf5]">
+                  <span
+                    className="block h-full rounded-full bg-gradient-to-r from-[#8254ed] to-[#ff5d9a]"
+                    style={{ width: `${Math.min(100, 100 - Number(left) / 3)}%` }}
+                  />
                 </span>
               </div>
             </article>

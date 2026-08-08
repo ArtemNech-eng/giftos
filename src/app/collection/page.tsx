@@ -47,6 +47,19 @@ const rarityLabel = {
   iconic: "Иконический",
 } as const;
 
+const rarityTint: Record<string, string> = {
+  limited: "bg-[#f0e9ff] text-[#7549d0]",
+  rare: "bg-[#ffe6f0] text-[#d84b81]",
+  iconic: "bg-[#fff6d9] text-[#b8860b]",
+};
+
+// Серия определяется по папке арта — как разные коллекции в Telegram.
+const seriesTag = (path: string) =>
+  path.includes("/gems/") ? "Драгоценная серия" : "Керамика";
+
+const soldPercent = (total: number, remaining: number) =>
+  total > 0 ? Math.round(((total - remaining) / total) * 100) : 0;
+
 export default async function CollectionPage() {
   const { supabase, user } = await requireUser();
   const [{ data: wallet }, { data: rawSeries }, { data: rawInstances }] =
@@ -148,6 +161,9 @@ export default async function CollectionPage() {
                       />
                       <span className="block p-2">
                         <b className="block truncate text-[9px]">{artifact.title}</b>
+                        <small className="mt-0.5 block text-[7px] font-bold text-[#8b6a9c]">
+                          {seriesTag(artifact.artwork_path)}
+                        </small>
                         <small className="mt-0.5 block text-[8px] font-black text-[#8753e6]">
                           #{instance.serial_number} / {artifact.total_edition}
                         </small>
@@ -213,20 +229,34 @@ export default async function CollectionPage() {
             const owned = ownedBySeries.get(artifact.id)?.length ?? 0;
             return (
               <article
-                className="border-[#2c2036]/9 overflow-hidden rounded-[1.4rem] border bg-white shadow-[0_8px_22px_rgba(69,43,94,.05)]"
+                className="border-[#2c2036]/9 group relative overflow-hidden rounded-[1.4rem] border bg-white shadow-[0_8px_22px_rgba(69,43,94,.05)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_16px_36px_rgba(69,43,94,.14)]"
                 key={artifact.id}
               >
+                {soldPercent(artifact.total_edition, artifact.remaining_edition) >=
+                  90 &&
+                  artifact.remaining_edition > 0 && (
+                    <span className="absolute right-2 top-2 z-40 animate-pulse rounded-full bg-[#ff2d55] px-2 py-0.5 text-[8px] font-black text-white shadow-[0_4px_12px_rgba(255,45,85,.4)]">
+                      Почти распродано
+                    </span>
+                  )}
                 <Link className="block" href={`/collection/${artifact.slug}` as Route}>
                   <AnimatedArtifact
                     alt={artifact.title}
-                    className="aspect-square w-full"
+                    className="aspect-square w-full transition duration-300 group-hover:scale-[1.04]"
                     orbit={artifact.rarity === "iconic"}
                     rarity={artifact.rarity}
                     src={artifact.artwork_path}
                   />
                   <div className="p-3">
-                    <span className="inline-flex rounded-full bg-[#f0e9ff] px-1.5 py-0.5 text-[8px] font-black text-[#7549d0]">
-                      {rarityLabel[artifact.rarity]}
+                    <span className="flex items-center justify-between gap-1">
+                      <span
+                        className={`inline-flex rounded-full px-1.5 py-0.5 text-[8px] font-black ${rarityTint[artifact.rarity]}`}
+                      >
+                        {rarityLabel[artifact.rarity]}
+                      </span>
+                      <span className="rounded-full bg-[#f5f0f7] px-1.5 py-0.5 text-[8px] font-black text-[#8b6a9c]">
+                        {seriesTag(artifact.artwork_path)}
+                      </span>
                     </span>
                     <h3 className="mt-2 text-xs font-black">{artifact.title}</h3>
                     <p className="mt-1 line-clamp-2 text-[9px] leading-4 text-[#756a7d]">
@@ -235,11 +265,42 @@ export default async function CollectionPage() {
                   </div>
                 </Link>
                 <div className="px-3 pb-3">
-                  <div className="mt-3 flex items-center justify-between text-[9px] font-black">
-                    <span className="text-[#8b6a9c]">
-                      {artifact.remaining_edition} / {artifact.total_edition}
-                    </span>
-                    <span className="text-[#7549d0]">{artifact.price_stars} ⭐</span>
+                  <div className="mt-2">
+                    <div className="flex items-center justify-between text-[9px] font-black">
+                      <span className="text-[#8b6a9c]">
+                        Распродано{" "}
+                        {soldPercent(
+                          artifact.total_edition,
+                          artifact.remaining_edition,
+                        )}
+                        %
+                      </span>
+                      <span className="text-[#7549d0]">{artifact.price_stars} ⭐</span>
+                    </div>
+                    <div className="mt-1.5 h-1 overflow-hidden rounded-full bg-[#f0eaf5]">
+                      <div
+                        className={`h-full rounded-full ${
+                          soldPercent(
+                            artifact.total_edition,
+                            artifact.remaining_edition,
+                          ) >= 90
+                            ? "bg-gradient-to-r from-[#ff2d55] to-[#ff9bc5]"
+                            : "bg-gradient-to-r from-[#8254ed] to-[#ff5d9a]"
+                        }`}
+                        style={{
+                          width: `${Math.max(
+                            3,
+                            soldPercent(
+                              artifact.total_edition,
+                              artifact.remaining_edition,
+                            ),
+                          )}%`,
+                        }}
+                      />
+                    </div>
+                    <p className="mt-1.5 text-[8px] font-bold text-[#8b6a9c]">
+                      Осталось {artifact.remaining_edition} из {artifact.total_edition}
+                    </p>
                   </div>
                   {owned > 0 && (
                     <p className="mt-2 flex items-center gap-1 text-[8px] font-black text-[#258b82]">
