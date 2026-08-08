@@ -14,6 +14,7 @@ import {
 import { setCollectibleArtifactProfileDisplay } from "@/app/collection/actions";
 import { requireUser } from "@/lib/auth";
 import { AnimatedArtifact } from "@/components/animated-artifact";
+import { GIFT_COLLECTIONS } from "@/lib/gift-collections";
 
 export const metadata = {
   title: "Коллекция артефактов",
@@ -27,6 +28,7 @@ type ArtifactSeries = {
   title: string;
   description: string | null;
   artwork_path: string;
+  collection_slug: string | null;
   rarity: "limited" | "rare" | "iconic";
   total_edition: number;
   remaining_edition: number;
@@ -56,7 +58,79 @@ const rarityTint: Record<string, string> = {
 const soldPercent = (total: number, remaining: number) =>
   total > 0 ? Math.round(((total - remaining) / total) * 100) : 0;
 
-export default async function CollectionPage() {
+function Card({ artifact, owned }: { artifact: ArtifactSeries; owned: number }) {
+  return (
+    <article className="border-[#2c2036]/9 group relative overflow-hidden rounded-[1.4rem] border bg-white shadow-[0_8px_22px_rgba(69,43,94,.05)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_16px_36px_rgba(69,43,94,.14)]">
+      {soldPercent(artifact.total_edition, artifact.remaining_edition) >= 90 &&
+        artifact.remaining_edition > 0 && (
+          <span className="absolute right-2 top-2 z-40 animate-pulse rounded-full bg-[#ff2d55] px-2 py-0.5 text-[8px] font-black text-white shadow-[0_4px_12px_rgba(255,45,85,.4)]">
+            Почти распродано
+          </span>
+        )}
+      <Link className="block" href={`/collection/${artifact.slug}` as Route}>
+        <AnimatedArtifact
+          alt={artifact.title}
+          className="aspect-square w-full transition duration-300 group-hover:scale-[1.04]"
+          orbit={artifact.rarity === "iconic"}
+          rarity={artifact.rarity}
+          src={artifact.artwork_path}
+        />
+        <div className="p-3">
+          <span
+            className={`inline-flex rounded-full px-1.5 py-0.5 text-[8px] font-black ${rarityTint[artifact.rarity]}`}
+          >
+            {rarityLabel[artifact.rarity]}
+          </span>
+          <h3 className="mt-2 text-xs font-black">{artifact.title}</h3>
+          <p className="mt-1 line-clamp-2 text-[9px] leading-4 text-[#756a7d]">
+            {artifact.description}
+          </p>
+        </div>
+      </Link>
+      <div className="px-3 pb-3">
+        <div className="mt-2">
+          <div className="flex items-center justify-between text-[9px] font-black">
+            <span className="text-[#8b6a9c]">
+              Распродано{" "}
+              {soldPercent(artifact.total_edition, artifact.remaining_edition)}%
+            </span>
+            <span className="text-[#7549d0]">{artifact.price_stars} ⭐</span>
+          </div>
+          <div className="mt-1.5 h-1 overflow-hidden rounded-full bg-[#f0eaf5]">
+            <div
+              className={`h-full rounded-full ${
+                soldPercent(artifact.total_edition, artifact.remaining_edition) >= 90
+                  ? "bg-gradient-to-r from-[#ff2d55] to-[#ff9bc5]"
+                  : "bg-gradient-to-r from-[#8254ed] to-[#ff5d9a]"
+              }`}
+              style={{
+                width: `${Math.max(3, soldPercent(artifact.total_edition, artifact.remaining_edition))}%`,
+              }}
+            />
+          </div>
+          <p className="mt-1.5 text-[8px] font-bold text-[#8b6a9c]">
+            Осталось {artifact.remaining_edition} из {artifact.total_edition}
+          </p>
+        </div>
+        {owned > 0 && (
+          <p className="mt-2 flex items-center gap-1 text-[8px] font-black text-[#258b82]">
+            <Check className="size-3" /> В твоей коллекции: {owned}
+          </p>
+        )}
+      </div>
+    </article>
+  );
+}
+
+export default async function CollectionPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ collection?: string }>;
+}) {
+  const { collection: rawCollection = "" } = await searchParams;
+  const activeCollection = GIFT_COLLECTIONS.some((item) => item.slug === rawCollection)
+    ? rawCollection
+    : "all";
   const { supabase, user } = await requireUser();
   const [{ data: wallet }, { data: rawSeries }, { data: rawInstances }] =
     await Promise.all([
@@ -68,7 +142,7 @@ export default async function CollectionPage() {
       supabase
         .from("collectible_artifact_series")
         .select(
-          "id, slug, title, description, artwork_path, rarity, total_edition, remaining_edition, price_stars",
+          "id, slug, title, description, artwork_path, collection_slug, rarity, total_edition, remaining_edition, price_stars",
         )
         .eq("is_active", true)
         .order("sort_order", { ascending: true }),
@@ -90,6 +164,29 @@ export default async function CollectionPage() {
     current.push(instance);
     ownedBySeries.set(instance.series_id, current);
   }
+
+  const visibleSeries =
+    activeCollection === "all"
+      ? series
+      : series.filter((item) => item.collection_slug === activeCollection);
+  const groups =
+    activeCollection === "all"
+      ? [
+          {
+            slug: "gems",
+            items: series.filter((item) => item.collection_slug === "gems"),
+          },
+          ...GIFT_COLLECTIONS.map((collection) => ({
+            slug: collection.slug,
+            items: series.filter((item) => item.collection_slug === collection.slug),
+          })),
+        ].filter((group) => group.items.length > 0)
+      : [
+          {
+            slug: activeCollection,
+            items: visibleSeries,
+          },
+        ];
 
   return (
     <main className="mx-auto min-h-screen max-w-[430px] bg-[#f7f4fb] px-4 pb-12 pt-5 text-[#251d31]">
@@ -208,98 +305,71 @@ export default async function CollectionPage() {
       <section className="mt-6">
         <div className="mb-3 flex items-end justify-between">
           <span>
-            <h2 className="text-sm font-black">Первая десятка</h2>
+            <h2 className="text-sm font-black">Подарки</h2>
             <p className="mt-0.5 text-[10px] text-[#82758a]">
-              Выбери предмет на профиле человека и подари его
+              Подбери подарок под характер человека
             </p>
           </span>
           <Link className="text-[10px] font-black text-[#8753e6]" href="/people">
             К людям <ChevronRight className="inline size-3.5" />
           </Link>
         </div>
-        <div className="grid grid-cols-2 gap-3">
-          {series.map((artifact) => {
-            const owned = ownedBySeries.get(artifact.id)?.length ?? 0;
-            return (
-              <article
-                className="border-[#2c2036]/9 group relative overflow-hidden rounded-[1.4rem] border bg-white shadow-[0_8px_22px_rgba(69,43,94,.05)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_16px_36px_rgba(69,43,94,.14)]"
-                key={artifact.id}
-              >
-                {soldPercent(artifact.total_edition, artifact.remaining_edition) >=
-                  90 &&
-                  artifact.remaining_edition > 0 && (
-                    <span className="absolute right-2 top-2 z-40 animate-pulse rounded-full bg-[#ff2d55] px-2 py-0.5 text-[8px] font-black text-white shadow-[0_4px_12px_rgba(255,45,85,.4)]">
-                      Почти распродано
-                    </span>
-                  )}
-                <Link className="block" href={`/collection/${artifact.slug}` as Route}>
-                  <AnimatedArtifact
-                    alt={artifact.title}
-                    className="aspect-square w-full transition duration-300 group-hover:scale-[1.04]"
-                    orbit={artifact.rarity === "iconic"}
-                    rarity={artifact.rarity}
-                    src={artifact.artwork_path}
-                  />
-                  <div className="p-3">
-                    <span
-                      className={`inline-flex rounded-full px-1.5 py-0.5 text-[8px] font-black ${rarityTint[artifact.rarity]}`}
-                    >
-                      {rarityLabel[artifact.rarity]}
-                    </span>
-                    <h3 className="mt-2 text-xs font-black">{artifact.title}</h3>
-                    <p className="mt-1 line-clamp-2 text-[9px] leading-4 text-[#756a7d]">
-                      {artifact.description}
-                    </p>
-                  </div>
-                </Link>
-                <div className="px-3 pb-3">
-                  <div className="mt-2">
-                    <div className="flex items-center justify-between text-[9px] font-black">
-                      <span className="text-[#8b6a9c]">
-                        Распродано{" "}
-                        {soldPercent(
-                          artifact.total_edition,
-                          artifact.remaining_edition,
-                        )}
-                        %
-                      </span>
-                      <span className="text-[#7549d0]">{artifact.price_stars} ⭐</span>
-                    </div>
-                    <div className="mt-1.5 h-1 overflow-hidden rounded-full bg-[#f0eaf5]">
-                      <div
-                        className={`h-full rounded-full ${
-                          soldPercent(
-                            artifact.total_edition,
-                            artifact.remaining_edition,
-                          ) >= 90
-                            ? "bg-gradient-to-r from-[#ff2d55] to-[#ff9bc5]"
-                            : "bg-gradient-to-r from-[#8254ed] to-[#ff5d9a]"
-                        }`}
-                        style={{
-                          width: `${Math.max(
-                            3,
-                            soldPercent(
-                              artifact.total_edition,
-                              artifact.remaining_edition,
-                            ),
-                          )}%`,
-                        }}
-                      />
-                    </div>
-                    <p className="mt-1.5 text-[8px] font-bold text-[#8b6a9c]">
-                      Осталось {artifact.remaining_edition} из {artifact.total_edition}
-                    </p>
-                  </div>
-                  {owned > 0 && (
-                    <p className="mt-2 flex items-center gap-1 text-[8px] font-black text-[#258b82]">
-                      <Check className="size-3" /> В твоей коллекции: {owned}
-                    </p>
-                  )}
-                </div>
-              </article>
-            );
-          })}
-        </div>
+
+        <nav className="scrollbar-none -mx-4 flex gap-1.5 overflow-x-auto px-4 pb-1">
+          <Link
+            className={`shrink-0 rounded-full px-3 py-1.5 text-[10px] font-black transition ${
+              activeCollection === "all"
+                ? "bg-gradient-to-r from-[#8254ed] to-[#ff5d9a] text-white shadow-[0_4px_12px_rgba(160,75,213,.3)]"
+                : "border border-[#2c2036]/10 bg-white text-[#756a7d]"
+            }`}
+            href="/collection"
+          >
+            Все
+          </Link>
+          {GIFT_COLLECTIONS.map((collection) => (
+            <Link
+              className={`shrink-0 rounded-full px-3 py-1.5 text-[10px] font-black transition ${
+                activeCollection === collection.slug
+                  ? "bg-gradient-to-r from-[#8254ed] to-[#ff5d9a] text-white shadow-[0_4px_12px_rgba(160,75,213,.3)]"
+                  : "border border-[#2c2036]/10 bg-white text-[#756a7d]"
+              }`}
+              href={`/collection?collection=${collection.slug}` as Route}
+              key={collection.slug}
+            >
+              {collection.icon} {collection.label}
+            </Link>
+          ))}
+        </nav>
+
+        {groups.map((group) => {
+          const meta =
+            group.slug === "gems"
+              ? { label: "Драгоценная серия", tagline: "Светящиеся камни" }
+              : (() => {
+                  const found = GIFT_COLLECTIONS.find(
+                    (item) => item.slug === group.slug,
+                  );
+                  return found
+                    ? { label: `${found.icon} ${found.label}`, tagline: found.tagline }
+                    : { label: group.slug, tagline: "" };
+                })();
+          return (
+            <section className="mt-5" key={group.slug}>
+              <div className="mb-2.5 flex items-baseline justify-between">
+                <h3 className="text-xs font-black">{meta.label}</h3>
+                <span className="text-[9px] font-bold text-[#8b6a9c]">
+                  {meta.tagline}
+                </span>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                {group.items.map((artifact) => {
+                  const owned = ownedBySeries.get(artifact.id)?.length ?? 0;
+                  return <Card key={artifact.id} artifact={artifact} owned={owned} />;
+                })}
+              </div>
+            </section>
+          );
+        })}
       </section>
 
       <section className="mt-5 flex gap-2.5 rounded-2xl bg-[#f0faf5] p-3.5 text-[#4c7169]">
