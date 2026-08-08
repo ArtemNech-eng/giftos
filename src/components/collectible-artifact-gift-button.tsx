@@ -7,6 +7,7 @@ import { sendCollectibleArtifact } from "@/app/collection/actions";
 import { AnimatedArtifact } from "@/components/animated-artifact";
 import { GIFT_COLLECTIONS } from "@/lib/gift-collections";
 import { GIFT_REASONS } from "@/lib/gift-reasons";
+import { GiftSendCelebration } from "@/components/gift-send-celebration";
 
 type Artifact = {
   id: string;
@@ -34,6 +35,13 @@ export function CollectibleArtifactGiftButton({
   const [tab, setTab] = useState<string>("all");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [selectedReason, setSelectedReason] = useState<string | null>(null);
+  const [celebrating, setCelebrating] = useState(false);
+  const [celebrateData, setCelebrateData] = useState<{
+    artworkPath: string;
+    title: string;
+    rarity: string;
+    reason: string | null;
+  } | null>(null);
 
   const visibleArtifacts =
     tab === "all"
@@ -51,6 +59,19 @@ export function CollectibleArtifactGiftButton({
       formData.set("username", username);
       if (reason) formData.set("reason", reason);
       await sendCollectibleArtifact(formData);
+      const sent = artifacts.find((artifact) => artifact.id === selectedId);
+      if (sent) {
+        setCelebrateData({
+          artworkPath: sent.artworkPath,
+          title: sent.title,
+          rarity: sent.rarity,
+          reason,
+        });
+      }
+      setCelebrating(true);
+      setOpen(false);
+      setSelectedId(null);
+      setSelectedReason(null);
     } catch {
       setBusy(false);
       setOpen(false);
@@ -206,6 +227,18 @@ export function CollectibleArtifactGiftButton({
             </>
           )}
         </div>
+      )}
+      {celebrating && celebrateData && (
+        <GiftSendCelebration
+          artworkPath={celebrateData.artworkPath}
+          onDone={() => {
+            setCelebrating(false);
+            setCelebrateData(null);
+          }}
+          rarity={celebrateData.rarity}
+          reason={celebrateData.reason}
+          title={celebrateData.title}
+        />
       )}
     </div>
   );
