@@ -7,6 +7,7 @@ import {
   Eye,
   EyeOff,
   Gem,
+  Heart,
   LockKeyhole,
   Sparkles,
 } from "lucide-react";
@@ -33,6 +34,7 @@ type ArtifactSeries = {
   total_edition: number;
   remaining_edition: number;
   price_stars: number;
+  times_sent: number;
 };
 type ArtifactInstance = {
   id: string;
@@ -142,7 +144,7 @@ export default async function CollectionPage({
       supabase
         .from("collectible_artifact_series")
         .select(
-          "id, slug, title, description, artwork_path, collection_slug, rarity, total_edition, remaining_edition, price_stars",
+          "id, slug, title, description, artwork_path, collection_slug, rarity, total_edition, remaining_edition, price_stars, times_sent",
         )
         .eq("is_active", true)
         .order("sort_order", { ascending: true }),
@@ -164,6 +166,10 @@ export default async function CollectionPage({
     current.push(instance);
     ownedBySeries.set(instance.series_id, current);
   }
+
+  const topGifts = [...series]
+    .sort((a, b) => (b.times_sent ?? 0) - (a.times_sent ?? 0))
+    .slice(0, 5);
 
   const visibleSeries =
     activeCollection === "all"
@@ -292,6 +298,38 @@ export default async function CollectionPage({
                   ]
                 : [];
             })}
+          </div>
+        </section>
+      )}
+
+      {topGifts.length > 0 && (
+        <section className="mt-6">
+          <div className="mb-3 flex items-end justify-between">
+            <span>
+              <h2 className="text-sm font-black">🔥 Популярные подарки</h2>
+              <p className="mt-0.5 text-[10px] text-[#82758a]">Их дарят чаще всего</p>
+            </span>
+          </div>
+          <div className="flex gap-3 overflow-x-auto pb-2">
+            {topGifts.map((artifact) => (
+              <Link
+                className="border-[#2c2036]/9 group w-32 shrink-0 overflow-hidden rounded-2xl border bg-white shadow-[0_6px_16px_rgba(69,43,94,.05)] transition hover:-translate-y-0.5"
+                href={`/collection/${artifact.slug}` as Route}
+                key={artifact.id}
+              >
+                <AnimatedArtifact
+                  className="aspect-square w-full"
+                  rarity={artifact.rarity}
+                  src={artifact.artwork_path}
+                />
+                <span className="block p-2">
+                  <b className="block truncate text-[9px]">{artifact.title}</b>
+                  <small className="mt-0.5 flex items-center gap-1 text-[8px] font-black text-[#8753e6]">
+                    <Heart className="size-2.5" /> {artifact.times_sent ?? 0}
+                  </small>
+                </span>
+              </Link>
+            ))}
           </div>
         </section>
       )}
