@@ -1356,7 +1356,7 @@ function CollectiblesScreen() {
           <small className="block text-[9px] font-black uppercase tracking-[0.13em] text-[#8c7e94]">
             Флагманский дроп
           </small>
-          <b className="block text-sm">Драгоценная серия</b>
+          <b className="block text-sm">Подарки под характер</b>
         </span>
         <span className="grid size-10 place-items-center rounded-full bg-[#f0e9ff] text-[#8753e6]">
           <Sparkles className="size-4.5" />
@@ -1433,16 +1433,26 @@ function CollectiblesScreen() {
 
 function CollectionScreen() {
   const artifacts = [
-    ["amethyst", "Аметист", "300", "49"],
-    ["topaz", "Топаз", "250", "59"],
-    ["opal", "Опал", "200", "69"],
-    ["pearl", "Жемчуг", "180", "79"],
-    ["amber", "Янтарь", "150", "89"],
-    ["sapphire", "Сапфир", "100", "119"],
-    ["emerald", "Изумруд", "80", "149"],
-    ["moonstone", "Лунный камень", "60", "179"],
-    ["ruby", "Рубин", "40", "249"],
-    ["diamond", "Бриллиант", "25", "329"],
+    ["cat", "Котик", "300", "49"],
+    ["skull", "Череп", "250", "59"],
+    ["lipstick", "Помада", "200", "69"],
+    ["atom", "Атом", "180", "79"],
+    ["ball", "Мяч", "150", "89"],
+    ["donut", "Пончик", "300", "49"],
+    ["hammer", "Молот", "250", "59"],
+    ["shoe", "Туфелька", "200", "69"],
+    ["flask", "Пробирка", "180", "79"],
+    ["dumbbell", "Гантеля", "150", "89"],
+    ["helmet", "Шлем", "100", "119"],
+    ["cap", "Кепка", "80", "149"],
+    ["butterfly", "Бабочка", "60", "179"],
+    ["spotlight", "Прожектор", "40", "249"],
+    ["hat", "Шляпа", "25", "329"],
+    ["racecar", "Болид", "200", "69"],
+    ["sneaker", "Кроссовок", "200", "69"],
+    ["mirror", "Зеркальце", "200", "69"],
+    ["mic", "Микрофон", "200", "69"],
+    ["cards", "Карты", "200", "69"],
   ] as const;
   return (
     <div className="min-h-[730px] bg-[#fbf9fe] px-4 pb-6 pt-5 text-[#251d31]">
@@ -1462,7 +1472,7 @@ function CollectionScreen() {
       </header>
       <section className="mt-5 rounded-[1.7rem] bg-gradient-to-br from-[#322452] via-[#543d7a] to-[#7b67d8] p-5 text-white shadow-[0_14px_30px_rgba(63,37,98,.2)]">
         <span className="bg-white/14 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.08em] text-[#fbd7e7]">
-          <Sparkles className="size-3.5" /> Драгоценная серия
+          <Sparkles className="size-3.5" /> Подарки под характер
         </span>
         <h1 className="mt-3 text-3xl font-black leading-[0.88] tracking-[-0.075em]">
           СИЯЮЩИЕ
@@ -1542,12 +1552,12 @@ function CollectionScreen() {
           <img
             loading="lazy"
             decoding="async"
-            alt="Бриллиант"
+            alt="Котик"
             className="h-24 w-[72px] rounded-xl object-cover"
-            src="/collectibles/gems/png/diamond.png"
+            src="/collectibles/gems/png/cat.png"
           />
           <span className="grow">
-            <b className="block text-[11px]">Бриллиант</b>
+            <b className="block text-[11px]">Котик</b>
             <small className="mt-1 block text-[9px] font-black text-[#8753e6]">
               #047 / 150
             </small>
@@ -1589,16 +1599,16 @@ function UnboxingScreen() {
           <img
             loading="lazy"
             decoding="async"
-            alt="Бриллиант"
+            alt="Котик"
             className="aspect-square w-full rounded-[1.2rem] object-cover"
-            src="/collectibles/gems/png/diamond.png"
+            src="/collectibles/gems/png/cat.png"
           />
         </div>
         <div className="relative z-10 mt-7">
           <span className="mx-auto grid size-10 place-items-center rounded-full bg-[#f0e9ff] text-[#7549d0]">
             <Check className="size-5" />
           </span>
-          <h1 className="mt-4 text-3xl font-black tracking-[-0.07em]">Бриллиант</h1>
+          <h1 className="mt-4 text-3xl font-black tracking-[-0.07em]">Котик</h1>
           <p className="mt-2 text-sm text-white/70">Теперь он на твоей полке.</p>
           <span className="bg-white/12 mt-5 inline-flex rounded-full px-4 py-2 text-sm font-black text-[#f3e9ff]">
             #047 / 150

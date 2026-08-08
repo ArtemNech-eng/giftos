@@ -171,16 +171,10 @@ export default async function CollectionPage({
       : series.filter((item) => item.collection_slug === activeCollection);
   const groups =
     activeCollection === "all"
-      ? [
-          {
-            slug: "gems",
-            items: series.filter((item) => item.collection_slug === "gems"),
-          },
-          ...GIFT_COLLECTIONS.map((collection) => ({
-            slug: collection.slug,
-            items: series.filter((item) => item.collection_slug === collection.slug),
-          })),
-        ].filter((group) => group.items.length > 0)
+      ? GIFT_COLLECTIONS.map((collection) => ({
+          slug: collection.slug,
+          items: series.filter((item) => item.collection_slug === collection.slug),
+        })).filter((group) => group.items.length > 0)
       : [
           {
             slug: activeCollection,
@@ -211,7 +205,7 @@ export default async function CollectionPage({
 
       <section className="mt-5 overflow-hidden rounded-[1.8rem] bg-gradient-to-br from-[#322452] via-[#543d7a] to-[#7b67d8] p-5 text-white shadow-[0_14px_30px_rgba(63,37,98,.2)]">
         <span className="bg-white/14 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.08em] text-[#fbd7e7]">
-          <Gem className="size-3.5" /> Драгоценная серия
+          <Gem className="size-3.5" /> Подарки под характер
         </span>
         <h2 className="mt-3 text-3xl font-black leading-[0.88] tracking-[-0.075em]">
           ДЕСЯТЬ
@@ -342,17 +336,10 @@ export default async function CollectionPage({
         </nav>
 
         {groups.map((group) => {
-          const meta =
-            group.slug === "gems"
-              ? { label: "Драгоценная серия", tagline: "Светящиеся камни" }
-              : (() => {
-                  const found = GIFT_COLLECTIONS.find(
-                    (item) => item.slug === group.slug,
-                  );
-                  return found
-                    ? { label: `${found.icon} ${found.label}`, tagline: found.tagline }
-                    : { label: group.slug, tagline: "" };
-                })();
+          const found = GIFT_COLLECTIONS.find((item) => item.slug === group.slug);
+          const meta = found
+            ? { label: `${found.icon} ${found.label}`, tagline: found.tagline }
+            : { label: group.slug, tagline: "" };
           return (
             <section className="mt-5" key={group.slug}>
               <div className="mb-2.5 flex items-baseline justify-between">
