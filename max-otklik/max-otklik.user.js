@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         MAX Автоотклик на заявки
 // @namespace    local.max-autootklik
-// @version      2.5.0
+// @version      2.7.0
 // @description  Автоотклик «Я» на сообщения с ключевыми словами в чате курьеров MAX (web.max.ru). Вкл/выкл: кнопка на панели, F9 или «вкл»/«выкл» в чат «Избранное» с телефона.
 // @author       you
 // @match        https://web.max.ru/*
@@ -64,9 +64,11 @@ const CONFIG = {
     on: loopOk && !!GM_getValue("maxOtklikOn", false),
     lastSend: 0, sentMin: 0, minStart: Date.now(),
     seenMs: {}, ctrlSeen: {}, ctrlInit: false, ctrlOk: null,
-    lastDbg: "", targetClicked: false
+    lastDbg: "", targetClicked: false,
+    ctrlLearnText: GM_getValue("mao_ctrlText", "")
   };
-  let logEl, btnEl, dbgEl;
+  let logEl, btnEl, dbgEl, btnCtrlEl;
+  let ctrlLearnMode = false;
   const observedRoots = new Set();
 
   /* ================= ДОКУМЕНТЫ + SHADOW DOM ================= */
@@ -330,15 +332,65 @@ const CONFIG = {
 
   /* ================= УПРАВЛЕНИЕ С ТЕЛЕФОНА ================= */
 
-  function pollCtrl() {
-    if (!CONFIG.MAX_CONTROL.ENABLED) return;
-    const items = findAllInAll("div, li, a").filter(function (el) {
+  // Название чата (часть до «:») — чтобы находить пульт, даже когда превью меняется
+  function ctrlTitleOf(t) {
+    const i = t.indexOf(":");
+    return (i >= 0 ? t.slice(0, i) : t).trim().toLowerCase();
+  }
+
+  // Поиск чата-пульта: сначала по CHAT_HINTS, потом по сохранённому (кликом)
+  function findCtrlChats() {
+    const all = findAllInAll("div, li, a").filter(function (el) {
       const t = (el.innerText || "").trim();
-      if (!t || t.length > 250 || el.children.length > 6) return false;
+      if (!t || t.length > 300 || el.children.length > 6) return false;
       const tl = t.toLowerCase();
       return CONFIG.MAX_CONTROL.CHAT_HINTS.some(function (h) { return tl.includes(h.toLowerCase()); });
     });
-    if (!items.length) { state.ctrlOk = false; return; }
+    if (all.length) return all;
+    if (state.ctrlLearnText) {
+      const saved = ctrlTitleOf(state.ctrlLearnText);
+      if (saved) {
+        return findAllInAll("div, li, a").filter(function (el) {
+          const t = (el.innerText || "").trim();
+          if (!t || t.length > 300 || el.children.length > 6) return false;
+          const title = ctrlTitleOf(t);
+          return title === saved || title.indexOf(saved) === 0 || saved.indexOf(title) === 0;
+        });
+      }
+    }
+    return [];
+  }
+
+  // «Обучение»: пользователь кликает по чату-пульту в списке — запоминаем его
+  function learnCtrl(el) {
+    let node = el;
+    for (let i = 0; node && i < 8; i++, node = node.parentElement) {
+      const t = (node.innerText || "").trim();
+      if (!t || t.length === 0 || t.length > 200) continue;
+      const title = ctrlTitleOf(t);
+      if (!title || title.length === 0 || title.length > 60) continue;
+      if (node.children.length <= 6) {
+        state.ctrlLearnText = t;
+        try { GM_setValue("mao_ctrlText", t); } catch (e) {}
+        state.ctrlOk = true;
+        log("Пульт указан: «" + t.slice(0, 60) + "». Теперь пишите «вкл»/«выкл» в этот чат с телефона.", "o");
+        return true;
+      }
+    }
+    log("Не получилось определить чат-пульт — кликните по названию чата в списке слева.", "w");
+    return false;
+  }
+
+  function pollCtrl() {
+    if (!CONFIG.MAX_CONTROL.ENABLED) return;
+    const items = findCtrlChats();
+    if (!items.length) {
+      state.ctrlOk = false;
+      if (!state.ctrlLearnText) {
+        log("Пульт не указан: нажмите «Указать пульт» на панели и кликните по чату-пульту в списке слева.", "w");
+      }
+      return;
+    }
     state.ctrlOk = true;
     const now = Date.now();
     items.forEach(function (el) {
@@ -364,28 +416,6 @@ const CONFIG = {
       }
     });
     state.ctrlInit = true;
-  }
-
-  // Журнал того, что видит скрипт в чате-пульте — для отладки «Избранного»
-  let lastCtrlDump = 0;
-  function dumpCtrl() {
-    if (Date.now() - lastCtrlDump < 4000) return;
-    lastCtrlDump = Date.now();
-    const matches = findAllInAll("div, li, a").filter(function (el) {
-      const t = (el.innerText || "").trim();
-      if (!t || t.length > 300 || el.children.length > 6) return false;
-      const tl = t.toLowerCase();
-      return CONFIG.MAX_CONTROL.CHAT_HINTS.some(function (h) { return tl.includes(h.toLowerCase()); });
-    });
-    if (!matches.length) {
-      log("Пульт: элементы «" + CONFIG.MAX_CONTROL.CHAT_HINTS.join("/") + "» не найдены на странице", "w");
-      return;
-    }
-    const seen = [];
-    matches.slice(0, 5).forEach(function (el) {
-      seen.push("«" + (el.innerText || "").trim().slice(0, 120) + "»");
-    });
-    log("Пульт: найдено чатов: " + matches.length + " → " + seen.join(" | "), "w");
   }
 
   /* ================= ПАНЕЛЬ ================= */
@@ -461,12 +491,24 @@ const CONFIG = {
     p.innerHTML =
       '<div class="hd"><span class="t">⚡ MAX Автоотклик</span><button id="mao-toggle" class="off">⚡ ВЫКЛ</button></div>' +
       '<div class="log"></div><div class="dbg"></div>' +
-      '<div class="f"><button data-a="scan">Проверить</button><button data-a="diag">Диагностика</button><button data-a="cls">Очистить</button><button data-a="hid">Свернуть</button></div>';
+      '<div class="f"><button data-a="ctrl">Указать пульт</button><button data-a="scan">Проверить</button><button data-a="diag">Диагностика</button><button data-a="cls">Очистить</button><button data-a="hid">Свернуть</button></div>';
     document.body.appendChild(p);
     logEl = p.querySelector(".log");
     dbgEl = p.querySelector(".dbg");
     btnEl = p.querySelector("#mao-toggle");
     btnEl.addEventListener("click", toggle);
+    btnCtrlEl = p.querySelector('[data-a="ctrl"]');
+    btnCtrlEl.addEventListener("click", function () {
+      ctrlLearnMode = !ctrlLearnMode;
+      btnCtrlEl.textContent = ctrlLearnMode ? "Кликни по чату…" : "Указать пульт";
+      log(ctrlLearnMode ? "Режим указания: кликните по чату-пульту в списке слева (например, «Избранное» или ваш канал)." : "Указание отменено", "w");
+      if (ctrlLearnMode) {
+        setTimeout(function () {
+          ctrlLearnMode = false;
+          btnCtrlEl.textContent = "Указать пульт";
+        }, 15000);
+      }
+    });
     p.querySelector('[data-a="scan"]').addEventListener("click", function () { scan(); dbg(); });
     p.querySelector('[data-a="diag"]').addEventListener("click", diag);
     p.querySelector('[data-a="cls"]').addEventListener("click", function () { logEl.innerHTML = ""; });
@@ -475,6 +517,10 @@ const CONFIG = {
     });
     log("Скрипт загружен. Слова: " + CONFIG.TRIGGER_KEYWORDS.join(", "));
     log("Отклик: «" + CONFIG.REPLY_TEXT + "»" + (CONFIG.TEST_MODE ? "  ⚠ ТЕСТ" : ""));
+    if (CONFIG.MAX_CONTROL.ENABLED) {
+      if (state.ctrlLearnText) log("Пульт: сохранён чат «" + state.ctrlLearnText.slice(0, 40) + "»", "o");
+      else log("Пульт: не указан. Нажмите «Указать пульт» и кликните по чату-пульту в списке слева.", "w");
+    }
     upd();
   }
 
@@ -551,6 +597,13 @@ const CONFIG = {
     document.addEventListener("click", function (e) {
       try {
         if (e.target && e.target.closest && e.target.closest("#mao-panel")) return;
+        // режим «Указать пульт»: клик по чату в списке = назначаем его пультом
+        if (ctrlLearnMode) {
+          ctrlLearnMode = false;
+          if (btnCtrlEl) btnCtrlEl.textContent = "Указать пульт";
+          learnCtrl(e.target);
+          return;
+        }
         let el = e.target;
         for (let i = 0; el && i < 8; i++, el = el.parentElement) {
           if (!el.innerText) continue;
@@ -577,7 +630,7 @@ const CONFIG = {
       if (state.on) { ensureOpen(); scan(); }
     }, CONFIG.POLL_MS);
 
-    if (CONFIG.MAX_CONTROL.ENABLED) { setTimeout(pollCtrl, 2000); setInterval(pollCtrl, CONFIG.MAX_CONTROL.POLL_MS); setInterval(dumpCtrl, 4000); }
+    if (CONFIG.MAX_CONTROL.ENABLED) { setTimeout(pollCtrl, 2000); setInterval(pollCtrl, CONFIG.MAX_CONTROL.POLL_MS); }
     setInterval(dbg, 2000);
 
     if (!loopOk) {
