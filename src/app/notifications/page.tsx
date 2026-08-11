@@ -22,6 +22,7 @@ import { CityPulse, type CityPulseItem } from "@/components/city-pulse";
 import { CityPulseRefresh } from "@/components/city-pulse-refresh";
 import { LiveNotificationRefresh } from "@/components/live-notification-refresh";
 import { PushNotificationButton } from "@/components/push-notification-button";
+import { reasonLabel } from "@/lib/gift-reasons";
 import { requireUser } from "@/lib/auth";
 import { getSignedImageUrl } from "@/lib/media";
 import { formatRubles } from "@/lib/money";
@@ -188,11 +189,17 @@ function notificationCopy(notification: Notification, actor: Actor | undefined) 
         ? notification.payload.artifact_title
         : "артефакт";
     const serial = Number(notification.payload.serial_number);
+    const occasion = reasonLabel(
+      typeof notification.payload.reason === "string"
+        ? notification.payload.reason
+        : null,
+    );
+    const title = Number.isFinite(serial)
+      ? `Тебе подарили «${artifactTitle}» · #${serial}`
+      : `Тебе подарили «${artifactTitle}»`;
     return {
       icon: Gem,
-      title: Number.isFinite(serial)
-        ? `Тебе подарили «${artifactTitle}» · #${serial}`
-        : `Тебе подарили «${artifactTitle}»`,
+      title: occasion ? `${title} · ${occasion.emoji} ${occasion.label}` : title,
       href: notification.entity_id
         ? (`/collection/unbox/${notification.entity_id}` as Route)
         : ("/collection" as Route),

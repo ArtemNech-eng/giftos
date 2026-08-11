@@ -53,6 +53,7 @@ export async function sendCollectibleArtifact(formData: FormData) {
         payload: {
           artifact_title: series?.title ?? "артефакт",
           serial_number: instance?.serial_number ?? null,
+          reason: reason ?? null,
         },
       });
   } catch {
