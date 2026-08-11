@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { QRCodeSVG } from "qrcode.react";
 import { BrandGiftIcon } from "@/components/brand-gift-icon";
 import { LocalRoleIcon } from "@/components/local-role-icon";
 
@@ -20,9 +21,12 @@ import {
   Hand,
   HandCoins,
   Heart,
+  ImageIcon,
   ImagePlus,
   Images,
   Lock,
+  Maximize2,
+  QrCode,
   MapPin,
   Medal,
   MessageCircle,
@@ -83,6 +87,7 @@ const screens = [
   { id: "live-analytics", label: "Аналитика эфира", number: "28" },
   { id: "profile-media", label: "Мои фото", number: "29" },
   { id: "story-analytics", label: "Аналитика story", number: "30" },
+  { id: "invite", label: "Приветствие по QR", number: "31" },
 ] as const;
 
 type ScreenId = (typeof screens)[number]["id"];
@@ -2135,6 +2140,116 @@ function BonusesScreen() {
   );
 }
 
+function InvitePreviewScreen() {
+  const inviteLink = "https://hochutakzhe.ru/r/nastya?city=budennovsk";
+  const posterUrl = `/og?type=invite&title=${encodeURIComponent(
+    "Настя зовёт тебя в Будённовск",
+  )}&subtitle=${encodeURIComponent(
+    `Забери свой бонус +200 ⭐. Твоя ссылка: ${inviteLink}`,
+  )}&emoji=🎁`;
+  return (
+    <div className="flex min-h-[730px] flex-col bg-[#f7f4fb] px-4 pb-6 pt-5 text-[#251d31]">
+      <header className="flex items-center justify-between">
+        <span className="border-[#2c2036]/9 grid size-10 place-items-center rounded-full border bg-white text-[#5f5369] shadow-[0_5px_15px_rgba(69,43,94,.05)]">
+          <ArrowUpRight className="size-4 rotate-[-135deg]" />
+        </span>
+        <span className="text-center">
+          <small className="block text-[9px] font-black uppercase tracking-[0.13em] text-[#8c7e94]">
+            Новая фишка
+          </small>
+          <b className="mt-0.5 block text-sm">Приветствие по QR</b>
+        </span>
+        <span className="grid size-10 place-items-center rounded-full bg-[#f0e9ff] text-[#8753e6]">
+          <QrCode className="size-4.5" />
+        </span>
+      </header>
+      <section className="relative mt-5 overflow-hidden rounded-[1.8rem] bg-gradient-to-br from-[#2a1a4d] via-[#4b2f7a] to-[#7a4fd0] p-5 text-white shadow-[0_16px_36px_rgba(63,37,98,.25)]">
+        <span className="bg-white/14 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.08em] text-[#fbd7e7]">
+          <UsersRound className="size-3.5" /> Вместо рукопожатия
+        </span>
+        <h2 className="mt-3 text-3xl font-black leading-[0.92] tracking-[-0.07em]">
+          Встретил человека —
+          <br />
+          покажи телефон.
+        </h2>
+        <p className="mt-3 text-[11px] leading-5 text-white/75">
+          Он сканирует QR — и сразу попадает в Будённовск с бонусом. Без поиска, без
+          ссылок — просто показал и всё.
+        </p>
+        <div className="mt-4 flex items-center gap-2 rounded-2xl bg-black/20 px-3 py-2.5 text-[10px] font-bold text-[#ffd35e]">
+          <Sparkles className="size-3.5 shrink-0" />
+          Настя · +200 ⭐ за каждого, кто пришёл по QR
+        </div>
+      </section>
+      <section className="border-[#2c2036]/9 mt-5 rounded-[1.7rem] border bg-white p-5 shadow-[0_10px_26px_rgba(69,43,94,.08)]">
+        <div className="flex items-center justify-between">
+          <span>
+            <h3 className="text-xs font-black">Твой QR-код</h3>
+            <p className="mt-0.5 text-[10px] text-[#81748a]">
+              Наведи камеру — и ты в городе
+            </p>
+          </span>
+          <span className="inline-flex items-center gap-1.5 rounded-xl border border-[#2c2036]/10 bg-[#fbf9fe] px-3 py-2 text-[10px] font-black text-[#5f5369]">
+            <Maximize2 className="size-3.5" /> На весь экран
+          </span>
+        </div>
+        <div className="mt-4 flex justify-center">
+          <div className="w-full max-w-[250px] rounded-[1.45rem] bg-white p-3.5 text-[#291c34] shadow-[0_16px_35px_rgba(0,0,0,0.18)]">
+            <div className="mb-3 flex items-center justify-between gap-2">
+              <span className="inline-flex min-w-0 items-center gap-1.5 text-xs font-black text-[#68418e]">
+                <MapPin className="size-3.5 shrink-0 text-[#a057e5]" />
+                <span className="truncate">В Будённовск</span>
+              </span>
+              <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-[#fff0a9] px-2 py-1 text-[10px] font-black text-[#735417]">
+                <Sparkles className="size-3" /> +200 ⭐
+              </span>
+            </div>
+            <div className="relative grid place-items-center rounded-xl bg-gradient-to-br from-[#f3ecff] to-[#fff0f6] p-2.5">
+              <div className="rounded-lg bg-white p-1">
+                <QRCodeSVG
+                  bgColor="#ffffff"
+                  fgColor="#24172e"
+                  level="M"
+                  marginSize={1}
+                  size={150}
+                  value={inviteLink}
+                />
+              </div>
+              <span className="pointer-events-none absolute grid size-9 place-items-center rounded-lg bg-gradient-to-br from-[#ff5d9a] to-[#8254ed] text-white shadow-[0_4px_12px_rgba(160,75,213,.4)]">
+                <Heart className="size-4 fill-current" />
+              </span>
+            </div>
+            <span className="mt-3 block text-center text-xs font-semibold leading-5 text-[#65546d]">
+              Сканируй — попадёшь в Будённовск
+            </span>
+          </div>
+        </div>
+        <p className="mt-3 flex gap-2 rounded-xl bg-[#f8f5fb] p-2.5 text-[9px] leading-4 text-[#756a7d]">
+          <Check className="mt-0.5 size-3.5 shrink-0 text-[#8753e6]" /> Полноэкранный
+          режим «покажи телефон» автоматически копирует ссылку — удобно отправить, если
+          сканер не сработал.
+        </p>
+      </section>
+      <section className="mt-5">
+        <h3 className="text-xs font-black">Поделиться на расстоянии</h3>
+        <div className="mt-4 overflow-hidden rounded-2xl border border-[#2c2036]/10 shadow-[0_8px_22px_rgba(69,43,94,.08)]">
+          {/* eslint-disable-next-line @next/next/no-img-element -- generated poster preview */}
+          <img
+            alt="Постер приглашения"
+            className="aspect-[1200/630] w-full object-cover"
+            decoding="async"
+            loading="lazy"
+            src={posterUrl}
+          />
+        </div>
+        <span className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#ff5d9a] to-[#8254ed] py-3 text-xs font-black text-white shadow-[0_8px_18px_rgba(160,75,213,.24)]">
+          <ImageIcon className="size-4" /> Поделиться постером
+        </span>
+      </section>
+    </div>
+  );
+}
+
 function MessagesScreen() {
   return (
     <div className="flex min-h-[730px] flex-col bg-[#fbf9fe] text-[#251d31]">
@@ -3342,6 +3457,7 @@ export default async function PreviewPage({
     "live-analytics": <LiveAnalyticsScreen />,
     "profile-media": <ProfileMediaScreen />,
     "story-analytics": <StoryAnalyticsScreen />,
+    invite: <InvitePreviewScreen />,
   };
 
   return (
