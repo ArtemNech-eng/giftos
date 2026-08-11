@@ -14,6 +14,7 @@ import {
   MoreHorizontal,
   Phone,
   Play,
+  QrCode,
   Radio,
   Rocket,
   ShieldAlert,
@@ -1237,6 +1238,12 @@ export default async function ProfilePage({
             Поделиться профилем
           </summary>
           <div className="mt-4 flex flex-col items-center gap-3">
+            <Link
+              className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#ff5d9a] to-[#8254ed] py-2.5 text-xs font-black text-white shadow-[0_8px_18px_rgba(160,75,213,.24)]"
+              href="/invite"
+            >
+              <QrCode className="size-4" /> Приветствие по QR — покажи телефон
+            </Link>
             <CreatorShareLink light username={profile.username} />
             <ProfileQrCode
               name={profile.display_name}
