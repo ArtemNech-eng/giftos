@@ -50,6 +50,7 @@ import { WishCategoryIcon } from "@/components/wish-category-icon";
 import { ProfileQrCode } from "@/components/profile-qr-code";
 import { ReportForm } from "@/components/report-form";
 import { CATEGORIES } from "@/lib/constants";
+import { reasonLabel } from "@/lib/gift-reasons";
 import { getSignedImageUrl } from "@/lib/media";
 import { formatRubles } from "@/lib/money";
 import { hasSupabaseEnvironment } from "@/lib/supabase/env";
@@ -251,7 +252,7 @@ export default async function ProfilePage({
     supabase
       .from("public_collectible_artifact_shelf")
       .select(
-        "id, serial_number, issued_at, series_slug, title, artwork_path, rarity, total_edition",
+        "id, serial_number, issued_at, series_slug, title, artwork_path, rarity, total_edition, reason",
       )
       .eq("recipient_id", profile.id)
       .order("issued_at", { ascending: false })
@@ -801,6 +802,12 @@ export default async function ProfilePage({
                 />
                 <span className="block p-2">
                   <b className="block truncate text-[9px]">{artifact.title}</b>
+                  {reasonLabel(artifact.reason) && (
+                    <small className="mt-0.5 block truncate text-[8px] font-bold text-[#b8860b]">
+                      {reasonLabel(artifact.reason)!.emoji}{" "}
+                      {reasonLabel(artifact.reason)!.label}
+                    </small>
+                  )}
                   <small className="mt-0.5 block text-[8px] font-black text-[#8753e6]">
                     #{artifact.serial_number} / {artifact.total_edition}
                   </small>
