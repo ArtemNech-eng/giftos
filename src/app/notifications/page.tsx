@@ -125,10 +125,10 @@ function notificationCopy(notification: Notification, actor: Actor | undefined) 
     const seriesTitle =
       typeof notification.payload.series_title === "string"
         ? notification.payload.series_title
-        : "артефакт";
+        : "подарок";
     return {
       icon: Gem,
-      title: `${actorName} хочет поддержать вас артефактом «${seriesTitle}»`,
+      title: `${actorName} хочет поддержать вас подарком «${seriesTitle}»`,
       href: "/creator/artifact-requests" as Route,
     };
   }
@@ -187,7 +187,7 @@ function notificationCopy(notification: Notification, actor: Actor | undefined) 
     const artifactTitle =
       typeof notification.payload.artifact_title === "string"
         ? notification.payload.artifact_title
-        : "артефакт";
+        : "подарок";
     const serial = Number(notification.payload.serial_number);
     const occasion = reasonLabel(
       typeof notification.payload.reason === "string"

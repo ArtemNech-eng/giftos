@@ -47,6 +47,14 @@
     text-wrap: balance;
   }
 
+  .scrollbar-none {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+
   .surface {
     @apply border border-white/80 bg-white/80 shadow-[0_10px_30px_rgba(84,41,57,0.06)] backdrop-blur;
   }

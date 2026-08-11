@@ -21,7 +21,7 @@ import { GIFT_COLLECTIONS } from "@/lib/gift-collections";
 import { reasonLabel } from "@/lib/gift-reasons";
 
 export const metadata = {
-  title: "Коллекция артефактов",
+  title: "Коллекция подарков",
   robots: { index: false, follow: false },
 };
 export const dynamic = "force-dynamic";

@@ -97,7 +97,7 @@ export function ArtifactUnboxing({
         ) : (
           <div className="relative z-10 mt-7">
             <h1 className="text-2xl font-black tracking-[-0.06em]">
-              Тебе подарили артефакт
+              Тебе подарили подарок
             </h1>
             <p className="mt-2 text-[11px] leading-5 text-white/65">
               Предмет уже выбран. Открой его, чтобы увидеть свой экземпляр и номер.
@@ -128,7 +128,7 @@ export function ArtifactUnboxing({
           onClick={() => void open()}
           type="button"
         >
-          <Sparkles className="size-4" /> {opening ? "Открываем…" : "Открыть артефакт"}
+          <Sparkles className="size-4" /> {opening ? "Открываем…" : "Открыть подарок"}
         </button>
       )}
     </main>

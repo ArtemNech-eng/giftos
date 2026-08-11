@@ -8,7 +8,7 @@ import {
 import { requireUser } from "@/lib/auth";
 
 export const metadata = {
-  title: "Запросы на артефакты",
+  title: "Запросы на подарки",
   robots: { index: false, follow: false },
 };
 export const dynamic = "force-dynamic";
@@ -69,7 +69,7 @@ export default async function CreatorArtifactRequestsPage() {
       </header>
 
       <section className="mt-5 rounded-2xl bg-[#f0faf5] p-3.5 text-[10px] leading-5 text-[#4c7169]">
-        Кто-то выбрал артефакт в подарок вам. Только после вашего принятия предмет будет
+        Кто-то выбрал подарок для вас. Только после вашего принятия предмет будет
         создан, со счёта отправителя спишутся ⭐, а вам начислится тестовый доход 80/20.
       </section>
 
@@ -78,7 +78,7 @@ export default async function CreatorArtifactRequestsPage() {
           <Gem className="mx-auto size-7 text-[#8753e6]" />
           <p className="mt-3 text-xs font-black text-[#5f5369]">Запросов пока нет.</p>
           <p className="mt-1 text-[10px] leading-5 text-[#81748a]">
-            Когда кто-то захочет поддержать вас артефактом, он появится здесь.
+            Когда кто-то захочет поддержать вас подарком, он появится здесь.
           </p>
         </div>
       ) : (

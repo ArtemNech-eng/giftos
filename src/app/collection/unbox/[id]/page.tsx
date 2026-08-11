@@ -4,7 +4,7 @@ import { ArtifactUnboxing } from "@/components/artifact-unboxing";
 import { requireUser } from "@/lib/auth";
 
 export const metadata = {
-  title: "Распаковка артефакта",
+  title: "Распаковка подарка",
   robots: { index: false, follow: false },
 };
 export const dynamic = "force-dynamic";

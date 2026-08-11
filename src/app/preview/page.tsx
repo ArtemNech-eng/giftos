@@ -2,6 +2,7 @@ import Link from "next/link";
 import { QRCodeSVG } from "qrcode.react";
 import { BrandGiftIcon } from "@/components/brand-gift-icon";
 import { LocalRoleIcon } from "@/components/local-role-icon";
+import { CollectionIcon } from "@/components/gift-icons";
 
 import {
   ArrowUpRight,
@@ -72,7 +73,7 @@ const screens = [
   { id: "people", label: "Люди", number: "13" },
   { id: "settings", label: "Приватность", number: "14" },
   { id: "wishes", label: "Желания", number: "15" },
-  { id: "collectibles", label: "Арт-направление", number: "16" },
+  { id: "collectibles", label: "Коллекции", number: "16" },
   { id: "collection", label: "Полка", number: "17" },
   { id: "unboxing", label: "Распаковка", number: "18" },
   { id: "wish", label: "Желание", number: "19" },
@@ -1331,25 +1332,114 @@ function ProfileScreen() {
 }
 
 function CollectiblesScreen() {
-  const directions = [
+  const collections = [
     {
-      title: "Игровые артефакты · выбрано",
-      note: "Доработанный единый set: десять редких игровых предметов в gallery-подаче.",
-      src: "/preview/collectibles/game-artifacts-selected.jpg",
-      tone: "bg-[#f0e9ff] text-[#7549d0]",
+      slug: "cute",
+      label: "Мимими",
+      tagline: "Для милых и нежных",
+      items: [
+        ["cat", "Котик", "300", "49"],
+        ["donut", "Пончик", "300", "49"],
+        ["panda", "Панда", "200", "79"],
+      ],
     },
     {
-      title: "Галерея героев",
-      note: "Десять персонажей в одном модном художественном мире.",
-      src: "/preview/collectibles/surreal-gallery-matrix.jpg",
-      tone: "bg-[#fff0f6] text-[#d84b81]",
+      slug: "brutal",
+      label: "Брутал",
+      tagline: "Для суровых",
+      items: [
+        ["skull", "Череп", "250", "59"],
+        ["hammer", "Молот", "250", "59"],
+        ["fist", "Кулак", "150", "119"],
+      ],
     },
     {
-      title: "Мягкие коллекционные фигуры",
-      note: "Более персонажный и игрушечный путь — проверяем, не слишком ли cute.",
-      src: "/preview/collectibles/character-matrix.jpg",
-      tone: "bg-[#eaf7f5] text-[#258b82]",
+      slug: "glamour",
+      label: "Гламур",
+      tagline: "Для роскошных",
+      items: [
+        ["lipstick", "Помада", "200", "69"],
+        ["shoe", "Туфелька", "200", "69"],
+        ["bag", "Сумочка", "120", "109"],
+      ],
     },
+    {
+      slug: "nerd",
+      label: "Ботаник",
+      tagline: "Для умных",
+      items: [
+        ["atom", "Атом", "180", "79"],
+        ["flask", "Пробирка", "180", "79"],
+        ["glasses", "Очки", "100", "129"],
+      ],
+    },
+    {
+      slug: "sport",
+      label: "Спорт",
+      tagline: "Для активных",
+      items: [
+        ["ball", "Мяч", "150", "89"],
+        ["dumbbell", "Гантеля", "150", "89"],
+        ["boxing", "Бокс", "90", "139"],
+      ],
+    },
+    {
+      slug: "racer",
+      label: "Гонщик",
+      tagline: "Для быстрых",
+      items: [
+        ["racecar", "Болид", "200", "69"],
+        ["helmet", "Шлем", "100", "119"],
+        ["lightning", "Молния", "60", "189"],
+      ],
+    },
+    {
+      slug: "street",
+      label: "Улица",
+      tagline: "Для своих",
+      items: [
+        ["cap", "Кепка", "80", "149"],
+        ["sneaker", "Кроссовок", "200", "69"],
+        ["boombox", "Бумбокс", "70", "169"],
+      ],
+    },
+    {
+      slug: "beauty",
+      label: "Красотка",
+      tagline: "Для красивых",
+      items: [
+        ["mirror", "Зеркальце", "200", "69"],
+        ["butterfly", "Бабочка", "60", "179"],
+        ["heart2", "Сердечко", "40", "229"],
+      ],
+    },
+    {
+      slug: "attention",
+      label: "Внимание",
+      tagline: "Для звёзд",
+      items: [
+        ["mic", "Микрофон", "200", "69"],
+        ["spotlight", "Прожектор", "40", "249"],
+        ["firework", "Фейерверк", "25", "329"],
+      ],
+    },
+    {
+      slug: "mafia",
+      label: "Мафия",
+      tagline: "Для серьёзных",
+      items: [
+        ["hat", "Шляпа", "25", "329"],
+        ["cards", "Карты", "200", "69"],
+        ["briefcase", "Кейс", "80", "199"],
+      ],
+    },
+  ] as const;
+  const topGifts = [
+    { slug: "cat", name: "Котик", sent: "2 412" },
+    { slug: "skull", name: "Череп", sent: "1 856" },
+    { slug: "mic", name: "Микрофон", sent: "1 504" },
+    { slug: "atom", name: "Атом", sent: "1 232" },
+    { slug: "ball", name: "Мяч", sent: "980" },
   ];
   return (
     <div className="min-h-[730px] bg-[#fbf9fe] px-4 pb-6 pt-5 text-[#251d31]">
@@ -1359,77 +1449,188 @@ function CollectiblesScreen() {
         </span>
         <span className="text-center">
           <small className="block text-[9px] font-black uppercase tracking-[0.13em] text-[#8c7e94]">
-            Флагманский дроп
+            ХОЧУ · КОЛЛЕКЦИИ
           </small>
-          <b className="block text-sm">Подарки под характер</b>
+          <b className="block text-sm">Коллекции</b>
         </span>
-        <span className="grid size-10 place-items-center rounded-full bg-[#f0e9ff] text-[#8753e6]">
-          <Sparkles className="size-4.5" />
+        <span className="inline-flex h-10 items-center gap-1 rounded-full bg-[#f0e9ff] px-3 text-[10px] font-black text-[#7549d0]">
+          <Sparkles className="size-3.5" /> 2 800
         </span>
       </header>
       <section className="mt-5 rounded-[1.7rem] bg-gradient-to-br from-[#322452] via-[#543d7a] to-[#7b67d8] p-5 text-white shadow-[0_14px_30px_rgba(63,37,98,.2)]">
         <span className="bg-white/14 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.08em] text-[#fbd7e7]">
-          <Sparkles className="size-3.5" /> ХОЧУ / ОБЪЕКТЫ 01
+          <Sparkles className="size-3.5" /> Подарки под характер
         </span>
         <h1 className="mt-3 text-3xl font-black leading-[0.88] tracking-[-0.075em]">
-          НЕ ИКОНКИ.
+          ТРИДЦАТЬ
           <br />
-          ДЕСЯТЬ ВЕЩЕЙ.
+          ПОДАРКОВ.
         </h1>
         <p className="mt-3 max-w-64 text-[10px] leading-5 text-white/75">
-          Сначала выбираем художественный мир. Серии, номера и распаковка появятся после
-          выбора.
+          10 тематических коллекций: выбери серию на профиле человека и подари с
+          поводом. Номер экземпляра появляется после вручения.
         </p>
       </section>
+      <nav className="scrollbar-none -mx-4 mt-5 flex gap-1.5 overflow-x-auto px-4 pb-1">
+        <span className="shrink-0 rounded-full bg-gradient-to-r from-[#8254ed] to-[#ff5d9a] px-3 py-1.5 text-[10px] font-black text-white shadow-[0_4px_12px_rgba(160,75,213,.3)]">
+          Все
+        </span>
+        {collections.map((collection) => (
+          <span
+            className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-[#2c2036]/10 bg-white px-3 py-1.5 text-[10px] font-black text-[#756a7d]"
+            key={collection.slug}
+          >
+            <CollectionIcon className="size-3.5" slug={collection.slug} />
+            {collection.label}
+          </span>
+        ))}
+      </nav>
       <section className="mt-5">
         <div className="mb-3 flex items-end justify-between">
           <span>
-            <h2 className="text-sm font-black">Три направления</h2>
+            <h2 className="text-sm font-black">Все коллекции</h2>
             <p className="mt-0.5 text-[10px] text-[#82758a]">
-              Synthetic art research · не финальные арты
+              3 лимитированных предмета в каждой серии
             </p>
           </span>
           <span className="rounded-full bg-[#efe9f6] px-2 py-1 text-[9px] font-black text-[#7a6688]">
-            10 × 3
+            10
           </span>
         </div>
-        <div className="space-y-4">
-          {directions.map((direction, index) => (
-            <article
-              className="border-[#2c2036]/9 overflow-hidden rounded-[1.45rem] border bg-white shadow-[0_8px_22px_rgba(69,43,94,.06)]"
-              key={direction.title}
+        <div className="space-y-5">
+          {collections.map((collection) => (
+            <section key={collection.slug}>
+              <div className="mb-2 flex items-baseline justify-between">
+                <h3 className="flex items-center gap-1.5 text-xs font-black">
+                  <CollectionIcon
+                    className="size-3.5 text-[#7549d0]"
+                    slug={collection.slug}
+                  />
+                  {collection.label}
+                </h3>
+                <span className="text-[9px] font-bold text-[#8b6a9c]">
+                  {collection.tagline}
+                </span>
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                {collection.items.map(([slug, name, left, price], index) => (
+                  <article
+                    className="border-[#2c2036]/9 overflow-hidden rounded-[1.2rem] border bg-white shadow-[0_6px_16px_rgba(69,43,94,.04)]"
+                    key={slug}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element -- generated static artifact art */}
+                    <img
+                      loading="lazy"
+                      decoding="async"
+                      alt=""
+                      className="aspect-square w-full object-cover"
+                      src={`/collectibles/gems/png/${slug}.png`}
+                    />
+                    <span className="block p-2">
+                      <span
+                        className={`inline-flex rounded-full px-1.5 py-0.5 text-[7px] font-black ${
+                          index === 0
+                            ? "bg-[#f0e9ff] text-[#7549d0]"
+                            : index === 1
+                              ? "bg-[#fff0f6] text-[#d84b81]"
+                              : "bg-[#fff6d9] text-[#a87511]"
+                        }`}
+                      >
+                        {index === 0
+                          ? "ЛИМИТИРОВАННЫЙ"
+                          : index === 1
+                            ? "РЕДКИЙ"
+                            : "ИКОНИЧЕСКИЙ"}
+                      </span>
+                      <b className="mt-1.5 block truncate text-[10px]">{name}</b>
+                      <span className="mt-1 flex items-center justify-between text-[8px] font-black">
+                        <span className="text-[#8b6a9c]">{left} шт.</span>
+                        <span className="text-[#7549d0]">{price} ⭐</span>
+                      </span>
+                    </span>
+                  </article>
+                ))}
+              </div>
+            </section>
+          ))}
+        </div>
+      </section>
+      <section className="mt-6">
+        <div className="mb-3 flex items-end justify-between">
+          <span>
+            <h2 className="flex items-center gap-2 text-sm font-black">
+              <Flame className="size-4 text-[#e2574c]" /> Популярные подарки
+            </h2>
+            <p className="mt-0.5 text-[10px] text-[#82758a]">Их дарят чаще всего</p>
+          </span>
+        </div>
+        <div className="flex gap-2.5 overflow-x-auto pb-1">
+          {topGifts.map((gift, index) => (
+            <div
+              className="border-[#2c2036]/9 flex w-28 shrink-0 items-center gap-2 rounded-2xl border bg-white p-2 shadow-[0_6px_16px_rgba(69,43,94,.04)]"
+              key={gift.slug}
             >
-              {/* eslint-disable-next-line @next/next/no-img-element -- generated synthetic concept art */}
+              {/* eslint-disable-next-line @next/next/no-img-element -- generated static artifact art */}
               <img
                 loading="lazy"
                 decoding="async"
-                alt={`Концепт коллекции: ${direction.title}`}
-                className="aspect-[5/3] w-full object-cover"
-                src={direction.src}
+                alt=""
+                className="size-9 rounded-xl object-cover"
+                src={`/collectibles/gems/png/${gift.slug}.png`}
               />
-              <div className="p-3.5">
-                <span
-                  className={`inline-flex rounded-full px-2 py-1 text-[8px] font-black ${direction.tone}`}
-                >
-                  НАПРАВЛЕНИЕ 0{index + 1}
-                </span>
-                <h3 className="mt-2 text-xs font-black">{direction.title}</h3>
-                <p className="mt-1 text-[10px] leading-4 text-[#756a7d]">
-                  {direction.note}
-                </p>
-                <span className="mt-3 inline-flex items-center gap-1 text-[9px] font-black text-[#8753e6]">
-                  10 лимитированных фигур <ChevronRight className="size-3" />
-                </span>
-              </div>
-            </article>
+              <span className="min-w-0">
+                <b className="block truncate text-[10px]">{gift.name}</b>
+                <small className="mt-0.5 flex items-center gap-0.5 text-[8px] font-black text-[#d84b81]">
+                  <Flame className="size-2.5" /> {gift.sent}
+                </small>
+              </span>
+              <span className="ml-auto shrink-0 text-[8px] font-black text-[#a295a8]">
+                #{index + 1}
+              </span>
+            </div>
           ))}
+        </div>
+      </section>
+      <section className="border-[#2c2036]/9 mt-5 rounded-[1.45rem] border bg-white p-3.5 shadow-[0_8px_22px_rgba(69,43,94,.05)]">
+        <div className="flex items-end justify-between">
+          <span>
+            <h2 className="text-sm font-black">Твоя полка</h2>
+            <p className="mt-0.5 text-[9px] text-[#82758a]">
+              Даритель остаётся приватным
+            </p>
+          </span>
+          <span className="rounded-full bg-[#efe9f6] px-2 py-1 text-[9px] font-black text-[#7a6688]">
+            1
+          </span>
+        </div>
+        <div className="mt-3 flex gap-3 rounded-2xl bg-[#fbf9fe] p-2.5">
+          {/* eslint-disable-next-line @next/next/no-img-element -- generated static artifact art */}
+          <img
+            loading="lazy"
+            decoding="async"
+            alt="Котик"
+            className="h-24 w-[72px] rounded-xl object-cover"
+            src="/collectibles/gems/png/cat.png"
+          />
+          <span className="grow">
+            <b className="block text-[11px]">Котик</b>
+            <small className="mt-1 block text-[9px] font-black text-[#8753e6]">
+              #047 / 150
+            </small>
+            <small className="mt-1 block text-[8px] text-[#82758a]">
+              Получен 7 авг. · «Просто так»
+            </small>
+            <span className="mt-3 flex w-full items-center justify-center gap-1 rounded-lg bg-[#f0e9ff] py-1.5 text-[8px] font-black text-[#7549d0]">
+              <Check className="size-2.5" /> В профиле
+            </span>
+          </span>
         </div>
       </section>
       <section className="mt-5 flex gap-2.5 rounded-2xl bg-[#f0faf5] p-3.5 text-[#4c7169]">
         <Check className="mt-0.5 size-4 shrink-0 text-[#258b82]" />
         <p className="text-[10px] leading-4">
-          После выбора одного направления фиксируем десять силуэтов, тиражи и витрину.
-          Распаковка — следующий слой.
+          Предметы не дают боевых статов и не влияют на рейтинг. Это коллекция и
+          красивый жест.
         </p>
       </section>
     </div>
@@ -2601,7 +2802,7 @@ function SearchScreen() {
           КУДА ЗАЙТИ.
         </h1>
         <p className="mt-3 max-w-64 text-[10px] leading-5 text-[#756a7d]">
-          Люди, места, желания, события и артефакты из доступных сцен.
+          Люди, места, желания, события и подарки из доступных сцен.
         </p>
       </section>
       <div className="mt-4 grid grid-cols-2 gap-1 rounded-2xl bg-[#ebe5f1] p-1 text-center text-[10px] font-black">
