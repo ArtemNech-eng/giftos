@@ -35,6 +35,7 @@ type ArtifactSeries = {
   remaining_edition: number;
   price_stars: number;
   times_sent: number;
+  created_at: string;
 };
 type ArtifactInstance = {
   id: string;
@@ -60,6 +61,11 @@ const rarityTint: Record<string, string> = {
 const soldPercent = (total: number, remaining: number) =>
   total > 0 ? Math.round(((total - remaining) / total) * 100) : 0;
 
+const isNew = (createdAt: string | null | undefined) =>
+  createdAt
+    ? Date.now() - new Date(createdAt).getTime() < 7 * 24 * 60 * 60 * 1000
+    : false;
+
 function Card({ artifact, owned }: { artifact: ArtifactSeries; owned: number }) {
   return (
     <article className="border-[#2c2036]/9 group relative overflow-hidden rounded-[1.4rem] border bg-white shadow-[0_8px_22px_rgba(69,43,94,.05)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_16px_36px_rgba(69,43,94,.14)]">
@@ -69,6 +75,11 @@ function Card({ artifact, owned }: { artifact: ArtifactSeries; owned: number }) 
             Почти распродано
           </span>
         )}
+      {isNew(artifact.created_at) && (
+        <span className="absolute left-2 top-2 z-40 rounded-full bg-gradient-to-r from-[#4bc9ff] to-[#8254ed] px-2 py-0.5 text-[8px] font-black text-white shadow-[0_4px_12px_rgba(75,201,255,.4)]">
+          NEW
+        </span>
+      )}
       <Link className="block" href={`/collection/${artifact.slug}` as Route}>
         <AnimatedArtifact
           alt={artifact.title}
@@ -144,7 +155,7 @@ export default async function CollectionPage({
       supabase
         .from("collectible_artifact_series")
         .select(
-          "id, slug, title, description, artwork_path, collection_slug, rarity, total_edition, remaining_edition, price_stars, times_sent",
+          "id, slug, title, description, artwork_path, collection_slug, rarity, total_edition, remaining_edition, price_stars, times_sent, created_at",
         )
         .eq("is_active", true)
         .order("sort_order", { ascending: true }),
