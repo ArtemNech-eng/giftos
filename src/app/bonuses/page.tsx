@@ -99,6 +99,9 @@ export default async function BonusesPage() {
       ? 100
       : 0;
   const reward = settings?.referral_reward ?? 200;
+  const referralCount = referrals?.length ?? 0;
+  const referralSteps = [1, 3, 5, 10];
+  const nextMilestone = referralSteps.find((need) => referralCount < need) ?? 0;
   const { data: referralLink } = await supabase.rpc("create_referral_link", {
     p_user_id: user.id,
   });
@@ -122,11 +125,42 @@ export default async function BonusesPage() {
         </div>
         <Sparkles className="size-7 text-[#a57513]" />
       </header>
-      <section className="mt-6 rounded-[2rem] bg-gradient-to-br from-[#fffaff] to-[#f0e8ff] p-6">
-        <p className="text-sm text-[#766b80]">Доступно</p>
-        <p className="mt-2 text-4xl font-bold">{wallet?.available_balance ?? 0} ⭐</p>
-        <p className="mt-3 text-xs leading-5 text-[#766b80]">
-          Бонусы не являются деньгами и используются только внутри платформы.
+      <section className="relative mt-6 overflow-hidden rounded-[2rem] bg-gradient-to-br from-[#2a1a4d] via-[#4b2f7a] to-[#7a4fd0] p-6 text-white shadow-[0_16px_36px_rgba(63,37,98,.25)]">
+        <span className="bg-white/14 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.08em] text-[#fbd7e7]">
+          <Sparkles className="size-3.5" /> Твой заработок
+        </span>
+        <p className="mt-4 text-4xl font-black tracking-[-0.04em]">
+          {wallet?.total_earned ?? 0} <span className="text-xl text-white/70">⭐</span>
+        </p>
+        <p className="mt-2 text-[11px] leading-5 text-white/75">
+          Заработано за всё время. Приглашай друзей — и баланс растёт.
+        </p>
+        <div className="mt-4 rounded-2xl bg-black/20 p-3">
+          <div className="flex items-center justify-between text-[10px] font-black">
+            <span>До следующей награды</span>
+            <span className="text-[#ffd35e]">
+              {nextMilestone > 0
+                ? `${Math.max(0, nextMilestone - (referrals?.length ?? 0))} друга`
+                : "максимум"}
+            </span>
+          </div>
+          <div className="mt-2 h-2 overflow-hidden rounded-full bg-white/15">
+            <div
+              className="h-full rounded-full bg-gradient-to-r from-[#ffd35e] to-[#ff5d9a]"
+              style={{
+                width: `${Math.min(
+                  100,
+                  Math.round(
+                    ((referrals?.length ?? 0) / Math.max(1, nextMilestone)) * 100,
+                  ),
+                )}%`,
+              }}
+            />
+          </div>
+        </div>
+        <p className="mt-3 text-[10px] leading-4 text-white/60">
+          ⭐ — внутренние бонусы: пока внутри платформы, реальный вывод — после
+          подключения выплат.
         </p>
       </section>
       <section className="mt-5 grid grid-cols-2 gap-3">
@@ -139,6 +173,61 @@ export default async function BonusesPage() {
           <b className="mt-1 block text-xl">{wallet?.total_earned ?? 0} ⭐</b>
         </div>
       </section>
+      <section className="mt-6">
+        <div className="flex items-end justify-between">
+          <span>
+            <p className="text-xs font-bold uppercase tracking-[0.12em] text-[#cda6ff]">
+              Личная лестница
+            </p>
+            <h2 className="mt-1 font-bold">Награды за приглашения</h2>
+          </span>
+          <span className="text-right text-xs text-[#7b7083]">
+            {referrals?.length ?? 0} / 10
+          </span>
+        </div>
+        <div className="mt-3 space-y-2">
+          {[
+            { need: 1, reward: 50, label: "1 друг" },
+            { need: 3, reward: 100, label: "3 друга" },
+            { need: 5, reward: 250, label: "5 друзей" },
+            { need: 10, reward: 500, label: "10 друзей" },
+          ].map((step) => {
+            const done = (referrals?.length ?? 0) >= step.need;
+            return (
+              <div
+                className={`flex items-center gap-3 rounded-2xl border p-3.5 ${
+                  done
+                    ? "border-[#6bdbab]/50 bg-[#eefaf4]"
+                    : "border-[#2c2036]/10 bg-white"
+                }`}
+                key={step.need}
+              >
+                <span
+                  className={`grid size-9 shrink-0 place-items-center rounded-xl text-sm font-black ${
+                    done ? "bg-[#6bdbab] text-[#0f2b1f]" : "bg-[#f0e9ff] text-[#7549d0]"
+                  }`}
+                >
+                  {done ? <Check className="size-4" /> : step.need}
+                </span>
+                <span className="min-w-0 grow">
+                  <b className="block text-xs">{step.label}</b>
+                  <small className="text-[10px] text-[#81748a]">
+                    {done
+                      ? "Награда получена"
+                      : `Пригласи ещё ${Math.max(0, step.need - (referrals?.length ?? 0))}`}
+                  </small>
+                </span>
+                <b
+                  className={`shrink-0 text-sm ${done ? "text-[#19885e]" : "text-[#a57513]"}`}
+                >
+                  +{step.reward} ⭐
+                </b>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
       <section className="mt-6 overflow-hidden rounded-[1.7rem] border border-[#c9a6ee]/55 bg-gradient-to-br from-[#fffaff] via-[#f6efff] to-[#f0f7ff] p-5">
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-3">
