@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 
 import { CreatorShareLink } from "@/components/creator-share-link";
+import { InvitePosterShare } from "@/components/invite-poster-share";
 import { ReferralQrCode } from "@/components/referral-qr-code";
 import { requireUser } from "@/lib/auth";
 
@@ -274,6 +275,13 @@ export default async function BonusesPage() {
           <div className="mt-5 flex justify-center">
             <ReferralQrCode cityName={cityName} reward={reward} url={link} />
           </div>
+        )}
+        {referralPath && (
+          <InvitePosterShare
+            cityName={cityName}
+            referralPath={referralPath}
+            reward={reward}
+          />
         )}
       </section>
 
