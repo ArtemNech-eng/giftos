@@ -193,7 +193,7 @@ export default async function SearchPage({
       // показываем публичных жителей города с этим интересом.
       const { data: categories } = await supabase
         .from("categories")
-        .select("slug, label, emoji")
+        .select("slug, label")
         .eq("is_active", true);
       const matchedCategory = ((categories ?? []) as InterestCategory[]).find(
         (category) => match(category.label, query),
@@ -327,7 +327,7 @@ export default async function SearchPage({
       // Поиск по интересам: публичные профили всей платформы.
       const { data: categories } = await supabase
         .from("categories")
-        .select("slug, label, emoji")
+        .select("slug, label")
         .eq("is_active", true);
       const matchedCategory = ((categories ?? []) as InterestCategory[]).find(
         (category) => match(category.label, query),
@@ -641,8 +641,12 @@ export default async function SearchPage({
               <div className="mb-3 flex items-end justify-between">
                 <span>
                   <h2 className="text-sm font-black">Люди по интересу</h2>
-                  <p className="mt-0.5 text-[10px] text-[#82758a]">
-                    Интерес: {interestCategory.emoji} {interestCategory.label}
+                  <p className="mt-0.5 flex items-center gap-1 text-[10px] text-[#82758a]">
+                    <WishCategoryIcon
+                      category={interestCategory.slug}
+                      className="size-3"
+                    />
+                    Интерес: {interestCategory.label}
                   </p>
                 </span>
                 <span className="rounded-full bg-[#efe9f6] px-2 py-1 text-[9px] font-black text-[#7a6688]">
@@ -665,7 +669,11 @@ export default async function SearchPage({
                       </small>
                     </span>
                     <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-[#f0e9ff] px-2 py-1 text-[8px] font-black text-[#7549d0]">
-                      {interestCategory.emoji} {interestCategory.label}
+                      <WishCategoryIcon
+                        category={interestCategory.slug}
+                        className="size-3"
+                      />
+                      {interestCategory.label}
                     </span>
                   </Link>
                 ))}

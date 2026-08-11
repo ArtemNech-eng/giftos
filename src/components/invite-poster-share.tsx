@@ -28,7 +28,7 @@ export function InvitePosterShare({
     title,
   )}&subtitle=${encodeURIComponent(
     `Забери свой бонус +${reward} ⭐. Твоя ссылка: ${inviteLink}`,
-  )}&emoji=🎁`;
+  )}`;
 
   async function copyPoster() {
     await navigator.clipboard.writeText(posterUrl);

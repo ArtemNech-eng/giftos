@@ -1482,10 +1482,11 @@ function CollectionScreen() {
         <h1 className="mt-3 text-3xl font-black leading-[0.88] tracking-[-0.075em]">
           СИЯЮЩИЕ
           <br />
-          КАМНИ.
+          ПОДАРКИ.
         </h1>
         <p className="mt-3 max-w-64 text-[10px] leading-5 text-white/75">
-          Лимитированные игровые предметы. Номер экземпляра появляется после вручения.
+          30 лимитированных предметов в 10 коллекциях. Номер экземпляра появляется после
+          вручения.
         </p>
       </section>
       <section className="mt-5">
@@ -2146,7 +2147,7 @@ function InvitePreviewScreen() {
     "Настя зовёт тебя в Будённовск",
   )}&subtitle=${encodeURIComponent(
     `Забери свой бонус +200 ⭐. Твоя ссылка: ${inviteLink}`,
-  )}&emoji=🎁`;
+  )}`;
   return (
     <div className="flex min-h-[730px] flex-col bg-[#f7f4fb] px-4 pb-6 pt-5 text-[#251d31]">
       <header className="flex items-center justify-between">

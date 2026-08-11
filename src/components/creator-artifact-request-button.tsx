@@ -5,6 +5,7 @@ import { ArrowLeft, Gem, HandCoins } from "lucide-react";
 
 import { requestCreatorArtifact } from "@/app/creator/artifact-requests/actions";
 import { AnimatedArtifact } from "@/components/animated-artifact";
+import { CollectionIcon, ReasonIcon } from "@/components/gift-icons";
 import { GIFT_COLLECTIONS } from "@/lib/gift-collections";
 import { GIFT_REASONS } from "@/lib/gift-reasons";
 
@@ -137,7 +138,8 @@ export function CreatorArtifactRequestButton({
                     }}
                     type="button"
                   >
-                    {reason.emoji} {reason.label}
+                    <ReasonIcon className="size-3.5" code={reason.code} />
+                    {reason.label}
                   </button>
                 ))}
               </div>
@@ -186,7 +188,8 @@ export function CreatorArtifactRequestButton({
                     onClick={() => setTab(collection.slug)}
                     type="button"
                   >
-                    {collection.icon} {collection.label}
+                    <CollectionIcon className="size-3.5" slug={collection.slug} />
+                    {collection.label}
                   </button>
                 ))}
               </nav>

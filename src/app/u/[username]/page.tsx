@@ -51,6 +51,7 @@ import { WishCategoryIcon } from "@/components/wish-category-icon";
 import { ProfileQrCode } from "@/components/profile-qr-code";
 import { ReportForm } from "@/components/report-form";
 import { CATEGORIES } from "@/lib/constants";
+import { ReasonIcon } from "@/components/gift-icons";
 import { reasonLabel } from "@/lib/gift-reasons";
 import { getSignedImageUrl } from "@/lib/media";
 import { formatRubles } from "@/lib/money";
@@ -804,8 +805,8 @@ export default async function ProfilePage({
                 <span className="block p-2">
                   <b className="block truncate text-[9px]">{artifact.title}</b>
                   {reasonLabel(artifact.reason) && (
-                    <small className="mt-0.5 block text-[8px] font-bold leading-3 text-[#b8860b]">
-                      {reasonLabel(artifact.reason)!.emoji}{" "}
+                    <small className="mt-0.5 flex items-center gap-1 text-[8px] font-bold leading-3 text-[#b8860b]">
+                      <ReasonIcon className="size-3" code={artifact.reason} />
                       {reasonLabel(artifact.reason)!.label}
                     </small>
                   )}

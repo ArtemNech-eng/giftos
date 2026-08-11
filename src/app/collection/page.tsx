@@ -6,6 +6,7 @@ import {
   ChevronRight,
   Eye,
   EyeOff,
+  Flame,
   Gem,
   Heart,
   LockKeyhole,
@@ -15,6 +16,7 @@ import {
 import { setCollectibleArtifactProfileDisplay } from "@/app/collection/actions";
 import { requireUser } from "@/lib/auth";
 import { AnimatedArtifact } from "@/components/animated-artifact";
+import { CollectionIcon, ReasonIcon } from "@/components/gift-icons";
 import { GIFT_COLLECTIONS } from "@/lib/gift-collections";
 import { reasonLabel } from "@/lib/gift-reasons";
 
@@ -227,12 +229,12 @@ export default async function CollectionPage({
           <Gem className="size-3.5" /> Подарки под характер
         </span>
         <h2 className="mt-3 text-3xl font-black leading-[0.88] tracking-[-0.075em]">
-          ДЕСЯТЬ
+          ТРИДЦАТЬ
           <br />
-          АРТЕФАКТОВ.
+          ПОДАРКОВ.
         </h2>
         <p className="mt-3 max-w-64 text-[10px] leading-5 text-white/75">
-          Лимитированная серия игровых предметов. Это коллекция, а не рейтинг и не
+          10 тематических коллекций под характер. Это коллекция, а не рейтинг и не
           финансовый актив.
         </p>
       </section>
@@ -268,8 +270,8 @@ export default async function CollectionPage({
                       <span className="block p-2">
                         <b className="block truncate text-[9px]">{artifact.title}</b>
                         {reasonLabel(instance.reason) && (
-                          <small className="mt-0.5 block text-[8px] font-bold leading-3 text-[#b8860b]">
-                            {reasonLabel(instance.reason)!.emoji}{" "}
+                          <small className="mt-0.5 flex items-center gap-1 text-[8px] font-bold leading-3 text-[#b8860b]">
+                            <ReasonIcon className="size-3" code={instance.reason} />
                             {reasonLabel(instance.reason)!.label}
                           </small>
                         )}
@@ -325,7 +327,9 @@ export default async function CollectionPage({
         <section className="mt-6">
           <div className="mb-3 flex items-end justify-between">
             <span>
-              <h2 className="text-sm font-black">🔥 Популярные подарки</h2>
+              <h2 className="flex items-center gap-2 text-sm font-black">
+                <Flame className="size-4 text-[#e2574c]" /> Популярные подарки
+              </h2>
               <p className="mt-0.5 text-[10px] text-[#82758a]">Их дарят чаще всего</p>
             </span>
           </div>
@@ -387,7 +391,8 @@ export default async function CollectionPage({
               href={`/collection?collection=${collection.slug}` as Route}
               key={collection.slug}
             >
-              {collection.icon} {collection.label}
+              <CollectionIcon className="size-3.5" slug={collection.slug} />
+              {collection.label}
             </Link>
           ))}
         </nav>
@@ -410,15 +415,18 @@ export default async function CollectionPage({
 
         {groups.map((group) => {
           const found = GIFT_COLLECTIONS.find((item) => item.slug === group.slug);
-          const meta = found
-            ? { label: `${found.icon} ${found.label}`, tagline: found.tagline }
-            : { label: group.slug, tagline: "" };
           return (
             <section className="mt-5" key={group.slug}>
               <div className="mb-2.5 flex items-baseline justify-between">
-                <h3 className="text-xs font-black">{meta.label}</h3>
+                <h3 className="flex items-center gap-1.5 text-xs font-black">
+                  <CollectionIcon
+                    className="size-3.5 text-[#7549d0]"
+                    slug={found?.slug ?? null}
+                  />
+                  {found?.label ?? group.slug}
+                </h3>
                 <span className="text-[9px] font-bold text-[#8b6a9c]">
-                  {meta.tagline}
+                  {found?.tagline ?? ""}
                 </span>
               </div>
               {group.items.length === 0 ? (

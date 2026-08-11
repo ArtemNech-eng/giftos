@@ -199,7 +199,7 @@ function notificationCopy(notification: Notification, actor: Actor | undefined) 
       : `Тебе подарили «${artifactTitle}»`;
     return {
       icon: Gem,
-      title: occasion ? `${title} · ${occasion.emoji} ${occasion.label}` : title,
+      title: occasion ? `${title} · ${occasion.label}` : title,
       href: notification.entity_id
         ? (`/collection/unbox/${notification.entity_id}` as Route)
         : ("/collection" as Route),

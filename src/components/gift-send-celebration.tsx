@@ -4,6 +4,7 @@ import { useEffect, useMemo } from "react";
 import { Check } from "lucide-react";
 
 import { AnimatedArtifact } from "@/components/animated-artifact";
+import { ReasonIcon } from "@/components/gift-icons";
 import { reasonLabel } from "@/lib/gift-reasons";
 
 /**
@@ -70,8 +71,9 @@ export function GiftSendCelebration({
         </span>
         <h2 className="mt-4 text-xl font-black text-white">Подарок отправлен!</h2>
         {occasion && (
-          <p className="mt-2 text-sm font-bold text-[#ffd35e]">
-            {occasion.emoji} {occasion.label}
+          <p className="mt-2 flex items-center justify-center gap-1.5 text-sm font-bold text-[#ffd35e]">
+            <ReasonIcon className="size-4" code={occasion.code} />
+            {occasion.label}
           </p>
         )}
         <p className="mt-1 text-sm text-white/70">{title}</p>
