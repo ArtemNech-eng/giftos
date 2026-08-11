@@ -74,7 +74,7 @@ const screens = [
   { id: "settings", label: "Приватность", number: "14" },
   { id: "wishes", label: "Желания", number: "15" },
   { id: "collectibles", label: "Коллекции", number: "16" },
-  { id: "collection", label: "Полка", number: "17" },
+  { id: "collection", label: "Серия подарков", number: "17" },
   { id: "unboxing", label: "Распаковка", number: "18" },
   { id: "wish", label: "Желание", number: "19" },
   { id: "fundraiser", label: "Сбор", number: "20" },
@@ -1638,27 +1638,38 @@ function CollectiblesScreen() {
 }
 
 function CollectionScreen() {
-  const artifacts = [
-    ["cat", "Котик", "300", "49"],
-    ["skull", "Череп", "250", "59"],
-    ["lipstick", "Помада", "200", "69"],
-    ["atom", "Атом", "180", "79"],
-    ["ball", "Мяч", "150", "89"],
-    ["donut", "Пончик", "300", "49"],
-    ["hammer", "Молот", "250", "59"],
-    ["shoe", "Туфелька", "200", "69"],
-    ["flask", "Пробирка", "180", "79"],
-    ["dumbbell", "Гантеля", "150", "89"],
-    ["helmet", "Шлем", "100", "119"],
-    ["cap", "Кепка", "80", "149"],
-    ["butterfly", "Бабочка", "60", "179"],
-    ["spotlight", "Прожектор", "40", "249"],
-    ["hat", "Шляпа", "25", "329"],
-    ["racecar", "Болид", "200", "69"],
-    ["sneaker", "Кроссовок", "200", "69"],
-    ["mirror", "Зеркальце", "200", "69"],
-    ["mic", "Микрофон", "200", "69"],
-    ["cards", "Карты", "200", "69"],
+  const series = {
+    slug: "cute",
+    label: "Мимими",
+    tagline: "Для милых и нежных",
+    description:
+      "Котики, пончики и всё, что хочется затискать. Тёплая серия для близких — 3 лимитированных предмета.",
+  } as const;
+  const items = [
+    {
+      slug: "cat",
+      name: "Котик",
+      left: "300",
+      price: "49",
+      rarity: "ЛИМИТИРОВАННЫЙ",
+      tone: "bg-[#f0e9ff] text-[#7549d0]",
+    },
+    {
+      slug: "donut",
+      name: "Пончик",
+      left: "300",
+      price: "49",
+      rarity: "РЕДКИЙ",
+      tone: "bg-[#fff0f6] text-[#d84b81]",
+    },
+    {
+      slug: "panda",
+      name: "Панда",
+      left: "200",
+      price: "79",
+      rarity: "ИКОНИЧЕСКИЙ",
+      tone: "bg-[#fff6d9] text-[#a87511]",
+    },
   ] as const;
   return (
     <div className="min-h-[730px] bg-[#fbf9fe] px-4 pb-6 pt-5 text-[#251d31]">
@@ -1668,45 +1679,52 @@ function CollectionScreen() {
         </span>
         <span className="text-center">
           <small className="block text-[9px] font-black uppercase tracking-[0.13em] text-[#8c7e94]">
-            ХОЧУ · КОЛЛЕКЦИЯ
+            ХОЧУ · СЕРИЯ
           </small>
-          <b className="block text-sm">Коллекция</b>
+          <b className="block text-sm">Серия подарков</b>
         </span>
         <span className="inline-flex h-10 items-center gap-1 rounded-full bg-[#f0e9ff] px-3 text-[10px] font-black text-[#7549d0]">
-          <Sparkles className="size-3.5" /> 2 800
+          <Sparkles className="size-3.5" /> 800
         </span>
       </header>
-      <section className="mt-5 rounded-[1.7rem] bg-gradient-to-br from-[#322452] via-[#543d7a] to-[#7b67d8] p-5 text-white shadow-[0_14px_30px_rgba(63,37,98,.2)]">
-        <span className="bg-white/14 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.08em] text-[#fbd7e7]">
-          <Sparkles className="size-3.5" /> Подарки под характер
+      <section className="relative mt-5 overflow-hidden rounded-[1.8rem] bg-gradient-to-br from-[#ff9ec4] via-[#e9a8f5] to-[#b7a1ff] p-5 text-white shadow-[0_16px_36px_rgba(163,80,207,.25)]">
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-white/25 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.08em] text-white">
+          <CollectionIcon className="size-3.5" slug={series.slug} />
+          {series.tagline}
         </span>
         <h1 className="mt-3 text-3xl font-black leading-[0.88] tracking-[-0.075em]">
-          СИЯЮЩИЕ
-          <br />
-          ПОДАРКИ.
+          СЕРИЯ
+          <br />«{series.label}».
         </h1>
-        <p className="mt-3 max-w-64 text-[10px] leading-5 text-white/75">
-          30 лимитированных предметов в 10 коллекциях. Номер экземпляра появляется после
-          вручения.
+        <p className="mt-3 max-w-64 text-[10px] leading-5 text-white/85">
+          {series.description}
         </p>
+        <div className="mt-4 flex gap-2">
+          <span className="rounded-full bg-white/25 px-2.5 py-1 text-[9px] font-black">
+            3 предмета
+          </span>
+          <span className="rounded-full bg-white/25 px-2.5 py-1 text-[9px] font-black">
+            от 49 ⭐
+          </span>
+        </div>
       </section>
       <section className="mt-5">
         <div className="mb-3 flex items-end justify-between">
           <span>
-            <h2 className="text-sm font-black">Коллекция</h2>
+            <h2 className="text-sm font-black">Предметы серии</h2>
             <p className="mt-0.5 text-[10px] text-[#82758a]">
-              Выбери предмет на профиле человека
+              Подаришь — появится номер экземпляра
             </p>
           </span>
           <span className="rounded-full bg-[#efe9f6] px-2 py-1 text-[9px] font-black text-[#7a6688]">
-            10
+            3
           </span>
         </div>
-        <div className="grid grid-cols-2 gap-3">
-          {artifacts.map(([slug, name, left, price], index) => (
+        <div className="grid grid-cols-3 gap-2">
+          {items.map((item) => (
             <article
-              className="border-[#2c2036]/9 overflow-hidden rounded-[1.35rem] border bg-white shadow-[0_8px_22px_rgba(69,43,94,.05)]"
-              key={slug}
+              className="border-[#2c2036]/9 overflow-hidden rounded-[1.2rem] border bg-white shadow-[0_6px_16px_rgba(69,43,94,.04)]"
+              key={item.slug}
             >
               {/* eslint-disable-next-line @next/next/no-img-element -- generated static artifact art */}
               <img
@@ -1714,74 +1732,44 @@ function CollectionScreen() {
                 decoding="async"
                 alt=""
                 className="aspect-square w-full object-cover"
-                src={`/collectibles/gems/png/${slug}.png`}
+                src={`/collectibles/gems/png/${item.slug}.png`}
               />
-              <div className="p-3">
-                <span className="flex items-center justify-between gap-1">
-                  <span className="inline-flex rounded-full bg-[#f0e9ff] px-1.5 py-0.5 text-[8px] font-black text-[#7549d0]">
-                    {index < 5
-                      ? "ЛИМИТИРОВАННЫЙ"
-                      : index < 8
-                        ? "РЕДКИЙ"
-                        : "ИКОНИЧЕСКИЙ"}
-                  </span>
+              <span className="block p-2">
+                <span
+                  className={`inline-flex rounded-full px-1.5 py-0.5 text-[7px] font-black ${item.tone}`}
+                >
+                  {item.rarity}
                 </span>
-                <b className="mt-2 block text-[11px]">{name}</b>
-                <span className="mt-2 flex items-center justify-between text-[9px] font-black">
-                  <span className="text-[#8b6a9c]">{left} шт.</span>
-                  <span className="text-[#7549d0]">{price} ⭐</span>
+                <b className="mt-1.5 block truncate text-[10px]">{item.name}</b>
+                <span className="mt-1 flex items-center justify-between text-[8px] font-black">
+                  <span className="text-[#8b6a9c]">{item.left} шт.</span>
+                  <span className="text-[#7549d0]">{item.price} ⭐</span>
                 </span>
-                <span className="mt-1.5 block h-1 overflow-hidden rounded-full bg-[#f0eaf5]">
-                  <span
-                    className="block h-full rounded-full bg-gradient-to-r from-[#8254ed] to-[#ff5d9a]"
-                    style={{ width: `${Math.min(100, 100 - Number(left) / 3)}%` }}
-                  />
-                </span>
-              </div>
+              </span>
             </article>
           ))}
         </div>
       </section>
-      <section className="border-[#2c2036]/9 mt-5 rounded-[1.45rem] border bg-white p-3.5 shadow-[0_8px_22px_rgba(69,43,94,.05)]">
-        <div className="flex items-end justify-between">
-          <span>
-            <h2 className="text-sm font-black">Твоя полка</h2>
-            <p className="mt-0.5 text-[9px] text-[#82758a]">
-              Даритель остаётся приватным
-            </p>
-          </span>
-          <span className="rounded-full bg-[#efe9f6] px-2 py-1 text-[9px] font-black text-[#7a6688]">
-            1
-          </span>
-        </div>
-        <div className="mt-3 flex gap-3 rounded-2xl bg-[#fbf9fe] p-2.5">
-          {/* eslint-disable-next-line @next/next/no-img-element -- generated static artifact art */}
-          <img
-            loading="lazy"
-            decoding="async"
-            alt="Котик"
-            className="h-24 w-[72px] rounded-xl object-cover"
-            src="/collectibles/gems/png/cat.png"
-          />
-          <span className="grow">
-            <b className="block text-[11px]">Котик</b>
-            <small className="mt-1 block text-[9px] font-black text-[#8753e6]">
-              #047 / 150
-            </small>
-            <small className="mt-1 block text-[8px] text-[#82758a]">
-              Получен 7 авг.
-            </small>
-            <span className="mt-3 flex w-full items-center justify-center gap-1 rounded-lg bg-[#f0e9ff] py-1.5 text-[8px] font-black text-[#7549d0]">
-              <Check className="size-2.5" /> В профиле
-            </span>
-          </span>
-        </div>
-      </section>
+      <Link
+        className="mt-5 flex items-center gap-3 rounded-[1.5rem] bg-gradient-to-r from-[#ff5d9a] to-[#8254ed] p-4 text-white shadow-[0_10px_22px_rgba(160,75,213,.22)]"
+        href="/preview?screen=profile"
+      >
+        <span className="grid size-10 place-items-center rounded-xl bg-white/15">
+          <UsersRound className="size-5" />
+        </span>
+        <span className="grow">
+          <b className="block text-xs">Выбрать, кому подарить</b>
+          <small className="mt-1 block text-[10px] text-white/75">
+            Серия открывается на публичном профиле человека.
+          </small>
+        </span>
+        <ChevronRight className="size-4" />
+      </Link>
       <section className="mt-5 flex gap-2.5 rounded-2xl bg-[#f0faf5] p-3.5 text-[#4c7169]">
         <Check className="mt-0.5 size-4 shrink-0 text-[#258b82]" />
         <p className="text-[10px] leading-4">
-          Предметы не дают боевых статов и не влияют на рейтинг. Это коллекция и
-          красивый жест.
+          Это коллекционный предмет, не финансовый актив: его нельзя перепродать,
+          обменять или вывести в деньги. Он не даёт статов и не влияет на рейтинг.
         </p>
       </section>
     </div>
