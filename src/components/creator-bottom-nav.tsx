@@ -4,7 +4,7 @@ import { CirclePlus, Heart, House, Search, UserRound } from "lucide-react";
 export function CreatorBottomNav() {
   return (
     <nav
-      className="fixed inset-x-0 bottom-0 z-30 mx-auto flex max-w-md items-center justify-around border-t border-white/10 bg-[#11131c]/95 px-3 py-2 text-[#b9b2c7] backdrop-blur md:hidden"
+      className="fixed inset-x-0 bottom-0 z-30 mx-auto flex max-w-md items-center justify-around border-t border-white/10 bg-[#11131c]/95 px-3 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 text-[#b9b2c7] backdrop-blur md:hidden"
       aria-label="Нижняя навигация"
     >
       <Link

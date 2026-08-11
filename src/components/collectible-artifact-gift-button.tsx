@@ -94,7 +94,7 @@ export function CollectibleArtifactGiftButton({
         <Gem className="size-4" /> Подарок
       </button>
       {open && (
-        <div className="absolute right-0 z-30 mt-2 w-[318px] rounded-[1.4rem] border border-[#e2d8e9] bg-white p-3 shadow-[0_18px_40px_rgba(69,43,94,.18)]">
+        <div className="fixed inset-x-4 top-14 z-50 mx-auto max-h-[calc(100dvh-5rem)] w-auto max-w-[318px] overflow-y-auto rounded-[1.4rem] border border-[#e2d8e9] bg-white p-3 shadow-[0_18px_40px_rgba(69,43,94,.18)] sm:absolute sm:inset-x-auto sm:right-0 sm:top-full sm:mt-2 sm:w-[318px] sm:max-w-none">
           {selected ? (
             <>
               <div className="flex items-center gap-2">

@@ -23,6 +23,13 @@
     @apply scroll-smooth;
   }
 
+  /* Mobile-first guard: никогда не даём горизонтальному контенту
+     растягивать страницу (clip не создаёт scroll-контейнер, sticky живёт). */
+  html,
+  body {
+    overflow-x: clip;
+  }
+
   body {
     @apply min-h-screen bg-[#0c0e14] font-sans text-[#f7f3fb] antialiased;
     background-image:

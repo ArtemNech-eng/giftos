@@ -1002,7 +1002,7 @@ function Avatar({
 function BottomNav() {
   return (
     <nav
-      className="fixed inset-x-0 bottom-0 z-30 mx-auto flex max-w-[430px] items-center justify-around border-t border-[#2c2036]/10 bg-white/95 px-3 py-2 text-[#756b80] backdrop-blur"
+      className="fixed inset-x-0 bottom-0 z-30 mx-auto flex max-w-[430px] items-center justify-around border-t border-[#2c2036]/10 bg-white/95 px-3 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 text-[#756b80] backdrop-blur"
       aria-label="Нижняя навигация"
     >
       <Link
