@@ -392,6 +392,22 @@ export default async function CollectionPage({
           ))}
         </nav>
 
+        {groups.length === 0 && (
+          <div className="mt-6 rounded-2xl border border-dashed border-[#cdbbe7] bg-white p-6 text-center">
+            <Sparkles className="mx-auto size-7 text-[#8753e6]" />
+            <p className="mt-3 text-xs font-black text-[#5f5369]">
+              {activeCollection === "all"
+                ? "Подарки скоро появятся"
+                : "В этой коллекции пока пусто"}
+            </p>
+            <p className="mt-1 text-[10px] leading-5 text-[#81748a]">
+              {activeCollection === "all"
+                ? "Первая партия подарков уже в пути."
+                : "Новые подарки этой серии уже готовятся."}
+            </p>
+          </div>
+        )}
+
         {groups.map((group) => {
           const found = GIFT_COLLECTIONS.find((item) => item.slug === group.slug);
           const meta = found
@@ -405,12 +421,18 @@ export default async function CollectionPage({
                   {meta.tagline}
                 </span>
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                {group.items.map((artifact) => {
-                  const owned = ownedBySeries.get(artifact.id)?.length ?? 0;
-                  return <Card key={artifact.id} artifact={artifact} owned={owned} />;
-                })}
-              </div>
+              {group.items.length === 0 ? (
+                <p className="rounded-xl border border-dashed border-[#e3d3ee] bg-[#fbf9fe] px-4 py-5 text-center text-[10px] text-[#8b6a9c]">
+                  Пока нет подарков в этой серии
+                </p>
+              ) : (
+                <div className="grid grid-cols-2 gap-3">
+                  {group.items.map((artifact) => {
+                    const owned = ownedBySeries.get(artifact.id)?.length ?? 0;
+                    return <Card key={artifact.id} artifact={artifact} owned={owned} />;
+                  })}
+                </div>
+              )}
             </section>
           );
         })}
