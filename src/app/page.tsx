@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Metadata, Route } from "next";
+import { QRCodeSVG } from "qrcode.react";
 /* eslint-disable @next/next/no-img-element -- city avatars use short-lived signed Storage URLs */
 import {
   ArrowDownRight,
@@ -8,6 +9,7 @@ import {
   Heart,
   MapPin,
   MessageCircle,
+  QrCode,
   Radio,
   Sparkles,
   UsersRound,
@@ -962,6 +964,117 @@ export default async function SeoLandingPage({
         </section>
       )}
 
+      <section
+        className="relative overflow-hidden bg-[#241a38] px-5 py-20 text-white sm:px-8 lg:px-12 lg:py-28"
+        id="qr-greeting"
+      >
+        <div
+          aria-hidden="true"
+          className="absolute -left-40 bottom-[-16rem] size-[34rem] rounded-full bg-[#7a4fd0]/40 blur-[130px]"
+        />
+        <div
+          aria-hidden="true"
+          className="absolute -right-32 -top-36 size-[30rem] rounded-full bg-[#ff5d9a]/30 blur-[130px]"
+        />
+        <div className="relative mx-auto grid max-w-[1440px] items-center gap-14 lg:grid-cols-[1.05fr_0.95fr] lg:gap-20">
+          <div>
+            <p className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-[0.18em] text-[#ff9cc0]">
+              <QrCode className="size-4" /> Новая фишка · вместо рукопожатия
+            </p>
+            <h2 className="mt-6 max-w-2xl text-balance text-5xl font-black leading-[0.87] tracking-[-0.075em] sm:text-6xl">
+              Встретил человека —
+              <span className="block text-[#ff86b2]">покажи телефон.</span>
+            </h2>
+            <p className="mt-7 max-w-xl text-lg leading-8 text-white/70 sm:text-xl">
+              Больше не надо объяснять, куда вводить ссылку и как найти приложение.
+              Открываешь экран с QR — человек сканирует и сразу попадает в город с
+              бонусом. Без поиска, без ссылок.
+            </p>
+            <div className="mt-10 grid gap-3 sm:grid-cols-3">
+              {[
+                {
+                  number: "01",
+                  title: "Показал",
+                  text: "Экран с QR открыт на твоём телефоне.",
+                },
+                {
+                  number: "02",
+                  title: "Отсканировал",
+                  text: "Камера ведёт сразу в город, без поиска.",
+                },
+                {
+                  number: "03",
+                  title: "Оба в плюсе",
+                  text: "Новый житель получает бонус ⭐ — и ты тоже.",
+                },
+              ].map((step) => (
+                <div
+                  className="rounded-[1.4rem] border border-white/10 bg-white/[0.06] p-4 backdrop-blur"
+                  key={step.number}
+                >
+                  <span className="text-2xl font-black leading-none tracking-[-0.06em] text-[#ff86b2]">
+                    {step.number}
+                  </span>
+                  <h3 className="mt-3 text-sm font-black">{step.title}</h3>
+                  <p className="mt-1.5 text-xs leading-5 text-white/60">{step.text}</p>
+                </div>
+              ))}
+            </div>
+            <div className="mt-10 flex flex-wrap items-center gap-4">
+              <Link
+                className="group inline-flex items-center gap-3 rounded-full bg-white px-6 py-3.5 text-sm font-black text-[#201827] shadow-[0_16px_34px_rgba(0,0,0,0.25)] transition hover:-translate-y-0.5 hover:bg-[#ffdce9]"
+                href={signInHref}
+              >
+                Попробовать в городе
+                <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
+              </Link>
+              <Link
+                className="inline-flex items-center gap-2 rounded-full border border-white/20 px-5 py-3.5 text-sm font-black text-white/85 transition hover:border-white/40 hover:text-white"
+                href="/preview?screen=invite"
+              >
+                Смотреть экран <ArrowRight className="size-4" />
+              </Link>
+            </div>
+          </div>
+
+          <div className="relative mx-auto w-full max-w-[330px]">
+            <div className="qr-pulse rounded-[2.2rem] bg-white p-6 text-[#291c34] shadow-[0_34px_80px_rgba(0,0,0,0.4)]">
+              <div className="mb-4 flex items-center justify-between gap-2">
+                <span className="inline-flex min-w-0 items-center gap-1.5 text-sm font-black text-[#68418e]">
+                  <MapPin className="size-4 shrink-0 text-[#a057e5]" />
+                  <span className="truncate">В {launchCityName}</span>
+                </span>
+                <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-[#fff0a9] px-2 py-1 text-[11px] font-black text-[#735417]">
+                  <Sparkles className="size-3" /> +200 ⭐
+                </span>
+              </div>
+              <div className="relative grid place-items-center rounded-2xl bg-gradient-to-br from-[#f3ecff] to-[#fff0f6] p-3">
+                <div className="rounded-xl bg-white p-1.5">
+                  <QRCodeSVG
+                    bgColor="#ffffff"
+                    fgColor="#24172e"
+                    level="M"
+                    marginSize={1}
+                    size={188}
+                    title={`Приглашение в ${launchCityName}`}
+                    value={`${process.env.NEXT_PUBLIC_APP_URL ?? "https://hochutakzhe.ru"}?city=budennovsk&invite=1`}
+                  />
+                </div>
+                <span className="pointer-events-none absolute grid size-11 place-items-center rounded-xl bg-gradient-to-br from-[#ff5d9a] to-[#8254ed] text-white shadow-[0_6px_16px_rgba(160,75,213,0.45)]">
+                  <Heart className="size-5 fill-current" />
+                </span>
+              </div>
+              <p className="mt-4 text-center text-sm font-semibold leading-5 text-[#65546d]">
+                Сканируй — попадёшь в {launchCityName} с бонусом
+              </p>
+            </div>
+            <span className="absolute -bottom-4 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-[#ffd35e] px-4 py-2 text-xs font-black text-[#4a2c05] shadow-[0_12px_28px_rgba(0,0,0,0.35)]">
+              +200 ⭐ за каждого, кто пришёл по QR
+            </span>
+          </div>
+        </div>
+      </section>
+
       <section className="relative overflow-hidden border-t border-[#2d2038]/10 bg-[#201827] px-5 py-20 text-white sm:px-8 lg:px-12 lg:py-28">
         <div
           aria-hidden="true"
@@ -1004,6 +1117,9 @@ export default async function SeoLandingPage({
             </a>
             <a className="transition hover:text-white" href="#budennovsk">
               Первый город
+            </a>
+            <a className="transition hover:text-white" href="#qr-greeting">
+              QR-приветствие
             </a>
             <Link className="transition hover:text-white" href={signInHref}>
               Войти
