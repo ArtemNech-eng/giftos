@@ -58,6 +58,19 @@ type ArtifactRow = {
   total_edition: number;
 };
 type ResultPerson = PersonRow & { avatarUrl: string | null };
+type InterestCategory = { slug: string; label: string; emoji: string };
+type DiscussionRow = {
+  id: string;
+  body: string;
+  author_id: string;
+  author_name: string | null;
+  author_username: string | null;
+  author_avatarUrl: string | null;
+  target_type: "wish" | "fundraiser";
+  target_title: string;
+  target_href: string;
+  created_at: string;
+};
 
 const scopes = [
   { key: "city", label: "Мой город", icon: MapPin },
@@ -109,6 +122,9 @@ export default async function SearchPage({
   let wishes: WishRow[] = [];
   let events: EventRow[] = [];
   let artifacts: ArtifactRow[] = [];
+  let interestPeople: ResultPerson[] = [];
+  let interestCategory: InterestCategory | null = null;
+  let discussions: DiscussionRow[] = [];
 
   if (query.length >= 2 && (scope === "platform" || hasCity)) {
     if (scope === "city" && profile?.city_id) {
@@ -172,6 +188,78 @@ export default async function SearchPage({
       events = ((rawEvents ?? []) as EventRow[])
         .filter((event) => match(event.title, query))
         .slice(0, 12);
+
+      // Поиск по интересам: запрос совпал с названием категории —
+      // показываем публичных жителей города с этим интересом.
+      const { data: categories } = await supabase
+        .from("categories")
+        .select("slug, label, emoji")
+        .eq("is_active", true);
+      const matchedCategory = ((categories ?? []) as InterestCategory[]).find(
+        (category) => match(category.label, query),
+      );
+      if (matchedCategory) {
+        const { data: interestRows } = await supabase
+          .from("profile_interests")
+          .select("profile_id")
+          .eq("category_slug", matchedCategory.slug)
+          .limit(300);
+        const interestIds = new Set(
+          (interestRows ?? []).map((row) => row.profile_id as string),
+        );
+        interestCategory = matchedCategory;
+        interestPeople = await Promise.all(
+          cityPeople
+            .filter((person) => interestIds.has(person.id))
+            .slice(0, 8)
+            .map(async (person) => ({
+              ...person,
+              avatarUrl: await getSignedImageUrl({
+                bucket: "avatars",
+                path: person.avatar_path,
+              }),
+            })),
+        );
+      }
+
+      // Поиск по обсуждениям: комментарии под публичными желаниями города.
+      const cityWishIds = ((rawWishes ?? []) as WishRow[]).map((wish) => wish.id);
+      if (cityWishIds.length) {
+        const wishTitleById = new Map(
+          ((rawWishes ?? []) as WishRow[]).map((wish) => [wish.id, wish.title]),
+        );
+        const { data: rawComments } = await supabase
+          .from("wish_comments")
+          .select("id, body, author_id, wish_id, created_at")
+          .in("wish_id", cityWishIds)
+          .eq("is_hidden", false)
+          .is("deleted_at", null)
+          .limit(300);
+        discussions = (
+          (rawComments ?? []) as Array<{
+            id: string;
+            body: string;
+            author_id: string;
+            wish_id: string;
+            created_at: string;
+          }>
+        )
+          .filter((comment) => match(comment.body, query))
+          .sort((a, b) => b.created_at.localeCompare(a.created_at))
+          .slice(0, 8)
+          .map((comment) => ({
+            id: comment.id,
+            body: comment.body,
+            author_id: comment.author_id,
+            author_name: null,
+            author_username: null,
+            author_avatarUrl: null,
+            target_type: "wish" as const,
+            target_title: wishTitleById.get(comment.wish_id) ?? "Желание",
+            target_href: `/wishes/${comment.wish_id}`,
+            created_at: comment.created_at,
+          }));
+      }
     } else {
       const [
         { data: rawPeople },
@@ -235,6 +323,126 @@ export default async function SearchPage({
       events = ((rawEvents ?? []) as EventRow[])
         .filter((event) => match(event.title, query))
         .slice(0, 12);
+
+      // Поиск по интересам: публичные профили всей платформы.
+      const { data: categories } = await supabase
+        .from("categories")
+        .select("slug, label, emoji")
+        .eq("is_active", true);
+      const matchedCategory = ((categories ?? []) as InterestCategory[]).find(
+        (category) => match(category.label, query),
+      );
+      if (matchedCategory) {
+        const { data: interestRows } = await supabase
+          .from("profile_interests")
+          .select("profile_id")
+          .eq("category_slug", matchedCategory.slug)
+          .limit(300);
+        const interestIds = [
+          ...new Set((interestRows ?? []).map((row) => row.profile_id as string)),
+        ].slice(0, 60);
+        if (interestIds.length) {
+          const { data: rawInterestPeople } = await supabase
+            .from("profiles")
+            .select("id, username, display_name, avatar_path, city, show_city")
+            .in("id", interestIds)
+            .eq("profile_visibility", "public")
+            .eq("is_suspended", false)
+            .limit(40);
+          interestCategory = matchedCategory;
+          interestPeople = await Promise.all(
+            ((rawInterestPeople ?? []) as PersonRow[])
+              .slice(0, 8)
+              .map(async (person) => ({
+                ...person,
+                city: person.show_city ? person.city : null,
+                avatarUrl: await getSignedImageUrl({
+                  bucket: "avatars",
+                  path: person.avatar_path,
+                }),
+              })),
+          );
+        }
+      }
+
+      // Поиск по обсуждениям: комментарии под публичными желаниями платформы.
+      const platformWishIds = ((rawWishes ?? []) as WishRow[]).map((wish) => wish.id);
+      if (platformWishIds.length) {
+        const wishTitleById = new Map(
+          ((rawWishes ?? []) as WishRow[]).map((wish) => [wish.id, wish.title]),
+        );
+        const { data: rawComments } = await supabase
+          .from("wish_comments")
+          .select("id, body, author_id, wish_id, created_at")
+          .in("wish_id", platformWishIds)
+          .eq("is_hidden", false)
+          .is("deleted_at", null)
+          .limit(300);
+        discussions = (
+          (rawComments ?? []) as Array<{
+            id: string;
+            body: string;
+            author_id: string;
+            wish_id: string;
+            created_at: string;
+          }>
+        )
+          .filter((comment) => match(comment.body, query))
+          .sort((a, b) => b.created_at.localeCompare(a.created_at))
+          .slice(0, 8)
+          .map((comment) => ({
+            id: comment.id,
+            body: comment.body,
+            author_id: comment.author_id,
+            author_name: null,
+            author_username: null,
+            author_avatarUrl: null,
+            target_type: "wish" as const,
+            target_title: wishTitleById.get(comment.wish_id) ?? "Желание",
+            target_href: `/wishes/${comment.wish_id}`,
+            created_at: comment.created_at,
+          }));
+      }
+    }
+
+    // Имена авторов обсуждений (только видимые публичные профили).
+    const discussionAuthorIds = [
+      ...new Set(discussions.map((discussion) => discussion.author_id)),
+    ];
+    if (discussionAuthorIds.length) {
+      const { data: rawAuthors } = await supabase
+        .from("profiles")
+        .select("id, username, display_name, avatar_path")
+        .in("id", discussionAuthorIds)
+        .eq("profile_visibility", "public")
+        .eq("is_suspended", false)
+        .limit(40);
+      const authorById = new Map(
+        (
+          (rawAuthors ?? []) as Array<{
+            id: string;
+            username: string;
+            display_name: string;
+            avatar_path: string | null;
+          }>
+        ).map((author) => [author.id, author]),
+      );
+      discussions = await Promise.all(
+        discussions.map(async (discussion) => {
+          const author = authorById.get(discussion.author_id);
+          return {
+            ...discussion,
+            author_name: author?.display_name ?? null,
+            author_username: author?.username ?? null,
+            author_avatarUrl: author
+              ? await getSignedImageUrl({
+                  bucket: "avatars",
+                  path: author.avatar_path,
+                })
+              : null,
+          };
+        }),
+      );
     }
 
     const { data: rawArtifacts } = await supabase
@@ -248,7 +456,13 @@ export default async function SearchPage({
   }
 
   const total =
-    people.length + places.length + wishes.length + events.length + artifacts.length;
+    people.length +
+    places.length +
+    wishes.length +
+    events.length +
+    artifacts.length +
+    interestPeople.length +
+    discussions.length;
   const quickLinks = [
     { href: "/people", label: "Люди", icon: UsersRound },
     { href: "/places", label: "Места", icon: MapPin },
@@ -422,6 +636,43 @@ export default async function SearchPage({
             </section>
           )}
 
+          {interestPeople.length > 0 && interestCategory && (
+            <section>
+              <div className="mb-3 flex items-end justify-between">
+                <span>
+                  <h2 className="text-sm font-black">Люди по интересу</h2>
+                  <p className="mt-0.5 text-[10px] text-[#82758a]">
+                    Интерес: {interestCategory.emoji} {interestCategory.label}
+                  </p>
+                </span>
+                <span className="rounded-full bg-[#efe9f6] px-2 py-1 text-[9px] font-black text-[#7a6688]">
+                  {interestPeople.length}
+                </span>
+              </div>
+              <div className="space-y-2">
+                {interestPeople.map((person) => (
+                  <Link
+                    className="border-[#2c2036]/9 flex items-center gap-3 rounded-2xl border bg-white p-3 shadow-[0_6px_16px_rgba(69,43,94,.04)]"
+                    href={`/u/${person.username}` as Route}
+                    key={`interest-${person.id}`}
+                  >
+                    <PersonAvatar person={person} />
+                    <span className="min-w-0 grow">
+                      <b className="block truncate text-xs">{person.display_name}</b>
+                      <small className="mt-1 block truncate text-[10px] text-[#81748a]">
+                        @{person.username}
+                        {scope === "platform" && person.city ? ` · ${person.city}` : ""}
+                      </small>
+                    </span>
+                    <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-[#f0e9ff] px-2 py-1 text-[8px] font-black text-[#7549d0]">
+                      {interestCategory.emoji} {interestCategory.label}
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            </section>
+          )}
+
           {places.length > 0 && (
             <section>
               <div className="mb-3 flex items-end justify-between">
@@ -538,6 +789,62 @@ export default async function SearchPage({
                       </small>
                     </span>
                     <ChevronRight className="size-4 text-[#a295a8]" />
+                  </Link>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {discussions.length > 0 && (
+            <section>
+              <div className="mb-3 flex items-end justify-between">
+                <span>
+                  <h2 className="text-sm font-black">Обсуждения</h2>
+                  <p className="mt-0.5 text-[10px] text-[#82758a]">
+                    Комментарии к желаниям
+                  </p>
+                </span>
+                <span className="rounded-full bg-[#efe9f6] px-2 py-1 text-[9px] font-black text-[#7a6688]">
+                  {discussions.length}
+                </span>
+              </div>
+              <div className="space-y-2">
+                {discussions.map((discussion) => (
+                  <Link
+                    className="border-[#2c2036]/9 rounded-2xl border bg-white p-3 shadow-[0_6px_16px_rgba(69,43,94,.04)]"
+                    href={discussion.target_href as Route}
+                    key={`discussion-${discussion.id}`}
+                  >
+                    <span className="flex items-center gap-2">
+                      {discussion.author_name ? (
+                        <PersonAvatar
+                          person={{
+                            id: discussion.author_id,
+                            username: discussion.author_username ?? "",
+                            display_name: discussion.author_name,
+                            avatar_path: null,
+                            city: null,
+                            avatarUrl: discussion.author_avatarUrl,
+                          }}
+                        />
+                      ) : (
+                        <span className="grid size-10 shrink-0 place-items-center rounded-full bg-[#f0e9ff] text-[#8753e6]">
+                          <UsersRound className="size-4" />
+                        </span>
+                      )}
+                      <span className="min-w-0 grow">
+                        <b className="block truncate text-xs">
+                          {discussion.author_name ?? "Участник"}
+                        </b>
+                        <small className="mt-0.5 block truncate text-[10px] text-[#8753e6]">
+                          в желании «{discussion.target_title}»
+                        </small>
+                      </span>
+                      <ChevronRight className="size-4 shrink-0 text-[#a295a8]" />
+                    </span>
+                    <p className="mt-2.5 line-clamp-2 rounded-xl bg-[#fbf9fe] px-3 py-2 text-[10px] leading-4 text-[#5f5369]">
+                      {discussion.body}
+                    </p>
                   </Link>
                 ))}
               </div>
