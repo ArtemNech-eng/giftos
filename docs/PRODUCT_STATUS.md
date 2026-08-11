@@ -1,6 +1,6 @@
 # Статус продукта «Хочу также» — итоговая сводка
 
-**Дата:** 2026-08-08 · **Ветка:** `arena/019fd2fe-giftos` · **Миграций:** 94 · **Коммитов:** ~220
+**Дата:** 2026-08-08 · **Ветка:** `arena/019fd2fe-giftos` · **Миграций:** 95 · **Коммитов:** ~220
 
 ## Что это
 
@@ -32,7 +32,7 @@
 
 ## Инфраструктура (НЕ в коде — следующий этап)
 
-1. **Self-hosted Supabase в РФ** + `npm run qa:migrations` (94) + `npm run qa:selfhosted` + сценарии `docs/SELF_HOSTED_SCENARIO_QA.md`.
+1. **Self-hosted Supabase в РФ** + `npm run qa:migrations` (95) + `npm run qa:selfhosted` + сценарии `docs/SELF_HOSTED_SCENARIO_QA.md`.
 2. **LiveKit/SFU** (реальный видеотранспорт; сейчас placeholder).
 3. **Платёжный партнёр + KYC** — только после юридической подготовки (договорённость).
 4. **Темы оформления профиля** — ждут дизайнера.
@@ -43,7 +43,7 @@
 - `npm run lint` — 0 ошибок/предупреждений
 - `npm run format:check` — чисто
 - `npm run build` — успешно (16 static + динамические)
-- `npm run qa:migrations` — 94 миграции, нумерация без пропусков
+- `npm run qa:migrations` — 95 миграций, нумерация без пропусков
 - `npm run qa:selfhosted` — preflight (env ожидаемо не заполнены до стенда)
 - dev `/api/health` — 200
 

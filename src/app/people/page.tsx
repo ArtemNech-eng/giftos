@@ -6,6 +6,7 @@ import {
   CalendarDays,
   ChevronRight,
   Compass,
+  Flame,
   MapPin,
   MessageCircle,
   Radio,
@@ -399,6 +400,104 @@ export default async function PeoplePage({
     return b.followers - a.followers;
   });
 
+  // Growth sections (plan item 7): «New in the city» and «Rising this week».
+  type GrowthPerson = {
+    id: string;
+    username: string;
+    displayName: string;
+    avatarUrl: string | null;
+    weeklyFollowers: number;
+    isNew: boolean;
+  };
+  let growthPeople: GrowthPerson[] = [];
+
+  const [newPeopleResult, risingPeopleResult] = await Promise.all([
+    scope === "city" && profile?.city_id
+      ? supabase
+          .from("profiles")
+          .select("id, username, display_name, avatar_path")
+          .eq("city_id", profile.city_id)
+          .eq("profile_visibility", "public")
+          .eq("is_suspended", false)
+          .order("created_at", { ascending: false })
+          .limit(6)
+      : supabase
+          .from("profiles")
+          .select("id, username, display_name, avatar_path")
+          .eq("profile_visibility", "public")
+          .eq("is_suspended", false)
+          .order("created_at", { ascending: false })
+          .limit(6),
+    supabase
+      .from("public_growing_people")
+      .select("id, username, display_name, avatar_path, weekly_followers")
+      .eq("city_id", profile?.city_id ?? "00000000-0000-0000-0000-000000000000")
+      .limit(6)
+      .then((result) => {
+        // Platform scope shows rising people across all cities instead.
+        if (scope !== "city" && result.data) {
+          return supabase
+            .from("public_growing_people")
+            .select("id, username, display_name, avatar_path, weekly_followers")
+            .limit(6);
+        }
+        return result;
+      }),
+  ]);
+
+  const newPeople = (
+    (newPeopleResult.data ?? []) as Array<{
+      id: string;
+      username: string;
+      display_name: string;
+      avatar_path: string | null;
+    }>
+  ).filter((person) => person.id !== user.id);
+  const risingPeople = (
+    (risingPeopleResult.data ?? []) as Array<{
+      id: string;
+      username: string;
+      display_name: string;
+      avatar_path: string | null;
+      weekly_followers: number;
+    }>
+  ).filter((person) => person.id !== user.id);
+
+  const growthRows: Array<{
+    id: string;
+    username: string;
+    display_name: string;
+    avatar_path: string | null;
+    weekly_followers: number;
+    isNew: boolean;
+  }> = [
+    ...risingPeople.map((person) => ({
+      ...person,
+      isNew: false,
+    })),
+    ...newPeople
+      .filter((person) => !risingPeople.some((rising) => rising.id === person.id))
+      .map((person) => ({
+        ...person,
+        weekly_followers: 0,
+        isNew: true,
+      })),
+  ].slice(0, 8);
+
+  growthPeople = await Promise.all(
+    growthRows.map(async (person) => ({
+      id: person.id,
+      username: person.username,
+      displayName: person.display_name,
+      avatarUrl: await getSignedImageUrl({
+        bucket: "avatars",
+        path: person.avatar_path,
+      }),
+      weeklyFollowers: person.weekly_followers,
+      isNew: person.isNew,
+    })),
+  );
+
   const cityName = profile?.city ?? "Твой город";
   const activeFilter = FILTERS.find((item) => item.key === filter) ?? FILTERS[0];
   const ActiveFilterIcon = activeFilter.icon;
@@ -456,6 +555,64 @@ export default async function PeoplePage({
           стороны.
         </p>
       </section>
+
+      {growthPeople.length > 0 && (
+        <section className="mt-5 rounded-[1.6rem] border border-[#e6d9ef] bg-white p-4 shadow-[0_8px_22px_rgba(69,43,94,.05)]">
+          <div className="flex items-center gap-2">
+            <span className="grid size-8 place-items-center rounded-xl bg-[#fff0f6] text-[#d84b81]">
+              <Flame className="size-4" />
+            </span>
+            <span>
+              <h2 className="text-sm font-black">Растут на этой неделе</h2>
+              <p className="mt-0.5 text-[10px] text-[#81748a]">
+                Кто набирает внимание сейчас — из реальной активности
+              </p>
+            </span>
+          </div>
+          <div className="mt-4 flex gap-3 overflow-x-auto pb-1">
+            {growthPeople.map((person) => (
+              <Link
+                className="group flex w-16 shrink-0 flex-col items-center gap-1.5"
+                href={`/u/${person.username}` as Route}
+                key={`growth-${person.id}`}
+              >
+                <span className="relative">
+                  <PersonAvatar
+                    person={{
+                      id: person.id,
+                      username: person.username,
+                      displayName: person.displayName,
+                      avatarUrl: person.avatarUrl,
+                      cityName: null,
+                      isCreator: false,
+                      followers: 0,
+                      following: false,
+                      roleCode: null,
+                      identity: "",
+                      context: null,
+                    }}
+                  />
+                  {person.isNew ? (
+                    <span className="absolute -right-1 -top-1 rounded-full bg-[#45c69d] px-1.5 py-0.5 text-[7px] font-black text-white shadow-[0_3px_8px_rgba(69,198,157,.4)]">
+                      NEW
+                    </span>
+                  ) : (
+                    <span className="absolute -right-1 -top-1 rounded-full bg-gradient-to-r from-[#ff5d9a] to-[#8254ed] px-1.5 py-0.5 text-[7px] font-black text-white shadow-[0_3px_8px_rgba(160,75,213,.4)]">
+                      +{person.weeklyFollowers}
+                    </span>
+                  )}
+                </span>
+                <span className="w-full truncate text-center text-[9px] font-black text-[#5f5369]">
+                  {person.displayName}
+                </span>
+                <span className="text-[8px] font-bold text-[#a093a6]">
+                  {person.isNew ? "новый в городе" : "за неделю"}
+                </span>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
 
       <nav className="mt-5 grid grid-cols-2 gap-1 rounded-2xl bg-[#ebe5f1] p-1 text-center text-[10px] font-black">
         <Link

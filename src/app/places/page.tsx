@@ -5,10 +5,12 @@ import {
   Bell,
   CalendarDays,
   ChevronRight,
+  Flame,
   MapPin,
   Pin,
   Plus,
   Radio,
+  Sparkles,
   TrendingUp,
   Trophy,
   UsersRound,
@@ -391,6 +393,39 @@ export default async function PlacesPage() {
     risingUsers = (rawRising ?? []) as typeof risingUsers;
   }
 
+  // Growth sections (plan item 7): «Popular places» (real 7-day activity)
+  // and «New places» (recently created) in the user's city.
+  type PopularPlaceRow = {
+    id: string;
+    name: string;
+    description: string | null;
+    icon_code: string | null;
+    kind: string;
+    activity_score: number;
+  };
+  let popularPlaces: PopularPlaceRow[] = [];
+  let newPlaces: PopularPlaceRow[] = [];
+  if (profile?.city_id) {
+    const [{ data: rawPopular }, { data: rawNew }] = await Promise.all([
+      supabase
+        .from("public_popular_places")
+        .select("id, name, description, icon_code, kind, activity_score")
+        .eq("city_id", profile.city_id)
+        .limit(6),
+      supabase
+        .from("places")
+        .select("id, name, description, icon_code, kind")
+        .eq("city_id", profile.city_id)
+        .eq("is_active", true)
+        .order("created_at", { ascending: false })
+        .limit(4),
+    ]);
+    popularPlaces = ((rawPopular ?? []) as PopularPlaceRow[]).filter(
+      (place) => place.activity_score > 0,
+    );
+    newPlaces = (rawNew ?? []) as PopularPlaceRow[];
+  }
+
   return (
     <main className="mx-auto min-h-screen max-w-[430px] bg-[#f7f4fb] px-4 pb-24 pt-5 text-[#251d31]">
       <CityPulseRefresh cityId={profile?.city_id} />
@@ -452,6 +487,73 @@ export default async function PlacesPage() {
               </span>
             </div>
           </section>
+
+          {(popularPlaces.length > 0 || newPlaces.length > 0) && (
+            <section className="mt-6">
+              {popularPlaces.length > 0 && (
+                <div>
+                  <div className="mb-3 flex items-end justify-between">
+                    <span>
+                      <h2 className="flex items-center gap-2 text-sm font-black">
+                        <Flame className="size-4 text-[#e2574c]" /> Популярные сейчас
+                      </h2>
+                      <p className="mt-0.5 text-[10px] text-[#81748a]">
+                        Живые разговоры за неделю — из реальной активности
+                      </p>
+                    </span>
+                  </div>
+                  <div className="flex gap-2.5 overflow-x-auto pb-1">
+                    {popularPlaces.map((place) => (
+                      <Link
+                        className="w-36 shrink-0 rounded-2xl border border-[#2c2036]/10 bg-white p-3 shadow-[0_6px_18px_rgba(69,43,94,.05)]"
+                        href={`/places/${place.id}` as Route}
+                        key={`popular-${place.id}`}
+                      >
+                        <span className="grid size-9 place-items-center rounded-xl bg-[#fff0f6] text-[#d84b81]">
+                          <PlaceIcon className="size-4.5" code={place.icon_code} />
+                        </span>
+                        <b className="mt-3 block truncate text-[11px]">{place.name}</b>
+                        <span className="mt-1 inline-flex items-center gap-1 rounded-full bg-[#ffe9ef] px-2 py-0.5 text-[8px] font-black text-[#d84b81]">
+                          <Flame className="size-2.5" /> {place.activity_score}
+                        </span>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {newPlaces.length > 0 && (
+                <div className={popularPlaces.length > 0 ? "mt-5" : ""}>
+                  <div className="mb-3 flex items-end justify-between">
+                    <span>
+                      <h2 className="flex items-center gap-2 text-sm font-black">
+                        <Sparkles className="size-4 text-[#8753e6]" /> Новые места
+                      </h2>
+                      <p className="mt-0.5 text-[10px] text-[#81748a]">
+                        Куда можно зайти первым
+                      </p>
+                    </span>
+                  </div>
+                  <div className="flex gap-2.5 overflow-x-auto pb-1">
+                    {newPlaces.map((place) => (
+                      <Link
+                        className="w-36 shrink-0 rounded-2xl border border-[#2c2036]/10 bg-white p-3 shadow-[0_6px_18px_rgba(69,43,94,.05)]"
+                        href={`/places/${place.id}` as Route}
+                        key={`new-${place.id}`}
+                      >
+                        <span className="grid size-9 place-items-center rounded-xl bg-[#f0e9ff] text-[#8753e6]">
+                          <PlaceIcon className="size-4.5" code={place.icon_code} />
+                        </span>
+                        <b className="mt-3 block truncate text-[11px]">{place.name}</b>
+                        <span className="mt-1 inline-flex items-center gap-1 rounded-full bg-[#f0e9ff] px-2 py-0.5 text-[8px] font-black text-[#7549d0]">
+                          <Sparkles className="size-2.5" /> Новое
+                        </span>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </section>
+          )}
 
           {cityCircle.length > 0 && (
             <section className="mt-6">
