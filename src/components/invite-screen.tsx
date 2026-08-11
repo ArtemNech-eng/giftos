@@ -33,6 +33,14 @@ export function InviteScreen({
   referralPath: string;
 }) {
   const [fullscreen, setFullscreen] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  function openFullscreen() {
+    setFullscreen(true);
+    void navigator.clipboard.writeText(link).catch(() => {});
+    setCopied(true);
+    window.setTimeout(() => setCopied(false), 2200);
+  }
 
   return (
     <main className="mx-auto min-h-screen max-w-[430px] bg-[#f7f4fb] px-4 pb-12 pt-5 text-[#251d31]">
@@ -87,14 +95,14 @@ export function InviteScreen({
           </span>
           <button
             className="inline-flex items-center gap-1.5 rounded-xl border border-[#2c2036]/10 bg-[#fbf9fe] px-3 py-2 text-[10px] font-black text-[#5f5369]"
-            onClick={() => setFullscreen(true)}
+            onClick={openFullscreen}
             type="button"
           >
             <Maximize2 className="size-3.5" /> На весь экран
           </button>
         </div>
         <div className="mt-4 flex justify-center">
-          <ReferralQrCode cityName={cityName} reward={reward} url={link} />
+          <ReferralQrCode cityName={cityName} premium reward={reward} url={link} />
         </div>
       </section>
 
@@ -124,8 +132,19 @@ export function InviteScreen({
             {cityName ? `Приглашение в ${cityName} · +${reward} ⭐` : `+${reward} ⭐`}
           </p>
           <div className="mt-6 scale-125">
-            <ReferralQrCode cityName={cityName} reward={reward} url={link} />
+            <ReferralQrCode
+              cityName={cityName}
+              premium
+              pulse
+              reward={reward}
+              url={link}
+            />
           </div>
+          <p className="mt-5 rounded-full bg-white/10 px-4 py-1.5 text-xs font-bold text-[#ffd35e]">
+            {copied
+              ? "Ссылка скопирована — отправь, если нужно"
+              : "Ссылка уже скопирована"}
+          </p>
           <p className="mt-8 max-w-60 text-center text-xs leading-5 text-white/50">
             Работает как рукопожатие: человек сканирует, регистрируется — и вы оба
             получаете бонус.
