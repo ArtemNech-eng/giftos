@@ -16,6 +16,7 @@ import { setCollectibleArtifactProfileDisplay } from "@/app/collection/actions";
 import { requireUser } from "@/lib/auth";
 import { AnimatedArtifact } from "@/components/animated-artifact";
 import { GIFT_COLLECTIONS } from "@/lib/gift-collections";
+import { reasonLabel } from "@/lib/gift-reasons";
 
 export const metadata = {
   title: "Коллекция артефактов",
@@ -44,6 +45,7 @@ type ArtifactInstance = {
   issued_at: string;
   unboxed_at: string | null;
   display_on_profile: boolean;
+  reason: string | null;
 };
 
 const rarityLabel = {
@@ -162,7 +164,7 @@ export default async function CollectionPage({
       supabase
         .from("collectible_artifact_instances")
         .select(
-          "id, series_id, serial_number, issued_at, unboxed_at, display_on_profile",
+          "id, series_id, serial_number, issued_at, unboxed_at, display_on_profile, reason",
         )
         .eq("recipient_id", user.id)
         .order("issued_at", { ascending: false }),
@@ -265,6 +267,12 @@ export default async function CollectionPage({
                       />
                       <span className="block p-2">
                         <b className="block truncate text-[9px]">{artifact.title}</b>
+                        {reasonLabel(instance.reason) && (
+                          <small className="mt-0.5 block text-[8px] font-bold leading-3 text-[#b8860b]">
+                            {reasonLabel(instance.reason)!.emoji}{" "}
+                            {reasonLabel(instance.reason)!.label}
+                          </small>
+                        )}
                         <small className="mt-0.5 block text-[8px] font-black text-[#8753e6]">
                           #{instance.serial_number} / {artifact.total_edition}
                         </small>

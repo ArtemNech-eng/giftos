@@ -803,7 +803,7 @@ export default async function ProfilePage({
                 <span className="block p-2">
                   <b className="block truncate text-[9px]">{artifact.title}</b>
                   {reasonLabel(artifact.reason) && (
-                    <small className="mt-0.5 block truncate text-[8px] font-bold text-[#b8860b]">
+                    <small className="mt-0.5 block text-[8px] font-bold leading-3 text-[#b8860b]">
                       {reasonLabel(artifact.reason)!.emoji}{" "}
                       {reasonLabel(artifact.reason)!.label}
                     </small>
