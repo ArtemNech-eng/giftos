@@ -62,6 +62,7 @@ export default async function BonusesPage() {
     { data: rawReferralProgress },
     { data: settings },
     { data: firstWaveRaw },
+    { data: myProfile },
   ] = await Promise.all([
     supabase
       .from("bonus_wallets")
@@ -86,6 +87,7 @@ export default async function BonusesPage() {
       .eq("id", true)
       .maybeSingle(),
     supabase.rpc("city_first_wave_progress"),
+    supabase.from("profiles").select("display_name").eq("id", user.id).maybeSingle(),
   ]);
   const entries = (rawEntries ?? []) as BonusEntry[];
   const referralProgress = (rawReferralProgress ?? []) as ReferralProgress[];
@@ -279,6 +281,7 @@ export default async function BonusesPage() {
         {referralPath && (
           <InvitePosterShare
             cityName={cityName}
+            inviterName={myProfile?.display_name ?? null}
             referralPath={referralPath}
             reward={reward}
           />

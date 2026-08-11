@@ -10,17 +10,22 @@ import { Check, ImageIcon } from "lucide-react";
  */
 export function InvitePosterShare({
   cityName,
+  inviterName,
   reward,
   referralPath,
 }: {
   cityName: string | null;
+  inviterName: string | null;
   reward: number;
   referralPath: string;
 }) {
   const [copied, setCopied] = useState(false);
   const inviteLink = `${window.location.origin}${referralPath}`;
+  const title = inviterName
+    ? `${inviterName} зовёт тебя в ${cityName ?? "город"}`
+    : `Тебя зовут в ${cityName ?? "город"}`;
   const posterUrl = `${window.location.origin}/og?type=invite&title=${encodeURIComponent(
-    `Тебя зовут в ${cityName ?? "город"}`,
+    title,
   )}&subtitle=${encodeURIComponent(
     `Забери свой бонус +${reward} ⭐. Твоя ссылка: ${inviteLink}`,
   )}&emoji=🎁`;
