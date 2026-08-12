@@ -1,12 +1,8 @@
 import Link from "next/link";
 import { ArrowLeft, Briefcase, Sparkles } from "lucide-react";
 
-import { createService } from "@/app/services/actions";
-import { PendingButton } from "@/components/pending-button";
-import { ServiceFormFields } from "@/components/service-form-fields";
-import { ServiceCategoryIcon } from "@/components/service-category-icon";
+import { ServiceCreateForm } from "@/components/service-create-form";
 import { requireUser } from "@/lib/auth";
-import { SERVICE_CATEGORIES } from "@/lib/service-categories";
 
 export const metadata = {
   title: "Добавить объявление",
@@ -21,7 +17,6 @@ export default async function NewServicePage() {
     .select("city, city_id")
     .eq("id", user.id)
     .maybeSingle();
-  const hasCity = Boolean(profile?.city_id);
   const cityName = profile?.city ?? "Твой город";
 
   return (
@@ -60,99 +55,7 @@ export default async function NewServicePage() {
         </p>
       </section>
 
-      <form action={createService} className="mt-5 space-y-4">
-        <ServiceFormFields initialKind="service" />
-
-        <section className="border-[#2c2036]/9 rounded-[1.5rem] border bg-white p-4 shadow-[0_8px_22px_rgba(69,43,94,.05)]">
-          <label className="block text-[11px] font-black" htmlFor="service-title">
-            Название
-          </label>
-          <input
-            className="mt-2 w-full rounded-xl border border-[#2c2036]/10 bg-[#fbf9fe] px-3 py-3 text-xs font-semibold outline-none placeholder:text-[#aaa0ae]"
-            id="service-title"
-            maxLength={80}
-            name="title"
-            placeholder="Маникюр у ДК / Кофейня «Утро»"
-            required
-          />
-        </section>
-
-        <section className="border-[#2c2036]/9 rounded-[1.5rem] border bg-white p-4 shadow-[0_8px_22px_rgba(69,43,94,.05)]">
-          <b className="block text-[11px]">Категория</b>
-          <div className="mt-2 grid grid-cols-2 gap-2">
-            {SERVICE_CATEGORIES.map((category) => (
-              <label
-                className="flex cursor-pointer items-center gap-2 rounded-xl border border-[#2c2036]/10 bg-[#fbf9fe] px-3 py-2.5 text-[10px] font-bold text-[#5f5369]"
-                key={category.slug}
-              >
-                <input
-                  className="accent-[#7549d0]"
-                  name="category_slug"
-                  required
-                  type="radio"
-                  value={category.slug}
-                />
-                <ServiceCategoryIcon
-                  className="size-4 text-[#8753e6]"
-                  code={category.iconCode}
-                />
-                {category.label}
-              </label>
-            ))}
-          </div>
-        </section>
-
-        <section className="border-[#2c2036]/9 rounded-[1.5rem] border bg-white p-4 shadow-[0_8px_22px_rgba(69,43,94,.05)]">
-          <label className="block text-[11px] font-black" htmlFor="service-desc">
-            О себе или месте
-          </label>
-          <textarea
-            className="mt-2 min-h-24 w-full rounded-xl border border-[#2c2036]/10 bg-[#fbf9fe] p-3 text-xs leading-5 outline-none placeholder:text-[#aaa0ae]"
-            id="service-desc"
-            maxLength={1500}
-            name="description"
-            placeholder="Что делаешь, где находишься, почему к тебе стоит прийти…"
-          />
-          <label
-            className="mt-3 block text-[11px] font-black"
-            htmlFor="service-contact"
-          >
-            Как связаться
-          </label>
-          <input
-            className="mt-2 w-full rounded-xl border border-[#2c2036]/10 bg-[#fbf9fe] px-3 py-3 text-xs font-semibold outline-none placeholder:text-[#aaa0ae]"
-            id="service-contact"
-            maxLength={200}
-            name="contact_text"
-            placeholder="Телефон или @telegram — по желанию"
-          />
-          <label className="mt-3 block text-[11px] font-black" htmlFor="service-photos">
-            Фото (до 3)
-          </label>
-          <input
-            accept="image/jpeg,image/png,image/webp"
-            className="mt-2 w-full rounded-xl border border-dashed border-[#cdbbe7] bg-[#fbf9fe] px-3 py-3 text-[10px] font-semibold text-[#756a7d] file:mr-3 file:rounded-lg file:border-0 file:bg-[#f0e9ff] file:px-3 file:py-1.5 file:text-[10px] file:font-black file:text-[#7549d0]"
-            id="service-photos"
-            multiple
-            name="photos"
-            type="file"
-          />
-          <small className="mt-1.5 block text-[9px] leading-4 text-[#a093a6]">
-            Первое фото станет обложкой. JPG, PNG или WebP, до 10 МБ.
-          </small>
-        </section>
-
-        {!hasCity ? (
-          <p className="rounded-xl bg-[#fff7e8] p-3 text-[10px] leading-4 text-[#896a27]">
-            Сначала укажи город в настройках профиля — объявление появится в его
-            витрине.
-          </p>
-        ) : (
-          <PendingButton pendingLabel="Публикуем…">
-            Опубликовать бесплатно
-          </PendingButton>
-        )}
-      </form>
+      <ServiceCreateForm />
     </main>
   );
 }

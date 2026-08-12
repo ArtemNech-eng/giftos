@@ -89,62 +89,76 @@ const validCategories = new Set<string>(
   SERVICE_CATEGORIES.map((category) => category.slug),
 );
 
-export async function createService(formData: FormData) {
-  const { supabase, user } = await requireUser();
-  const kind = formData.get("kind") === "business" ? "business" : "service";
-  const title = requiredText(formData.get("title"), 80);
-  const categorySlug = requiredText(formData.get("category_slug"), 40);
-  const description = optionalText(formData.get("description"), 1500);
-  const contactText = optionalText(formData.get("contact_text"), 200);
+export type ServiceActionState = { error?: string } | null;
 
-  if (!validKinds.has(kind)) throw new Error("Выберите тип объявления.");
-  if (!title) throw new Error("Укажите название.");
-  if (!validCategories.has(categorySlug)) throw new Error("Выберите категорию.");
+export async function createService(
+  _prev: ServiceActionState,
+  formData: FormData,
+): Promise<ServiceActionState> {
+  try {
+    const { supabase, user } = await requireUser();
+    const kind = formData.get("kind") === "business" ? "business" : "service";
+    const title = requiredText(formData.get("title"), 80);
+    const categorySlug = requiredText(formData.get("category_slug"), 40);
+    const description = optionalText(formData.get("description"), 1500);
+    const contactText = optionalText(formData.get("contact_text"), 200);
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("city_id")
-    .eq("id", user.id)
-    .maybeSingle();
-  if (!profile?.city_id) throw new Error("Сначала укажите город в профиле.");
+    if (!validKinds.has(kind)) return { error: "Выберите тип объявления." };
+    if (!title) return { error: "Укажите название." };
+    if (!validCategories.has(categorySlug)) return { error: "Выберите категорию." };
 
-  const address = optionalText(formData.get("address"), 200);
-  const hours = kind === "business" ? readHours(formData) : null;
-  const catalogItems = readCatalogItems(formData);
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("city_id")
+      .eq("id", user.id)
+      .maybeSingle();
+    if (!profile?.city_id) return { error: "Сначала укажите город в профиле." };
 
-  const { data: service, error } = await supabase
-    .from("city_services")
-    .insert({
-      city_id: profile.city_id,
-      owner_id: user.id,
-      kind,
-      title,
-      category_slug: categorySlug,
-      description,
-      contact_text: contactText,
-      address: address || null,
-      hours: hours ? JSON.stringify(hours) : null,
-    })
-    .select("id")
-    .single();
-  if (error) throw new Error(`Не удалось создать объявление: ${error.message}`);
+    const address = optionalText(formData.get("address"), 200);
+    const hours = kind === "business" ? readHours(formData) : null;
+    const catalogItems = readCatalogItems(formData);
 
-  await replaceCatalogItems(service.id, catalogItems);
+    const { data: service, error } = await supabase
+      .from("city_services")
+      .insert({
+        city_id: profile.city_id,
+        owner_id: user.id,
+        kind,
+        title,
+        category_slug: categorySlug,
+        description,
+        contact_text: contactText,
+        address: address || null,
+        hours: hours ? JSON.stringify(hours) : null,
+      })
+      .select("id")
+      .single();
+    if (error) return { error: `Не удалось создать объявление: ${error.message}` };
 
-  const photoPaths = await uploadServicePhotos(formData, user.id);
-  if (photoPaths.length > 0) {
-    await supabase.from("city_service_media").insert(
-      photoPaths.map((storage_path, index) => ({
-        service_id: service.id,
-        storage_path,
-        sort_order: index,
-      })),
-    );
+    await replaceCatalogItems(service.id, catalogItems);
+
+    const photoPaths = await uploadServicePhotos(formData, user.id);
+    if (photoPaths.length > 0) {
+      await supabase.from("city_service_media").insert(
+        photoPaths.map((storage_path, index) => ({
+          service_id: service.id,
+          storage_path,
+          sort_order: index,
+        })),
+      );
+    }
+
+    revalidatePath("/services");
+    revalidatePath("/services/new");
+    redirect(`/services/${service.id}`);
+  } catch (err) {
+    return {
+      error:
+        err instanceof Error && err.message
+          ? err.message
+          : "Не получилось создать объявление. Попробуй ещё раз.",
+    };
   }
-
-  revalidatePath("/services");
-  revalidatePath("/services/new");
-  redirect(`/services/${service.id}`);
 }
 
 export async function updateService(formData: FormData) {
