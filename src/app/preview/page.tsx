@@ -2298,6 +2298,83 @@ function BonusesScreen() {
           Пригласить друзей
         </button>
       </section>
+      <section className="mt-6 overflow-hidden rounded-[1.7rem] border border-[#e2d3f0] bg-white shadow-[0_10px_26px_rgba(69,43,94,.07)]">
+        <div className="flex items-center justify-between gap-3 bg-gradient-to-r from-[#f4e9ff] to-[#fff0f7] px-4 py-3">
+          <span className="flex items-center gap-2">
+            <span className="grid size-8 place-items-center rounded-xl bg-white text-[#8753e6] shadow-[0_4px_10px_rgba(117,73,208,.15)]">
+              <Sparkles className="size-4" />
+            </span>
+            <span>
+              <h2 className="text-sm font-black">Ежедневные задания</h2>
+              <p className="mt-0.5 text-[10px] text-[#81748a]">
+                Сегодня: 2 из 4 · +15 ⭐
+              </p>
+            </span>
+          </span>
+          <span className="shrink-0 rounded-full bg-[#fff0a9] px-2.5 py-1 text-[10px] font-black text-[#735417]">
+            +35 ⭐/день
+          </span>
+        </div>
+        <div className="divide-y divide-[#f1e8f5]">
+          {[
+            {
+              title: "Заглянуть в город",
+              note: "Открой приложение",
+              reward: "5",
+              done: true,
+              icon: Compass,
+            },
+            {
+              title: "Отреагировать на story",
+              note: "Поддержи чей-то момент",
+              reward: "10",
+              done: true,
+              icon: Heart,
+            },
+            {
+              title: "Написать в место",
+              note: "Оставь сообщение в месте города",
+              reward: "10",
+              done: false,
+              icon: MessageCircle,
+            },
+            {
+              title: "Поддержать желание",
+              note: "Нажми «Хочу также»",
+              reward: "10",
+              done: false,
+              icon: Sparkles,
+            },
+          ].map((quest) => (
+            <div className="flex items-center gap-3 px-4 py-3" key={quest.title}>
+              <span
+                className={`grid size-9 shrink-0 place-items-center rounded-xl ${
+                  quest.done
+                    ? "bg-[#e4f7ed] text-[#19885e]"
+                    : "bg-[#f0e9ff] text-[#8753e6]"
+                }`}
+              >
+                <quest.icon className="size-4" />
+              </span>
+              <span className="min-w-0 grow">
+                <b className="block truncate text-xs">{quest.title}</b>
+                <small className="mt-0.5 block truncate text-[10px] text-[#81748a]">
+                  {quest.note}
+                </small>
+              </span>
+              {quest.done ? (
+                <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-[#e4f7ed] px-2 py-1 text-[10px] font-black text-[#19885e]">
+                  <Check className="size-3" /> Готово
+                </span>
+              ) : (
+                <span className="shrink-0 rounded-full bg-gradient-to-r from-[#ff5d9a] to-[#8254ed] px-3 py-1.5 text-[10px] font-black text-white shadow-[0_5px_12px_rgba(160,75,213,.2)]">
+                  +{quest.reward} ⭐
+                </span>
+              )}
+            </div>
+          ))}
+        </div>
+      </section>
       <section className="mt-6">
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-black">Кто по твоей ссылке</h2>

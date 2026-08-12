@@ -3,14 +3,18 @@ import {
   Check,
   CircleDashed,
   Clock3,
+  Compass,
   Copy,
   Gift,
+  Heart,
   MapPin,
+  MessageCircle,
   ShoppingBag,
   Sparkles,
   UsersRound,
   Waves,
 } from "lucide-react";
+import type { Route } from "next";
 
 import { CreatorShareLink } from "@/components/creator-share-link";
 import { InvitePosterShare } from "@/components/invite-poster-share";
@@ -53,6 +57,43 @@ type FirstWaveProgress = {
 const FIRST_WAVE_MILESTONES = [5, 15, 30];
 const FIRST_WAVE_BONUS: Record<number, number> = { 5: 100, 15: 250, 30: 500 };
 
+// Mirrors the daily_quests table (titles/rewards are kept in sync by the
+// migration seed); statuses come from daily_quest_progress().
+const DAILY_QUESTS = [
+  {
+    slug: "daily_login",
+    title: "Заглянуть в город",
+    description: "Открой приложение",
+    reward: 5,
+    href: "/feed" as Route,
+    icon: Compass,
+  },
+  {
+    slug: "daily_story_reaction",
+    title: "Отреагировать на story",
+    description: "Поддержи чей-то момент",
+    reward: 10,
+    href: "/feed" as Route,
+    icon: Heart,
+  },
+  {
+    slug: "daily_place_message",
+    title: "Написать в место",
+    description: "Оставь сообщение в месте города",
+    reward: 10,
+    href: "/places" as Route,
+    icon: MessageCircle,
+  },
+  {
+    slug: "daily_wish_support",
+    title: "Поддержать желание",
+    description: "Нажми «Хочу также»",
+    reward: 10,
+    href: "/wishes" as Route,
+    icon: Sparkles,
+  },
+] as const;
+
 export default async function BonusesPage() {
   const { supabase, user } = await requireUser();
   const [
@@ -63,6 +104,7 @@ export default async function BonusesPage() {
     { data: settings },
     { data: firstWaveRaw },
     { data: myProfile },
+    { data: dailyQuestProgress },
   ] = await Promise.all([
     supabase
       .from("bonus_wallets")
@@ -88,6 +130,7 @@ export default async function BonusesPage() {
       .maybeSingle(),
     supabase.rpc("city_first_wave_progress"),
     supabase.from("profiles").select("display_name").eq("id", user.id).maybeSingle(),
+    supabase.rpc("daily_quest_progress"),
   ]);
   const entries = (rawEntries ?? []) as BonusEntry[];
   const referralProgress = (rawReferralProgress ?? []) as ReferralProgress[];
@@ -118,6 +161,16 @@ export default async function BonusesPage() {
   const cityName = cityTag
     ? cityTag.replace(/^./, (letter) => letter.toUpperCase())
     : null;
+  const dailyProgress = (dailyQuestProgress ?? []) as Array<{
+    quest_slug: string;
+    completed_on: string;
+  }>;
+  const completedQuests = new Set(dailyProgress.map((item) => item.quest_slug));
+  const dailyDoneCount = completedQuests.size;
+  const dailyRewardEarned = DAILY_QUESTS.reduce(
+    (sum, quest) => sum + (completedQuests.has(quest.slug) ? quest.reward : 0),
+    0,
+  );
 
   return (
     <main className="mx-auto min-h-screen max-w-[430px] bg-[#f7f4fb] px-4 py-5 text-[#241a2c]">
@@ -164,6 +217,65 @@ export default async function BonusesPage() {
         <p className="mt-3 text-[10px] leading-4 text-white/60">
           ⭐ — внутренние бонусы: пока внутри платформы, реальный вывод — после
           подключения выплат.
+        </p>
+      </section>
+      <section className="mt-5 overflow-hidden rounded-[1.7rem] border border-[#e2d3f0] bg-white shadow-[0_10px_26px_rgba(69,43,94,.07)]">
+        <div className="flex items-center justify-between gap-3 bg-gradient-to-r from-[#f4e9ff] to-[#fff0f7] px-4 py-3">
+          <span className="flex items-center gap-2">
+            <span className="grid size-8 place-items-center rounded-xl bg-white text-[#8753e6] shadow-[0_4px_10px_rgba(117,73,208,.15)]">
+              <Sparkles className="size-4" />
+            </span>
+            <span>
+              <h2 className="text-sm font-black">Ежедневные задания</h2>
+              <p className="mt-0.5 text-[10px] text-[#81748a]">
+                {dailyDoneCount > 0
+                  ? `Сегодня: ${dailyDoneCount} из ${DAILY_QUESTS.length} · +${dailyRewardEarned} ⭐`
+                  : `До ${DAILY_QUESTS.length} наград в день`}
+              </p>
+            </span>
+          </span>
+          <span className="shrink-0 rounded-full bg-[#fff0a9] px-2.5 py-1 text-[10px] font-black text-[#735417]">
+            +35 ⭐/день
+          </span>
+        </div>
+        <div className="divide-y divide-[#f1e8f5]">
+          {DAILY_QUESTS.map((quest) => {
+            const done = completedQuests.has(quest.slug);
+            const Icon = quest.icon;
+            return (
+              <div className="flex items-center gap-3 px-4 py-3" key={quest.slug}>
+                <span
+                  className={`grid size-9 shrink-0 place-items-center rounded-xl ${
+                    done ? "bg-[#e4f7ed] text-[#19885e]" : "bg-[#f0e9ff] text-[#8753e6]"
+                  }`}
+                >
+                  <Icon className="size-4" />
+                </span>
+                <span className="min-w-0 grow">
+                  <b className="block truncate text-xs">{quest.title}</b>
+                  <small className="mt-0.5 block truncate text-[10px] text-[#81748a]">
+                    {quest.description}
+                  </small>
+                </span>
+                {done ? (
+                  <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-[#e4f7ed] px-2 py-1 text-[10px] font-black text-[#19885e]">
+                    <Check className="size-3" /> Готово
+                  </span>
+                ) : (
+                  <Link
+                    className="shrink-0 rounded-full bg-gradient-to-r from-[#ff5d9a] to-[#8254ed] px-3 py-1.5 text-[10px] font-black text-white shadow-[0_5px_12px_rgba(160,75,213,.2)]"
+                    href={quest.href}
+                  >
+                    +{quest.reward} ⭐
+                  </Link>
+                )}
+              </div>
+            );
+          })}
+        </div>
+        <p className="border-t border-[#f1e8f5] px-4 py-2.5 text-[9px] leading-4 text-[#a093a6]">
+          Задания обновляются каждый день в 00:00. Бонусы начисляются автоматически за
+          первые действия дня.
         </p>
       </section>
       <section className="mt-5 grid grid-cols-2 gap-3">

@@ -348,6 +348,9 @@ export async function sendPlaceMessage(formData: FormData) {
     .insert({ place_id: placeId, author_id: user.id, body });
   if (error) throw new Error(`Не удалось отправить сообщение: ${error.message}`);
 
+  // Daily quest: wrote in a place.
+  await supabase.rpc("complete_daily_quest", { p_slug: "daily_place_message" });
+
   // Sending a message is activity: refresh presence so the user stays online.
   await supabase.from("place_presence").upsert(
     {

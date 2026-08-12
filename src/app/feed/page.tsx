@@ -403,6 +403,13 @@ async function getHomeData(scope: "circle" | "city" | "global" = "circle") {
     const {
       data: { user },
     } = await supabase.auth.getUser();
+
+    // Daily quest: visiting the feed (idempotent per day, never blocks).
+    if (user) {
+      void Promise.resolve(
+        supabase.rpc("complete_daily_quest", { p_slug: "daily_login" }),
+      ).catch(() => {});
+    }
     const [
       { data: rawStories },
       { data: rawFundraisers },

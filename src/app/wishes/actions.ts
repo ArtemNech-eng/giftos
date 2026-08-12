@@ -177,6 +177,11 @@ export async function toggleAlsoWantWish(formData: FormData) {
       });
   }
 
+  // Daily quest: supported a wish (only on add, not on removal).
+  if (!existing) {
+    await supabase.rpc("complete_daily_quest", { p_slug: "daily_wish_support" });
+  }
+
   revalidatePath(`/wishes/${wishId}`);
   revalidatePath("/wishes");
   redirect(`/wishes/${wishId}` as Route);
@@ -214,6 +219,11 @@ export async function toggleAlsoWantWishFromFeed(formData: FormData) {
         .from("wish_also_wants")
         .insert({ wish_id: wishId, profile_id: user.id });
   if (error) throw new Error(`Не удалось обновить «Хочу также»: ${error.message}`);
+
+  // Daily quest: supported a wish (only on add, not on removal).
+  if (!existing) {
+    await supabase.rpc("complete_daily_quest", { p_slug: "daily_wish_support" });
+  }
 
   revalidatePath("/feed");
   revalidatePath("/wishes");

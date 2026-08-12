@@ -35,6 +35,11 @@ export async function toggleStoryReaction(formData: FormData) {
         .insert({ story_id: storyId, sender_id: user.id, reaction });
   if (error) throw new Error(`Не удалось обновить реакцию: ${error.message}`);
 
+  // Daily quest: reacting to a story (only on add, not on removal).
+  if (!existing) {
+    await supabase.rpc("complete_daily_quest", { p_slug: "daily_story_reaction" });
+  }
+
   revalidatePath(`/stories/${storyId}`);
   redirect(`/stories/${storyId}` as Route);
 }

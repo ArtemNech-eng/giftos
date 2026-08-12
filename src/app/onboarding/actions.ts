@@ -102,6 +102,13 @@ export async function completeOnboarding(formData: FormData) {
   // City battle: qualified action (profile completed).
   await awardCityPoints(supabase, "profile_completed", user.id);
 
+  // Signup bonus: first stars for the very first gift (idempotent).
+  try {
+    await supabase.rpc("claim_signup_bonus");
+  } catch {
+    // The bonus must never block onboarding.
+  }
+
   // Entering a city changes every city-first surface for this person.
   for (const path of [
     "/",
