@@ -1,10 +1,10 @@
 /* eslint-disable @next/next/no-img-element -- avatars use short-lived signed Storage URLs */
 import Link from "next/link";
-import { ArrowLeft, MapPin, MessageCircle, Send, ShieldCheck } from "lucide-react";
+import { ArrowLeft, MapPin, MessageCircle, ShieldCheck } from "lucide-react";
 import { notFound } from "next/navigation";
 
-import { sendDirectMessage } from "@/app/messages/actions";
 import { LiveConversationRefresh } from "@/components/live-conversation-refresh";
+import { MessageComposer } from "@/components/message-composer";
 import { LocalRoleIcon } from "@/components/local-role-icon";
 import { PlaceInviteButton } from "@/components/place-invite-button";
 import { requireUser } from "@/lib/auth";
@@ -80,6 +80,10 @@ export default async function ConversationPage({
   const nameById = new Map(
     (profiles ?? []).map((profile) => [profile.id, profile.display_name]),
   );
+  const timeFormatter = new Intl.DateTimeFormat("ru-RU", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 
   return (
     <main className="mx-auto flex min-h-screen max-w-[430px] flex-col bg-[#f7f4fb] px-4 pb-5 pt-5 text-[#251d31]">
@@ -183,9 +187,14 @@ export default async function ConversationPage({
                 key={message.id}
               >
                 <b
-                  className={`mb-1 block text-[10px] ${mine ? "text-white/75" : "text-[#8753e6]"}`}
+                  className={`mb-1 flex items-center justify-between gap-2 text-[10px] ${mine ? "text-white/75" : "text-[#8753e6]"}`}
                 >
                   {mine ? "Вы" : (nameById.get(message.sender_id) ?? "Собеседник")}
+                  <span
+                    className={`font-semibold ${mine ? "text-white/55" : "text-[#a093a6]"}`}
+                  >
+                    {timeFormatter.format(new Date(message.created_at))}
+                  </span>
                 </b>
                 {message.body}
               </div>
@@ -204,25 +213,7 @@ export default async function ConversationPage({
         </span>
       </section>
 
-      <form
-        action={sendDirectMessage}
-        className="mt-4 flex gap-2 border-t border-[#2c2036]/10 pt-4"
-      >
-        <input name="conversation_id" type="hidden" value={id} />
-        <textarea
-          className="min-h-11 grow rounded-xl border border-[#2c2036]/10 bg-white px-3 py-2 text-sm outline-none placeholder:text-[#a69bab] focus:border-[#9a62eb] focus:ring-4 focus:ring-[#9a62eb]/10"
-          maxLength={2000}
-          name="body"
-          placeholder="Напишите сообщение"
-          required
-        />
-        <button
-          className="grid size-11 place-items-center rounded-xl bg-gradient-to-r from-[#ff5d9a] to-[#8254ed] text-white shadow-[0_6px_14px_rgba(160,75,213,.2)]"
-          type="submit"
-        >
-          <Send className="size-4" />
-        </button>
-      </form>
+      <MessageComposer conversationId={id} />
     </main>
   );
 }
