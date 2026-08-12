@@ -1,5 +1,13 @@
 import Link from "next/link";
-import { ArrowLeft, Eye, Film, MapPin, ShieldCheck, Sparkles } from "lucide-react";
+import {
+  ArrowLeft,
+  Eye,
+  Film,
+  MapPin,
+  ShieldCheck,
+  Sparkles,
+  Store,
+} from "lucide-react";
 
 import { createStory } from "@/app/stories/actions";
 import { StoryVideoPicker } from "@/components/story-video-picker";
@@ -26,6 +34,22 @@ export default async function NewStoryPage({
   const cityContext = Boolean(
     profile?.city && profile.show_city && profile.profile_visibility === "public",
   );
+
+  // Portfolio link: author's own active listings.
+  const { data: rawMyServices } = profile?.is_creator
+    ? await supabase
+        .from("city_services")
+        .select("id, title, kind")
+        .eq("owner_id", user.id)
+        .eq("is_active", true)
+        .order("updated_at", { ascending: false })
+        .limit(10)
+    : { data: [] };
+  const myServices = (rawMyServices ?? []) as Array<{
+    id: string;
+    title: string;
+    kind: "service" | "business";
+  }>;
 
   return (
     <main className="mx-auto min-h-screen max-w-[430px] bg-[#f7f4fb] px-4 pb-10 pt-5 text-[#251d31]">
@@ -116,6 +140,56 @@ export default async function NewStoryPage({
               />
             </label>
           </section>
+
+          {myServices.length > 0 && (
+            <section className="border-[#2c2036]/9 rounded-[1.6rem] border bg-white p-4 shadow-[0_8px_22px_rgba(69,43,94,.05)]">
+              <div className="flex items-center gap-2">
+                <span className="grid size-8 place-items-center rounded-xl bg-[#fff6e8] text-[#a87511]">
+                  <Store className="size-4" />
+                </span>
+                <span>
+                  <h2 className="text-xs font-black">Портфолио для витрины</h2>
+                  <p className="mt-0.5 text-[10px] text-[#81748a]">
+                    Покажи работу — зритель перейдёт к твоему объявлению
+                  </p>
+                </span>
+              </div>
+              <div className="mt-3 space-y-2">
+                <label className="flex cursor-pointer items-center gap-2 rounded-xl border border-[#2c2036]/10 bg-[#fbf9fe] px-3 py-2.5">
+                  <input
+                    className="accent-[#7549d0]"
+                    name="linked_service_id"
+                    type="radio"
+                    value=""
+                  />
+                  <span className="text-[10px] font-bold text-[#756a7d]">
+                    Без объявления — просто story
+                  </span>
+                </label>
+                {myServices.map((service) => (
+                  <label
+                    className="flex cursor-pointer items-center gap-2 rounded-xl border border-[#2c2036]/10 bg-[#fbf9fe] px-3 py-2.5"
+                    key={service.id}
+                  >
+                    <input
+                      className="accent-[#7549d0]"
+                      name="linked_service_id"
+                      type="radio"
+                      value={service.id}
+                    />
+                    <span className="min-w-0 grow">
+                      <span className="block truncate text-[11px] font-bold text-[#5f5369]">
+                        {service.title}
+                      </span>
+                      <small className="text-[9px] font-bold text-[#a093a6]">
+                        {service.kind === "business" ? "Заведение" : "Услуга"}
+                      </small>
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </section>
+          )}
 
           <section className="border-[#2c2036]/9 rounded-[1.6rem] border bg-white p-4 shadow-[0_8px_22px_rgba(69,43,94,.05)]">
             <div className="flex items-center gap-2">

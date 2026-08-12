@@ -13,6 +13,10 @@ import { optionalText, requiredText } from "@/lib/validation";
 export async function createStory(formData: FormData) {
   const { supabase, user } = await requireUser();
   const caption = optionalText(formData.get("caption"), 500);
+  const rawLinkedService = String(formData.get("linked_service_id") ?? "").trim();
+  const linkedServiceId = /^[0-9a-f-]{36}$/i.test(rawLinkedService)
+    ? rawLinkedService
+    : null;
   const video = formData.get("video");
   if (!isUploadedFile(video)) throw new Error("Выберите видео для story.");
 
@@ -27,6 +31,7 @@ export async function createStory(formData: FormData) {
   // New stories are deliberately free while paid unlocks and creator payouts
   // are deferred. Legacy paid stories remain readable through testUnlockStory.
   const path = await uploadOwnedStoryVideo({ file: video, ownerId: user.id });
+  // Portfolio link: the DB guard rejects a listing the author does not own.
   const { data: story, error } = await supabase
     .from("stories")
     .insert({
@@ -36,6 +41,7 @@ export async function createStory(formData: FormData) {
       access_type: "free",
       unlock_price_minor: null,
       moderation_status: "approved",
+      linked_service_id: linkedServiceId,
     })
     .select("id")
     .single();

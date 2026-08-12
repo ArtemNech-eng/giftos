@@ -1,7 +1,17 @@
 /* eslint-disable @next/next/no-img-element -- media and avatars use short-lived signed Storage URLs */
 import Link from "next/link";
 import type { Route } from "next";
-import { Flame, Heart, LockKeyhole, MapPin, Play, Radio, Sparkles } from "lucide-react";
+import {
+  ChevronRight,
+  Flame,
+  Heart,
+  LockKeyhole,
+  MapPin,
+  Play,
+  Radio,
+  Sparkles,
+  Store,
+} from "lucide-react";
 import { notFound } from "next/navigation";
 
 import { sendTestStoryGift } from "@/app/stories/gifts/actions";
@@ -31,7 +41,7 @@ export default async function StoryPage({
   const { data: story } = await supabase
     .from("stories")
     .select(
-      "id, author_id, media_path, caption, access_type, unlock_price_minor, currency, expires_at, created_at",
+      "id, author_id, media_path, caption, access_type, unlock_price_minor, currency, expires_at, created_at, linked_service_id",
     )
     .eq("id", id)
     .maybeSingle();
@@ -66,6 +76,15 @@ export default async function StoryPage({
       : { data: null };
   const canWatch =
     story.access_type === "free" || isAuthor || unlock?.status === "unlocked";
+
+  // Portfolio link: the linked listing (public view keeps only active ones).
+  const { data: linkedService } = story.linked_service_id
+    ? await supabase
+        .from("public_city_services")
+        .select("id, title, kind")
+        .eq("id", story.linked_service_id)
+        .maybeSingle()
+    : { data: null };
   const [{ data: author }, { data: gifts }, { data: storyGifts }, { data: reactions }] =
     await Promise.all([
       supabase
@@ -271,6 +290,28 @@ export default async function StoryPage({
             </Link>
           )}
         </section>
+
+        {linkedService && (
+          <Link
+            className="mx-4 mt-3 flex items-center gap-3 rounded-2xl bg-gradient-to-r from-[#ff5d9a] to-[#8254ed] p-3.5 text-white shadow-[0_8px_18px_rgba(160,75,213,.22)]"
+            href={`/services/${linkedService.id}` as Route}
+          >
+            <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-white/15">
+              <Store className="size-4" />
+            </span>
+            <span className="min-w-0 grow">
+              <b className="block truncate text-xs">
+                {linkedService.kind === "business"
+                  ? "Смотреть заведение"
+                  : "Смотреть объявление"}
+              </b>
+              <small className="mt-0.5 block truncate text-[10px] text-white/80">
+                {linkedService.title} · витрина города
+              </small>
+            </span>
+            <ChevronRight className="size-4 shrink-0" />
+          </Link>
+        )}
 
         {canWatch && (
           <section className="border-t border-[#f0e8f5] px-4 py-3">

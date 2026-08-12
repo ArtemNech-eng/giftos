@@ -61,6 +61,7 @@ type StoryAuthor = {
   displayName: string;
   avatarPath: string | null;
   storyId?: string;
+  portfolio?: boolean;
 };
 
 type WishPreview = {
@@ -427,7 +428,7 @@ async function getHomeData(scope: "circle" | "city" | "global" = "circle") {
     ] = await Promise.all([
       supabase
         .from("stories")
-        .select("id, author_id, created_at")
+        .select("id, author_id, created_at, linked_service_id")
         .gt("expires_at", new Date().toISOString())
         .order("created_at", { ascending: false })
         .limit(30),
@@ -488,7 +489,10 @@ async function getHomeData(scope: "circle" | "city" | "global" = "circle") {
 
     const liveRooms = await buildLiveRooms(supabase, rawLiveRooms ?? []);
 
-    const uniqueStoryAuthors = new Map<string, { id: string; author_id: string }>();
+    const uniqueStoryAuthors = new Map<
+      string,
+      { id: string; author_id: string; linked_service_id: string | null }
+    >();
     for (const story of rawStories ?? []) {
       if (!uniqueStoryAuthors.has(story.author_id))
         uniqueStoryAuthors.set(story.author_id, story);
@@ -519,6 +523,7 @@ async function getHomeData(scope: "circle" | "city" | "global" = "circle") {
               displayName: profile.display_name,
               avatarPath: profile.avatar_path,
               storyId: story.id,
+              portfolio: Boolean(story.linked_service_id),
             },
           ]
         : [];
@@ -1641,7 +1646,21 @@ export default async function HomePage({
                       href={href}
                       key={author.id}
                     >
-                      <Avatar imageUrl={null} index={index} name={author.displayName} />
+                      <span className="relative">
+                        <Avatar
+                          imageUrl={null}
+                          index={index}
+                          name={author.displayName}
+                        />
+                        {author.portfolio && (
+                          <span
+                            className="absolute -right-2 -top-1 grid size-4 place-items-center rounded-full bg-[#a87511] text-[9px] font-black text-white shadow-[0_2px_6px_rgba(168,117,17,.4)]"
+                            title="Портфолио на витрине"
+                          >
+                            ★
+                          </span>
+                        )}
+                      </span>
                       <span className="w-16 truncate text-center text-xs text-[#2c2036]">
                         {author.displayName}
                       </span>
