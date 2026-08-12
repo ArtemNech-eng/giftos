@@ -35,6 +35,7 @@ import {
   Play,
   Trophy,
   TrendingUp,
+  Video,
   UsersRound,
   Radio,
   Search,
@@ -2369,6 +2370,91 @@ function BonusesScreen() {
               ) : (
                 <span className="shrink-0 rounded-full bg-gradient-to-r from-[#ff5d9a] to-[#8254ed] px-3 py-1.5 text-[10px] font-black text-white shadow-[0_5px_12px_rgba(160,75,213,.2)]">
                   +{quest.reward} ⭐
+                </span>
+              )}
+            </div>
+          ))}
+        </div>
+      </section>
+      <section className="mt-5 overflow-hidden rounded-[1.7rem] border border-[#f2ddc4] bg-white shadow-[0_10px_26px_rgba(69,43,94,.07)]">
+        <div className="flex items-center justify-between gap-3 bg-gradient-to-r from-[#fff4e0] to-[#fff0f7] px-4 py-3">
+          <span className="flex items-center gap-2">
+            <span className="grid size-8 place-items-center rounded-xl bg-white text-[#a87511] shadow-[0_4px_10px_rgba(168,117,17,.15)]">
+              <Gift className="size-4" />
+            </span>
+            <span>
+              <h2 className="text-sm font-black">Первые шаги в городе</h2>
+              <p className="mt-0.5 text-[10px] text-[#81748a]">3 из 5 · до +800 ⭐</p>
+            </span>
+          </span>
+          <span className="shrink-0 rounded-full bg-[#fff0a9] px-2.5 py-1 text-[10px] font-black text-[#735417]">
+            +800 ⭐
+          </span>
+        </div>
+        <div className="divide-y divide-[#f7ecdc]">
+          {[
+            {
+              title: "Создать профиль",
+              note: "Заполни анкету и интересы",
+              reward: "50",
+              done: true,
+              icon: UserRound,
+            },
+            {
+              title: "Опубликовать желание",
+              note: "Расскажи, что хочешь",
+              reward: "100",
+              done: true,
+              icon: Sparkles,
+            },
+            {
+              title: "Выпустить story",
+              note: "Покажи свой момент",
+              reward: "150",
+              done: true,
+              icon: Video,
+            },
+            {
+              title: "Написать в место",
+              note: "Оставь сообщение в месте города",
+              reward: "200",
+              done: false,
+              icon: MessageCircle,
+            },
+            {
+              title: "Позвать друга",
+              note: "Кто-то придёт по твоей ссылке",
+              reward: "300",
+              done: false,
+              icon: UserPlus,
+            },
+          ].map((step, index) => (
+            <div className="flex items-center gap-3 px-4 py-3" key={step.title}>
+              <span
+                className={`relative grid size-9 shrink-0 place-items-center rounded-xl ${
+                  step.done
+                    ? "bg-[#e4f7ed] text-[#19885e]"
+                    : "bg-[#fff6e8] text-[#a87511]"
+                }`}
+              >
+                <step.icon className="size-4" />
+                <span className="absolute -left-1 -top-1 grid size-4 place-items-center rounded-full bg-[#a87511] text-[8px] font-black text-white">
+                  {index + 1}
+                </span>
+              </span>
+              <span className="min-w-0 grow">
+                <b className="block truncate text-xs">{step.title}</b>
+                <small className="mt-0.5 block truncate text-[10px] text-[#81748a]">
+                  {step.note}
+                </small>
+              </span>
+              {step.done ? (
+                <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-[#e4f7ed] px-2 py-1 text-[10px] font-black text-[#19885e]">
+                  <Check className="size-3" /> +{step.reward} ⭐
+                </span>
+              ) : (
+                <span className="shrink-0 rounded-full border border-[#e8c88f] bg-[#fff8ea] px-3 py-1.5 text-[10px] font-black text-[#a87511]">
+                  +{step.reward} ⭐
                 </span>
               )}
             </div>

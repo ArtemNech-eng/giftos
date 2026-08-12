@@ -11,7 +11,10 @@ import {
   MessageCircle,
   ShoppingBag,
   Sparkles,
+  UserPlus,
+  UserRound,
   UsersRound,
+  Video,
   Waves,
 } from "lucide-react";
 import type { Route } from "next";
@@ -56,6 +59,57 @@ type FirstWaveProgress = {
 
 const FIRST_WAVE_MILESTONES = [5, 15, 30];
 const FIRST_WAVE_BONUS: Record<number, number> = { 5: 100, 15: 250, 30: 500 };
+
+// One-time starter path «Первые шаги в городе» (mirrors the migration's
+// step keys and bonus_settings.starter_quest_rewards).
+const STARTER_STEPS = [
+  {
+    step: "profile_done",
+    title: "Создать профиль",
+    description: "Заполни анкету и интересы",
+    reward: 50,
+    href: "/settings" as Route,
+    icon: UserRound,
+  },
+  {
+    step: "wish_created",
+    title: "Опубликовать желание",
+    description: "Расскажи, что хочешь",
+    reward: 100,
+    href: "/wishes/new" as Route,
+    icon: Sparkles,
+  },
+  {
+    step: "story_published",
+    title: "Выпустить story",
+    description: "Покажи свой момент",
+    reward: 150,
+    href: "/stories/new" as Route,
+    icon: Video,
+  },
+  {
+    step: "place_activity",
+    title: "Написать в место",
+    description: "Оставь сообщение в месте города",
+    reward: 200,
+    href: "/places" as Route,
+    icon: MessageCircle,
+  },
+  {
+    step: "friend_invited",
+    title: "Позвать друга",
+    description: "Кто-то придёт по твоей ссылке",
+    reward: 300,
+    href: "/invite" as Route,
+    icon: UserPlus,
+  },
+] as const;
+
+type StarterState = {
+  done: boolean;
+  claimed: boolean;
+  reward: number;
+};
 
 // Mirrors the daily_quests table (titles/rewards are kept in sync by the
 // migration seed); statuses come from daily_quest_progress().
@@ -172,6 +226,19 @@ export default async function BonusesPage() {
     0,
   );
 
+  // Starter quest: claim done steps (idempotent) and read the full state.
+  const { data: starterState } = await supabase.rpc("claim_starter_steps");
+  const starterSteps = (starterState ?? {}) as Record<string, StarterState>;
+  const starterDoneCount = STARTER_STEPS.filter(
+    (step) => starterSteps[step.step]?.done,
+  ).length;
+  const starterTotalReward = STARTER_STEPS.reduce((sum, step) => sum + step.reward, 0);
+  const starterEarnedReward = STARTER_STEPS.reduce(
+    (sum, step) => sum + (starterSteps[step.step]?.claimed ? step.reward : 0),
+    0,
+  );
+  const starterFinished = STARTER_STEPS.every((step) => starterSteps[step.step]?.done);
+
   return (
     <main className="mx-auto min-h-screen max-w-[430px] bg-[#f7f4fb] px-4 py-5 text-[#241a2c]">
       <header className="flex items-center justify-between">
@@ -276,6 +343,76 @@ export default async function BonusesPage() {
         <p className="border-t border-[#f1e8f5] px-4 py-2.5 text-[9px] leading-4 text-[#a093a6]">
           Задания обновляются каждый день в 00:00. Бонусы начисляются автоматически за
           первые действия дня.
+        </p>
+      </section>
+      <section className="mt-5 overflow-hidden rounded-[1.7rem] border border-[#f2ddc4] bg-white shadow-[0_10px_26px_rgba(69,43,94,.07)]">
+        <div className="flex items-center justify-between gap-3 bg-gradient-to-r from-[#fff4e0] to-[#fff0f7] px-4 py-3">
+          <span className="flex items-center gap-2">
+            <span className="grid size-8 place-items-center rounded-xl bg-white text-[#a87511] shadow-[0_4px_10px_rgba(168,117,17,.15)]">
+              <Gift className="size-4" />
+            </span>
+            <span>
+              <h2 className="text-sm font-black">Первые шаги в городе</h2>
+              <p className="mt-0.5 text-[10px] text-[#81748a]">
+                {starterFinished
+                  ? `Пройдено · +${starterEarnedReward} ⭐ получено`
+                  : `${starterDoneCount} из ${STARTER_STEPS.length} · до +${starterTotalReward} ⭐`}
+              </p>
+            </span>
+          </span>
+          <span className="shrink-0 rounded-full bg-[#fff0a9] px-2.5 py-1 text-[10px] font-black text-[#735417]">
+            +{starterTotalReward} ⭐
+          </span>
+        </div>
+        <div className="divide-y divide-[#f7ecdc]">
+          {STARTER_STEPS.map((step, index) => {
+            const state = starterSteps[step.step];
+            const done = state?.done ?? false;
+            const claimed = state?.claimed ?? false;
+            const Icon = step.icon;
+            return (
+              <div className="flex items-center gap-3 px-4 py-3" key={step.step}>
+                <span
+                  className={`relative grid size-9 shrink-0 place-items-center rounded-xl ${
+                    done ? "bg-[#e4f7ed] text-[#19885e]" : "bg-[#fff6e8] text-[#a87511]"
+                  }`}
+                >
+                  <Icon className="size-4" />
+                  <span className="absolute -left-1 -top-1 grid size-4 place-items-center rounded-full bg-[#a87511] text-[8px] font-black text-white">
+                    {index + 1}
+                  </span>
+                </span>
+                <span className="min-w-0 grow">
+                  <b className="block truncate text-xs">{step.title}</b>
+                  <small className="mt-0.5 block truncate text-[10px] text-[#81748a]">
+                    {step.description}
+                  </small>
+                </span>
+                {done ? (
+                  <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-[#e4f7ed] px-2 py-1 text-[10px] font-black text-[#19885e]">
+                    {claimed ? (
+                      <>
+                        <Check className="size-3" /> +{step.reward} ⭐
+                      </>
+                    ) : (
+                      "Выполнено"
+                    )}
+                  </span>
+                ) : (
+                  <Link
+                    className="shrink-0 rounded-full border border-[#e8c88f] bg-[#fff8ea] px-3 py-1.5 text-[10px] font-black text-[#a87511]"
+                    href={step.href}
+                  >
+                    +{step.reward} ⭐
+                  </Link>
+                )}
+              </div>
+            );
+          })}
+        </div>
+        <p className="border-t border-[#f7ecdc] px-4 py-2.5 text-[9px] leading-4 text-[#a093a6]">
+          Разовые награды для новичка: по одной за каждый шаг. Начисляются
+          автоматически, как только шаг выполнен.
         </p>
       </section>
       <section className="mt-5 grid grid-cols-2 gap-3">
