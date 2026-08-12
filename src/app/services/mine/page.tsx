@@ -5,6 +5,7 @@ import {
   Check,
   Eye,
   EyeOff,
+  Hand,
   Flame,
   PenLine,
   Pin,
@@ -12,7 +13,11 @@ import {
   Store,
 } from "lucide-react";
 
-import { bumpService, toggleServiceActive, toggleServicePin } from "@/app/services/actions";
+import {
+  bumpService,
+  toggleServiceActive,
+  toggleServicePin,
+} from "@/app/services/actions";
 import { ServiceCategoryIcon } from "@/components/service-category-icon";
 import { requireUser } from "@/lib/auth";
 import { SERVICE_KIND_LABELS, serviceCategory } from "@/lib/service-categories";
@@ -49,6 +54,22 @@ export default async function MyServicesPage() {
       .limit(50),
   ]);
   const services = (rawServices ?? []) as MineRow[];
+  const { data: demandRows } =
+    services.length > 0
+      ? await supabase.rpc("service_demand_counts", {
+          p_ids: services.map((service) => service.id),
+        })
+      : { data: [] };
+  const demandByService = new Map(
+    ((demandRows ?? []) as Array<{ service_id: string; cnt: number }>).map((row) => [
+      row.service_id,
+      Number(row.cnt),
+    ]),
+  );
+  const totalDemand = [...demandByService.values()].reduce(
+    (sum, count) => sum + count,
+    0,
+  );
   const totalViews = services.reduce((sum, service) => sum + service.views_count, 0);
   const activeCount = services.filter((service) => service.is_active).length;
 
@@ -87,10 +108,10 @@ export default async function MyServicesPage() {
           ВИТРИНА.
         </h2>
         <p className="mt-3 max-w-64 text-[11px] leading-5 text-white/75">
-          Управляй объявлениями, следи за просмотрами и поднимай себя в выдаче —
-          всё в одном месте.
+          Управляй объявлениями, следи за просмотрами и поднимай себя в выдаче — всё в
+          одном месте.
         </p>
-        <div className="mt-4 grid grid-cols-3 gap-2">
+        <div className="mt-4 grid grid-cols-4 gap-2">
           <span className="rounded-2xl bg-black/20 p-2.5">
             <b className="block text-lg leading-none">{services.length}</b>
             <small className="mt-1 block text-[9px] text-white/60">объявлений</small>
@@ -103,6 +124,10 @@ export default async function MyServicesPage() {
             <b className="block text-lg leading-none">{totalViews}</b>
             <small className="mt-1 block text-[9px] text-white/60">просмотров</small>
           </span>
+          <span className="rounded-2xl bg-black/20 p-2.5">
+            <b className="block text-lg leading-none">{totalDemand}</b>
+            <small className="mt-1 block text-[9px] text-white/60">ждут</small>
+          </span>
         </div>
       </section>
 
@@ -113,8 +138,8 @@ export default async function MyServicesPage() {
             Витрина пока пуста
           </h2>
           <p className="mt-2 text-xs leading-5 text-[#756a7d]">
-            Заяви о себе: услуга или заведение — бесплатно и видно только жителям
-            твоего города.
+            Заяви о себе: услуга или заведение — бесплатно и видно только жителям твоего
+            города.
           </p>
           <Link
             className="mt-4 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#ff5d9a] to-[#8254ed] px-4 py-2.5 text-xs font-black text-white shadow-[0_8px_18px_rgba(160,75,213,.24)]"
@@ -162,6 +187,12 @@ export default async function MyServicesPage() {
                     </span>
                     <small className="mt-1 flex items-center gap-1.5 text-[9px] font-bold text-[#a093a6]">
                       <Eye className="size-3 text-[#258b82]" /> {service.views_count}
+                      {(demandByService.get(service.id) ?? 0) > 0 && (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-[#fff6e8] px-1.5 py-0.5 text-[8px] font-black text-[#a87511]">
+                          <Hand className="size-2.5" />{" "}
+                          {demandByService.get(service.id)} хотят
+                        </span>
+                      )}
                       {!service.is_active && (
                         <span className="inline-flex items-center gap-0.5 rounded-full bg-[#fdeaea] px-1.5 py-0.5 text-[8px] font-black text-[#c0392b]">
                           <EyeOff className="size-2.5" /> Скрыто

@@ -4,14 +4,16 @@ import {
   ArrowLeft,
   Briefcase,
   ChevronRight,
-  Pin,
   Eye,
+  Hand,
   MapPin,
+  Pin,
   Plus,
   Sparkles,
   Store,
 } from "lucide-react";
 
+import { toggleCategoryDemand } from "@/app/services/actions";
 import { ServiceCategoryIcon } from "@/components/service-category-icon";
 import { ServiceRating } from "@/components/service-rating";
 import { requireUser } from "@/lib/auth";
@@ -60,6 +62,9 @@ export default async function ServicesPage({
   const hasCity = Boolean(profile?.city_id);
 
   let services: ServiceRow[] = [];
+  let demandByService = new Map<string, number>();
+  let demandByCategory = new Map<string, number>();
+  let myCategoryDemands = new Set<string>();
   if (hasCity) {
     const query = supabase
       .from("public_city_services")
@@ -74,6 +79,32 @@ export default async function ServicesPage({
     if (activeCategory) query.eq("category_slug", activeCategory);
     const { data } = await query;
     services = (data ?? []) as ServiceRow[];
+    if (services.length > 0) {
+      const { data: demandRows } = await supabase.rpc("service_demand_counts", {
+        p_ids: services.map((service) => service.id),
+      });
+      demandByService = new Map(
+        ((demandRows ?? []) as Array<{ service_id: string; cnt: number }>).map(
+          (row) => [row.service_id, Number(row.cnt)],
+        ),
+      );
+    }
+    const { data: categoryDemandRows } = await supabase.rpc("category_demand_counts", {
+      p_city_id: profile!.city_id!,
+    });
+    demandByCategory = new Map(
+      ((categoryDemandRows ?? []) as Array<{ category_slug: string; cnt: number }>).map(
+        (row) => [row.category_slug, Number(row.cnt)],
+      ),
+    );
+    const { data: myDemandRows } = await supabase
+      .from("service_demands")
+      .select("category_slug")
+      .eq("user_id", user.id)
+      .not("category_slug", "is", null);
+    myCategoryDemands = new Set(
+      (myDemandRows ?? []).map((row) => row.category_slug as string),
+    );
   }
 
   const cityName = profile?.city ?? "Твой город";
@@ -179,8 +210,32 @@ export default async function ServicesPage({
               ? "Объявления появятся, как только мастера заявят себя."
               : "Будь первым: расскажи, что ты делаешь, — бесплатно."}
           </p>
+          {activeCategory && (
+            <form action={toggleCategoryDemand} className="mt-4">
+              <input name="category_slug" type="hidden" value={activeCategory} />
+              <button
+                className={`inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-black transition ${
+                  myCategoryDemands.has(activeCategory)
+                    ? "bg-[#201827] text-white"
+                    : "border border-[#d9b876] bg-[#fff8ea] text-[#8a6414]"
+                }`}
+                type="submit"
+              >
+                <Hand className="size-4" />
+                {myCategoryDemands.has(activeCategory)
+                  ? "Хочу такого — отметил(а)"
+                  : "Хочу такого мастера в городе"}
+              </button>
+            </form>
+          )}
+          {activeCategory && (demandByCategory.get(activeCategory) ?? 0) > 0 && (
+            <p className="mt-3 text-[10px] font-bold text-[#a87511]">
+              {demandByCategory.get(activeCategory)} человек уже ждут эту услугу в
+              городе
+            </p>
+          )}
           <Link
-            className="mt-4 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#ff5d9a] to-[#8254ed] px-4 py-2.5 text-xs font-black text-white shadow-[0_8px_18px_rgba(160,75,213,.24)]"
+            className="mt-3 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#ff5d9a] to-[#8254ed] px-4 py-2.5 text-xs font-black text-white shadow-[0_8px_18px_rgba(160,75,213,.24)]"
             href="/services/new"
           >
             <Plus className="size-4" /> Добавить объявление
@@ -243,6 +298,11 @@ export default async function ServicesPage({
                 <small className="inline-flex items-center gap-1 text-[9px] font-black text-[#258b82]">
                   <Eye className="size-3" /> {service.views_count}
                 </small>
+                {(demandByService.get(service.id) ?? 0) > 0 && (
+                  <small className="inline-flex items-center gap-1 text-[9px] font-black text-[#a87511]">
+                    <Hand className="size-3" /> {demandByService.get(service.id)}
+                  </small>
+                )}
               </span>
               <ChevronRight className="mt-1 size-4 shrink-0 text-[#a295a8]" />
             </Link>

@@ -7,6 +7,7 @@ import {
   ChevronRight,
   Eye,
   Flame,
+  Hand,
   MessageSquare,
   Pencil,
   Pin,
@@ -23,6 +24,7 @@ import {
   deleteServiceReview,
   replyToServiceReview,
   toggleServiceActive,
+  toggleServiceDemand,
   toggleServicePin,
 } from "@/app/services/actions";
 import { ServiceCategoryIcon } from "@/components/service-category-icon";
@@ -130,6 +132,20 @@ export default async function ServicePage({
     }>
   ).filter((review) => (isOwner ? true : !review.is_hidden));
   const myReview = reviews.find((review) => review.author_id === user.id) ?? null;
+
+  const [{ count: demandCount }, { data: myDemand }] = await Promise.all([
+    supabase
+      .from("service_demands")
+      .select("*", { count: "exact", head: true })
+      .eq("service_id", id),
+    supabase
+      .from("service_demands")
+      .select("id")
+      .eq("service_id", id)
+      .eq("user_id", user.id)
+      .maybeSingle(),
+  ]);
+  const demandWanted = Boolean(myDemand);
   const authorIds = [...new Set(reviews.map((review) => review.author_id))];
   const { data: rawAuthors } = authorIds.length
     ? await supabase
@@ -299,6 +315,40 @@ export default async function ServicePage({
           <p className="mt-3 flex items-center gap-2 rounded-xl bg-[#f0e9ff] px-3 py-2.5 text-[11px] font-black text-[#7549d0]">
             <Sparkles className="size-3.5" /> {service.contact_text}
           </p>
+        )}
+        {!isOwner && (
+          <form action={toggleServiceDemand} className="mt-4">
+            <input name="service_id" type="hidden" value={service.id} />
+            <button
+              className={`flex w-full items-center justify-center gap-2 rounded-2xl border py-3 text-xs font-black transition ${
+                demandWanted
+                  ? "border-[#201827] bg-[#201827] text-white"
+                  : "border-[#2c2036]/10 bg-[#fbf9fe] text-[#5f5369]"
+              }`}
+              type="submit"
+            >
+              <Hand className={`size-4 ${demandWanted ? "fill-current" : ""}`} />
+              {demandWanted ? "Хочу такого — отметил(а)" : "Хочу такого мастера"}
+              {(demandCount ?? 0) > 0 && (
+                <span
+                  className={`rounded-full px-2 py-0.5 text-[10px] font-black ${
+                    demandWanted
+                      ? "bg-white/15 text-white"
+                      : "bg-[#f0e9ff] text-[#7549d0]"
+                  }`}
+                >
+                  {(demandCount ?? 0) + (demandWanted ? 0 : 0)}
+                </span>
+              )}
+            </button>
+            <p className="mt-2 text-center text-[9px] leading-4 text-[#a093a6]">
+              {demandWanted
+                ? "Ты показал(а) спрос — мастер видит, что его ждут."
+                : `Спрос видят в городе: ${demandCount ?? 0} ${
+                    (demandCount ?? 0) === 1 ? "человек хочет" : "человек хотят"
+                  } такую услугу.`}
+            </p>
+          </form>
         )}
       </article>
 

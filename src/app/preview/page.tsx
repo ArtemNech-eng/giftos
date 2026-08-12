@@ -2525,6 +2525,7 @@ function ServicesPreviewScreen() {
       pinned: true,
       rating: 5,
       reviews: 12,
+      demand: 7,
     },
     {
       title: "Кофейня «Утро»",
@@ -2537,6 +2538,7 @@ function ServicesPreviewScreen() {
       pinned: false,
       rating: 4.8,
       reviews: 9,
+      demand: 3,
     },
     {
       title: "Ремонт телефонов",
@@ -2549,6 +2551,7 @@ function ServicesPreviewScreen() {
       pinned: false,
       rating: 4.5,
       reviews: 6,
+      demand: 11,
     },
   ];
   return (
@@ -2656,6 +2659,9 @@ function ServicesPreviewScreen() {
               <span className="flex shrink-0 flex-col items-end gap-1">
                 <small className="inline-flex items-center gap-1 text-[9px] font-black text-[#258b82]">
                   <Eye className="size-3" /> {listing.views}
+                </small>
+                <small className="inline-flex items-center gap-1 text-[9px] font-black text-[#a87511]">
+                  <Hand className="size-3" /> {listing.demand}
                 </small>
               </span>
               <ChevronRight className="mt-1 size-4 shrink-0 text-[#a295a8]" />

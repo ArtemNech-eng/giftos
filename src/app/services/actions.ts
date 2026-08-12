@@ -319,3 +319,23 @@ export async function replyToServiceReview(formData: FormData) {
     .maybeSingle();
   if (review) revalidatePath(`/services/${review.service_id}`);
 }
+
+export async function toggleServiceDemand(formData: FormData) {
+  const { supabase } = await requireUser();
+  const serviceId = requiredText(formData.get("service_id"), 100);
+  await supabase.rpc("toggle_service_demand", {
+    p_service_id: serviceId,
+  });
+  revalidatePath(`/services/${serviceId}`);
+  revalidatePath("/services");
+  revalidatePath("/services/mine");
+}
+
+export async function toggleCategoryDemand(formData: FormData) {
+  const { supabase } = await requireUser();
+  const categorySlug = requiredText(formData.get("category_slug"), 40);
+  await supabase.rpc("toggle_category_demand", {
+    p_category_slug: categorySlug,
+  });
+  revalidatePath("/services");
+}
