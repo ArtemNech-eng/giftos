@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 
 import { requireUser } from "@/lib/auth";
 import { awardCityPoints } from "@/lib/city-battle";
+import { clientIp } from "@/lib/ip";
 import { isUploadedFile, uploadOwnedImage } from "@/lib/media";
 import {
   optionalText,
@@ -49,6 +50,8 @@ export async function completeOnboarding(formData: FormData) {
     });
   }
 
+  const registrationIp = await clientIp();
+
   const profileUpdate = {
     username,
     display_name: displayName,
@@ -63,6 +66,9 @@ export async function completeOnboarding(formData: FormData) {
     profile_visibility:
       formData.get("profile_visibility") === "private" ? "private" : "public",
     onboarding_completed_at: new Date().toISOString(),
+    // Referral anti-fraud: recorded once at onboarding, used to refuse
+    // self-invites (same IP) and farming cascades.
+    ...(registrationIp ? { registration_ip: registrationIp } : {}),
     ...(avatarPath ? { avatar_path: avatarPath } : {}),
   };
 

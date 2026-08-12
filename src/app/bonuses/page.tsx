@@ -306,6 +306,7 @@ export default async function BonusesPage() {
             {referralProgress.slice(0, 5).map((referral, index) => {
               const bonusReady = referral.status === "approved";
               const bonusHeld = referral.status === "held";
+              const bonusRejected = referral.status === "rejected";
               const firstActionDone = referral.first_action_completed;
               return (
                 <article
@@ -320,7 +321,9 @@ export default async function BonusesPage() {
                           ? `+${reward} ⭐ начислены`
                           : bonusHeld
                             ? "Бонус на проверке"
-                            : "Ждём следующий шаг"}
+                            : bonusRejected
+                              ? "Бонус не засчитан автоматически"
+                              : "Ждём следующий шаг"}
                       </small>
                     </span>
                     <span
@@ -329,10 +332,18 @@ export default async function BonusesPage() {
                           ? "bg-[#e4f7ed] text-[#19885e]"
                           : bonusHeld
                             ? "bg-[#fff4d6] text-[#a57513]"
-                            : "bg-[#f0e7fb] text-[#8750d1]"
+                            : bonusRejected
+                              ? "bg-[#fdeaea] text-[#c0392b]"
+                              : "bg-[#f0e7fb] text-[#8750d1]"
                       }`}
                     >
-                      {bonusReady ? "ГОТОВО" : bonusHeld ? "ПРОВЕРКА" : "В ПУТИ"}
+                      {bonusReady
+                        ? "ГОТОВО"
+                        : bonusHeld
+                          ? "ПРОВЕРКА"
+                          : bonusRejected
+                            ? "ОТКЛОНЕНО"
+                            : "В ПУТИ"}
                     </span>
                   </div>
                   <div className="mt-4 grid grid-cols-3 gap-2">
