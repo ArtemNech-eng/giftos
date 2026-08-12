@@ -250,3 +250,72 @@ export async function bumpService(formData: FormData) {
   revalidatePath("/services");
   revalidatePath("/services/mine");
 }
+
+export async function addServiceReview(formData: FormData) {
+  const { supabase, user } = await requireUser();
+  const serviceId = requiredText(formData.get("service_id"), 100);
+  const rawRating = Number(formData.get("rating"));
+  const body = optionalText(formData.get("body"), 1000);
+
+  if (!Number.isInteger(rawRating) || rawRating < 1 || rawRating > 5)
+    throw new Error("Поставьте оценку от 1 до 5.");
+
+  const { data: service } = await supabase
+    .from("city_services")
+    .select("id, owner_id")
+    .eq("id", serviceId)
+    .eq("is_active", true)
+    .maybeSingle();
+  if (!service) throw new Error("Объявление не найдено.");
+  if (service.owner_id === user.id)
+    throw new Error("Нельзя оставить отзыв на собственное объявление.");
+
+  const { error } = await supabase.from("service_reviews").insert({
+    service_id: serviceId,
+    author_id: user.id,
+    rating: rawRating,
+    body: body || null,
+  });
+  if (error) {
+    if (error.code === "23505")
+      throw new Error("Вы уже оставили отзыв на это объявление.");
+    throw new Error(`Не удалось отправить отзыв: ${error.message}`);
+  }
+
+  revalidatePath(`/services/${serviceId}`);
+}
+
+export async function deleteServiceReview(formData: FormData) {
+  const { supabase, user } = await requireUser();
+  const reviewId = requiredText(formData.get("review_id"), 100);
+  const { data: review } = await supabase
+    .from("service_reviews")
+    .select("id, service_id")
+    .eq("id", reviewId)
+    .eq("author_id", user.id)
+    .maybeSingle();
+  if (!review) throw new Error("Отзыв не найден.");
+
+  await supabase.from("service_reviews").delete().eq("id", reviewId);
+  revalidatePath(`/services/${review.service_id}`);
+}
+
+export async function replyToServiceReview(formData: FormData) {
+  const { supabase } = await requireUser();
+  const reviewId = requiredText(formData.get("review_id"), 100);
+  const reply = requiredText(formData.get("reply"), 1000);
+  if (!reply) throw new Error("Введите ответ.");
+
+  const { data: ok } = await supabase.rpc("reply_to_service_review", {
+    p_review_id: reviewId,
+    p_reply: reply,
+  });
+  if (!ok) throw new Error("Ответить может только владелец объявления.");
+
+  const { data: review } = await supabase
+    .from("service_reviews")
+    .select("service_id")
+    .eq("id", reviewId)
+    .maybeSingle();
+  if (review) revalidatePath(`/services/${review.service_id}`);
+}

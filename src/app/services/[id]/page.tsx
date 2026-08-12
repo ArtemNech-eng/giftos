@@ -7,19 +7,26 @@ import {
   ChevronRight,
   Eye,
   Flame,
+  MessageSquare,
   Pencil,
   Pin,
   Sparkles,
+  Star,
+  Trash2,
 } from "lucide-react";
 import { notFound } from "next/navigation";
 
 import {
+  addServiceReview,
   bumpService,
   deleteService,
+  deleteServiceReview,
+  replyToServiceReview,
   toggleServiceActive,
   toggleServicePin,
 } from "@/app/services/actions";
 import { ServiceCategoryIcon } from "@/components/service-category-icon";
+import { ServiceRating } from "@/components/service-rating";
 import { requireUser } from "@/lib/auth";
 import { getSignedImageUrl } from "@/lib/media";
 import { SERVICE_KIND_LABELS, serviceCategory } from "@/lib/service-categories";
@@ -46,6 +53,8 @@ type ServiceDetail = {
   owner_display_name: string;
   owner_avatar_path: string | null;
   cover_path: string | null;
+  rating_avg: number | null;
+  rating_count: number;
 };
 
 export default async function ServicePage({
@@ -102,6 +111,49 @@ export default async function ServicePage({
   });
   const isPinned = Boolean(service.pinned_at);
 
+  const { data: rawReviews } = await supabase
+    .from("service_reviews")
+    .select("id, author_id, rating, body, reply, replied_at, created_at, is_hidden")
+    .eq("service_id", id)
+    .order("created_at", { ascending: false })
+    .limit(50);
+  const reviews = (
+    (rawReviews ?? []) as Array<{
+      id: string;
+      author_id: string;
+      rating: number;
+      body: string | null;
+      reply: string | null;
+      replied_at: string | null;
+      created_at: string;
+      is_hidden: boolean;
+    }>
+  ).filter((review) => (isOwner ? true : !review.is_hidden));
+  const myReview = reviews.find((review) => review.author_id === user.id) ?? null;
+  const authorIds = [...new Set(reviews.map((review) => review.author_id))];
+  const { data: rawAuthors } = authorIds.length
+    ? await supabase
+        .from("profiles")
+        .select("id, username, display_name, avatar_path")
+        .in("id", authorIds)
+    : { data: [] };
+  const authors = new Map(
+    (rawAuthors ?? []).map((author) => [
+      author.id,
+      {
+        name: author.display_name,
+        username: author.username,
+        avatar: null as string | null,
+      },
+    ]),
+  );
+  for (const [authorId, meta] of authors) {
+    meta.avatar = await getSignedImageUrl({
+      bucket: "avatars",
+      path: (rawAuthors ?? []).find((a) => a.id === authorId)?.avatar_path,
+    });
+  }
+
   // Count a view (skip the owner's own visits).
   if (!isOwner) {
     try {
@@ -144,7 +196,7 @@ export default async function ServicePage({
       {media.length > 0 && (
         <section className="border-[#2c2036]/9 mt-5 overflow-hidden rounded-[1.7rem] border bg-white shadow-[0_14px_32px_rgba(69,43,94,.08)]">
           <div className="relative">
-            { }
+            {}
             <img
               alt={service.title}
               className="aspect-[4/3] w-full object-cover"
@@ -165,7 +217,6 @@ export default async function ServicePage({
           {media.length > 1 && (
             <div className="flex gap-2 p-2">
               {media.map((photo) => (
-                 
                 <img
                   alt=""
                   className="size-16 rounded-xl object-cover"
@@ -200,6 +251,13 @@ export default async function ServicePage({
           </span>
         </span>
         <h2 className="mt-3 text-3xl font-black tracking-[-0.06em]">{service.title}</h2>
+        <div className="mt-2">
+          <ServiceRating
+            count={service.rating_count}
+            size="size-4"
+            value={service.rating_avg}
+          />
+        </div>
         {category && (
           <p className="mt-2 flex items-center gap-1.5 text-[10px] font-black text-[#8753e6]">
             <ServiceCategoryIcon className="size-3.5" code={category.iconCode} />
@@ -243,6 +301,152 @@ export default async function ServicePage({
           </p>
         )}
       </article>
+
+      <section className="border-[#2c2036]/9 mt-5 rounded-[1.55rem] border bg-white p-4 shadow-[0_8px_22px_rgba(69,43,94,.05)]">
+        <div className="flex items-center justify-between">
+          <span className="flex items-center gap-2">
+            <span className="grid size-8 place-items-center rounded-xl bg-[#fff6e8] text-[#a87511]">
+              <MessageSquare className="size-4" />
+            </span>
+            <span>
+              <h2 className="text-sm font-black">Отзывы</h2>
+              <p className="mt-0.5 text-[10px] text-[#81748a]">
+                {service.rating_count > 0
+                  ? `${service.rating_count} · репутация мастера в городе`
+                  : "Пока нет — будь первым"}
+              </p>
+            </span>
+          </span>
+          {service.rating_count > 0 && (
+            <ServiceRating count={service.rating_count} value={service.rating_avg} />
+          )}
+        </div>
+
+        {reviews.length > 0 && (
+          <div className="mt-4 space-y-3">
+            {reviews.map((review) => {
+              const author = authors.get(review.author_id);
+              const canReply = isOwner && !review.reply;
+              return (
+                <article className="rounded-2xl bg-[#fbf9fe] p-3" key={review.id}>
+                  <div className="flex items-start gap-2.5">
+                    <span className="grid size-8 shrink-0 place-items-center overflow-hidden rounded-full bg-gradient-to-br from-[#ff83b0] to-[#815be8] text-[10px] font-black text-white">
+                      {author?.avatar ? (
+                        <img
+                          alt=""
+                          className="size-full object-cover"
+                          decoding="async"
+                          src={author.avatar}
+                        />
+                      ) : (
+                        (author?.name ?? "?").slice(0, 1).toUpperCase()
+                      )}
+                    </span>
+                    <span className="min-w-0 grow">
+                      <span className="flex items-center justify-between gap-2">
+                        <b className="truncate text-[11px]">
+                          {author?.name ?? "Житель города"}
+                        </b>
+                        <span className="flex shrink-0 items-center gap-0.5">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <Star
+                              className={`size-3 ${
+                                star <= review.rating
+                                  ? "fill-[#ffb020] text-[#ffb020]"
+                                  : "fill-[#e8e0d6] text-[#e8e0d6]"
+                              }`}
+                              key={star}
+                            />
+                          ))}
+                        </span>
+                      </span>
+                      {review.body && (
+                        <p className="mt-1.5 whitespace-pre-line text-[11px] leading-5 text-[#5f5369]">
+                          {review.body}
+                        </p>
+                      )}
+                      {review.reply && (
+                        <div className="mt-2.5 rounded-xl border-l-2 border-[#8753e6] bg-white px-3 py-2">
+                          <small className="block text-[9px] font-black uppercase tracking-[0.08em] text-[#8753e6]">
+                            Ответ владельца
+                          </small>
+                          <p className="mt-1 text-[10px] leading-4 text-[#5f5369]">
+                            {review.reply}
+                          </p>
+                        </div>
+                      )}
+                      {canReply && (
+                        <form action={replyToServiceReview} className="mt-2.5">
+                          <input name="review_id" type="hidden" value={review.id} />
+                          <input
+                            className="w-full rounded-xl border border-[#2c2036]/10 bg-white px-3 py-2 text-[10px] outline-none placeholder:text-[#aaa0ae]"
+                            maxLength={1000}
+                            name="reply"
+                            placeholder="Ответить на отзыв…"
+                          />
+                          <button
+                            className="mt-1.5 rounded-lg bg-[#f0e9ff] px-3 py-1.5 text-[10px] font-black text-[#7549d0]"
+                            type="submit"
+                          >
+                            Ответить
+                          </button>
+                        </form>
+                      )}
+                    </span>
+                  </div>
+                  {review.author_id === user.id && (
+                    <form action={deleteServiceReview} className="mt-2 text-right">
+                      <input name="review_id" type="hidden" value={review.id} />
+                      <button
+                        className="inline-flex items-center gap-1 text-[9px] font-bold text-[#c0392b]"
+                        type="submit"
+                      >
+                        <Trash2 className="size-3" /> Удалить отзыв
+                      </button>
+                    </form>
+                  )}
+                </article>
+              );
+            })}
+          </div>
+        )}
+
+        {!isOwner && !myReview && (
+          <form
+            action={addServiceReview}
+            className="mt-4 rounded-2xl border border-dashed border-[#cdbbe7] bg-[#fffcff] p-3"
+          >
+            <b className="block text-[11px]">Оценить мастера</b>
+            <div className="mt-2 flex gap-1">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <label key={star}>
+                  <input
+                    className="peer sr-only"
+                    name="rating"
+                    required
+                    type="radio"
+                    value={star}
+                  />
+                  <Star className="size-6 cursor-pointer fill-[#e8e0d6] text-[#e8e0d6] peer-checked:fill-[#ffb020] peer-checked:text-[#ffb020]" />
+                </label>
+              ))}
+            </div>
+            <input name="service_id" type="hidden" value={service.id} />
+            <textarea
+              className="mt-2 min-h-16 w-full rounded-xl border border-[#2c2036]/10 bg-[#fbf9fe] p-2.5 text-[10px] leading-4 outline-none placeholder:text-[#aaa0ae]"
+              maxLength={1000}
+              name="body"
+              placeholder="Расскажи, как прошло — поможешь городу выбрать"
+            />
+            <button
+              className="mt-2 w-full rounded-xl bg-gradient-to-r from-[#ff5d9a] to-[#8254ed] py-2.5 text-[10px] font-black text-white shadow-[0_6px_14px_rgba(160,75,213,.2)]"
+              type="submit"
+            >
+              Оставить отзыв
+            </button>
+          </form>
+        )}
+      </section>
 
       {isOwner ? (
         <section className="mt-4 space-y-2">

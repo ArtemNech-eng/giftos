@@ -2523,6 +2523,8 @@ function ServicesPreviewScreen() {
       contact: "@nastya_nails",
       views: 342,
       pinned: true,
+      rating: 5,
+      reviews: 12,
     },
     {
       title: "Кофейня «Утро»",
@@ -2533,6 +2535,8 @@ function ServicesPreviewScreen() {
       contact: "+7 900 …",
       views: 218,
       pinned: false,
+      rating: 4.8,
+      reviews: 9,
     },
     {
       title: "Ремонт телефонов",
@@ -2543,6 +2547,8 @@ function ServicesPreviewScreen() {
       contact: "ул. Пушкина, 12",
       views: 156,
       pinned: false,
+      rating: 4.5,
+      reviews: 6,
     },
   ];
   return (
@@ -2631,6 +2637,21 @@ function ServicesPreviewScreen() {
                   <Sparkles className="size-3 text-[#8753e6]" />
                   {listing.owner} · {listing.contact}
                 </small>
+                <span className="mt-1.5 flex items-center gap-1">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <Star
+                      className={`size-3 ${
+                        star <= Math.round(listing.rating)
+                          ? "fill-[#ffb020] text-[#ffb020]"
+                          : "fill-[#e8e0d6] text-[#e8e0d6]"
+                      }`}
+                      key={star}
+                    />
+                  ))}
+                  <small className="ml-1 text-[9px] font-black text-[#8a7d91]">
+                    {listing.rating} · {listing.reviews}
+                  </small>
+                </span>
               </span>
               <span className="flex shrink-0 flex-col items-end gap-1">
                 <small className="inline-flex items-center gap-1 text-[9px] font-black text-[#258b82]">

@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 
 import { ServiceCategoryIcon } from "@/components/service-category-icon";
+import { ServiceRating } from "@/components/service-rating";
 import { requireUser } from "@/lib/auth";
 import { SERVICE_CATEGORIES, SERVICE_KIND_LABELS } from "@/lib/service-categories";
 
@@ -35,6 +36,8 @@ type ServiceRow = {
   owner_display_name: string;
   owner_username: string;
   owner_avatar_path: string | null;
+  rating_avg: number | null;
+  rating_count: number;
 };
 
 export default async function ServicesPage({
@@ -229,6 +232,12 @@ export default async function ServicesPage({
                   {service.owner_display_name}
                   {service.contact_text ? ` · ${service.contact_text}` : ""}
                 </small>
+                <span className="mt-1.5 block">
+                  <ServiceRating
+                    count={service.rating_count}
+                    value={service.rating_avg}
+                  />
+                </span>
               </span>
               <span className="flex shrink-0 flex-col items-end gap-1">
                 <small className="inline-flex items-center gap-1 text-[9px] font-black text-[#258b82]">
