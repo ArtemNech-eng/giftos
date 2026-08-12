@@ -109,7 +109,7 @@ export function ServiceCreateForm() {
         </small>
       </section>
 
-      <PendingButton pendingLabel="Публикуем…">Опубликовать бесплатно</PendingButton>
+      <PendingButton pendingLabel="Публикуем…">Опубликовать объявление</PendingButton>
     </form>
   );
 }

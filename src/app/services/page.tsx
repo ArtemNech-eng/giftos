@@ -64,6 +64,7 @@ export default async function ServicesPage({
   let services: ServiceRow[] = [];
   let demandByService = new Map<string, number>();
   let demandByCategory = new Map<string, number>();
+  let totalDemand = 0;
   let myCategoryDemands = new Set<string>();
   if (hasCity) {
     const query = supabase
@@ -97,6 +98,7 @@ export default async function ServicesPage({
         (row) => [row.category_slug, Number(row.cnt)],
       ),
     );
+    totalDemand = [...demandByCategory.values()].reduce((sum, count) => sum + count, 0);
     const { data: myDemandRows } = await supabase
       .from("service_demands")
       .select("category_slug")
@@ -150,8 +152,13 @@ export default async function ServicesPage({
           <span className="rounded-full bg-white/15 px-2.5 py-1 text-[10px] font-black">
             {services.length} объявлений
           </span>
+          {totalDemand > 0 && (
+            <span className="rounded-full bg-white/15 px-2.5 py-1 text-[10px] font-black">
+              {totalDemand} ждут
+            </span>
+          )}
           <span className="rounded-full bg-white/15 px-2.5 py-1 text-[10px] font-black">
-            пока бесплатно
+            только свой город
           </span>
         </div>
       </section>
@@ -208,7 +215,7 @@ export default async function ServicesPage({
           <p className="mt-2 text-xs leading-5 text-[#756a7d]">
             {activeCategory
               ? "Объявления появятся, как только мастера заявят себя."
-              : "Будь первым: расскажи, что ты делаешь, — бесплатно."}
+              : "Будь первым: расскажи, что ты делаешь."}
           </p>
           {activeCategory && (
             <form action={toggleCategoryDemand} className="mt-4">

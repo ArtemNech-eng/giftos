@@ -1090,7 +1090,7 @@ export default async function SeoLandingPage({
         <div className="relative mx-auto grid max-w-[1440px] items-center gap-12 lg:grid-cols-[1fr_1fr] lg:gap-16">
           <div>
             <p className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-[0.18em] text-[#b07918]">
-              <Store className="size-4" /> Городская витрина · пока бесплатно
+              <Store className="size-4" /> Городская витрина
             </p>
             <h2 className="mt-6 max-w-xl text-balance text-5xl font-black leading-[0.88] tracking-[-0.075em] sm:text-6xl">
               Мастера твоего
@@ -1098,15 +1098,14 @@ export default async function SeoLandingPage({
             </h2>
             <p className="mt-7 max-w-xl text-lg leading-8 text-[#6d5a3a] sm:text-xl">
               Косметологи, маникюр, парикмахеры, ремонт, свои кафе — не реклама на всю
-              страну, а витрина людей, к которым можно дойти пешком. В первой волне —
-              бесплатно.
+              страну, а витрина людей, к которым можно дойти пешком.
             </p>
             <ul className="mt-8 grid gap-3 sm:grid-cols-2">
               {[
                 "Объявление видно только жителям города",
                 "Ты сам решаешь, как с тобой связаться",
                 "Без посредников и комиссий",
-                "Позже появится платное продвижение — по желанию",
+                "Только свой город — без рекламы на всю страну",
               ].map((item) => (
                 <li
                   className="flex items-start gap-2 text-sm font-bold leading-5 text-[#6d5a3a]"
@@ -1124,7 +1123,7 @@ export default async function SeoLandingPage({
                 className="group inline-flex items-center gap-3 rounded-full bg-[#201827] px-6 py-3.5 text-sm font-black text-white shadow-[0_16px_34px_rgba(48,27,70,.2)] transition hover:-translate-y-0.5 hover:bg-[#4b2d66]"
                 href={signInHref}
               >
-                Заявить о себе бесплатно
+                Заявить о себе
                 <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
               </Link>
               <Link

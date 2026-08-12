@@ -460,7 +460,7 @@ export default async function PlacesPage() {
           <span>
             <b className="block text-xs">Услуги и заведения города</b>
             <small className="mt-0.5 block text-[10px] text-[#81748a]">
-              Мастера и точки рядом · пока бесплатно
+              Мастера и точки рядом
             </small>
           </span>
         </span>

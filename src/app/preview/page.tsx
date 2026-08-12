@@ -2590,7 +2590,7 @@ function ServicesPreviewScreen() {
             17 объявлений
           </span>
           <span className="rounded-full bg-white/15 px-2.5 py-1 text-[10px] font-black">
-            пока бесплатно
+            только свой город
           </span>
         </div>
       </section>
@@ -2689,9 +2689,7 @@ function ServicesPreviewScreen() {
       </div>
       <section className="mt-5 flex gap-2.5 rounded-2xl bg-[#f0faf5] p-3.5 text-[#4c7169]">
         <Check className="mt-0.5 size-4 shrink-0 text-[#258b82]" />
-        <p className="text-[10px] leading-4">
-          Объявления бесплатны в первой волне и видны только жителям города.
-        </p>
+        <p className="text-[10px] leading-4">Объявления видны только жителям города.</p>
       </section>
     </div>
   );

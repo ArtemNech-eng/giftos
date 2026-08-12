@@ -42,7 +42,7 @@ export default async function NewServicePage() {
 
       <section className="mt-5 rounded-[1.7rem] bg-gradient-to-br from-[#2e2250] via-[#4d3572] to-[#7559d5] p-5 text-white shadow-[0_14px_32px_rgba(63,37,98,.22)]">
         <span className="bg-white/14 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.08em] text-[#ffc3da]">
-          <Sparkles className="size-3.5" /> {cityName} · бесплатно
+          <Sparkles className="size-3.5" /> {cityName} · витрина города
         </span>
         <h2 className="mt-3 text-3xl font-black leading-[0.9] tracking-[-0.075em]">
           ЗАЯВИ

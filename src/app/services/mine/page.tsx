@@ -138,8 +138,7 @@ export default async function MyServicesPage() {
             Витрина пока пуста
           </h2>
           <p className="mt-2 text-xs leading-5 text-[#756a7d]">
-            Заяви о себе: услуга или заведение — бесплатно и видно только жителям твоего
-            города.
+            Заяви о себе: услуга или заведение — видно только жителям твоего города.
           </p>
           <Link
             className="mt-4 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#ff5d9a] to-[#8254ed] px-4 py-2.5 text-xs font-black text-white shadow-[0_8px_18px_rgba(160,75,213,.24)]"
@@ -262,7 +261,7 @@ export default async function MyServicesPage() {
         <Check className="mt-0.5 size-4 shrink-0 text-[#258b82]" />
         <p className="text-[10px] leading-4">
           Одно закреплённое объявление всегда вверху категории. «Поднять» возвращает
-          объявление в начало выдачи — бесплатно, хоть каждый день.
+          объявление в начало выдачи — хоть каждый день.
         </p>
       </section>
     </main>

@@ -367,7 +367,12 @@ export default async function ServicePage({
               </small>
             </span>
           </Link>
-          <ChevronRight className="size-4 shrink-0 text-[#a295a8]" />
+          <span className="flex shrink-0 flex-col items-end gap-1">
+            <span className="rounded-full bg-[#f0e9ff] px-2 py-0.5 text-[8px] font-black text-[#7549d0]">
+              Открыть профиль
+            </span>
+            <ChevronRight className="size-3.5 text-[#a295a8]" />
+          </span>
         </div>
         {service.contact_text && (
           <p className="mt-3 flex items-center gap-2 rounded-xl bg-[#f0e9ff] px-3 py-2.5 text-[11px] font-black text-[#7549d0]">
