@@ -1,5 +1,10 @@
 import Link from "next/link";
 
+export const metadata = {
+  title: "Не удалось войти",
+  robots: { index: false, follow: false },
+};
+
 export default function AuthErrorPage() {
   return (
     <main className="grid min-h-screen place-items-center p-4">

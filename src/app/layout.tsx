@@ -1,9 +1,13 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 
 import "./globals.css";
 
+export const viewport: Viewport = {
+  themeColor: "#7549d0",
+};
+
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "https://hochu-takzhe.ru"),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "https://hochutakzhe.ru"),
   title: {
     default: "Хочу также — живое медиапространство города",
     template: "%s · Хочу также",
@@ -14,6 +18,7 @@ export const metadata: Metadata = {
   manifest: "/manifest.webmanifest",
   icons: {
     icon: "/icon.svg",
+    apple: "/icons/apple-touch-icon.png",
   },
   openGraph: {
     siteName: "Хочу также",

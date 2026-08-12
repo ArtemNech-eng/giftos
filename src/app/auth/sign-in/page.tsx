@@ -4,7 +4,10 @@ import { Gift, MapPin } from "lucide-react";
 import { AuthForm } from "@/app/auth/sign-in/auth-form";
 import { APP_NAME } from "@/lib/constants";
 
-export const metadata = { title: "Вход" };
+export const metadata = {
+  title: "Вход",
+  robots: { index: false, follow: false },
+};
 
 export default async function SignInPage({
   searchParams,

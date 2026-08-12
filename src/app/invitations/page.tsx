@@ -9,7 +9,10 @@ import { EmptyState } from "@/components/empty-state";
 import { SiteHeader } from "@/components/site-header";
 import { requireUser } from "@/lib/auth";
 
-export const metadata = { title: "Приглашения" };
+export const metadata = {
+  title: "Приглашения",
+  robots: { index: false, follow: false },
+};
 export const dynamic = "force-dynamic";
 
 type Invitation = {

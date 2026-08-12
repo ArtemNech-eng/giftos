@@ -6,7 +6,7 @@
 
 - [ ] Выбрать хостинг (Timeweb / VK Cloud / Selectel) и регион в РФ.
 - [ ] VPS: ≥ 2 vCPU / 4 ГБ RAM / 40 ГБ SSD (Supabase + LiveKit помещаются).
-- [ ] Домен (например, `api.hochu-takzhe.ru`) с доступом к DNS.
+- [ ] Домен (например, `api.hochutakzhe.ru`) с доступом к DNS.
 - [ ] Репозиторий на сервере: `git clone https://github.com/ArtemNech-eng/giftos.git && cd giftos && npm ci`.
 
 ## Фаза 1. Supabase (self-hosted)
@@ -16,7 +16,7 @@
 - [ ] Выставить `ANON_KEY`, `SERVICE_ROLE_KEY`, `JWT_SECRET` — в `.env` сервера.
 - [ ] Применить миграции: `npm run qa:migrations` (должно показать 95, без пропусков).
 - [ ] Прогнать `npm run qa:selfhosted` — preflight должен пройти без missing-ошибок.
-- [ ] Проверить Storage buckets (avatars, profile-media, wish-media, story-media, artifact art) и RLS.
+- [ ] Проверить Storage buckets (avatars, profile-media, wish-media, fundraiser-media, story-media) и RLS. Арты коллекций — статика в `public/collectibles` (30 PNG), bucket не нужен.
 
 ## Фаза 2. Приложение
 

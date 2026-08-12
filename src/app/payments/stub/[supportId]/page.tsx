@@ -6,7 +6,10 @@ import { confirmStubPayment } from "@/app/payments/stub/[supportId]/actions";
 import { formatRubles } from "@/lib/money";
 import { requireUser } from "@/lib/auth";
 
-export const metadata = { title: "Тестовая оплата" };
+export const metadata = {
+  title: "Тестовая оплата",
+  robots: { index: false, follow: false },
+};
 export const dynamic = "force-dynamic";
 
 export default async function StubPaymentPage({

@@ -13,7 +13,7 @@ import { requireUser } from "@/lib/auth";
 import { AnimatedArtifact } from "@/components/animated-artifact";
 
 export const metadata = {
-  title: "Артефакт",
+  title: "Подарок",
   robots: { index: false, follow: false },
 };
 export const dynamic = "force-dynamic";
