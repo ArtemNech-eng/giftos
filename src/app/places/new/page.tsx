@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 
 import { createPlace } from "@/app/places/actions";
+import { PendingButton } from "@/components/pending-button";
 import { PLACE_ICON_CODES, PlaceIcon } from "@/components/place-icon";
 import { requireUser } from "@/lib/auth";
 
@@ -207,12 +208,9 @@ export default async function NewPlacePage() {
             </p>
           </section>
 
-          <button
-            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#ff5d9a] to-[#8254ed] py-3.5 text-sm font-black text-white shadow-[0_10px_22px_rgba(160,75,213,.24)]"
-            type="submit"
-          >
+          <PendingButton pendingLabel="Создаём…">
             <UsersRound className="size-4.5" /> Создать место
-          </button>
+          </PendingButton>
         </form>
       )}
     </main>

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowLeft, Briefcase, Sparkles } from "lucide-react";
 
 import { createService } from "@/app/services/actions";
+import { PendingButton } from "@/components/pending-button";
 import { ServiceFormFields } from "@/components/service-form-fields";
 import { ServiceCategoryIcon } from "@/components/service-category-icon";
 import { requireUser } from "@/lib/auth";
@@ -147,12 +148,9 @@ export default async function NewServicePage() {
             витрине.
           </p>
         ) : (
-          <button
-            className="w-full rounded-2xl bg-gradient-to-r from-[#ff5d9a] to-[#8254ed] py-3.5 text-sm font-black text-white shadow-[0_10px_22px_rgba(160,75,213,.24)]"
-            type="submit"
-          >
+          <PendingButton pendingLabel="Публикуем…">
             Опубликовать бесплатно
-          </button>
+          </PendingButton>
         )}
       </form>
     </main>

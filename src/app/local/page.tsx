@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowLeft, ChevronRight, MapPin, Sparkles, Store } from "lucide-react";
 
 import { updateLocalCreatorProfile } from "@/app/local/actions";
+import { PendingButton } from "@/components/pending-button";
 import {
   LOCAL_ROLE_CODES,
   LOCAL_ROLE_LABELS,
@@ -171,13 +172,19 @@ export default async function LocalCreatorPage() {
           </p>
         )}
 
-        <button
-          className="flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#ff5d9a] to-[#8254ed] py-3.5 text-sm font-black text-white shadow-[0_9px_20px_rgba(160,75,213,.24)] disabled:cursor-not-allowed disabled:opacity-50"
-          disabled={!canList}
-          type="submit"
-        >
-          <MapPin className="size-4" /> Сохранить локальную витрину
-        </button>
+        {canList ? (
+          <PendingButton pendingLabel="Сохраняем…">
+            <MapPin className="size-4" /> Сохранить локальную витрину
+          </PendingButton>
+        ) : (
+          <button
+            className="flex w-full cursor-not-allowed items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#ff5d9a] to-[#8254ed] py-3.5 text-sm font-black text-white opacity-50 shadow-[0_9px_20px_rgba(160,75,213,.24)]"
+            disabled
+            type="button"
+          >
+            <MapPin className="size-4" /> Сохранить локальную витрину
+          </button>
+        )}
       </form>
     </main>
   );
