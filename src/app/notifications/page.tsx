@@ -13,6 +13,7 @@ import {
   MapPin,
   MessageCircle,
   Radio,
+  ShieldAlert,
   Sparkles,
   UserPlus,
 } from "lucide-react";
@@ -270,11 +271,57 @@ function notificationCopy(notification: Notification, actor: Actor | undefined) 
       title: `${actorName} отклонил(-а) ваш запрос`,
       href: "/notifications" as Route,
     };
+  if (notification.type === "report_open") {
+    const targetType =
+      typeof notification.payload.target_type === "string"
+        ? notification.payload.target_type
+        : "";
+    const reason =
+      typeof notification.payload.reason === "string"
+        ? notification.payload.reason
+        : "";
+    return {
+      icon: ShieldAlert,
+      title: `Новая жалоба: ${reportTargetLabel(targetType)} — ${reportReasonLabel(reason)}`,
+      href: "/admin/reports" as Route,
+    };
+  }
   return {
     icon: Bell,
     title: "Новое событие в «Хочу также»",
     href: "/notifications" as Route,
   };
+}
+
+const reportTargetLabels: Record<string, string> = {
+  profile: "профиль",
+  wish: "желание",
+  fundraiser: "сбор",
+  comment: "сообщение",
+  message: "сообщение",
+  story: "video story",
+  wish_comment: "комментарий желания",
+  live_room: "эфир",
+  place: "место",
+  place_message: "сообщение места",
+  live_message: "сообщение эфира",
+};
+
+const reportReasonLabels: Record<string, string> = {
+  fraud: "мошенничество",
+  prohibited_content: "запрещённый контент",
+  false_information: "ложная информация",
+  spam: "спам",
+  inappropriate_content: "неприемлемый контент",
+  other: "другое",
+};
+
+function reportTargetLabel(targetType: string) {
+  return reportTargetLabels[targetType] ?? "объект";
+}
+
+function reportReasonLabel(reason: string) {
+  return reportReasonLabels[reason] ?? "жалоба";
 }
 
 export default async function NotificationsPage({

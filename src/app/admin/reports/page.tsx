@@ -278,6 +278,13 @@ export default async function AdminReportsPage({
                         <span className="rounded-full bg-[#f1e8f0] px-2.5 py-1 text-xs font-semibold text-[#7a4d6e]">
                           {targetLabels[report.target_type] ?? report.target_type}
                         </span>
+                        {tab === "queue" &&
+                          new Date(report.created_at).getTime() >
+                            Date.now() - 60 * 60 * 1000 && (
+                            <span className="rounded-full bg-[#e5396b] px-2.5 py-1 text-[11px] font-black text-white">
+                              NEW
+                            </span>
+                          )}
                         {report.status === "resolved" && (
                           <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">
                             Решено
