@@ -672,13 +672,16 @@ async function getHomeData(scope: "circle" | "city" | "global" = "circle") {
       category_slug: string;
       rating_avg: number | null;
       rating_count: number;
+      views_count: number;
     }> = [];
+    let myUsername: string | null = null;
     if (scope !== "global" && user) {
       const { data: myProfile } = await supabase
         .from("profiles")
-        .select("city_id, city")
+        .select("city_id, city, username")
         .eq("id", user.id)
         .maybeSingle();
+      myUsername = myProfile?.username ?? null;
       if (myProfile?.city_id) {
         const { data: rawCitizens } = await supabase
           .from("public_city_people")
@@ -687,7 +690,9 @@ async function getHomeData(scope: "circle" | "city" | "global" = "circle") {
           .limit(20);
         const { data: rawCityServices } = await supabase
           .from("public_city_services")
-          .select("id, title, kind, category_slug, rating_avg, rating_count")
+          .select(
+            "id, title, kind, category_slug, rating_avg, rating_count, views_count",
+          )
           .eq("city_id", myProfile.city_id)
           .limit(3);
         cityServices = (rawCityServices ?? []) as typeof cityServices;
@@ -900,6 +905,7 @@ async function getHomeData(scope: "circle" | "city" | "global" = "circle") {
       cityChampion,
       cityFirstWave,
       cityServices,
+      myUsername,
       isDemo: false,
     };
   } catch {
@@ -925,6 +931,7 @@ async function getHomeData(scope: "circle" | "city" | "global" = "circle") {
       cityChampion: null,
       cityFirstWave: false,
       cityServices: [],
+      myUsername: null,
       isDemo: false,
     };
   }
@@ -1031,7 +1038,10 @@ function Avatar({
   );
 }
 
-function BottomNav() {
+function BottomNav({ myUsername }: { myUsername: string | null }) {
+  const profileHref = myUsername
+    ? (`/u/${myUsername}` as Route)
+    : ("/creator/start" as Route);
   return (
     <nav
       className="fixed inset-x-0 bottom-0 z-30 mx-auto flex max-w-[430px] items-center justify-around border-t border-[#2c2036]/10 bg-white/95 px-3 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 text-[#756b80] backdrop-blur"
@@ -1066,7 +1076,7 @@ function BottomNav() {
       </Link>
       <Link
         className="grid place-items-center gap-1 text-xs transition hover:text-[#241a2c]"
-        href="/creator/dashboard"
+        href={profileHref}
       >
         <UserRound className="size-5" />
         Профиль
@@ -1107,6 +1117,7 @@ export default async function HomePage({
     cityChampion,
     cityFirstWave,
     cityServices,
+    myUsername = null,
     isDemo,
   } = await getHomeData(scope);
   // Demo data is visible only without a configured data service. Once Supabase
@@ -1184,7 +1195,9 @@ export default async function HomePage({
               <span>
                 <b className="block text-xs font-black">Витрина города</b>
                 <small className="mt-0.5 block text-[10px] text-[#81748a]">
-                  Мастера и заведения рядом
+                  Мастера и заведения рядом ·{" "}
+                  {cityServices.reduce((sum, item) => sum + item.views_count, 0)}{" "}
+                  просмотров
                 </small>
               </span>
             </span>
@@ -1201,6 +1214,7 @@ export default async function HomePage({
                 category_slug: string;
                 rating_avg: number | null;
                 rating_count: number;
+                views_count: number;
               }) => (
                 <span className="flex items-center gap-3 px-4 py-2.5" key={service.id}>
                   <ServiceCategoryIcon
@@ -1521,7 +1535,7 @@ export default async function HomePage({
           {cityLiveRooms.length > 0 && (
             <section className="mt-7">
               <div className="mb-3 flex items-center justify-between">
-                <h2 className="text-base font-bold">Сейчас в эфире · город</h2>
+                <h2 className="text-base font-bold">Сейчас в эфире</h2>
                 <Link className="text-xs font-medium text-[#b26fff]" href="/feed">
                   Все эфиры ›
                 </Link>
@@ -1631,7 +1645,7 @@ export default async function HomePage({
         <>
           <section>
             <div className="mb-3 flex items-center justify-between">
-              <h1 className="text-base font-bold">Новые stories</h1>
+              <h2 className="text-base font-bold">Новые stories</h2>
               <span className="text-xs font-medium text-[#b26fff]">Смотреть все ›</span>
             </div>
             <div className="flex gap-3 overflow-x-auto pb-2">
@@ -1988,7 +2002,7 @@ export default async function HomePage({
           </section>
         </>
       ) : null}
-      <BottomNav />
+      <BottomNav myUsername={myUsername} />
     </main>
   );
 }
