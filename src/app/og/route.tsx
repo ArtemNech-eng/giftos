@@ -39,6 +39,11 @@ const THEMES: Record<string, { accent: string; glow: string; label: string }> = 
     glow: "rgba(222,100,255,0.55)",
     label: "Приглашение в город",
   },
+  service: {
+    accent: "#ffb020",
+    glow: "rgba(255,176,32,0.45)",
+    label: "Витрина города · «Хочу также»",
+  },
 };
 
 /**

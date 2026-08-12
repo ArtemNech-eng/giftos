@@ -3,7 +3,6 @@ import type { Route } from "next";
 /* eslint-disable @next/next/no-img-element -- signed Storage URLs */
 import {
   ArrowLeft,
-  Check,
   ChevronRight,
   Eye,
   Flame,
@@ -29,6 +28,7 @@ import {
 } from "@/app/services/actions";
 import { ServiceCategoryIcon } from "@/components/service-category-icon";
 import { ServiceRating } from "@/components/service-rating";
+import { ServiceShareButton } from "@/components/service-share-button";
 import { requireUser } from "@/lib/auth";
 import { getSignedImageUrl } from "@/lib/media";
 import { SERVICE_KIND_LABELS, serviceCategory } from "@/lib/service-categories";
@@ -524,6 +524,12 @@ export default async function ServicePage({
               </button>
             </form>
           </div>
+          <ServiceShareButton
+            cityName={null}
+            ownerName={service.owner_display_name}
+            serviceId={service.id}
+            title={service.title}
+          />
           <Link
             className="flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#ff5d9a] to-[#8254ed] py-3 text-xs font-black text-white shadow-[0_10px_22px_rgba(160,75,213,.24)]"
             href={`/services/${service.id}/edit`}
@@ -556,11 +562,15 @@ export default async function ServicePage({
           </form>
         </section>
       ) : (
-        <section className="mt-5 flex gap-2.5 rounded-2xl bg-[#f0faf5] p-3.5 text-[#4c7169]">
-          <Check className="mt-0.5 size-4 shrink-0 text-[#258b82]" />
-          <p className="text-[10px] leading-4">
-            Объявление бесплатное и видно только жителям города. Личные данные и
-            переписка не раскрываются.
+        <section className="mt-4">
+          <ServiceShareButton
+            cityName={null}
+            ownerName={service.owner_display_name}
+            serviceId={service.id}
+            title={service.title}
+          />
+          <p className="mt-2 text-center text-[9px] leading-4 text-[#a093a6]">
+            Поделись карточкой — в чатах города откроется красивая визитка мастера.
           </p>
         </section>
       )}
