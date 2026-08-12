@@ -55,6 +55,12 @@ async function uploadMediaFile({
   ownerId: string;
   bucket: MediaBucket;
 }) {
+  // Upload quota: ask the server «may I upload?» before touching Storage.
+  // The RPC is security definer and counts per user per day; a legit user
+  // on a small VPS can never fill the disk in one session.
+  const kind = bucket === "story-media" ? "video" : "image";
+  await consumeQuotaOrThrow(kind);
+
   const extension = file.type === "image/jpeg" ? "jpg" : file.type.split("/")[1];
   const path = `${ownerId}/${randomUUID()}.${extension}`;
   const admin = createAdminClient();
@@ -63,6 +69,26 @@ async function uploadMediaFile({
     .upload(path, file, { contentType: file.type, upsert: false });
   if (error) throw new Error(`Не удалось загрузить файл: ${error.message}`);
   return path;
+}
+
+async function consumeQuotaOrThrow(kind: "image" | "video") {
+  try {
+    const { createClient } = await import("@/lib/supabase/server");
+    const supabase = await createClient();
+    const { data: allowed } = await supabase.rpc("consume_upload_quota", {
+      p_kind: kind,
+    });
+    if (allowed === false) {
+      throw new Error(
+        kind === "video"
+          ? "Достигнут дневной лимит видео. Вернись завтра."
+          : "Достигнут дневной лимит загрузок. Вернись завтра.",
+      );
+    }
+  } catch (err) {
+    if (err instanceof Error && err.message.includes("лимит")) throw err;
+    // No Supabase configured (local/dev) — uploads are allowed.
+  }
 }
 
 // In-process signed URL cache. Signed Storage URLs are valid for an hour,
