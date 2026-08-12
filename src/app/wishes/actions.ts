@@ -35,85 +35,111 @@ function wishInput(formData: FormData) {
   };
 }
 
-export async function createWish(formData: FormData) {
-  const { supabase, user } = await requireUser();
-  const input = wishInput(formData);
-  const sourceWishId = optionalText(formData.get("source_wish_id"), 100);
-  if (sourceWishId) {
-    const { data: sourceWish } = await supabase
+export type WishActionState = { error?: string } | null;
+
+export async function createWish(
+  _prev: WishActionState,
+  formData: FormData,
+): Promise<WishActionState> {
+  try {
+    const { supabase, user } = await requireUser();
+    const input = wishInput(formData);
+    const sourceWishId = optionalText(formData.get("source_wish_id"), 100);
+    if (sourceWishId) {
+      const { data: sourceWish } = await supabase
+        .from("wishes")
+        .select("id")
+        .eq("id", sourceWishId)
+        .eq("visibility", "public")
+        .eq("is_archived", false)
+        .maybeSingle();
+      if (!sourceWish) return { error: "Исходное желание недоступно." };
+    }
+
+    const image = formData.get("image");
+    const imagePath = isUploadedFile(image)
+      ? await uploadOwnedImage({ file: image, ownerId: user.id, bucket: "wish-media" })
+      : null;
+
+    const { data, error } = await supabase
       .from("wishes")
+      .insert({
+        ...input,
+        author_id: user.id,
+        image_path: imagePath,
+        source_wish_id: sourceWishId,
+      })
       .select("id")
-      .eq("id", sourceWishId)
-      .eq("visibility", "public")
-      .eq("is_archived", false)
-      .maybeSingle();
-    if (!sourceWish) throw new Error("Исходное желание недоступно.");
+      .single();
+
+    if (error) return { error: `Не удалось создать желание: ${error.message}` };
+
+    // A referral becomes active only after onboarding and a meaningful action.
+    const { data: claimed } = await supabase.rpc("claim_referral_bonus_if_qualified");
+
+    // City battle: qualified actions.
+    await awardCityPoints(supabase, "wish_published", data.id);
+    if (claimed === true) {
+      await awardCityPoints(supabase, "referral_qualified", `referral-${user.id}`);
+    }
+
+    revalidatePath("/");
+    revalidatePath("/feed");
+    revalidatePath("/wishes");
+    revalidatePath("/places");
+    redirect(`/wishes/${data.id}/edit`);
+  } catch (err) {
+    return {
+      error:
+        err instanceof Error && err.message
+          ? err.message
+          : "Не получилось создать желание. Попробуй ещё раз.",
+    };
   }
-
-  const image = formData.get("image");
-  const imagePath = isUploadedFile(image)
-    ? await uploadOwnedImage({ file: image, ownerId: user.id, bucket: "wish-media" })
-    : null;
-
-  const { data, error } = await supabase
-    .from("wishes")
-    .insert({
-      ...input,
-      author_id: user.id,
-      image_path: imagePath,
-      source_wish_id: sourceWishId,
-    })
-    .select("id")
-    .single();
-
-  if (error) throw new Error(`Не удалось создать желание: ${error.message}`);
-
-  // A referral becomes active only after onboarding and a meaningful action.
-  const { data: claimed } = await supabase.rpc("claim_referral_bonus_if_qualified");
-
-  // City battle: qualified actions.
-  await awardCityPoints(supabase, "wish_published", data.id);
-  if (claimed === true) {
-    await awardCityPoints(supabase, "referral_qualified", `referral-${user.id}`);
-  }
-
-  revalidatePath("/");
-  revalidatePath("/feed");
-  revalidatePath("/wishes");
-  revalidatePath("/places");
-  redirect(`/wishes/${data.id}/edit`);
 }
 
-export async function updateWish(formData: FormData) {
-  const { supabase, user } = await requireUser();
-  const wishId = requiredText(formData.get("wish_id"), 100);
-  const input = wishInput(formData);
-  if (!wishId) throw new Error("Не найдено желание для обновления.");
+export async function updateWish(
+  _prev: WishActionState,
+  formData: FormData,
+): Promise<WishActionState> {
+  try {
+    const { supabase, user } = await requireUser();
+    const wishId = requiredText(formData.get("wish_id"), 100);
+    const input = wishInput(formData);
+    if (!wishId) return { error: "Не найдено желание для обновления." };
 
-  const image = formData.get("image");
-  const removeImage = formData.get("remove_image") === "on";
-  const imagePath = isUploadedFile(image)
-    ? await uploadOwnedImage({ file: image, ownerId: user.id, bucket: "wish-media" })
-    : removeImage
-      ? null
-      : undefined;
+    const image = formData.get("image");
+    const removeImage = formData.get("remove_image") === "on";
+    const imagePath = isUploadedFile(image)
+      ? await uploadOwnedImage({ file: image, ownerId: user.id, bucket: "wish-media" })
+      : removeImage
+        ? null
+        : undefined;
 
-  const { error } = await supabase
-    .from("wishes")
-    .update({
-      ...input,
-      ...(imagePath !== undefined ? { image_path: imagePath } : {}),
-    })
-    .eq("id", wishId)
-    .eq("author_id", user.id);
+    const { error } = await supabase
+      .from("wishes")
+      .update({
+        ...input,
+        ...(imagePath !== undefined ? { image_path: imagePath } : {}),
+      })
+      .eq("id", wishId)
+      .eq("author_id", user.id);
 
-  if (error) throw new Error(`Не удалось обновить желание: ${error.message}`);
+    if (error) return { error: `Не удалось обновить желание: ${error.message}` };
 
-  revalidatePath("/");
-  revalidatePath("/feed");
-  revalidatePath("/wishes");
-  revalidatePath(`/wishes/${wishId}`);
-  redirect(`/wishes/${wishId}/edit?saved=1`);
+    revalidatePath("/");
+    revalidatePath("/feed");
+    revalidatePath("/wishes");
+    revalidatePath(`/wishes/${wishId}`);
+    redirect(`/wishes/${wishId}/edit?saved=1`);
+  } catch (err) {
+    return {
+      error:
+        err instanceof Error && err.message
+          ? err.message
+          : "Не получилось обновить желание. Попробуй ещё раз.",
+    };
+  }
 }
 
 export async function archiveWish(formData: FormData) {

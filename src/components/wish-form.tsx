@@ -1,6 +1,10 @@
-import { CircleDollarSign, ImagePlus } from "lucide-react";
+"use client";
+
+import { useActionState } from "react";
+import { AlertCircle, CircleDollarSign, ImagePlus } from "lucide-react";
 
 import { SubmitButton } from "@/components/submit-button";
+import type { WishActionState } from "@/app/wishes/actions";
 import { WishCategoryIcon } from "@/components/wish-category-icon";
 import { CATEGORIES } from "@/lib/constants";
 import { formatRubles } from "@/lib/money";
@@ -22,16 +26,26 @@ export function WishForm({
   values,
   submitLabel,
 }: {
-  action: (formData: FormData) => void | Promise<void>;
+  action: (prev: WishActionState, formData: FormData) => Promise<WishActionState>;
   values?: WishValues;
   submitLabel: string;
 }) {
+  const [state, formAction] = useActionState<WishActionState, FormData>(action, null);
   const estimatedCost = values?.estimated_cost_minor
     ? String(Number(values.estimated_cost_minor) / 100)
     : "";
 
   return (
-    <form action={action} className="mt-5 space-y-4" encType="multipart/form-data">
+    <form action={formAction} className="mt-5 space-y-4" encType="multipart/form-data">
+      {state?.error && (
+        <div
+          className="flex items-start gap-2 rounded-2xl border border-[#f0c8c8] bg-[#fff5f5] p-3.5 text-[#c0392b]"
+          role="alert"
+        >
+          <AlertCircle className="mt-0.5 size-4 shrink-0" />
+          <p className="text-[11px] font-bold leading-4">{state.error}</p>
+        </div>
+      )}
       {values?.id && <input name="wish_id" type="hidden" value={values.id} />}
       {values?.source_wish_id && (
         <input name="source_wish_id" type="hidden" value={values.source_wish_id} />

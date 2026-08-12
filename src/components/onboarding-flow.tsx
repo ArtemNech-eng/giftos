@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 import {
+  AlertCircle,
   ArrowLeft,
   Camera,
   CheckCircle2,
@@ -16,7 +17,10 @@ import {
   UsersRound,
 } from "lucide-react";
 
-import { completeOnboarding } from "@/app/onboarding/actions";
+import {
+  completeOnboarding,
+  type OnboardingActionState,
+} from "@/app/onboarding/actions";
 import { CATEGORIES } from "@/lib/constants";
 
 const USERNAME_PATTERN = /^[a-zA-Z0-9_]{3,30}$/;
@@ -94,6 +98,10 @@ export function OnboardingFlow({
   const [step, setStep] = useState(1);
   const [error, setError] = useState<string | null>(null);
   const [interests, setInterests] = useState<string[]>([]);
+  const [state, formAction] = useActionState<OnboardingActionState, FormData>(
+    completeOnboarding,
+    null,
+  );
 
   const goNext = () => {
     if (step === 2) {
@@ -171,7 +179,16 @@ export function OnboardingFlow({
         ))}
       </div>
 
-      <form action={completeOnboarding} className="mt-5">
+      <form action={formAction} className="mt-5">
+        {(state?.error || error) && (
+          <div
+            className="mb-4 flex items-start gap-2 rounded-2xl border border-[#f0c8c8] bg-[#fff5f5] p-3.5 text-[#c0392b]"
+            role="alert"
+          >
+            <AlertCircle className="mt-0.5 size-4 shrink-0" />
+            <p className="text-[11px] font-bold leading-4">{state?.error ?? error}</p>
+          </div>
+        )}
         <section
           className={
             step === 1

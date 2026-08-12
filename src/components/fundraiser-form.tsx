@@ -1,17 +1,46 @@
-import { CalendarDays, EyeOff, ImagePlus, Link2, Lock, Target } from "lucide-react";
+"use client";
+
+import { useActionState } from "react";
+import {
+  AlertCircle,
+  CalendarDays,
+  EyeOff,
+  ImagePlus,
+  Link2,
+  Lock,
+  Target,
+} from "lucide-react";
 
 import { SubmitButton } from "@/components/submit-button";
+import type { FundraiserActionState } from "@/app/fundraisers/actions";
 import { CATEGORIES } from "@/lib/constants";
 
 export function FundraiserForm({
   action,
   wishes,
 }: {
-  action: (formData: FormData) => void | Promise<void>;
+  action: (
+    prev: FundraiserActionState,
+    formData: FormData,
+  ) => Promise<FundraiserActionState>;
   wishes: Array<{ id: string; title: string; category_slug: string | null }>;
 }) {
+  const [state, formAction] = useActionState<FundraiserActionState, FormData>(
+    action,
+    null,
+  );
+
   return (
-    <form action={action} className="mt-5 space-y-4" encType="multipart/form-data">
+    <form action={formAction} className="mt-5 space-y-4" encType="multipart/form-data">
+      {state?.error && (
+        <div
+          className="flex items-start gap-2 rounded-2xl border border-[#f0c8c8] bg-[#fff5f5] p-3.5 text-[#c0392b]"
+          role="alert"
+        >
+          <AlertCircle className="mt-0.5 size-4 shrink-0" />
+          <p className="text-[11px] font-bold leading-4">{state.error}</p>
+        </div>
+      )}
       <section className="border-[#2c2036]/9 rounded-[1.6rem] border bg-white p-4 shadow-[0_8px_22px_rgba(69,43,94,.05)]">
         <label className="block" htmlFor="fundraiser-title">
           <span className="text-xs font-black">Какая общая цель?</span>
