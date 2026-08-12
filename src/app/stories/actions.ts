@@ -10,56 +10,70 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { isUploadedFile, uploadOwnedStoryVideo } from "@/lib/media";
 import { optionalText, requiredText } from "@/lib/validation";
 
-export async function createStory(formData: FormData) {
-  const { supabase, user } = await requireUser();
-  const caption = optionalText(formData.get("caption"), 500);
-  const rawLinkedService = String(formData.get("linked_service_id") ?? "").trim();
-  const linkedServiceId = /^[0-9a-f-]{36}$/i.test(rawLinkedService)
-    ? rawLinkedService
-    : null;
-  const video = formData.get("video");
-  if (!isUploadedFile(video)) throw new Error("Выберите видео для story.");
+export type StoryActionState = { error?: string } | null;
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("username, is_creator")
-    .eq("id", user.id)
-    .maybeSingle();
-  if (!profile?.is_creator || !profile.username)
-    throw new Error("Сначала создайте страницу автора.");
+export async function createStory(
+  _prev: StoryActionState,
+  formData: FormData,
+): Promise<StoryActionState> {
+  try {
+    const { supabase, user } = await requireUser();
+    const caption = optionalText(formData.get("caption"), 500);
+    const rawLinkedService = String(formData.get("linked_service_id") ?? "").trim();
+    const linkedServiceId = /^[0-9a-f-]{36}$/i.test(rawLinkedService)
+      ? rawLinkedService
+      : null;
+    const video = formData.get("video");
+    if (!isUploadedFile(video)) return { error: "Выберите видео для story." };
 
-  // New stories are deliberately free while paid unlocks and creator payouts
-  // are deferred. Legacy paid stories remain readable through testUnlockStory.
-  const path = await uploadOwnedStoryVideo({ file: video, ownerId: user.id });
-  // Portfolio link: the DB guard rejects a listing the author does not own.
-  const { data: story, error } = await supabase
-    .from("stories")
-    .insert({
-      author_id: user.id,
-      media_path: path,
-      caption,
-      access_type: "free",
-      unlock_price_minor: null,
-      moderation_status: "approved",
-      linked_service_id: linkedServiceId,
-    })
-    .select("id")
-    .single();
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("username, is_creator")
+      .eq("id", user.id)
+      .maybeSingle();
+    if (!profile?.is_creator || !profile.username)
+      return { error: "Сначала создайте страницу автора." };
 
-  if (error) {
-    await createAdminClient().storage.from("story-media").remove([path]);
-    throw new Error(`Не удалось опубликовать story: ${error.message}`);
+    // New stories are deliberately free while paid unlocks and creator payouts
+    // are deferred. Legacy paid stories remain readable through testUnlockStory.
+    const path = await uploadOwnedStoryVideo({ file: video, ownerId: user.id });
+    // Portfolio link: the DB guard rejects a listing the author does not own.
+    const { data: story, error } = await supabase
+      .from("stories")
+      .insert({
+        author_id: user.id,
+        media_path: path,
+        caption,
+        access_type: "free",
+        unlock_price_minor: null,
+        moderation_status: "approved",
+        linked_service_id: linkedServiceId,
+      })
+      .select("id")
+      .single();
+
+    if (error) {
+      await createAdminClient().storage.from("story-media").remove([path]);
+      return { error: `Не удалось опубликовать story: ${error.message}` };
+    }
+
+    // City battle: qualified action (story published).
+    await awardCityPoints(supabase, "story_published", story?.id);
+
+    revalidatePath("/");
+    revalidatePath("/feed");
+    revalidatePath("/places");
+    revalidatePath("/stories/new");
+    revalidatePath(`/u/${profile.username}`);
+    redirect(`/u/${profile.username}?story=processing` as Route);
+  } catch (err) {
+    return {
+      error:
+        err instanceof Error && err.message
+          ? err.message
+          : "Не получилось опубликовать story. Попробуй ещё раз.",
+    };
   }
-
-  // City battle: qualified action (story published).
-  await awardCityPoints(supabase, "story_published", story?.id);
-
-  revalidatePath("/");
-  revalidatePath("/feed");
-  revalidatePath("/places");
-  revalidatePath("/stories/new");
-  revalidatePath(`/u/${profile.username}`);
-  redirect(`/u/${profile.username}?story=processing` as Route);
 }
 
 export async function testUnlockStory(formData: FormData) {

@@ -394,58 +394,72 @@ export async function joinPlace(formData: FormData) {
   redirect(`/places/${placeId}` as Route);
 }
 
-export async function createPlace(formData: FormData) {
-  const { supabase, user } = await requireUser();
-  const name = requiredText(formData.get("name"), 60);
-  const description = optionalText(formData.get("description"), 500);
-  const iconCode = optionalText(formData.get("icon_code"), 20) || "place";
-  const validIconCodes = new Set([
-    "center",
-    "music",
-    "gaming",
-    "night",
-    "meet",
-    "sport",
-    "coffee",
-    "event",
-    "home",
-    "place",
-  ]);
-  const kind = formData.get("kind") === "temporary" ? "temporary" : "personal";
-  if (!name) throw new Error("Укажите название места.");
-  if (!validIconCodes.has(iconCode)) throw new Error("Выберите иконку места.");
+export type PlaceActionState = { error?: string } | null;
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("city_id")
-    .eq("id", user.id)
-    .maybeSingle();
-  if (!profile?.city_id) throw new Error("Сначала укажите город в профиле.");
+export async function createPlace(
+  _prev: PlaceActionState,
+  formData: FormData,
+): Promise<PlaceActionState> {
+  try {
+    const { supabase, user } = await requireUser();
+    const name = requiredText(formData.get("name"), 60);
+    const description = optionalText(formData.get("description"), 500);
+    const iconCode = optionalText(formData.get("icon_code"), 20) || "place";
+    const validIconCodes = new Set([
+      "center",
+      "music",
+      "gaming",
+      "night",
+      "meet",
+      "sport",
+      "coffee",
+      "event",
+      "home",
+      "place",
+    ]);
+    const kind = formData.get("kind") === "temporary" ? "temporary" : "personal";
+    if (!name) return { error: "Укажите название места." };
+    if (!validIconCodes.has(iconCode)) return { error: "Выберите иконку места." };
 
-  const { data: place, error } = await supabase
-    .from("places")
-    .insert({
-      city_id: profile.city_id,
-      creator_id: user.id,
-      name,
-      description,
-      icon_code: iconCode,
-      kind,
-    })
-    .select("id")
-    .single();
-  if (error) throw new Error(`Не удалось создать место: ${error.message}`);
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("city_id")
+      .eq("id", user.id)
+      .maybeSingle();
+    if (!profile?.city_id) return { error: "Сначала укажите город в профиле." };
 
-  await supabase
-    .from("place_members")
-    .insert({ place_id: place.id, profile_id: user.id, role: "creator" });
-  await supabase.from("place_presence").insert({
-    place_id: place.id,
-    profile_id: user.id,
-  });
+    const { data: place, error } = await supabase
+      .from("places")
+      .insert({
+        city_id: profile.city_id,
+        creator_id: user.id,
+        name,
+        description,
+        icon_code: iconCode,
+        kind,
+      })
+      .select("id")
+      .single();
+    if (error) return { error: `Не удалось создать место: ${error.message}` };
 
-  revalidatePath("/places");
-  revalidatePath("/feed");
-  revalidatePath("/people");
-  redirect(`/places/${place.id}` as Route);
+    await supabase
+      .from("place_members")
+      .insert({ place_id: place.id, profile_id: user.id, role: "creator" });
+    await supabase.from("place_presence").insert({
+      place_id: place.id,
+      profile_id: user.id,
+    });
+
+    revalidatePath("/places");
+    revalidatePath("/feed");
+    revalidatePath("/people");
+    redirect(`/places/${place.id}` as Route);
+  } catch (err) {
+    return {
+      error:
+        err instanceof Error && err.message
+          ? err.message
+          : "Не получилось создать место. Попробуй ещё раз.",
+    };
+  }
 }
