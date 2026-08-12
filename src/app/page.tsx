@@ -11,6 +11,10 @@ import {
   MessageCircle,
   QrCode,
   Radio,
+  Store,
+  Coffee,
+  Wrench,
+  Check,
   Sparkles,
   UsersRound,
 } from "lucide-react";
@@ -1075,6 +1079,114 @@ export default async function SeoLandingPage({
         </div>
       </section>
 
+      <section
+        className="relative overflow-hidden border-y border-[#2e203a]/10 bg-[#fdf6ec] px-5 py-20 sm:px-8 lg:px-12 lg:py-28"
+        id="masters"
+      >
+        <div
+          aria-hidden="true"
+          className="absolute -left-40 bottom-[-16rem] size-[34rem] rounded-full bg-[#ffd9a0]/60 blur-[120px]"
+        />
+        <div className="relative mx-auto grid max-w-[1440px] items-center gap-12 lg:grid-cols-[1fr_1fr] lg:gap-16">
+          <div>
+            <p className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-[0.18em] text-[#b07918]">
+              <Store className="size-4" /> Городская витрина · пока бесплатно
+            </p>
+            <h2 className="mt-6 max-w-xl text-balance text-5xl font-black leading-[0.88] tracking-[-0.075em] sm:text-6xl">
+              Мастера твоего
+              <span className="block text-[#e3a523]">города — рядом.</span>
+            </h2>
+            <p className="mt-7 max-w-xl text-lg leading-8 text-[#6d5a3a] sm:text-xl">
+              Косметологи, маникюр, парикмахеры, ремонт, свои кафе — не реклама на всю
+              страну, а витрина людей, к которым можно дойти пешком. В первой волне —
+              бесплатно.
+            </p>
+            <ul className="mt-8 grid gap-3 sm:grid-cols-2">
+              {[
+                "Объявление видно только жителям города",
+                "Ты сам решаешь, как с тобой связаться",
+                "Без посредников и комиссий",
+                "Позже появится платное продвижение — по желанию",
+              ].map((item) => (
+                <li
+                  className="flex items-start gap-2 text-sm font-bold leading-5 text-[#6d5a3a]"
+                  key={item}
+                >
+                  <span className="mt-0.5 grid size-5 shrink-0 place-items-center rounded-full bg-[#e3a523] text-white">
+                    <Check className="size-3" />
+                  </span>
+                  {item}
+                </li>
+              ))}
+            </ul>
+            <div className="mt-10 flex flex-wrap items-center gap-4">
+              <Link
+                className="group inline-flex items-center gap-3 rounded-full bg-[#201827] px-6 py-3.5 text-sm font-black text-white shadow-[0_16px_34px_rgba(48,27,70,.2)] transition hover:-translate-y-0.5 hover:bg-[#4b2d66]"
+                href={signInHref}
+              >
+                Заявить о себе бесплатно
+                <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
+              </Link>
+              <Link
+                className="inline-flex items-center gap-2 rounded-full border border-[#d9b876] px-5 py-3.5 text-sm font-black text-[#8a6414] transition hover:border-[#b07918] hover:text-[#6d4d0e]"
+                href="/preview?screen=services"
+              >
+                Смотреть витрину <ArrowRight className="size-4" />
+              </Link>
+            </div>
+          </div>
+
+          <div className="grid gap-3">
+            {[
+              {
+                icon: Sparkles,
+                category: "Красота",
+                title: "Маникюр у ДК",
+                note: "Наталья · гель-лак и дизайн",
+                tone: "bg-[#ffe9f2] text-[#d84b81]",
+              },
+              {
+                icon: Coffee,
+                category: "Еда и напитки",
+                title: "Кофейня «Утро»",
+                note: "Свежая выпечка с 7:00",
+                tone: "bg-[#fff0d6] text-[#b07918]",
+              },
+              {
+                icon: Wrench,
+                category: "Ремонт",
+                title: "Ремонт телефонов",
+                note: "Сергей · замена стекла за час",
+                tone: "bg-[#e8f2ff] text-[#3d6fb5]",
+              },
+            ].map((item) => (
+              <article
+                className="flex items-center gap-4 rounded-[1.5rem] border border-[#ead9b4] bg-white/90 p-4 shadow-[0_12px_30px_rgba(122,86,26,.08)] backdrop-blur"
+                key={item.title}
+              >
+                <span
+                  className={`grid size-12 shrink-0 place-items-center rounded-2xl ${item.tone}`}
+                >
+                  <item.icon className="size-5" />
+                </span>
+                <span className="min-w-0 grow">
+                  <small className="block text-[9px] font-black uppercase tracking-[0.12em] text-[#a58a4e]">
+                    {item.category}
+                  </small>
+                  <b className="mt-0.5 block truncate text-sm">{item.title}</b>
+                  <small className="mt-0.5 block truncate text-xs text-[#8a7350]">
+                    {item.note}
+                  </small>
+                </span>
+                <span className="shrink-0 rounded-full bg-[#f3ead6] px-2.5 py-1 text-[9px] font-black text-[#8a6414]">
+                  {launchCityName}
+                </span>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
       <section className="relative overflow-hidden border-t border-[#2d2038]/10 bg-[#201827] px-5 py-20 text-white sm:px-8 lg:px-12 lg:py-28">
         <div
           aria-hidden="true"
@@ -1120,6 +1232,9 @@ export default async function SeoLandingPage({
             </a>
             <a className="transition hover:text-white" href="#qr-greeting">
               QR-приветствие
+            </a>
+            <a className="transition hover:text-white" href="#masters">
+              Мастера города
             </a>
             <Link className="transition hover:text-white" href={signInHref}>
               Войти

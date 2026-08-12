@@ -11,6 +11,7 @@ import {
   Plus,
   Radio,
   Sparkles,
+  Store,
   TrendingUp,
   Trophy,
   UsersRound,
@@ -447,6 +448,24 @@ export default async function PlacesPage() {
           <Plus className="size-5" />
         </Link>
       </header>
+
+      <Link
+        className="mt-4 flex items-center justify-between rounded-2xl border border-[#e6d9ef] bg-white p-3.5 shadow-[0_6px_16px_rgba(69,43,94,.05)]"
+        href="/services"
+      >
+        <span className="flex items-center gap-3">
+          <span className="grid size-9 place-items-center rounded-xl bg-[#fff6e8] text-[#a87511]">
+            <Store className="size-4.5" />
+          </span>
+          <span>
+            <b className="block text-xs">Услуги и заведения города</b>
+            <small className="mt-0.5 block text-[10px] text-[#81748a]">
+              Мастера и точки рядом · пока бесплатно
+            </small>
+          </span>
+        </span>
+        <ChevronRight className="size-4 shrink-0 text-[#a295a8]" />
+      </Link>
 
       {!profile?.city_id ? (
         <section className="mt-12 rounded-[1.8rem] border border-[#d9c5f3] bg-gradient-to-br from-[#fffaff] to-[#f2ecff] p-6 text-center shadow-[0_12px_30px_rgba(69,43,94,.07)]">

@@ -19,6 +19,7 @@ import {
   Rocket,
   ShieldAlert,
   Sparkles,
+  Store,
   Star,
   Trophy,
   UsersRound,
@@ -46,6 +47,8 @@ import { CreatorArtifactRequestButton } from "@/components/creator-artifact-requ
 import { AnimatedArtifact } from "@/components/animated-artifact";
 import { CreatorShareLink } from "@/components/creator-share-link";
 import { LocalRoleIcon } from "@/components/local-role-icon";
+import { ServiceCategoryIcon } from "@/components/service-category-icon";
+import { SERVICE_CATEGORIES, SERVICE_KIND_LABELS } from "@/lib/service-categories";
 import { CollectibleArtifactGiftButton } from "@/components/collectible-artifact-gift-button";
 import { WishCategoryIcon } from "@/components/wish-category-icon";
 import { ProfileQrCode } from "@/components/profile-qr-code";
@@ -139,6 +142,7 @@ export default async function ProfilePage({
     { data: rawArtifactCatalog },
     { data: rawArtifactShelf },
     { data: equippedItems },
+    { data: rawServices },
   ] = await Promise.all([
     user && !isOwnProfile
       ? supabase
@@ -264,7 +268,21 @@ export default async function ProfilePage({
       .select("item_id, virtual_items!inner(id, item_type, icon_code, name)")
       .eq("profile_id", profile.id)
       .eq("is_equipped", true),
+    supabase
+      .from("public_city_services")
+      .select("id, kind, title, category_slug, description, contact_text")
+      .eq("owner_id", profile.id)
+      .limit(3),
   ]);
+
+  const profileServices = (rawServices ?? []) as Array<{
+    id: string;
+    kind: "service" | "business";
+    title: string;
+    category_slug: string;
+    description: string | null;
+    contact_text: string | null;
+  }>;
 
   const avatarUrl = await getSignedImageUrl({
     bucket: "avatars",
@@ -685,6 +703,66 @@ export default async function ProfilePage({
                 </span>
               ))}
             </div>
+          )}
+        </section>
+      )}
+
+      {profileServices.length > 0 && (
+        <section className="border-[#2c2036]/9 mx-4 mt-4 rounded-[1.55rem] border bg-white p-4 shadow-[0_8px_22px_rgba(69,43,94,.05)]">
+          <div className="flex items-center justify-between">
+            <span className="flex items-center gap-2">
+              <span className="grid size-8 place-items-center rounded-xl bg-[#fff6e8] text-[#a87511]">
+                <Store className="size-4" />
+              </span>
+              <span>
+                <h2 className="text-sm font-black">Услуги и заведения</h2>
+                <p className="mt-0.5 text-[10px] text-[#81748a]">
+                  {isOwnProfile
+                    ? "Твоя витрина в городе"
+                    : "Что человек предлагает городу"}
+                </p>
+              </span>
+            </span>
+            <Link className="text-[10px] font-black text-[#8753e6]" href="/services">
+              Витрина ›
+            </Link>
+          </div>
+          <div className="mt-3 space-y-2">
+            {profileServices.map((service) => (
+              <Link
+                className="flex items-center gap-3 rounded-xl bg-[#fbf9fe] p-2.5"
+                href={`/services/${service.id}` as Route}
+                key={service.id}
+              >
+                <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-[#f0e9ff] text-[#8753e6]">
+                  <ServiceCategoryIcon
+                    className="size-4"
+                    code={
+                      SERVICE_CATEGORIES.find(
+                        (category) => category.slug === service.category_slug,
+                      )?.iconCode
+                    }
+                  />
+                </span>
+                <span className="min-w-0 grow">
+                  <b className="block truncate text-[11px]">{service.title}</b>
+                  <small className="mt-0.5 flex items-center gap-1.5 truncate text-[9px] font-bold text-[#a093a6]">
+                    <Sparkles className="size-3 shrink-0 text-[#8753e6]" />
+                    {SERVICE_KIND_LABELS[service.kind]}
+                    {service.contact_text ? ` · ${service.contact_text}` : ""}
+                  </small>
+                </span>
+                <ChevronRight className="size-4 shrink-0 text-[#a295a8]" />
+              </Link>
+            ))}
+          </div>
+          {isOwnProfile && (
+            <Link
+              className="mt-3 block rounded-xl border border-dashed border-[#e0cf9f] py-2.5 text-center text-[10px] font-black text-[#a87511]"
+              href="/services/new"
+            >
+              + Добавить объявление
+            </Link>
           )}
         </section>
       )}

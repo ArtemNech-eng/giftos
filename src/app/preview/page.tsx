@@ -8,6 +8,13 @@ import {
   ArrowUpRight,
   Award,
   BarChart3,
+  HeartPulse,
+  Wrench,
+  GraduationCap,
+  Coffee,
+  Car,
+  Store,
+  Plus,
   CalendarDays,
   Check,
   CirclePlus,
@@ -90,6 +97,7 @@ const screens = [
   { id: "profile-media", label: "Мои фото", number: "29" },
   { id: "story-analytics", label: "Аналитика story", number: "30" },
   { id: "invite", label: "Приветствие по QR", number: "31" },
+  { id: "services", label: "Услуги города", number: "32" },
 ] as const;
 
 type ScreenId = (typeof screens)[number]["id"];
@@ -2493,6 +2501,140 @@ function BonusesScreen() {
   );
 }
 
+function ServicesPreviewScreen() {
+  const categories = [
+    { slug: "beauty", label: "Красота", icon: Sparkles },
+    { slug: "health", label: "Здоровье", icon: HeartPulse },
+    { slug: "repair", label: "Ремонт", icon: Wrench },
+    { slug: "education", label: "Обучение", icon: GraduationCap },
+    { slug: "events", label: "Организация", icon: CalendarDays },
+    { slug: "food", label: "Еда и напитки", icon: Coffee },
+    { slug: "transport", label: "Транспорт", icon: Car },
+    { slug: "other", label: "Другое", icon: Store },
+  ];
+  const listings = [
+    {
+      title: "Маникюр у ДК",
+      kind: "Услуга",
+      category: "beauty",
+      note: "Гель-лак, дизайн, укрепление",
+      owner: "Наталья",
+      contact: "@nastya_nails",
+    },
+    {
+      title: "Кофейня «Утро»",
+      kind: "Заведение",
+      category: "food",
+      note: "Свежая выпечка и кофе с 7:00",
+      owner: "Сергей",
+      contact: "+7 900 …",
+    },
+    {
+      title: "Ремонт телефонов",
+      kind: "Услуга",
+      category: "repair",
+      note: "Замена стекла и аккумулятора за час",
+      owner: "Дмитрий",
+      contact: "ул. Пушкина, 12",
+    },
+  ];
+  return (
+    <div className="min-h-[730px] bg-[#f7f4fb] px-4 pb-6 pt-5 text-[#251d31]">
+      <header className="flex items-center justify-between">
+        <span className="grid size-10 place-items-center rounded-full border border-[#2c2036]/10 bg-white text-[#5f5369]">
+          <ArrowUpRight className="size-4 rotate-[-135deg]" />
+        </span>
+        <span className="text-center">
+          <small className="block text-[9px] font-black uppercase tracking-[0.13em] text-[#8c7e94]">
+            Будённовск
+          </small>
+          <b className="block text-sm">Услуги и заведения</b>
+        </span>
+        <span className="grid size-10 place-items-center rounded-full bg-gradient-to-br from-[#ff5d9a] to-[#8254ed] text-white">
+          <Plus className="size-5" />
+        </span>
+      </header>
+      <section className="mt-5 overflow-hidden rounded-[1.8rem] bg-gradient-to-br from-[#2e2250] via-[#4d3572] to-[#7559d5] p-5 text-white shadow-[0_14px_32px_rgba(63,37,98,.22)]">
+        <span className="bg-white/14 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.08em] text-[#ffc3da]">
+          <Store className="size-3.5" /> Свои исполнители
+        </span>
+        <h2 className="mt-3 text-3xl font-black leading-[0.9] tracking-[-0.075em]">
+          КТО ЧТО ДЕЛАЕТ
+          <br />В ГОРОДЕ.
+        </h2>
+        <p className="mt-3 max-w-64 text-[11px] leading-5 text-white/75">
+          Мастера, специалисты и заведения Будённовска — одним списком. Без рекламы всей
+          страны: только свои, только рядом.
+        </p>
+        <div className="mt-4 flex gap-2">
+          <span className="rounded-full bg-white/15 px-2.5 py-1 text-[10px] font-black">
+            17 объявлений
+          </span>
+          <span className="rounded-full bg-white/15 px-2.5 py-1 text-[10px] font-black">
+            пока бесплатно
+          </span>
+        </div>
+      </section>
+      <nav className="scrollbar-none -mx-4 mt-5 flex gap-1.5 overflow-x-auto px-4 pb-1">
+        <span className="shrink-0 rounded-full bg-gradient-to-r from-[#8254ed] to-[#ff5d9a] px-3 py-1.5 text-[10px] font-black text-white shadow-[0_4px_12px_rgba(160,75,213,.3)]">
+          Все
+        </span>
+        {categories.map((category) => (
+          <span
+            className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-[#2c2036]/10 bg-white px-3 py-1.5 text-[10px] font-black text-[#756a7d]"
+            key={category.slug}
+          >
+            <category.icon className="size-3.5" /> {category.label}
+          </span>
+        ))}
+      </nav>
+      <div className="mt-5 space-y-2.5">
+        {listings.map((listing) => {
+          const category = categories.find((item) => item.slug === listing.category)!;
+          return (
+            <article
+              className="border-[#2c2036]/9 flex items-start gap-3 rounded-[1.4rem] border bg-white p-3.5 shadow-[0_8px_22px_rgba(69,43,94,.05)]"
+              key={listing.title}
+            >
+              <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-[#f0e9ff] text-[#8753e6]">
+                <category.icon className="size-5" />
+              </span>
+              <span className="min-w-0 grow">
+                <span className="flex items-center gap-2">
+                  <b className="truncate text-xs">{listing.title}</b>
+                  <span
+                    className={`shrink-0 rounded-full px-1.5 py-0.5 text-[8px] font-black ${
+                      listing.kind === "Заведение"
+                        ? "bg-[#fff6d9] text-[#a87511]"
+                        : "bg-[#f0e9ff] text-[#7549d0]"
+                    }`}
+                  >
+                    {listing.kind}
+                  </span>
+                </span>
+                <small className="mt-1 line-clamp-2 block text-[10px] leading-4 text-[#81748a]">
+                  {listing.note}
+                </small>
+                <small className="mt-1.5 flex items-center gap-1.5 text-[9px] font-bold text-[#a093a6]">
+                  <Sparkles className="size-3 text-[#8753e6]" />
+                  {listing.owner} · {listing.contact}
+                </small>
+              </span>
+              <ChevronRight className="mt-1 size-4 shrink-0 text-[#a295a8]" />
+            </article>
+          );
+        })}
+      </div>
+      <section className="mt-5 flex gap-2.5 rounded-2xl bg-[#f0faf5] p-3.5 text-[#4c7169]">
+        <Check className="mt-0.5 size-4 shrink-0 text-[#258b82]" />
+        <p className="text-[10px] leading-4">
+          Объявления бесплатны в первой волне и видны только жителям города.
+        </p>
+      </section>
+    </div>
+  );
+}
+
 function InvitePreviewScreen() {
   const inviteLink = "https://hochutakzhe.ru/r/nastya?city=budennovsk";
   const posterUrl = `/og?type=invite&title=${encodeURIComponent(
@@ -3811,6 +3953,7 @@ export default async function PreviewPage({
     "profile-media": <ProfileMediaScreen />,
     "story-analytics": <StoryAnalyticsScreen />,
     invite: <InvitePreviewScreen />,
+    services: <ServicesPreviewScreen />,
   };
 
   return (
