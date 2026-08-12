@@ -16,6 +16,8 @@ import {
   Music2,
   Plane,
   Radio,
+  Store,
+  Star,
   Sparkles,
   TrendingUp,
   Trophy,
@@ -29,6 +31,8 @@ import { FeedWishToggle } from "@/components/feed-wish-toggle";
 import { ShowMoreSection } from "@/components/show-more-section";
 import { WishCategoryIcon } from "@/components/wish-category-icon";
 import { PlaceIcon } from "@/components/place-icon";
+import { ServiceCategoryIcon } from "@/components/service-category-icon";
+import { SERVICE_CATEGORIES } from "@/lib/service-categories";
 import { APP_NAME, CATEGORIES } from "@/lib/constants";
 import { formatRubles } from "@/lib/money";
 import { hasSupabaseEnvironment } from "@/lib/supabase/env";
@@ -656,6 +660,14 @@ async function getHomeData(scope: "circle" | "city" | "global" = "circle") {
     let circleLiveRooms: LiveRoomPreview[] = [];
     let cityChampion: { seasonName: string; cityName: string } | null = null;
     let cityFirstWave = false;
+    let cityServices: Array<{
+      id: string;
+      title: string;
+      kind: "service" | "business";
+      category_slug: string;
+      rating_avg: number | null;
+      rating_count: number;
+    }> = [];
     if (scope !== "global" && user) {
       const { data: myProfile } = await supabase
         .from("profiles")
@@ -668,6 +680,12 @@ async function getHomeData(scope: "circle" | "city" | "global" = "circle") {
           .select("id, username, display_name, city, is_creator, is_vip")
           .eq("city_id", myProfile.city_id)
           .limit(20);
+        const { data: rawCityServices } = await supabase
+          .from("public_city_services")
+          .select("id, title, kind, category_slug, rating_avg, rating_count")
+          .eq("city_id", myProfile.city_id)
+          .limit(3);
+        cityServices = (rawCityServices ?? []) as typeof cityServices;
         const citizens = (rawCitizens ?? []) as Array<{
           id: string;
           username: string;
@@ -876,6 +894,7 @@ async function getHomeData(scope: "circle" | "city" | "global" = "circle") {
       circleLiveRooms,
       cityChampion,
       cityFirstWave,
+      cityServices,
       isDemo: false,
     };
   } catch {
@@ -900,6 +919,7 @@ async function getHomeData(scope: "circle" | "city" | "global" = "circle") {
       circleLiveRooms: [],
       cityChampion: null,
       cityFirstWave: false,
+      cityServices: [],
       isDemo: false,
     };
   }
@@ -1081,6 +1101,7 @@ export default async function HomePage({
     circleLiveRooms,
     cityChampion,
     cityFirstWave,
+    cityServices,
     isDemo,
   } = await getHomeData(scope);
   // Demo data is visible only without a configured data service. Once Supabase
@@ -1144,6 +1165,71 @@ export default async function HomePage({
           </Link>
         </div>
       </header>
+
+      {cityServices && cityServices.length > 0 && (
+        <Link
+          className="mb-4 block overflow-hidden rounded-[1.6rem] border border-[#e6d9ef] bg-white shadow-[0_8px_22px_rgba(69,43,94,.06)]"
+          href="/services"
+        >
+          <div className="flex items-center justify-between gap-3 bg-gradient-to-r from-[#fff4e0] to-[#fff0f7] px-4 py-3">
+            <span className="flex items-center gap-2">
+              <span className="grid size-8 place-items-center rounded-xl bg-white text-[#a87511] shadow-[0_4px_10px_rgba(168,117,17,.15)]">
+                <Store className="size-4" />
+              </span>
+              <span>
+                <b className="block text-xs font-black">Витрина города</b>
+                <small className="mt-0.5 block text-[10px] text-[#81748a]">
+                  Мастера и заведения рядом
+                </small>
+              </span>
+            </span>
+            <span className="shrink-0 rounded-full bg-[#201827] px-3 py-1.5 text-[10px] font-black text-white">
+              Открыть ›
+            </span>
+          </div>
+          <div className="divide-y divide-[#f4ecf6]">
+            {cityServices.map(
+              (service: {
+                id: string;
+                title: string;
+                kind: "service" | "business";
+                category_slug: string;
+                rating_avg: number | null;
+                rating_count: number;
+              }) => (
+                <span className="flex items-center gap-3 px-4 py-2.5" key={service.id}>
+                  <ServiceCategoryIcon
+                    className="size-4 shrink-0 text-[#8753e6]"
+                    code={
+                      SERVICE_CATEGORIES.find(
+                        (category) => category.slug === service.category_slug,
+                      )?.iconCode
+                    }
+                  />
+                  <span className="min-w-0 grow truncate text-[11px] font-bold text-[#5f5369]">
+                    {service.title}
+                  </span>
+                  <span
+                    className={`shrink-0 rounded-full px-1.5 py-0.5 text-[8px] font-black ${
+                      service.kind === "business"
+                        ? "bg-[#fff6d9] text-[#a87511]"
+                        : "bg-[#f0e9ff] text-[#7549d0]"
+                    }`}
+                  >
+                    {service.kind === "business" ? "Заведение" : "Услуга"}
+                  </span>
+                  {service.rating_count > 0 && (
+                    <span className="flex shrink-0 items-center gap-0.5 text-[9px] font-black text-[#8a7d91]">
+                      <Star className="size-3 fill-[#ffb020] text-[#ffb020]" />
+                      {service.rating_avg?.toFixed(1)}
+                    </span>
+                  )}
+                </span>
+              ),
+            )}
+          </div>
+        </Link>
+      )}
 
       <nav
         aria-label="Лента города"

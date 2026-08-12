@@ -1,7 +1,8 @@
 import Link from "next/link";
-import { ArrowLeft, Briefcase, Sparkles, Store } from "lucide-react";
+import { ArrowLeft, Briefcase, Sparkles } from "lucide-react";
 
 import { createService } from "@/app/services/actions";
+import { ServiceFormFields } from "@/components/service-form-fields";
 import { ServiceCategoryIcon } from "@/components/service-category-icon";
 import { requireUser } from "@/lib/auth";
 import { SERVICE_CATEGORIES } from "@/lib/service-categories";
@@ -59,30 +60,7 @@ export default async function NewServicePage() {
       </section>
 
       <form action={createService} className="mt-5 space-y-4">
-        <section className="border-[#2c2036]/9 rounded-[1.5rem] border bg-white p-4 shadow-[0_8px_22px_rgba(69,43,94,.05)]">
-          <b className="block text-[11px]">Что это?</b>
-          <div className="mt-2 grid grid-cols-2 gap-2">
-            <label className="flex cursor-pointer items-center gap-2 rounded-xl border border-[#a67ae7] bg-[#f0e9ff] p-3 text-[10px] font-black text-[#7549d0]">
-              <input
-                className="accent-[#7549d0]"
-                defaultChecked
-                name="kind"
-                type="radio"
-                value="service"
-              />
-              <Briefcase className="size-4" /> Услуга
-            </label>
-            <label className="flex cursor-pointer items-center gap-2 rounded-xl border border-[#2c2036]/10 bg-[#fbf9fe] p-3 text-[10px] font-black text-[#756a7d]">
-              <input
-                className="accent-[#7549d0]"
-                name="kind"
-                type="radio"
-                value="business"
-              />
-              <Store className="size-4" /> Заведение
-            </label>
-          </div>
-        </section>
+        <ServiceFormFields initialKind="service" />
 
         <section className="border-[#2c2036]/9 rounded-[1.5rem] border bg-white p-4 shadow-[0_8px_22px_rgba(69,43,94,.05)]">
           <label className="block text-[11px] font-black" htmlFor="service-title">

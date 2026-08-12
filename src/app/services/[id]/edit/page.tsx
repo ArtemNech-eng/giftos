@@ -1,9 +1,13 @@
 import Link from "next/link";
-import { ArrowLeft, Briefcase, Store } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { notFound } from "next/navigation";
 
 import { updateService } from "@/app/services/actions";
 import { ServiceCategoryIcon } from "@/components/service-category-icon";
+import {
+  ServiceFormFields,
+  type ServiceFormItem,
+} from "@/components/service-form-fields";
 import { requireUser } from "@/lib/auth";
 import { SERVICE_CATEGORIES } from "@/lib/service-categories";
 
@@ -21,6 +25,14 @@ type ServiceRow = {
   category_slug: string;
   description: string | null;
   contact_text: string | null;
+  address: string | null;
+  hours: string | null;
+};
+
+type CatalogItem = {
+  id: string;
+  title: string;
+  price: string;
 };
 
 export default async function EditServicePage({
@@ -37,6 +49,17 @@ export default async function EditServicePage({
     .maybeSingle();
   const service = rawService as ServiceRow | null;
   if (!service || service.owner_id !== user.id) notFound();
+
+  const { data: rawItems } = await supabase
+    .from("service_catalog_items")
+    .select("id, title, price")
+    .eq("service_id", service.id)
+    .order("sort_order", { ascending: true })
+    .limit(8);
+  const items: ServiceFormItem[] = ((rawItems ?? []) as CatalogItem[]).map((item) => ({
+    title: item.title,
+    price: item.price,
+  }));
 
   return (
     <main className="mx-auto min-h-screen max-w-[430px] bg-[#f7f4fb] px-4 pb-10 pt-5 text-[#251d31]">
@@ -59,43 +82,12 @@ export default async function EditServicePage({
 
       <form action={updateService} className="mt-5 space-y-4">
         <input name="service_id" type="hidden" value={service.id} />
-        <section className="border-[#2c2036]/9 rounded-[1.5rem] border bg-white p-4 shadow-[0_8px_22px_rgba(69,43,94,.05)]">
-          <b className="block text-[11px]">Что это?</b>
-          <div className="mt-2 grid grid-cols-2 gap-2">
-            <label
-              className={`flex cursor-pointer items-center gap-2 rounded-xl border p-3 text-[10px] font-black ${
-                service.kind === "service"
-                  ? "border-[#a67ae7] bg-[#f0e9ff] text-[#7549d0]"
-                  : "border-[#2c2036]/10 bg-[#fbf9fe] text-[#756a7d]"
-              }`}
-            >
-              <input
-                className="accent-[#7549d0]"
-                defaultChecked={service.kind === "service"}
-                name="kind"
-                type="radio"
-                value="service"
-              />
-              <Briefcase className="size-4" /> Услуга
-            </label>
-            <label
-              className={`flex cursor-pointer items-center gap-2 rounded-xl border p-3 text-[10px] font-black ${
-                service.kind === "business"
-                  ? "border-[#a67ae7] bg-[#f0e9ff] text-[#7549d0]"
-                  : "border-[#2c2036]/10 bg-[#fbf9fe] text-[#756a7d]"
-              }`}
-            >
-              <input
-                className="accent-[#7549d0]"
-                defaultChecked={service.kind === "business"}
-                name="kind"
-                type="radio"
-                value="business"
-              />
-              <Store className="size-4" /> Заведение
-            </label>
-          </div>
-        </section>
+        <ServiceFormFields
+          address={service.address}
+          hours={service.hours}
+          initialKind={service.kind}
+          items={items}
+        />
 
         <section className="border-[#2c2036]/9 rounded-[1.5rem] border bg-white p-4 shadow-[0_8px_22px_rgba(69,43,94,.05)]">
           <label className="block text-[11px] font-black" htmlFor="service-title">

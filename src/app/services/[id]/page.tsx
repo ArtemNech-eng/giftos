@@ -4,9 +4,11 @@ import type { Route } from "next";
 import {
   ArrowLeft,
   ChevronRight,
+  Clock3,
   Eye,
   Flame,
   Hand,
+  MapPin,
   MessageSquare,
   Pencil,
   Pin,
@@ -57,7 +59,50 @@ type ServiceDetail = {
   cover_path: string | null;
   rating_avg: number | null;
   rating_count: number;
+  address: string | null;
+  hours: string | null;
 };
+
+type HoursDay = { day: number; open?: string; close?: string; closed?: boolean };
+
+function formatHours(raw: string | null | undefined): string[] | null {
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(raw) as HoursDay[];
+    if (!Array.isArray(parsed) || parsed.length !== 7) return null;
+    const openDays = parsed.filter((day) => !day.closed && day.open && day.close);
+    if (openDays.length === 0) return ["Ежедневно — без графика"];
+    const allSame =
+      openDays.length === 7 &&
+      new Set(openDays.map((day) => `${day.open}-${day.close}`)).size === 1;
+    if (allSame) return [`Ежедневно ${openDays[0].open}–${openDays[0].close}`];
+    const labels = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
+    const lines: string[] = [];
+    let i = 0;
+    while (i < 7) {
+      const day = parsed[i];
+      if (day.closed || !day.open || !day.close) {
+        lines.push(`${labels[i]} — выходной`);
+        i += 1;
+        continue;
+      }
+      const key = `${day.open}-${day.close}`;
+      let j = i;
+      while (
+        j + 1 < 7 &&
+        !parsed[j + 1].closed &&
+        `${parsed[j + 1].open}-${parsed[j + 1].close}` === key
+      )
+        j += 1;
+      const range = j === i ? labels[i] : `${labels[i]}–${labels[j]}`;
+      lines.push(`${range} ${day.open}–${day.close}`);
+      i = j + 1;
+    }
+    return lines;
+  } catch {
+    return null;
+  }
+}
 
 export default async function ServicePage({
   params,
@@ -132,6 +177,19 @@ export default async function ServicePage({
     }>
   ).filter((review) => (isOwner ? true : !review.is_hidden));
   const myReview = reviews.find((review) => review.author_id === user.id) ?? null;
+
+  const { data: rawCatalog } = await supabase
+    .from("service_catalog_items")
+    .select("id, title, price")
+    .eq("service_id", id)
+    .order("sort_order", { ascending: true })
+    .limit(8);
+  const catalogItems = (rawCatalog ?? []) as Array<{
+    id: string;
+    title: string;
+    price: string;
+  }>;
+  const hoursLines = formatHours(service.hours);
 
   const [{ count: demandCount }, { data: myDemand }] = await Promise.all([
     supabase
@@ -315,6 +373,60 @@ export default async function ServicePage({
           <p className="mt-3 flex items-center gap-2 rounded-xl bg-[#f0e9ff] px-3 py-2.5 text-[11px] font-black text-[#7549d0]">
             <Sparkles className="size-3.5" /> {service.contact_text}
           </p>
+        )}
+
+        {service.kind === "business" && (service.address || hoursLines) && (
+          <div className="mt-4 space-y-2.5">
+            {service.address && (
+              <p className="flex items-start gap-2 text-[11px] leading-5 text-[#5f5369]">
+                <MapPin className="mt-0.5 size-4 shrink-0 text-[#258b82]" />
+                <span>
+                  <small className="block text-[9px] font-black uppercase tracking-[0.08em] text-[#81748a]">
+                    Адрес
+                  </small>
+                  {service.address}
+                </span>
+              </p>
+            )}
+            {hoursLines && (
+              <p className="flex items-start gap-2 text-[11px] leading-5 text-[#5f5369]">
+                <Clock3 className="mt-0.5 size-4 shrink-0 text-[#258b82]" />
+                <span>
+                  <small className="block text-[9px] font-black uppercase tracking-[0.08em] text-[#81748a]">
+                    Часы работы
+                  </small>
+                  {hoursLines.map((line) => (
+                    <span className="block" key={line}>
+                      {line}
+                    </span>
+                  ))}
+                </span>
+              </p>
+            )}
+          </div>
+        )}
+
+        {catalogItems.length > 0 && (
+          <div className="mt-4 rounded-2xl bg-[#fbf9fe] p-3">
+            <small className="block text-[9px] font-black uppercase tracking-[0.08em] text-[#81748a]">
+              {service.kind === "business" ? "Меню и цены" : "Услуги и цены"}
+            </small>
+            <div className="mt-2 divide-y divide-[#efe7f2]">
+              {catalogItems.map((item) => (
+                <div
+                  className="flex items-baseline justify-between gap-3 py-2"
+                  key={item.id}
+                >
+                  <span className="text-[11px] font-semibold leading-4 text-[#5f5369]">
+                    {item.title}
+                  </span>
+                  <span className="shrink-0 text-[11px] font-black text-[#7549d0]">
+                    {item.price}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
         )}
         {!isOwner && (
           <form action={toggleServiceDemand} className="mt-4">

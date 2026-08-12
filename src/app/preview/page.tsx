@@ -2526,6 +2526,7 @@ function ServicesPreviewScreen() {
       rating: 5,
       reviews: 12,
       demand: 7,
+      price: "Маникюр + гель-лак — 1 200 ₽",
     },
     {
       title: "Кофейня «Утро»",
@@ -2539,6 +2540,8 @@ function ServicesPreviewScreen() {
       rating: 4.8,
       reviews: 9,
       demand: 3,
+      address: "ул. Ленина, 12",
+      hours: "Пн–Сб 07:00–20:00 · Вс — выходной",
     },
     {
       title: "Ремонт телефонов",
@@ -2636,6 +2639,21 @@ function ServicesPreviewScreen() {
                 <small className="mt-1 line-clamp-2 block text-[10px] leading-4 text-[#81748a]">
                   {listing.note}
                 </small>
+                {listing.price && (
+                  <small className="mt-1 flex items-center gap-1 text-[9px] font-bold text-[#7549d0]">
+                    <Sparkles className="size-3" /> {listing.price}
+                  </small>
+                )}
+                {listing.address && (
+                  <small className="mt-1 flex items-center gap-1 text-[9px] font-bold text-[#5f5369]">
+                    <MapPin className="size-3 text-[#258b82]" /> {listing.address}
+                  </small>
+                )}
+                {listing.hours && (
+                  <small className="mt-1 flex items-center gap-1 text-[9px] font-bold text-[#5f5369]">
+                    <Clock3 className="size-3 text-[#258b82]" /> {listing.hours}
+                  </small>
+                )}
                 <small className="mt-1.5 flex items-center gap-1.5 text-[9px] font-bold text-[#a093a6]">
                   <Sparkles className="size-3 text-[#8753e6]" />
                   {listing.owner} · {listing.contact}

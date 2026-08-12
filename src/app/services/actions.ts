@@ -9,6 +9,53 @@ import { SERVICE_CATEGORIES } from "@/lib/service-categories";
 import { optionalText, requiredText } from "@/lib/validation";
 
 const MAX_PHOTOS = 3;
+const MAX_CATALOG_ITEMS = 8;
+
+function readHours(formData: FormData) {
+  const days: Array<
+    { day: number; open: string; close: string } | { day: number; closed: true }
+  > = [];
+  for (let day = 0; day < 7; day += 1) {
+    const open = String(formData.get(`hours_open_${day}`) ?? "").trim();
+    const close = String(formData.get(`hours_close_${day}`) ?? "").trim();
+    if (open && close) {
+      days.push({ day, open, close });
+    } else {
+      days.push({ day, closed: true });
+    }
+  }
+  return days;
+}
+
+function readCatalogItems(formData: FormData) {
+  const titles = formData.getAll("item_title").map(String).slice(0, MAX_CATALOG_ITEMS);
+  const prices = formData.getAll("item_price").map(String).slice(0, MAX_CATALOG_ITEMS);
+  const items: Array<{ title: string; price: string }> = [];
+  for (let i = 0; i < titles.length; i += 1) {
+    const title = titles[i]?.trim() ?? "";
+    const price = prices[i]?.trim() ?? "";
+    if (title && price) items.push({ title, price });
+  }
+  return items;
+}
+
+async function replaceCatalogItems(
+  serviceId: string,
+  items: Array<{ title: string; price: string }>,
+) {
+  const { supabase } = await requireUser();
+  await supabase.from("service_catalog_items").delete().eq("service_id", serviceId);
+  if (items.length > 0) {
+    await supabase.from("service_catalog_items").insert(
+      items.map((item, index) => ({
+        service_id: serviceId,
+        title: item.title.slice(0, 120),
+        price: item.price.slice(0, 40),
+        sort_order: index,
+      })),
+    );
+  }
+}
 
 async function uploadServicePhotos(
   formData: FormData,
@@ -61,6 +108,10 @@ export async function createService(formData: FormData) {
     .maybeSingle();
   if (!profile?.city_id) throw new Error("Сначала укажите город в профиле.");
 
+  const address = optionalText(formData.get("address"), 200);
+  const hours = kind === "business" ? readHours(formData) : null;
+  const catalogItems = readCatalogItems(formData);
+
   const { data: service, error } = await supabase
     .from("city_services")
     .insert({
@@ -71,10 +122,14 @@ export async function createService(formData: FormData) {
       category_slug: categorySlug,
       description,
       contact_text: contactText,
+      address: address || null,
+      hours: hours ? JSON.stringify(hours) : null,
     })
     .select("id")
     .single();
   if (error) throw new Error(`Не удалось создать объявление: ${error.message}`);
+
+  await replaceCatalogItems(service.id, catalogItems);
 
   const photoPaths = await uploadServicePhotos(formData, user.id);
   if (photoPaths.length > 0) {
@@ -113,6 +168,10 @@ export async function updateService(formData: FormData) {
     .maybeSingle();
   if (!existing) throw new Error("Объявление не найдено.");
 
+  const address = optionalText(formData.get("address"), 200);
+  const hours = kind === "business" ? readHours(formData) : null;
+  const catalogItems = readCatalogItems(formData);
+
   const { error } = await supabase
     .from("city_services")
     .update({
@@ -121,10 +180,14 @@ export async function updateService(formData: FormData) {
       category_slug: categorySlug,
       description,
       contact_text: contactText,
+      address: address || null,
+      hours: hours ? JSON.stringify(hours) : null,
       updated_at: new Date().toISOString(),
     })
     .eq("id", serviceId);
   if (error) throw new Error(`Не удалось сохранить: ${error.message}`);
+
+  await replaceCatalogItems(serviceId, catalogItems);
 
   // Replace photos only when new ones were provided.
   const photoPaths = await uploadServicePhotos(formData, user.id);
@@ -190,6 +253,7 @@ export async function deleteService(formData: FormData) {
     serviceId,
     (media ?? []).map((row) => row.storage_path),
   );
+  await supabase.from("service_catalog_items").delete().eq("service_id", serviceId);
 
   await supabase.from("city_services").delete().eq("id", serviceId);
 
