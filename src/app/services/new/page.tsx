@@ -147,6 +147,20 @@ export default async function NewServicePage() {
             name="contact_text"
             placeholder="Телефон или @telegram — по желанию"
           />
+          <label className="mt-3 block text-[11px] font-black" htmlFor="service-photos">
+            Фото (до 3)
+          </label>
+          <input
+            accept="image/jpeg,image/png,image/webp"
+            className="mt-2 w-full rounded-xl border border-dashed border-[#cdbbe7] bg-[#fbf9fe] px-3 py-3 text-[10px] font-semibold text-[#756a7d] file:mr-3 file:rounded-lg file:border-0 file:bg-[#f0e9ff] file:px-3 file:py-1.5 file:text-[10px] file:font-black file:text-[#7549d0]"
+            id="service-photos"
+            multiple
+            name="photos"
+            type="file"
+          />
+          <small className="mt-1.5 block text-[9px] leading-4 text-[#a093a6]">
+            Первое фото станет обложкой. JPG, PNG или WebP, до 10 МБ.
+          </small>
         </section>
 
         {!hasCity ? (

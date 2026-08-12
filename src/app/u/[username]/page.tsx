@@ -757,12 +757,20 @@ export default async function ProfilePage({
             ))}
           </div>
           {isOwnProfile && (
-            <Link
-              className="mt-3 block rounded-xl border border-dashed border-[#e0cf9f] py-2.5 text-center text-[10px] font-black text-[#a87511]"
-              href="/services/new"
-            >
-              + Добавить объявление
-            </Link>
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              <Link
+                className="block rounded-xl border border-dashed border-[#e0cf9f] py-2.5 text-center text-[10px] font-black text-[#a87511]"
+                href="/services/new"
+              >
+                + Добавить
+              </Link>
+              <Link
+                className="block rounded-xl border border-[#2c2036]/10 bg-[#fbf9fe] py-2.5 text-center text-[10px] font-black text-[#7549d0]"
+                href="/services/mine"
+              >
+                Моя витрина
+              </Link>
+            </div>
           )}
         </section>
       )}

@@ -19,6 +19,7 @@ import {
   Check,
   CirclePlus,
   ChevronRight,
+  Pin,
   Clock3,
   Compass,
   Crown,
@@ -2520,6 +2521,8 @@ function ServicesPreviewScreen() {
       note: "Гель-лак, дизайн, укрепление",
       owner: "Наталья",
       contact: "@nastya_nails",
+      views: 342,
+      pinned: true,
     },
     {
       title: "Кофейня «Утро»",
@@ -2528,6 +2531,8 @@ function ServicesPreviewScreen() {
       note: "Свежая выпечка и кофе с 7:00",
       owner: "Сергей",
       contact: "+7 900 …",
+      views: 218,
+      pinned: false,
     },
     {
       title: "Ремонт телефонов",
@@ -2536,6 +2541,8 @@ function ServicesPreviewScreen() {
       note: "Замена стекла и аккумулятора за час",
       owner: "Дмитрий",
       contact: "ул. Пушкина, 12",
+      views: 156,
+      pinned: false,
     },
   ];
   return (
@@ -2611,6 +2618,11 @@ function ServicesPreviewScreen() {
                   >
                     {listing.kind}
                   </span>
+                  {listing.pinned && (
+                    <span className="inline-flex shrink-0 items-center gap-0.5 rounded-full bg-[#201827] px-1.5 py-0.5 text-[8px] font-black text-white">
+                      <Pin className="size-2.5" /> Вверху
+                    </span>
+                  )}
                 </span>
                 <small className="mt-1 line-clamp-2 block text-[10px] leading-4 text-[#81748a]">
                   {listing.note}
@@ -2618,6 +2630,11 @@ function ServicesPreviewScreen() {
                 <small className="mt-1.5 flex items-center gap-1.5 text-[9px] font-bold text-[#a093a6]">
                   <Sparkles className="size-3 text-[#8753e6]" />
                   {listing.owner} · {listing.contact}
+                </small>
+              </span>
+              <span className="flex shrink-0 flex-col items-end gap-1">
+                <small className="inline-flex items-center gap-1 text-[9px] font-black text-[#258b82]">
+                  <Eye className="size-3" /> {listing.views}
                 </small>
               </span>
               <ChevronRight className="mt-1 size-4 shrink-0 text-[#a295a8]" />

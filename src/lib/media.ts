@@ -6,7 +6,12 @@ const acceptedImageTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
 const acceptedVideoTypes = new Set(["video/mp4", "video/webm"]);
 
 type MediaBucket =
-  "avatars" | "profile-media" | "wish-media" | "fundraiser-media" | "story-media";
+  | "avatars"
+  | "profile-media"
+  | "wish-media"
+  | "fundraiser-media"
+  | "story-media"
+  | "service-media";
 
 export async function uploadOwnedImage({
   file,
@@ -93,4 +98,16 @@ export async function getSignedImageUrl({
 
 export function isUploadedFile(value: FormDataEntryValue | null): value is File {
   return value instanceof File && value.size > 0;
+}
+
+export async function deleteMediaFile({
+  bucket,
+  path,
+}: {
+  bucket: MediaBucket;
+  path: string;
+}) {
+  const admin = createAdminClient();
+  const { error } = await admin.storage.from(bucket).remove([path]);
+  if (error) throw new Error(`Не удалось удалить файл: ${error.message}`);
 }

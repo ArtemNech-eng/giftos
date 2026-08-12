@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowLeft, MapPin, Sparkles } from "lucide-react";
+import { ArrowLeft, ChevronRight, MapPin, Sparkles, Store } from "lucide-react";
 
 import { updateLocalCreatorProfile } from "@/app/local/actions";
 import {
@@ -17,18 +17,23 @@ export const dynamic = "force-dynamic";
 
 export default async function LocalCreatorPage() {
   const { supabase, user } = await requireUser();
-  const [{ data: profile }, { data: local }] = await Promise.all([
-    supabase
-      .from("profiles")
-      .select("username, display_name, city, city_id, profile_visibility, show_city")
-      .eq("id", user.id)
-      .maybeSingle(),
-    supabase
-      .from("local_creator_profiles")
-      .select("is_listed, role_code, city_label, headline")
-      .eq("profile_id", user.id)
-      .maybeSingle(),
-  ]);
+  const [{ data: profile }, { data: local }, { count: serviceCount }] =
+    await Promise.all([
+      supabase
+        .from("profiles")
+        .select("username, display_name, city, city_id, profile_visibility, show_city")
+        .eq("id", user.id)
+        .maybeSingle(),
+      supabase
+        .from("local_creator_profiles")
+        .select("is_listed, role_code, city_label, headline")
+        .eq("profile_id", user.id)
+        .maybeSingle(),
+      supabase
+        .from("city_services")
+        .select("*", { count: "exact", head: true })
+        .eq("owner_id", user.id),
+    ]);
 
   const canList = Boolean(
     profile?.city_id && profile.profile_visibility === "public" && profile.show_city,
@@ -46,6 +51,24 @@ export default async function LocalCreatorPage() {
         <h1 className="text-lg font-black tracking-[-0.03em]">Локальная витрина</h1>
         <span className="w-10" />
       </header>
+
+      <Link
+        className="mt-4 flex items-center justify-between rounded-2xl border border-[#e6d9ef] bg-white p-3.5 shadow-[0_6px_16px_rgba(69,43,94,.05)]"
+        href="/services/mine"
+      >
+        <span className="flex items-center gap-3">
+          <span className="grid size-9 place-items-center rounded-xl bg-[#fff6e8] text-[#a87511]">
+            <Store className="size-4.5" />
+          </span>
+          <span>
+            <b className="block text-xs">Мои объявления</b>
+            <small className="mt-0.5 block text-[10px] text-[#81748a]">
+              {serviceCount ?? 0} на витрине города · управление, просмотры, поднятие
+            </small>
+          </span>
+        </span>
+        <ChevronRight className="size-4 shrink-0 text-[#a295a8]" />
+      </Link>
 
       <section className="mt-6 overflow-hidden rounded-[1.8rem] bg-gradient-to-br from-[#f3e8ff] via-[#fff6fb] to-[#e7f4ff] p-5 shadow-[0_14px_34px_rgba(95,57,130,.12)]">
         <div className="flex items-start justify-between gap-3">

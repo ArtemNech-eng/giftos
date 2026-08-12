@@ -4,6 +4,8 @@ import {
   ArrowLeft,
   Briefcase,
   ChevronRight,
+  Pin,
+  Eye,
   MapPin,
   Plus,
   Sparkles,
@@ -27,9 +29,12 @@ type ServiceRow = {
   category_slug: string;
   description: string | null;
   contact_text: string | null;
+  views_count: number;
+  pinned_at: string | null;
   created_at: string;
   owner_display_name: string;
   owner_username: string;
+  owner_avatar_path: string | null;
 };
 
 export default async function ServicesPage({
@@ -60,7 +65,8 @@ export default async function ServicesPage({
       )
       .eq("city_id", profile!.city_id!)
       .eq("is_active", true)
-      .order("created_at", { ascending: false })
+      .order("pinned_at", { ascending: false, nullsFirst: false })
+      .order("updated_at", { ascending: false })
       .limit(60);
     if (activeCategory) query.eq("category_slug", activeCategory);
     const { data } = await query;
@@ -207,6 +213,11 @@ export default async function ServicesPage({
                   >
                     {SERVICE_KIND_LABELS[service.kind]}
                   </span>
+                  {service.pinned_at && (
+                    <span className="inline-flex shrink-0 items-center gap-0.5 rounded-full bg-[#201827] px-1.5 py-0.5 text-[8px] font-black text-white">
+                      <Pin className="size-2.5" /> Вверху
+                    </span>
+                  )}
                 </span>
                 {service.description && (
                   <small className="mt-1 line-clamp-2 block text-[10px] leading-4 text-[#81748a]">
@@ -217,6 +228,11 @@ export default async function ServicesPage({
                   <Sparkles className="size-3 text-[#8753e6]" />
                   {service.owner_display_name}
                   {service.contact_text ? ` · ${service.contact_text}` : ""}
+                </small>
+              </span>
+              <span className="flex shrink-0 flex-col items-end gap-1">
+                <small className="inline-flex items-center gap-1 text-[9px] font-black text-[#258b82]">
+                  <Eye className="size-3" /> {service.views_count}
                 </small>
               </span>
               <ChevronRight className="mt-1 size-4 shrink-0 text-[#a295a8]" />

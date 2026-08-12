@@ -1,11 +1,27 @@
 import Link from "next/link";
 import type { Route } from "next";
-import { ArrowLeft, Check, ChevronRight, Pencil, Sparkles } from "lucide-react";
+/* eslint-disable @next/next/no-img-element -- signed Storage URLs */
+import {
+  ArrowLeft,
+  Check,
+  ChevronRight,
+  Eye,
+  Flame,
+  Pencil,
+  Pin,
+  Sparkles,
+} from "lucide-react";
 import { notFound } from "next/navigation";
 
-import { deleteService, toggleServiceActive } from "@/app/services/actions";
+import {
+  bumpService,
+  deleteService,
+  toggleServiceActive,
+  toggleServicePin,
+} from "@/app/services/actions";
 import { ServiceCategoryIcon } from "@/components/service-category-icon";
 import { requireUser } from "@/lib/auth";
+import { getSignedImageUrl } from "@/lib/media";
 import { SERVICE_KIND_LABELS, serviceCategory } from "@/lib/service-categories";
 
 export const metadata = {
@@ -24,8 +40,12 @@ type ServiceDetail = {
   description: string | null;
   contact_text: string | null;
   created_at: string;
+  views_count: number;
+  pinned_at: string | null;
   owner_username: string;
   owner_display_name: string;
+  owner_avatar_path: string | null;
+  cover_path: string | null;
 };
 
 export default async function ServicePage({
@@ -54,6 +74,42 @@ export default async function ServicePage({
 
   const isOwner = service.owner_id === user.id;
   const category = serviceCategory(service.category_slug);
+
+  const { data: rawMedia } = await supabase
+    .from("city_service_media")
+    .select("id, storage_path, sort_order")
+    .eq("service_id", id)
+    .order("sort_order", { ascending: true })
+    .limit(3);
+  const media = await Promise.all(
+    (
+      (rawMedia ?? []) as Array<{
+        id: string;
+        storage_path: string;
+        sort_order: number;
+      }>
+    ).map(async (item) => ({
+      ...item,
+      url: await getSignedImageUrl({
+        bucket: "service-media",
+        path: item.storage_path,
+      }),
+    })),
+  );
+  const ownerAvatar = await getSignedImageUrl({
+    bucket: "avatars",
+    path: service.owner_avatar_path,
+  });
+  const isPinned = Boolean(service.pinned_at);
+
+  // Count a view (skip the owner's own visits).
+  if (!isOwner) {
+    try {
+      await supabase.rpc("record_service_view", { p_service_id: id });
+    } catch {
+      // Counting must never break the page.
+    }
+  }
   const createdAt = new Intl.DateTimeFormat("ru-RU", {
     day: "numeric",
     month: "long",
@@ -85,15 +141,63 @@ export default async function ServicePage({
         </span>
       </header>
 
+      {media.length > 0 && (
+        <section className="border-[#2c2036]/9 mt-5 overflow-hidden rounded-[1.7rem] border bg-white shadow-[0_14px_32px_rgba(69,43,94,.08)]">
+          <div className="relative">
+            { }
+            <img
+              alt={service.title}
+              className="aspect-[4/3] w-full object-cover"
+              decoding="async"
+              src={media[0].url ?? ""}
+            />
+            {isPinned && (
+              <span className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-[#201827]/85 px-2.5 py-1 text-[9px] font-black text-white backdrop-blur">
+                <Pin className="size-3" /> Закреплено
+              </span>
+            )}
+            {isOwner && (
+              <span className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full bg-white/90 px-2.5 py-1 text-[9px] font-black text-[#5f5369] backdrop-blur">
+                <Eye className="size-3" /> {service.views_count}
+              </span>
+            )}
+          </div>
+          {media.length > 1 && (
+            <div className="flex gap-2 p-2">
+              {media.map((photo) => (
+                 
+                <img
+                  alt=""
+                  className="size-16 rounded-xl object-cover"
+                  decoding="async"
+                  key={photo.id}
+                  src={photo.url ?? ""}
+                />
+              ))}
+            </div>
+          )}
+        </section>
+      )}
+
       <article className="border-[#2c2036]/9 mt-5 rounded-[1.7rem] border bg-white p-4 shadow-[0_14px_32px_rgba(69,43,94,.08)]">
-        <span
-          className={`inline-flex rounded-full px-2 py-1 text-[9px] font-black ${
-            service.kind === "business"
-              ? "bg-[#fff6d9] text-[#a87511]"
-              : "bg-[#f0e9ff] text-[#7549d0]"
-          }`}
-        >
-          {SERVICE_KIND_LABELS[service.kind]}
+        <span className="flex flex-wrap items-center gap-2">
+          <span
+            className={`inline-flex rounded-full px-2 py-1 text-[9px] font-black ${
+              service.kind === "business"
+                ? "bg-[#fff6d9] text-[#a87511]"
+                : "bg-[#f0e9ff] text-[#7549d0]"
+            }`}
+          >
+            {SERVICE_KIND_LABELS[service.kind]}
+          </span>
+          {isPinned && !media.length && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-[#201827] px-2 py-1 text-[9px] font-black text-white">
+              <Pin className="size-3" /> Закреплено
+            </span>
+          )}
+          <span className="inline-flex items-center gap-1 rounded-full bg-[#f0faf5] px-2 py-1 text-[9px] font-black text-[#258b82]">
+            <Eye className="size-3" /> {service.views_count} просмотров
+          </span>
         </span>
         <h2 className="mt-3 text-3xl font-black tracking-[-0.06em]">{service.title}</h2>
         {category && (
@@ -112,8 +216,17 @@ export default async function ServicePage({
             className="flex min-w-0 grow items-center gap-2"
             href={`/u/${service.owner_username}` as Route}
           >
-            <span className="grid size-9 shrink-0 place-items-center rounded-full bg-gradient-to-br from-[#ff83b0] to-[#815be8] text-xs font-black text-white">
-              {service.owner_display_name.slice(0, 1).toUpperCase()}
+            <span className="grid size-9 shrink-0 place-items-center overflow-hidden rounded-full bg-gradient-to-br from-[#ff83b0] to-[#815be8] text-xs font-black text-white">
+              {ownerAvatar ? (
+                <img
+                  alt=""
+                  className="size-full object-cover"
+                  decoding="async"
+                  src={ownerAvatar}
+                />
+              ) : (
+                service.owner_display_name.slice(0, 1).toUpperCase()
+              )}
             </span>
             <span className="min-w-0">
               <b className="block truncate text-[11px]">{service.owner_display_name}</b>
@@ -133,11 +246,41 @@ export default async function ServicePage({
 
       {isOwner ? (
         <section className="mt-4 space-y-2">
+          <div className="grid grid-cols-2 gap-2">
+            <form action={toggleServicePin}>
+              <input name="service_id" type="hidden" value={service.id} />
+              <button
+                className={`flex w-full items-center justify-center gap-1.5 rounded-2xl border py-3 text-xs font-black ${
+                  isPinned
+                    ? "border-[#201827] bg-[#201827] text-white"
+                    : "border-[#2c2036]/10 bg-white text-[#5f5369]"
+                }`}
+                type="submit"
+              >
+                <Pin className="size-3.5" /> {isPinned ? "Открепить" : "Закрепить"}
+              </button>
+            </form>
+            <form action={bumpService}>
+              <input name="service_id" type="hidden" value={service.id} />
+              <button
+                className="flex w-full items-center justify-center gap-1.5 rounded-2xl border border-[#2c2036]/10 bg-white py-3 text-xs font-black text-[#5f5369]"
+                type="submit"
+              >
+                <Flame className="size-3.5 text-[#e2574c]" /> Поднять
+              </button>
+            </form>
+          </div>
           <Link
             className="flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#ff5d9a] to-[#8254ed] py-3 text-xs font-black text-white shadow-[0_10px_22px_rgba(160,75,213,.24)]"
             href={`/services/${service.id}/edit`}
           >
             <Pencil className="size-4" /> Редактировать
+          </Link>
+          <Link
+            className="flex items-center justify-center gap-2 rounded-2xl border border-[#2c2036]/10 bg-white py-3 text-xs font-black text-[#5f5369]"
+            href="/services/mine"
+          >
+            Моя витрина <ChevronRight className="size-4" />
           </Link>
           <form action={toggleServiceActive}>
             <input name="service_id" type="hidden" value={service.id} />
