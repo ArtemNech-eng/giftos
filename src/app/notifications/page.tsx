@@ -555,6 +555,12 @@ export default async function NotificationsPage({
                           {date}
                         </span>
                       </span>
+                      {!notification.read_at && (
+                        <span
+                          aria-label="Новое"
+                          className="size-2.5 shrink-0 rounded-full bg-[#ff3f79] shadow-[0_0_0_4px_rgba(255,63,121,.15)]"
+                        />
+                      )}
                     </Link>
                   );
                 })}
