@@ -380,6 +380,12 @@ export default async function SeoLandingPage({
           <a className="transition hover:text-[#201827]" href="#first-wave">
             Первая волна
           </a>
+          <a className="transition hover:text-[#201827]" href="#masters">
+            Мастера города
+          </a>
+          <a className="transition hover:text-[#201827]" href="#qr-greeting">
+            QR-приветствие
+          </a>
           <Link
             className="rounded-full bg-[#f0e5ff] px-3 py-1.5 text-[#7549d0] transition hover:bg-[#e6d4ff]"
             href="/preview"
