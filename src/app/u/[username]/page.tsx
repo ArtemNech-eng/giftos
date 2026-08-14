@@ -1320,11 +1320,9 @@ export default async function ProfilePage({
         </div>
       )}
       {isOwnProfile && (
-        <details className="mx-4 mt-3 rounded-2xl border border-[#2c2036]/10 bg-white p-4">
-          <summary className="cursor-pointer text-sm font-bold">
-            Поделиться профилем
-          </summary>
-          <div className="mt-4 flex flex-col items-center gap-3">
+        <div className="mx-4 mt-3 rounded-2xl border border-[#2c2036]/10 bg-white p-4">
+          <b className="text-sm font-black">Поделиться профилем</b>
+          <div className="mt-3 flex flex-col items-center gap-3">
             <Link
               className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#ff5d9a] to-[#8254ed] py-2.5 text-xs font-black text-white shadow-[0_8px_18px_rgba(160,75,213,.24)]"
               href="/invite"
@@ -1337,7 +1335,7 @@ export default async function ProfilePage({
               url={`${process.env.NEXT_PUBLIC_APP_URL ?? "https://hochutakzhe.ru"}/u/${profile.username}`}
             />
           </div>
-        </details>
+        </div>
       )}
       {isOwnProfile && profile.is_creator && (
         <details className="mx-4 mt-3 rounded-2xl border border-[#2c2036]/10 bg-white p-4">
@@ -1504,6 +1502,18 @@ export default async function ProfilePage({
             </div>
           </form>
         </details>
+      )}
+
+      {!isOwnProfile && (
+        <section className="mx-4 mt-5 rounded-2xl border border-[#2c2036]/10 bg-white p-4">
+          <b className="block text-sm font-black">Поделиться профилем</b>
+          <p className="mt-1 text-[10px] leading-4 text-[#81748a]">
+            Отправь ссылку — откроется визитка {profile.display_name} в городе.
+          </p>
+          <div className="mt-3">
+            <CreatorShareLink light username={profile.username} />
+          </div>
+        </section>
       )}
     </main>
   );
